@@ -876,48 +876,59 @@ def build_comprehensive_drug_map():
 
 def classify_drug_by_name(commercial_name: str, generic_name: str) -> str:
     """
-    Classify drugs into MOA categories based on name patterns and known classifications
+    Classify drugs using curated GU oncology drug whitelist (safe, focused approach)
     """
     name_lower = f"{commercial_name} {generic_name}".lower()
 
-    # ICI patterns (most comprehensive)
-    ici_patterns = [
-        "mab", "lizumab", "lumab", "limab", "zumab",  # antibody suffixes
-        "pd-1", "pd1", "pdl1", "pd-l1", "ctla-4", "ctla4"  # target patterns
-    ]
+    # CURATED GU ONCOLOGY DRUG WHITELIST (focused on bladder/renal cancer)
+    gu_drug_classifications = {
+        # ICIs (Checkpoint Inhibitors) - most common in GU
+        "avelumab": "ICI", "bavencio": "ICI",
+        "pembrolizumab": "ICI", "keytruda": "ICI",
+        "nivolumab": "ICI", "opdivo": "ICI",
+        "atezolizumab": "ICI", "tecentriq": "ICI",
+        "durvalumab": "ICI", "imfinzi": "ICI",
+        "cemiplimab": "ICI", "libtayo": "ICI",
+        "dostarlimab": "ICI", "jemperli": "ICI",
+        "ipilimumab": "ICI", "yervoy": "ICI",
 
-    # Known ICI drug names (from training data + CSV analysis)
-    ici_drugs = [
-        "keytruda", "pembrolizumab", "opdivo", "nivolumab", "tecentriq", "atezolizumab",
-        "imfinzi", "durvalumab", "bavencio", "avelumab", "libtayo", "cemiplimab",
-        "jemperli", "dostarlimab", "yervoy", "ipilimumab", "tremelimumab", "retifanlimab"
-    ]
+        # ADCs (Antibody-Drug Conjugates) - key in bladder cancer
+        "enfortumab vedotin": "ADC", "enfortumab": "ADC", "padcev": "ADC",
+        "sacituzumab govitecan": "ADC", "sacituzumab": "ADC", "trodelvy": "ADC",
+        "trastuzumab deruxtecan": "ADC", "deruxtecan": "ADC", "enhertu": "ADC",
+        "disitamab vedotin": "ADC", "disitamab": "ADC",
 
-    # ADC patterns
-    adc_patterns = ["vedotin", "deruxtecan", "govitecan", "emtansine", "monomethyl"]
-    adc_drugs = ["padcev", "enfortumab", "trodelvy", "sacituzumab", "enhertu", "trastuzumab deruxtecan"]
+        # FGFR Inhibitors - bladder cancer specific
+        "erdafitinib": "FGFR", "balversa": "FGFR",
+        "pemigatinib": "FGFR", "pemazyre": "FGFR",
 
-    # FGFR patterns
-    fgfr_patterns = ["fgfr", "fibroblast"]
-    fgfr_drugs = ["balversa", "erdafitinib", "pemazyre", "pemigatinib"]
+        # Targeted Therapies - renal cancer
+        "cabozantinib": "Targeted", "cabometyx": "Targeted",
+        "axitinib": "Targeted", "inlyta": "Targeted",
+        "sunitinib": "Targeted", "sutent": "Targeted",
+        "pazopanib": "Targeted", "votrient": "Targeted",
+        "sorafenib": "Targeted", "nexavar": "Targeted",
+        "lenvatinib": "Targeted", "lenvima": "Targeted",
+        "everolimus": "Targeted", "afinitor": "Targeted",
+        "temsirolimus": "Targeted", "torisel": "Targeted",
 
-    # Return all matching patterns (support multiple MOAs)
-    categories = []
+        # Combination patterns
+        "ev+p": "ADC+ICI", "evp": "ADC+ICI", "ev + p": "ADC+ICI",
+        "ev-302": "ADC+ICI", "padcev pembrolizumab": "ADC+ICI"
+    }
 
-    if any(pattern in name_lower for pattern in ici_patterns) or any(drug in name_lower for drug in ici_drugs):
-        categories.append("ICI")
-    if any(pattern in name_lower for pattern in adc_patterns) or any(drug in name_lower for drug in adc_drugs):
-        categories.append("ADC")
-    if any(pattern in name_lower for pattern in fgfr_patterns) or any(drug in name_lower for drug in fgfr_drugs):
-        categories.append("FGFR")
+    # Check for exact matches first
+    for drug_name, moa in gu_drug_classifications.items():
+        if drug_name in name_lower:
+            return moa
 
-    # Return single category or combination
-    if len(categories) == 1:
-        return categories[0]
-    elif len(categories) > 1:
-        return "+".join(sorted(categories))  # e.g., "ADC+ICI"
+    # Fallback: basic suffix patterns for unlisted drugs (conservative)
+    if any(suffix in name_lower for suffix in ["vedotin", "govitecan", "deruxtecan"]):
+        return "ADC"
+    elif "erdafitinib" in name_lower or "fgfr" in name_lower:
+        return "FGFR"
 
-    return None  # Unknown classification
+    return None  # Skip unknown drugs (safe approach)
 
 def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -930,8 +941,9 @@ def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
     # Build comprehensive drug mapping from CSV + manual classifications
     drug_moa_map = build_comprehensive_drug_map()
 
-    # Regex patterns to extract drug names from context
+    # Regex patterns to extract drug names from context AND conventional naming
     drug_extraction_patterns = [
+        # Contextual extraction patterns
         r"(?:trial of|study of)\s+([a-zA-Z0-9\s\-+]+?)(?:\s+(?:as|in|for|with)|$)",
         r"(?:treatment with|therapy with)\s+([a-zA-Z0-9\s\-+]+?)(?:\s+(?:as|in|for|plus)|$)",
         r"([a-zA-Z0-9\-+]+)\s+therapy",
@@ -940,7 +952,19 @@ def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
         r"([a-zA-Z0-9\-+]+)-based",
         r"([a-zA-Z0-9\-+]+)\s+\+\s+([a-zA-Z0-9\-+]+)",  # combination patterns
         r"([a-zA-Z0-9\-+]+)\s+monotherapy",
-        r"([a-zA-Z0-9\-+]+)\s+maintenance"
+        r"([a-zA-Z0-9\-+]+)\s+maintenance",
+
+        # Conventional drug naming patterns (catch drugs by suffix even without context)
+        r"\b([a-z]+mab)\b",           # antibodies: pembrolizumab, avelumab, nivolumab
+        r"\b([a-z]+lizumab)\b",       # antibodies: atezolizumab, durvalumab
+        r"\b([a-z]+lumab)\b",         # antibodies: ipilimumab
+        r"\b([a-z]+limab)\b",         # antibodies: cemiplimab
+        r"\b([a-z]+tinib)\b",         # kinase inhibitors: erdafitinib, sunitinib
+        r"\b([a-z]+nib)\b",           # kinase inhibitors: imatinib, dasatinib
+        r"\b([a-z]+cyclib)\b",        # CDK inhibitors: palbociclib, ribociclib
+        r"\b([a-z]+vedotin)\b",       # ADCs: enfortumab vedotin
+        r"\b([a-z]+govitecan)\b",     # ADCs: sacituzumab govitecan
+        r"\b([a-z]+deruxtecan)\b"     # ADCs: trastuzumab deruxtecan
     ]
 
     # Biomarker patterns (non-drug)
@@ -962,7 +986,12 @@ def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
 
         found_categories = set()
 
-        # Step 1: Extract and classify drug names using regex patterns
+        # Step 1A: Direct drug name matching (simple and reliable)
+        for drug_name, moa_category in drug_moa_map.items():
+            if drug_name in title_l:
+                found_categories.add(moa_category)
+
+        # Step 1B: Extract and classify drug names using regex patterns (additional detection)
         for pattern in drug_extraction_patterns:
             matches = re.findall(pattern, title_l, re.IGNORECASE)
             for match in matches:
