@@ -1641,6 +1641,10 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
 
                     # Stream the analysis token by token
                     print(f"🔧 Prompt length: {len(individual_prompt)} chars")
+
+                    # Send heartbeat before starting OpenAI call (critical for 30s timeout)
+                    yield ": heartbeat\n\n"
+
                     stream = client.chat.completions.create(
                         model="gpt-5-mini",
                         reasoning_effort="minimal",
@@ -1656,8 +1660,15 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
                     profile_content = ""
                     token_count = 0
                     last_token_time = time.time()
+                    last_heartbeat = time.time()
 
                     for chunk in stream:
+                        # Send heartbeat every 10 seconds to prevent timeout
+                        current_time = time.time()
+                        if current_time - last_heartbeat > 10:
+                            yield ": heartbeat\n\n"
+                            last_heartbeat = current_time
+
                         if chunk.choices[0].delta.content is not None:
                             token = chunk.choices[0].delta.content
                             profile_content += token
@@ -2724,7 +2735,7 @@ def stream_kol_analysis():
             yield f"data: Error: {str(e)}\n\n"
 
     return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Cache-Control'
@@ -2796,6 +2807,9 @@ Provide a comprehensive analysis covering:
 
 Deliver insights in paragraph form, 150-200 words."""
 
+            # Send heartbeat before OpenAI call (critical for 30s timeout)
+            yield sse_event("status", {"message": "🔄 Connecting to AI..."})
+
             # Stream the AI response
             stream = client.chat.completions.create(
                 model="gpt-5-mini",
@@ -2810,7 +2824,15 @@ Deliver insights in paragraph form, 150-200 words."""
             )
 
             profile_content = ""
+            last_heartbeat = time.time()
+
             for chunk in stream:
+                # Send heartbeat every 10 seconds to prevent timeout
+                current_time = time.time()
+                if current_time - last_heartbeat > 10:
+                    yield ": heartbeat\n\n"
+                    last_heartbeat = current_time
+
                 if chunk.choices[0].delta.content:
                     token = chunk.choices[0].delta.content
                     profile_content += token
@@ -2827,7 +2849,7 @@ Deliver insights in paragraph form, 150-200 words."""
             yield sse_event("error", {"message": f"Error analyzing {author_name}: {str(e)}"})
 
     return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Cache-Control'
@@ -2906,7 +2928,7 @@ def stream_competitor_analysis():
             yield f"data: Error: {str(e)}\n\n"
 
     return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Cache-Control'
@@ -2941,7 +2963,7 @@ def stream_institution_analysis():
             yield f"data: Error: {str(e)}\n\n"
 
     return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Cache-Control'
@@ -2976,7 +2998,7 @@ def stream_insights_analysis():
             yield f"data: Error: {str(e)}\n\n"
 
     return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Cache-Control'
@@ -3011,7 +3033,7 @@ def stream_strategy_analysis():
             yield f"data: Error: {str(e)}\n\n"
 
     return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Cache-Control'
@@ -3305,7 +3327,7 @@ Write a natural, conversational response that directly answers the user's questi
             yield sse_event("error", {"message": f"Error generating response: {str(e)}"})
 
     return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Cache-Control'
