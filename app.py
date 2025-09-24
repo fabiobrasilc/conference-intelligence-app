@@ -9,8 +9,6 @@ from pathlib import Path
 import re
 import json
 from typing import List, Tuple, Dict, Any, Optional
-from queue import Queue, Empty
-from threading import Thread
 from collections import Counter
 from datetime import datetime
 from dataclasses import dataclass
@@ -48,7 +46,7 @@ if OPENAI_API_KEY:
 
     client = OpenAI(
         api_key=OPENAI_API_KEY,
-        timeout=180.0,  # Allow longer completions before the client aborts
+        timeout=60.0,   # More realistic timeout per request
         max_retries=2,
         http_client=custom_http_client
     )
@@ -62,8 +60,6 @@ csv_hash_global = None
 df_global = None
 bladder_keywords_global = None
 renal_keywords_global = None
-
-STREAM_HEARTBEAT_SECONDS = 5.0
 
 # =========================
 # Global Helpers
@@ -1471,31 +1467,31 @@ def extract_author_name_from_query(query: str) -> str:
 def yield_hybrid_stream(prompt: str, section: str):
     """Helper function to yield hybrid streaming events"""
     try:
-        current_content = ""
-        last_boundary_pos = 0
-
-        for event_type, payload in stream_chat_completion_events(
+        stream = client.chat.completions.create(
             model="gpt-5-mini",
             reasoning_effort="minimal",
             verbosity="low",
             messages=[{"role": "user", "content": prompt}],
             max_completion_tokens=2000,
-        ):
-            if event_type == "token":
-                token = payload
+            stream=True
+        )
+
+        current_content = ""
+        last_boundary_pos = 0
+
+        for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                token = chunk.choices[0].delta.content
                 current_content += token
 
+                # Stream the token immediately
                 yield sse_event("token", {"text": token, "section": section})
 
+                # Check for NEW paragraph boundaries (double newlines)
                 boundary_pos = current_content.find('\n\n', last_boundary_pos)
                 if boundary_pos != -1:
                     yield sse_event("paragraph_boundary", {"section": section})
                     last_boundary_pos = boundary_pos + 2
-            else:
-                yield sse_event("ping", {
-                    "timestamp": int(time.time()),
-                    "section": section
-                })
 
         # Send completion signal
         yield sse_event("done", {})
@@ -1505,52 +1501,6 @@ def yield_hybrid_stream(prompt: str, section: str):
         import traceback
         traceback.print_exc()
         yield sse_event("error", {"message": f"Streaming error: {str(e)}"})
-
-def stream_chat_completion_events(*, heartbeat_interval: float = STREAM_HEARTBEAT_SECONDS, **create_kwargs):
-    """
-    Yield ('token', text) or ('ping', None) tuples while streaming an OpenAI chat completion.
-    Sends periodic heartbeat events even if the API has not produced tokens yet.
-    """
-    if client is None:
-        raise RuntimeError("OpenAI client not initialized")
-
-    create_kwargs = dict(create_kwargs)
-    create_kwargs["stream"] = True
-
-    queue: Queue[Tuple[str, Any]] = Queue()
-
-    def run_stream():
-        try:
-            stream = client.chat.completions.create(**create_kwargs)
-            for chunk in stream:
-                delta = chunk.choices[0].delta
-                if delta and delta.content:
-                    queue.put(("token", delta.content))
-        except Exception as exc:
-            queue.put(("error", exc))
-        finally:
-            queue.put(("done", None))
-
-    worker = Thread(target=run_stream, daemon=True)
-    worker.start()
-
-    try:
-        while True:
-            try:
-                item_type, payload = queue.get(timeout=heartbeat_interval)
-            except Empty:
-                yield ("ping", None)
-                continue
-
-            if item_type == "token":
-                yield ("token", payload)
-            elif item_type == "error":
-                raise payload
-            elif item_type == "done":
-                break
-    finally:
-        worker.join(timeout=0)
-
 
 def generate_kol_analysis_streaming(
     filtered_df: pd.DataFrame,
@@ -1610,10 +1560,8 @@ Write ONE comprehensive paragraph (4-6 sentences) that covers:
 
 Make it flow naturally as a single, well-structured paragraph without internal breaks."""
 
-        # Stream executive summary tokens in real-time with heartbeats
-        current_content = ""
-        last_boundary_pos = 0
-        for event_type, payload in stream_chat_completion_events(
+        # Stream executive summary tokens in real-time
+        summary_stream = client.chat.completions.create(
             model="gpt-5-mini",
             reasoning_effort="minimal",
             verbosity="low",
@@ -1621,10 +1569,16 @@ Make it flow naturally as a single, well-structured paragraph without internal b
                 {"role": "system", "content": "You are a medical affairs analyst. Provide comprehensive analysis immediately without delay. Start your response right away."},
                 {"role": "user", "content": executive_summary_prompt}
             ],
-            max_completion_tokens=500,
-        ):
-            if event_type == "token":
-                token = payload
+            max_completion_tokens=500,  # Increased for executive summary
+            stream=True
+        )
+
+        # Stream tokens and detect paragraph boundaries
+        current_content = ""
+        last_boundary_pos = 0
+        for chunk in summary_stream:
+            if chunk.choices[0].delta.content:
+                token = chunk.choices[0].delta.content
                 current_content += token
 
                 # Stream the token immediately
@@ -1633,14 +1587,9 @@ Make it flow naturally as a single, well-structured paragraph without internal b
                 # Check for NEW paragraph boundaries (double newlines) after last detected position
                 boundary_pos = current_content.find('\n\n', last_boundary_pos)
                 if boundary_pos != -1:
+                    # Send paragraph boundary signal only once
                     yield sse_event("paragraph_boundary", {"section": "executive_summary"})
-                    last_boundary_pos = boundary_pos + 2
-            else:
-                # Emit heartbeat while waiting on OpenAI
-                yield sse_event("ping", {
-                    "timestamp": int(time.time()),
-                    "section": "executive_summary"
-                })
+                    last_boundary_pos = boundary_pos + 2  # Move past the boundary
 
         # Final boundary for executive summary completion
         yield sse_event("section_boundary", {"section": "executive_summary"})
@@ -1692,9 +1641,7 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
 
                     # Stream the analysis token by token
                     print(f"🔧 Prompt length: {len(individual_prompt)} chars")
-                    profile_content = ""
-                    token_count = 0
-                    for event_type, payload in stream_chat_completion_events(
+                    stream = client.chat.completions.create(
                         model="gpt-5-mini",
                         reasoning_effort="minimal",
                         verbosity="low",
@@ -1702,12 +1649,20 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
                             {"role": "system", "content": "You are a medical affairs analyst. Provide comprehensive analysis immediately without delay. Start your response right away."},
                             {"role": "user", "content": individual_prompt}
                         ],
-                        max_completion_tokens=600,  # Increased for more complete responses
-                    ):
-                        if event_type == "token":
-                            token = payload
+                                    max_completion_tokens=600,  # Increased for more complete responses
+                        stream=True
+                    )
+
+                    profile_content = ""
+                    token_count = 0
+                    last_token_time = time.time()
+
+                    for chunk in stream:
+                        if chunk.choices[0].delta.content is not None:
+                            token = chunk.choices[0].delta.content
                             profile_content += token
                             token_count += 1
+                            last_token_time = time.time()
 
                             # Stream each token with author context
                             yield sse_event("token", {
@@ -1715,12 +1670,11 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
                                 "section": "kol_profile",
                                 "author": author
                             })
-                        else:
-                            yield sse_event("ping", {
-                                "timestamp": int(time.time()),
-                                "section": "kol_profile",
-                                "author": author
-                            })
+
+                        # Send keep-alive ping every 5 seconds during streaming
+                        elif time.time() - last_token_time > 5:
+                            yield sse_event("ping", {"timestamp": int(time.time())})
+                            last_token_time = time.time()
 
                     print(f"🔧 Completed streaming for {author}: {token_count} tokens, {len(profile_content)} chars")
 
@@ -1814,23 +1768,22 @@ Therapeutic Area Filter: {ta_filter}
 Write a comprehensive, natural intelligence report based on this data."""
 
         # Stream the analysis in real-time
-        for event_type, payload in stream_chat_completion_events(
+        stream = client.chat.completions.create(
             model="gpt-5-mini",
             reasoning_effort="minimal",
             verbosity="low",
             messages=[{"role": "user", "content": competitor_prompt}],
             max_completion_tokens=3000,
-        ):
-            if event_type == "token":
-                token = payload
+            stream=True
+        )
 
+        for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                token = chunk.choices[0].delta.content
+
+                # Stream each token
                 yield sse_event("token", {
                     "text": token,
-                    "section": "competitor_analysis"
-                })
-            else:
-                yield sse_event("ping", {
-                    "timestamp": int(time.time()),
                     "section": "competitor_analysis"
                 })
 
@@ -1886,23 +1839,22 @@ Therapeutic Area Filter: {ta_filter}
 Write a comprehensive, natural intelligence report based on this data."""
 
         # Stream the analysis in real-time
-        for event_type, payload in stream_chat_completion_events(
+        stream = client.chat.completions.create(
             model="gpt-5-mini",
             reasoning_effort="minimal",
             verbosity="low",
             messages=[{"role": "user", "content": institution_prompt}],
             max_completion_tokens=3000,
-        ):
-            if event_type == "token":
-                token = payload
+            stream=True
+        )
 
+        for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                token = chunk.choices[0].delta.content
+
+                # Stream each token
                 yield sse_event("token", {
                     "text": token,
-                    "section": "institution_analysis"
-                })
-            else:
-                yield sse_event("ping", {
-                    "timestamp": int(time.time()),
                     "section": "institution_analysis"
                 })
 
@@ -1958,23 +1910,22 @@ Therapeutic Area Filter: {ta_filter}
 Write a comprehensive, natural intelligence report based on this data."""
 
         # Stream the analysis in real-time
-        for event_type, payload in stream_chat_completion_events(
+        stream = client.chat.completions.create(
             model="gpt-5-mini",
             reasoning_effort="minimal",
             verbosity="low",
             messages=[{"role": "user", "content": insights_prompt}],
             max_completion_tokens=3000,
-        ):
-            if event_type == "token":
-                token = payload
+            stream=True
+        )
 
+        for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                token = chunk.choices[0].delta.content
+
+                # Stream each token
                 yield sse_event("token", {
                     "text": token,
-                    "section": "insights_analysis"
-                })
-            else:
-                yield sse_event("ping", {
-                    "timestamp": int(time.time()),
                     "section": "insights_analysis"
                 })
 
@@ -2020,23 +1971,22 @@ Therapeutic Area Filter: {ta_filter}
 Write a comprehensive, natural intelligence report based on this data."""
 
         # Stream the analysis in real-time
-        for event_type, payload in stream_chat_completion_events(
+        stream = client.chat.completions.create(
             model="gpt-5-mini",
             reasoning_effort="minimal",
             verbosity="low",
             messages=[{"role": "user", "content": strategy_prompt}],
             max_completion_tokens=3000,
-        ):
-            if event_type == "token":
-                token = payload
+            stream=True
+        )
 
+        for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                token = chunk.choices[0].delta.content
+
+                # Stream each token
                 yield sse_event("token", {
                     "text": token,
-                    "section": "strategy_analysis"
-                })
-            else:
-                yield sse_event("ping", {
-                    "timestamp": int(time.time()),
                     "section": "strategy_analysis"
                 })
 
@@ -2846,8 +2796,8 @@ Provide a comprehensive analysis covering:
 
 Deliver insights in paragraph form, 150-200 words."""
 
-            profile_content = ""
-            for event_type, payload in stream_chat_completion_events(
+            # Stream the AI response
+            stream = client.chat.completions.create(
                 model="gpt-5-mini",
                 reasoning_effort="minimal",
                 verbosity="low",
@@ -2856,13 +2806,15 @@ Deliver insights in paragraph form, 150-200 words."""
                     {"role": "user", "content": individual_prompt}
                 ],
                 max_completion_tokens=300,
-            ):
-                if event_type == "token":
-                    token = payload
+                stream=True
+            )
+
+            profile_content = ""
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    token = chunk.choices[0].delta.content
                     profile_content += token
                     yield sse_event("token", {"token": token})
-                else:
-                    yield sse_event("ping", {"timestamp": int(time.time())})
 
             # Send completion event
             yield sse_event("kol_complete", {
@@ -2898,7 +2850,7 @@ def get_kol_list():
         filtered_df = df_global.copy()
 
     # Get top authors table
-    top_authors_table = build_top_authors_table(filtered_df)
+    top_authors_table = get_top_authors(df_sig(filtered_df), filtered_df, 20)
     top_15_authors = top_authors_table.head(15)['Authors'].tolist()
 
     # Return list with table data
@@ -3315,18 +3267,22 @@ Based on the user's query and the relevant conference data above, provide a comp
 Write a natural, conversational response that directly answers the user's question."""
 
             # Enhanced streaming with paragraph boundary detection
-            accumulated_content = ""
-            last_boundary_pos = 0
-
-            for event_type, payload in stream_chat_completion_events(
+            stream = client.chat.completions.create(
                 model="gpt-5-mini",
                 reasoning_effort="minimal",
                 verbosity="low",
                 messages=[{"role": "user", "content": streaming_prompt}],
-                max_completion_tokens=2000,
-            ):
-                if event_type == "token":
-                    token = payload
+                    max_completion_tokens=2000,
+                stream=True
+            )
+
+            # Track content for paragraph detection
+            accumulated_content = ""
+            last_boundary_pos = 0
+
+            for chunk in stream:
+                if chunk.choices[0].delta.content is not None:
+                    token = chunk.choices[0].delta.content
                     accumulated_content += token
 
                     # Send the token (legacy format for compatibility)
@@ -3335,10 +3291,9 @@ Write a natural, conversational response that directly answers the user's questi
                     # Check for NEW paragraph boundaries
                     boundary_pos = accumulated_content.find('\n\n', last_boundary_pos)
                     if boundary_pos != -1:
+                        # Send a special boundary signal
                         yield f"data: |||PARAGRAPH_BREAK|||\n\n"
                         last_boundary_pos = boundary_pos + 2
-                else:
-                    yield f": heartbeat {int(time.time())}\n\n"
 
             # Send completion signal
             yield "data: [DONE]\n\n"
