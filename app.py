@@ -810,26 +810,191 @@ def create_emerging_threats_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame(rows).drop_duplicates(subset=["Abstract #", "Threat Type"])
     return pd.DataFrame(columns=["Threat Type","Abstract #","Poster #","Title"])
 
+def build_comprehensive_drug_map():
+    """
+    Build comprehensive drug-to-MOA mapping from Drug_Company_names.csv plus manual classifications
+    """
+    import os
+    import re
+
+    drug_moa_map = {}
+
+    # Load drug data from CSV if available
+    csv_path = os.path.join(os.path.dirname(__file__), "Drug_Company_names.csv")
+    if os.path.exists(csv_path):
+        try:
+            with open(csv_path, 'r', encoding='utf-8-sig') as f:
+                lines = f.readlines()[1:]  # Skip header
+
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+
+                # Parse format: "Commercial Name (generic_name) / Company"
+                match = re.match(r'([^(]+)\s*\(([^)]+)\)\s*/\s*(.+)', line)
+                if match:
+                    commercial_name = match.group(1).strip().lower()
+                    generic_name = match.group(2).strip().lower()
+                    company = match.group(3).strip()
+
+                    # Classify drugs based on known patterns
+                    moa_category = classify_drug_by_name(commercial_name, generic_name)
+
+                    if moa_category:
+                        # Add both commercial and generic names
+                        drug_moa_map[commercial_name] = moa_category
+                        drug_moa_map[generic_name] = moa_category
+
+                        # Handle complex generic names (remove suffixes)
+                        clean_generic = re.sub(r'[-\s](ejfv|rwlc|hziy|dlwr|tftv|hrii|dlle|vmjw|tebn|wtpg|jsgr|nxki|tpzi|actl|gxly|irfc|cxix)$', '', generic_name)
+                        if clean_generic != generic_name:
+                            drug_moa_map[clean_generic] = moa_category
+
+        except Exception as e:
+            print(f"Warning: Could not load Drug_Company_names.csv: {e}")
+
+    # Add manual high-priority classifications and combinations
+    manual_additions = {
+        # Combination shorthand
+        "ev+p": "ADC+ICI", "evp": "ADC+ICI", "ev + p": "ADC+ICI",
+        "ev-302": "ADC+ICI", "ev 302": "ADC+ICI", "ev+pembrolizumab": "ADC+ICI",
+
+        # Common abbreviations
+        "anti-pd1": "ICI", "anti-pd-1": "ICI", "anti-pdl1": "ICI", "anti-pd-l1": "ICI",
+        "checkpoint inhibitor": "ICI", "immune checkpoint": "ICI",
+
+        # ADC patterns
+        "antibody-drug conjugate": "ADC", "adc": "ADC", "conjugate": "ADC",
+
+        # FGFR patterns
+        "fgfr inhibitor": "FGFR", "fibroblast growth factor": "FGFR"
+    }
+
+    drug_moa_map.update(manual_additions)
+    return drug_moa_map
+
+def classify_drug_by_name(commercial_name: str, generic_name: str) -> str:
+    """
+    Classify drugs into MOA categories based on name patterns and known classifications
+    """
+    name_lower = f"{commercial_name} {generic_name}".lower()
+
+    # ICI patterns (most comprehensive)
+    ici_patterns = [
+        "mab", "lizumab", "lumab", "limab", "zumab",  # antibody suffixes
+        "pd-1", "pd1", "pdl1", "pd-l1", "ctla-4", "ctla4"  # target patterns
+    ]
+
+    # Known ICI drug names (from training data + CSV analysis)
+    ici_drugs = [
+        "keytruda", "pembrolizumab", "opdivo", "nivolumab", "tecentriq", "atezolizumab",
+        "imfinzi", "durvalumab", "bavencio", "avelumab", "libtayo", "cemiplimab",
+        "jemperli", "dostarlimab", "yervoy", "ipilimumab", "tremelimumab", "retifanlimab"
+    ]
+
+    # ADC patterns
+    adc_patterns = ["vedotin", "deruxtecan", "govitecan", "emtansine", "monomethyl"]
+    adc_drugs = ["padcev", "enfortumab", "trodelvy", "sacituzumab", "enhertu", "trastuzumab deruxtecan"]
+
+    # FGFR patterns
+    fgfr_patterns = ["fgfr", "fibroblast"]
+    fgfr_drugs = ["balversa", "erdafitinib", "pemazyre", "pemigatinib"]
+
+    # Check patterns
+    if any(pattern in name_lower for pattern in ici_patterns) or any(drug in name_lower for drug in ici_drugs):
+        return "ICI"
+    elif any(pattern in name_lower for pattern in adc_patterns) or any(drug in name_lower for drug in adc_drugs):
+        return "ADC"
+    elif any(pattern in name_lower for pattern in fgfr_patterns) or any(drug in name_lower for drug in fgfr_drugs):
+        return "FGFR"
+
+    return None  # Unknown classification
+
 def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Enhanced biomarker/MOA classification using comprehensive drug database + regex extraction
+    """
+    import re
+
     dfu = filtered_df.drop_duplicates(subset=["Abstract #"]).copy()
-    topics = {
-        "ADCs": ["adc", "enfortumab", "sacituzumab", "deruxtecan", "nectin", "trop-2", "trop2"],
-        "ICIs": ["avelumab", "pembrolizumab", "nivolumab", "atezolizumab", "durvalumab", "checkpoint"],
-        "FGFR": ["fgfr", "erdafitinib"],
-        "HER2": ["her2"],
-        "TMB": ["tmb"],
-        "ctDNA": ["ctdna"],
-        "utDNA": ["utdna"],
+
+    # Build comprehensive drug mapping from CSV + manual classifications
+    drug_moa_map = build_comprehensive_drug_map()
+
+    # Regex patterns to extract drug names from context
+    drug_extraction_patterns = [
+        r"(?:trial of|study of)\s+([a-zA-Z0-9\s\-+]+?)(?:\s+(?:as|in|for|with)|$)",
+        r"(?:treatment with|therapy with)\s+([a-zA-Z0-9\s\-+]+?)(?:\s+(?:as|in|for|plus)|$)",
+        r"([a-zA-Z0-9\-+]+)\s+therapy",
+        r"([a-zA-Z0-9\-+]+)\s+treatment",
+        r"([a-zA-Z0-9\-+]+)\s+plus",
+        r"([a-zA-Z0-9\-+]+)-based",
+        r"([a-zA-Z0-9\-+]+)\s+\+\s+([a-zA-Z0-9\-+]+)",  # combination patterns
+        r"([a-zA-Z0-9\-+]+)\s+monotherapy",
+        r"([a-zA-Z0-9\-+]+)\s+maintenance"
+    ]
+
+    # Biomarker patterns (non-drug)
+    biomarker_keywords = {
         "PD-L1": ["pd-l1", "pdl1", "pd l1"],
         "FGFR3": ["fgfr3"],
-        "DDR": ["dna damage response", "atr", "atm", "parp"]
+        "HER2": ["her2", "her-2"],
+        "TMB": ["tmb", "tumor mutational burden"],
+        "ctDNA": ["ctdna", "circulating tumor dna"],
+        "utDNA": ["utdna", "urinary tumor dna"],
+        "DDR": ["dna damage response", "homologous recombination", "brca"]
     }
+
     rows = []
+
     for _, r in dfu.iterrows():
-        title_l = str(r["Title"]).lower()
-        tags = [label for label, keys in topics.items() if any(k in title_l for k in keys)]
-        for tag in tags:
-            rows.append({"Biomarker / MOA": tag, "Abstract #": r["Abstract #"], "Title": r["Title"]})
+        title = str(r["Title"])
+        title_l = title.lower()
+
+        found_categories = set()
+
+        # Step 1: Extract and classify drug names using regex patterns
+        for pattern in drug_extraction_patterns:
+            matches = re.findall(pattern, title_l, re.IGNORECASE)
+            for match in matches:
+                if isinstance(match, tuple):  # combination pattern
+                    for drug_candidate in match:
+                        drug_candidate = drug_candidate.strip()
+                        if drug_candidate in drug_moa_map:
+                            found_categories.add(drug_moa_map[drug_candidate])
+                else:
+                    drug_candidate = match.strip()
+                    if drug_candidate in drug_moa_map:
+                        found_categories.add(drug_moa_map[drug_candidate])
+
+        # Step 2: Check for biomarkers (non-overlapping with drug classifications)
+        for biomarker, keywords in biomarker_keywords.items():
+            if any(keyword in title_l for keyword in keywords):
+                # Only add PD-L1 if we haven't already found ICIs (avoid overlap)
+                if biomarker == "PD-L1" and "ICI" in found_categories:
+                    continue  # Skip PD-L1 if already classified as ICI
+                found_categories.add(biomarker)
+
+        # Step 3: Fallback to broader keyword matching for missed cases
+        if not found_categories:
+            fallback_keywords = {
+                "ICI": ["checkpoint", "immunotherapy", "immune checkpoint"],
+                "ADC": ["antibody-drug conjugate", "conjugate"],
+                "FGFR": ["fgfr inhibitor", "fibroblast growth factor"]
+            }
+            for category, keywords in fallback_keywords.items():
+                if any(keyword in title_l for keyword in keywords):
+                    found_categories.add(category)
+
+        # Add rows for each found category
+        for category in found_categories:
+            rows.append({
+                "Biomarker / MOA": category,
+                "Abstract #": r["Abstract #"],
+                "Title": r["Title"]
+            })
+
     if rows:
         return pd.DataFrame(rows).drop_duplicates(subset=["Biomarker / MOA", "Abstract #"])
     return pd.DataFrame(columns=["Biomarker / MOA", "Abstract #", "Title"])
