@@ -2730,6 +2730,138 @@ def stream_kol_analysis():
         'Access-Control-Allow-Headers': 'Cache-Control'
     })
 
+@app.route('/api/playbook/kol/single', methods=['GET'])
+def stream_single_kol():
+    """
+    Stream analysis for a single KOL. Returns quickly (under 30 seconds).
+    Parameters: ta (therapeutic area), author (KOL name), index (position in list)
+    """
+    if not initialize_app_globals():
+        return jsonify({"error": "Application data could not be loaded"}), 500
+
+    ta_filter = request.args.get('ta', 'All')
+    author_name = request.args.get('author', '')
+    kol_index = request.args.get('index', '0')
+
+    if not author_name:
+        return jsonify({"error": "Author name required"}), 400
+
+    # Filter data based on therapeutic area
+    if ta_filter == "Bladder Cancer":
+        filtered_df = df_global[df_global["ta"] == "bladder"].copy()
+    elif ta_filter == "Renal Cell Carcinoma":
+        filtered_df = df_global[df_global["ta"] == "renal"].copy()
+    else:
+        filtered_df = df_global.copy()
+
+    def generate():
+        try:
+            # Send immediate heartbeat
+            yield sse_event("status", {"message": f"⏳ Analyzing {author_name}..."})
+
+            # Get author's publications
+            author_data = filtered_df[filtered_df['Authors'].str.contains(author_name, case=False, na=False)]
+
+            if author_data.empty:
+                yield sse_event("kol_complete", {
+                    "author": author_name,
+                    "index": kol_index,
+                    "content": f"No publications found for {author_name} in {ta_filter}."
+                })
+                return
+
+            # Build analysis prompt
+            abstracts_list = []
+            for _, row in author_data.iterrows():
+                abstract_entry = f"• {row['Title']}"
+                if pd.notna(row['Institutions']):
+                    institutions = row['Institutions'].split(';')[0]  # First institution
+                    abstract_entry += f" ({institutions})"
+                abstracts_list.append(abstract_entry)
+
+            abstracts_text = "\n".join(abstracts_list[:10])  # Limit to 10 abstracts
+
+            individual_prompt = f"""Analyze this KOL's research profile at ASCO GU 2025:
+
+**KOL**: {author_name}
+**Therapeutic Area**: {ta_filter}
+**Publications** ({len(author_data)}):
+{abstracts_text}
+
+Provide a comprehensive analysis covering:
+1. **Research Focus**: Primary areas of investigation
+2. **Clinical Impact**: Significance of their work
+3. **Collaboration Patterns**: Key institutional partnerships
+4. **EMD Serono Relevance**: Potential for avelumab-related collaborations
+
+Deliver insights in paragraph form, 150-200 words."""
+
+            # Stream the AI response
+            stream = client.chat.completions.create(
+                model="gpt-5-mini",
+                reasoning_effort="minimal",
+                verbosity="low",
+                messages=[
+                    {"role": "system", "content": "You are a medical affairs analyst. Provide strategic insights immediately without delay."},
+                    {"role": "user", "content": individual_prompt}
+                ],
+                max_completion_tokens=300,
+                stream=True
+            )
+
+            profile_content = ""
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    token = chunk.choices[0].delta.content
+                    profile_content += token
+                    yield sse_event("token", {"token": token})
+
+            # Send completion event
+            yield sse_event("kol_complete", {
+                "author": author_name,
+                "index": kol_index,
+                "content": profile_content
+            })
+
+        except Exception as e:
+            yield sse_event("error", {"message": f"Error analyzing {author_name}: {str(e)}"})
+
+    return Response(generate(), mimetype='text/event-stream', headers={
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control'
+    })
+
+@app.route('/api/playbook/kol/list', methods=['GET'])
+def get_kol_list():
+    """Get the list of top 15 KOLs for progressive loading"""
+    if not initialize_app_globals():
+        return jsonify({"error": "Application data could not be loaded"}), 500
+
+    ta_filter = request.args.get('ta', 'All')
+
+    # Filter data based on therapeutic area
+    if ta_filter == "Bladder Cancer":
+        filtered_df = df_global[df_global["ta"] == "bladder"].copy()
+    elif ta_filter == "Renal Cell Carcinoma":
+        filtered_df = df_global[df_global["ta"] == "renal"].copy()
+    else:
+        filtered_df = df_global.copy()
+
+    # Get top authors table
+    top_authors_table = build_top_authors_table(filtered_df)
+    top_15_authors = top_authors_table.head(15)['Authors'].tolist()
+
+    # Return list with table data
+    authors_table_data = top_authors_table.head(15).to_dict('records')
+
+    return jsonify({
+        "authors": top_15_authors,
+        "table_data": authors_table_data,
+        "total_count": len(top_15_authors)
+    })
+
 @app.route('/api/playbook/competitor/stream', methods=['GET'])
 def stream_competitor_analysis():
     """

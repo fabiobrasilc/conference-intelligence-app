@@ -1,1 +1,1 @@
-web: gunicorn app:app --bind 0.0.0.0:$PORT -k uvicorn.workers.UvicornWorker --workers 2 --threads 4 --timeout 180 --graceful-timeout 180 --keep-alive 65 --max-requests 1000 --max-requests-jitter 100 --worker-tmp-dir /dev/shm
+web: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --worker-class sync --timeout 90 --graceful-timeout 90 --keep-alive 30 --max-requests 100 --max-requests-jitter 10
