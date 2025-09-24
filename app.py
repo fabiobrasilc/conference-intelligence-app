@@ -938,13 +938,13 @@ def extract_phase_and_setting(title_lower: str) -> str:
 
     phase_info = []
 
-    # Phase detection patterns
+    # Phase detection patterns (order matters - check combined phases first!)
     phase_patterns = {
-        "Phase I": ["phase i", "phase 1", "phase one", "first-in-human", "dose escalation", "dose finding"],
-        "Phase II": ["phase ii", "phase 2", "phase two"],
+        "Phase I/II": ["phase i/ii", "phase 1/2", "phase i-ii", "phase i / ii"],
+        "Phase II/III": ["phase ii/iii", "phase 2/3", "phase ii-iii", "phase ii / iii"],
         "Phase III": ["phase iii", "phase 3", "phase three", "randomized controlled", "pivotal"],
-        "Phase I/II": ["phase i/ii", "phase 1/2", "phase i-ii"],
-        "Phase II/III": ["phase ii/iii", "phase 2/3", "phase ii-iii"]
+        "Phase II": ["phase ii", "phase 2", "phase two"],
+        "Phase I": ["phase i", "phase 1", "phase one", "first-in-human", "dose escalation", "dose finding"]
     }
 
     # Therapy line patterns
@@ -981,8 +981,8 @@ def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
 
     dfu = filtered_df.drop_duplicates(subset=["Abstract #"]).copy()
 
-    # Build comprehensive drug mapping from CSV + manual classifications
-    drug_moa_map = build_comprehensive_drug_map()
+    # Use automatic pattern-based drug detection instead of hardcoded lists
+    drug_moa_map = {}  # Start fresh with pattern-based detection only
 
     # Regex patterns to extract drug names from context AND conventional naming
     drug_extraction_patterns = [
@@ -1029,24 +1029,80 @@ def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
 
         found_categories = set()
 
-        # Step 1A: Direct drug name matching (simple and reliable)
-        for drug_name, moa_category in drug_moa_map.items():
-            if drug_name in title_l:
-                found_categories.add(moa_category)
+        # Step 1: Pattern-based drug detection (automatic, scalable)
+        import re
 
-        # Step 1B: Extract and classify drug names using regex patterns (additional detection)
-        for pattern in drug_extraction_patterns:
-            matches = re.findall(pattern, title_l, re.IGNORECASE)
-            for match in matches:
-                if isinstance(match, tuple):  # combination pattern
-                    for drug_candidate in match:
-                        drug_candidate = drug_candidate.strip()
-                        if drug_candidate in drug_moa_map:
-                            found_categories.add(drug_moa_map[drug_candidate])
-                else:
-                    drug_candidate = match.strip()
-                    if drug_candidate in drug_moa_map:
-                        found_categories.add(drug_moa_map[drug_candidate])
+        # Define drug patterns and their MOA classifications
+        drug_patterns = {
+            # ICIs - Context-based classification (Option B)
+            # Only classify *mab drugs as ICIs if immune checkpoint context is present
+            "ICI": [
+                # Direct checkpoint inhibitor mentions (always ICI)
+                r"\bcheckpoint inhibitor\b",
+                r"\bimmune checkpoint\b",
+                r"\bpd-?1 inhibitor\b",
+                r"\bpd-?l1 inhibitor\b",
+                r"\bctla-?4 inhibitor\b",
+                # Known ICI drugs by name (high confidence)
+                r"\bpembrolizumab\b",
+                r"\bavelumab\b",
+                r"\bnivolumab\b",
+                r"\batezolizumab\b",
+                r"\bdurvalumab\b",
+                r"\bipilimumab\b",
+                r"\bcemiplimab\b",
+                r"\btislelizumab\b"
+            ],
+            # ADCs - Antibody-Drug Conjugates
+            "ADC": [
+                r"\b\w*vedotin\b",      # enfortumab vedotin, disitamab vedotin
+                r"\b\w*govitecan\b",    # sacituzumab govitecan
+                r"\b\w*deruxtecan\b",   # trastuzumab deruxtecan
+                r"\bsg\b",              # sacituzumab govitecan abbreviation
+                r"\brad-sg\b"           # RAD-SG study abbreviation
+            ],
+            # FGFR inhibitors
+            "FGFR": [
+                r"\berdafitinib\b",
+                r"\bpemigatinib\b",
+                r"\binfigratinib\b"
+            ],
+            # Targeted therapies (kinase inhibitors)
+            "Targeted": [
+                r"\b\w*tinib\b",        # erdafitinib, sunitinib, axitinib, cabozantinib
+                r"\b\w*nib\b"           # imatinib, dasatinib (broader pattern)
+            ]
+        }
+
+        # Apply pattern matching
+        for moa_category, patterns in drug_patterns.items():
+            for pattern in patterns:
+                if re.search(pattern, title_l, re.IGNORECASE):
+                    found_categories.add(moa_category)
+
+        # Step 1.5: Context-based ICI classification for *mab drugs
+        # Only classify antibodies (*mab) as ICIs if immune checkpoint markers are present
+        immune_checkpoint_markers = [
+            r"\bpd-?1\b", r"\bpd-?l1\b", r"\bctla-?4\b",
+            r"\bcheckpoint\b", r"\bimmunotherapy\b", r"\bimmune checkpoint\b"
+        ]
+
+        antibody_patterns = [
+            r"\b\w*mab\b",          # General antibodies: pembrolizumab, avelumab, nivolumab
+            r"\b\w*lizumab\b",      # Specific pattern: atezolizumab, durvalumab, tislelizumab
+            r"\b\w*lumab\b",        # Pattern: ipilimumab
+            r"\b\w*limab\b"         # Pattern: cemiplimab
+        ]
+
+        # Check if title contains both antibody pattern AND checkpoint context
+        has_antibody = any(re.search(pattern, title_l, re.IGNORECASE) for pattern in antibody_patterns)
+        has_checkpoint_context = any(re.search(marker, title_l, re.IGNORECASE) for marker in immune_checkpoint_markers)
+
+        if has_antibody and has_checkpoint_context:
+            found_categories.add("ICI")
+        elif has_antibody and not has_checkpoint_context:
+            # Antibody without checkpoint context - classify as general "Targeted" therapy
+            found_categories.add("Targeted")
 
         # Step 2: Check for therapy combinations and additional MOAs
         combination_keywords = {
