@@ -978,12 +978,17 @@ def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
 
         # Step 2: Check for therapy combinations and additional MOAs
         combination_keywords = {
-            "Chemotherapy": ["chemotherapy", "chemo", "platinum", "cisplatin", "carboplatin", "gemcitabine", "paclitaxel", "docetaxel", "pemetrexed"],
+            "Chemotherapy": ["platinum", "cisplatin", "carboplatin", "gemcitabine", "paclitaxel", "docetaxel", "pemetrexed"],
             "Targeted": ["targeted therapy", "tyrosine kinase", "kinase inhibitor", "small molecule"],
             "Radiation": ["radiation", "radiotherapy", "radioimmunotherapy", "chemoradiation"],
             "Hormonal": ["hormone therapy", "androgen deprivation", "adt", "enzalutamide", "abiraterone"]
         }
 
+        # Only add generic "chemotherapy" if no specific drugs were found
+        if not found_categories and any(word in title_l for word in ["chemotherapy", "chemo"]):
+            found_categories.add("Chemotherapy")
+
+        # Add other therapy combinations
         for therapy_type, keywords in combination_keywords.items():
             if any(keyword in title_l for keyword in keywords):
                 found_categories.add(therapy_type)
@@ -1007,10 +1012,14 @@ def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
                 if any(keyword in title_l for keyword in keywords):
                     found_categories.add(category)
 
-        # Add rows for each found category
-        for category in found_categories:
+        # Add single row with comma-separated categories (if any found)
+        if found_categories:
+            # Sort categories for consistent ordering, join with commas
+            sorted_categories = sorted(list(found_categories))
+            combined_moa = ", ".join(sorted_categories)
+
             rows.append({
-                "Biomarker / MOA": category,
+                "Biomarker / MOA": combined_moa,
                 "Abstract #": r["Abstract #"],
                 "Title": r["Title"]
             })
