@@ -17,6 +17,35 @@ import time
 from dotenv import load_dotenv
 import hashlib  # <-- Added (used by file_md5 / df_sig)
 
+# --- Heartbeat wrapper for SSE streaming ---
+def stream_with_heartbeat(inner_gen, interval=10):
+    """
+    Wrap an iterator (SSE token generator) and ensure we emit a ping
+    at least every `interval` seconds so the connection never goes idle.
+    """
+    last = time.monotonic()
+
+    for chunk in inner_gen:
+        yield chunk
+        last = time.monotonic()
+
+        # Non-blocking: while there are long gaps before the next chunk, drip pings
+        now = time.monotonic()
+        if now - last >= interval:
+            yield f": ping {int(now)}\n\n"
+            last = now
+
+    # one last ping for good measure
+    yield f": ping {int(time.monotonic())}\n\n"
+
+SSE_HEADERS = {
+    "Cache-Control": "no-cache, no-transform",
+    "Connection": "keep-alive",
+    "X-Accel-Buffering": "no",       # ignored if not applicable, safe to send
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Cache-Control",
+}
+
 # --- Initialization ---
 load_dotenv()  # Load environment variables from .env file
 
@@ -1641,10 +1670,6 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
 
                     # Stream the analysis token by token
                     print(f"🔧 Prompt length: {len(individual_prompt)} chars")
-
-                    # Send heartbeat before starting OpenAI call (critical for 30s timeout)
-                    yield ": heartbeat\n\n"
-
                     stream = client.chat.completions.create(
                         model="gpt-5-mini",
                         reasoning_effort="minimal",
@@ -1660,15 +1685,8 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
                     profile_content = ""
                     token_count = 0
                     last_token_time = time.time()
-                    last_heartbeat = time.time()
 
                     for chunk in stream:
-                        # Send heartbeat every 10 seconds to prevent timeout
-                        current_time = time.time()
-                        if current_time - last_heartbeat > 10:
-                            yield ": heartbeat\n\n"
-                            last_heartbeat = current_time
-
                         if chunk.choices[0].delta.content is not None:
                             token = chunk.choices[0].delta.content
                             profile_content += token
@@ -2734,12 +2752,7 @@ def stream_kol_analysis():
         except Exception as e:
             yield f"data: Error: {str(e)}\n\n"
 
-    return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache, no-transform',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Cache-Control'
-    })
+    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
 
 @app.route('/api/playbook/kol/single', methods=['GET'])
 def stream_single_kol():
@@ -2807,9 +2820,6 @@ Provide a comprehensive analysis covering:
 
 Deliver insights in paragraph form, 150-200 words."""
 
-            # Send heartbeat before OpenAI call (critical for 30s timeout)
-            yield sse_event("status", {"message": "🔄 Connecting to AI..."})
-
             # Stream the AI response
             stream = client.chat.completions.create(
                 model="gpt-5-mini",
@@ -2824,15 +2834,8 @@ Deliver insights in paragraph form, 150-200 words."""
             )
 
             profile_content = ""
-            last_heartbeat = time.time()
 
             for chunk in stream:
-                # Send heartbeat every 10 seconds to prevent timeout
-                current_time = time.time()
-                if current_time - last_heartbeat > 10:
-                    yield ": heartbeat\n\n"
-                    last_heartbeat = current_time
-
                 if chunk.choices[0].delta.content:
                     token = chunk.choices[0].delta.content
                     profile_content += token
@@ -2848,12 +2851,7 @@ Deliver insights in paragraph form, 150-200 words."""
         except Exception as e:
             yield sse_event("error", {"message": f"Error analyzing {author_name}: {str(e)}"})
 
-    return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache, no-transform',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Cache-Control'
-    })
+    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
 
 @app.route('/api/playbook/kol/list', methods=['GET'])
 def get_kol_list():
@@ -2927,12 +2925,7 @@ def stream_competitor_analysis():
         except Exception as e:
             yield f"data: Error: {str(e)}\n\n"
 
-    return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache, no-transform',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Cache-Control'
-    })
+    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
 
 @app.route('/api/playbook/institution/stream', methods=['GET'])
 def stream_institution_analysis():
@@ -2962,12 +2955,7 @@ def stream_institution_analysis():
         except Exception as e:
             yield f"data: Error: {str(e)}\n\n"
 
-    return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache, no-transform',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Cache-Control'
-    })
+    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
 
 @app.route('/api/playbook/insights/stream', methods=['GET'])
 def stream_insights_analysis():
@@ -2997,12 +2985,7 @@ def stream_insights_analysis():
         except Exception as e:
             yield f"data: Error: {str(e)}\n\n"
 
-    return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache, no-transform',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Cache-Control'
-    })
+    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
 
 @app.route('/api/playbook/strategy/stream', methods=['GET'])
 def stream_strategy_analysis():
@@ -3032,12 +3015,7 @@ def stream_strategy_analysis():
         except Exception as e:
             yield f"data: Error: {str(e)}\n\n"
 
-    return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache, no-transform',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Cache-Control'
-    })
+    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
 
 @app.route('/api/playbook/<playbook_key>', methods=['GET'])
 def run_playbook_api_route(playbook_key):
@@ -3326,12 +3304,7 @@ Write a natural, conversational response that directly answers the user's questi
             traceback.print_exc()
             yield sse_event("error", {"message": f"Error generating response: {str(e)}"})
 
-    return Response(generate(), mimetype='text/event-stream', headers={
-        'Cache-Control': 'no-cache, no-transform',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Cache-Control'
-    })
+    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
 
 @app.route('/api/chat', methods=['POST'])
 def chat_api():
