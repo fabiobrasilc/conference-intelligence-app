@@ -29,13 +29,29 @@ CSV_FILE = Path(__file__).parent / "ASCO GU 2025 Poster Author Affiliations info
 CHROMA_DB_PATH = "./chroma_conference_db"
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-# Configure OpenAI client with robust connection settings for Railway deployment
-client = OpenAI(
-    api_key=OPENAI_API_KEY,
-    timeout=300.0,  # 5-minute timeout for long streaming operations
-    max_retries=3,
-    http_client=None  # Let OpenAI handle connection pooling
-) if OPENAI_API_KEY else None
+
+# Configure OpenAI client with controlled connection pooling for Railway deployment
+if OPENAI_API_KEY:
+    import httpx
+
+    # Create custom httpx client with controlled connection pooling
+    custom_http_client = httpx.Client(
+        timeout=httpx.Timeout(300.0, connect=30.0),  # 5-minute timeout, 30s connect
+        limits=httpx.Limits(
+            max_connections=3,          # Reduced from default 100
+            max_keepalive_connections=1  # Reduced from default 20
+        ),
+        transport=httpx.HTTPTransport(retries=2)
+    )
+
+    client = OpenAI(
+        api_key=OPENAI_API_KEY,
+        timeout=300.0,
+        max_retries=2,  # Reduced from 3
+        http_client=custom_http_client
+    )
+else:
+    client = None
 
 # --- Global variables ---
 chroma_client = None
