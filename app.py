@@ -806,11 +806,13 @@ def create_emerging_threats_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
                 "Threat Type": kw.upper(),
                 "Abstract #": r["Abstract #"],
                 "Poster #": r["Poster #"],
+                "Authors": r["Authors"],
+                "Institutions": r["Institutions"],
                 "Title": r["Title"]
             })
     if rows:
         return pd.DataFrame(rows).drop_duplicates(subset=["Abstract #", "Threat Type"])
-    return pd.DataFrame(columns=["Threat Type","Abstract #","Poster #","Title"])
+    return pd.DataFrame(columns=["Threat Type","Abstract #","Poster #","Authors","Institutions","Title"])
 
 def build_comprehensive_drug_map():
     """
@@ -1155,12 +1157,14 @@ def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
                 "Biomarker / MOA": combined_moa,
                 "Phase/Setting": phase_setting,
                 "Abstract #": r["Abstract #"],
+                "Poster #": r["Poster #"],
+                "Authors": r["Authors"],
                 "Title": r["Title"]
             })
 
     if rows:
         return pd.DataFrame(rows).drop_duplicates(subset=["Biomarker / MOA", "Abstract #"])
-    return pd.DataFrame(columns=["Biomarker / MOA", "Phase/Setting", "Abstract #", "Title"])
+    return pd.DataFrame(columns=["Biomarker / MOA", "Phase/Setting", "Abstract #", "Poster #", "Authors", "Title"])
 
 # Cached-like helpers
 def get_top_authors(filtered_sig: str, filtered_df: pd.DataFrame, n: int = 20):
