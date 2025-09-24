@@ -3109,16 +3109,30 @@ def run_playbook_api_route(playbook_key):
     })
 
 # API Endpoint for chat messages (NEW AI-FIRST ARCHITECTURE)
-@app.route('/api/chat/stream', methods=['GET'])
+@app.route('/api/chat/stream', methods=['POST'])
 def stream_chat_api():
     """
-    Token-by-token streaming endpoint for all chat responses.
+    Token-by-token streaming endpoint for all chat responses with conversation memory.
+    Accepts: {"message": "user question", "ta_filter": "All", "conversation_history": []}
     """
     if not initialize_app_globals():
         return "data: Error: Application data could not be loaded\n\n", 500, {'Content-Type': 'text/event-stream'}
 
-    user_query = request.args.get('message', '').strip()
-    ta_filter = request.args.get('ta_filter', 'All')
+    try:
+        data = request.get_json()
+        if not data:
+            return "data: Error: No JSON data provided\n\n", 400, {'Content-Type': 'text/event-stream'}
+
+        user_query = data.get('message', '').strip()
+        ta_filter = data.get('ta_filter', 'All')
+        conversation_history = data.get('conversation_history', [])  # List of {"role": "user/assistant", "content": "text"}
+
+        # Limit conversation history to last 10 exchanges (20 messages)
+        if len(conversation_history) > 20:
+            conversation_history = conversation_history[-20:]
+
+    except Exception as e:
+        return f"data: Error parsing request: {str(e)}\n\n", 400, {'Content-Type': 'text/event-stream'}
 
     if not user_query:
         return "data: Error: No message provided\n\n", 400, {'Content-Type': 'text/event-stream'}
@@ -3189,9 +3203,19 @@ def stream_chat_api():
                         else:
                             institution_data = "No data found"
 
-                    streaming_prompt = f"""You are an AI medical affairs analyst. Respond to the user's request about institutional activity.
+                    # Build conversation context
+                    conversation_context = ""
+                    if conversation_history:
+                        conversation_context = "\n\nConversation History (for context only):\n"
+                        for msg in conversation_history:
+                            role = msg.get('role', 'unknown')
+                            content = msg.get('content', '')[:200] + ('...' if len(msg.get('content', '')) > 200 else '')
+                            conversation_context += f"{role.title()}: {content}\n"
+                        conversation_context += "\n"
 
-User Request: "{user_query}"
+                    streaming_prompt = f"""You are an AI medical affairs analyst. Respond to the user's request about institutional activity.
+{conversation_context}
+Current User Request: "{user_query}"
 Therapeutic Area Filter: {ta_filter}
 
 Conference Data for {institution_name}:
@@ -3215,9 +3239,19 @@ Respond naturally to exactly what the user asked about this institution."""
                         "rows": author_table_data
                     })
 
-                    streaming_prompt = f"""You are an AI medical affairs analyst. Respond to the user's request naturally and appropriately.
+                    # Build conversation context
+                    conversation_context = ""
+                    if conversation_history:
+                        conversation_context = "\n\nConversation History (for context only):\n"
+                        for msg in conversation_history:
+                            role = msg.get('role', 'unknown')
+                            content = msg.get('content', '')[:200] + ('...' if len(msg.get('content', '')) > 200 else '')
+                            conversation_context += f"{role.title()}: {content}\n"
+                        conversation_context += "\n"
 
-User Request: "{user_query}"
+                    streaming_prompt = f"""You are an AI medical affairs analyst. Respond to the user's request naturally and appropriately.
+{conversation_context}
+Current User Request: "{user_query}"
 Therapeutic Area Filter: {ta_filter}
 
 Conference Data for {author_name}:
@@ -3254,9 +3288,19 @@ Respond naturally to exactly what the user asked - don't follow rigid frameworks
                 else:
                     semantic_data = "No relevant data found."
 
-                streaming_prompt = f"""You are a medical affairs AI assistant analyzing conference data from ASCO GU 2025.
+                # Build conversation context
+                conversation_context = ""
+                if conversation_history:
+                    conversation_context = "\n\nConversation History (for context only):\n"
+                    for msg in conversation_history:
+                        role = msg.get('role', 'unknown')
+                        content = msg.get('content', '')[:200] + ('...' if len(msg.get('content', '')) > 200 else '')
+                        conversation_context += f"{role.title()}: {content}\n"
+                    conversation_context += "\n"
 
-User Query: "{user_query}"
+                streaming_prompt = f"""You are a medical affairs AI assistant analyzing conference data from ASCO GU 2025.
+{conversation_context}
+Current User Query: "{user_query}"
 Therapeutic Area Filter: {ta_filter}
 
 Relevant Conference Data:
