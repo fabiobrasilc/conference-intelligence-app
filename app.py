@@ -117,6 +117,32 @@ def safe_contains(series: pd.Series, pattern: str, regex: bool = True) -> pd.Ser
 def clean_filename(s: str) -> str:
     return s.lower().replace(' ', '_').replace('/', '_').replace('\\', '_')
 
+def normalize_institution_name(institution_text: str) -> str:
+    """
+    Normalize institution names by handling department prefixes.
+    Rule: If 'Department' is detected, use the institution name after the semicolon.
+    """
+    if not institution_text or pd.isna(institution_text):
+        return ""
+
+    # Clean up the text
+    institution_text = str(institution_text).strip()
+
+    # If "Department" is in the text and there's a semicolon, use what comes after
+    if "Department" in institution_text and ";" in institution_text:
+        parts = institution_text.split(";")
+        # Find the first part after a department that isn't also a department
+        for part in parts[1:]:  # Skip the first part (which contains "Department")
+            clean_part = part.strip()
+            if clean_part and "Department" not in clean_part:
+                return clean_part
+
+    # Otherwise, use the first part before any semicolon (or the whole thing if no semicolon)
+    if ";" in institution_text:
+        return institution_text.split(";")[0].strip()
+
+    return institution_text
+
 def extract_number_default(q: str, default_n: int = 20) -> int:
     nums = re.findall(r"\b(\d{1,3})\b", q)
     if not nums:
@@ -613,7 +639,10 @@ def count_top_institutions(df: pd.DataFrame, n: int = 20) -> pd.DataFrame:
         for part in parts:
             s = part.strip()
             if len(s) > 6 and any(k in s.lower() for k in institution_keywords):
-                institutions_list.append({"Abstract #": row["Abstract #"], "Institution": s, "Title": row["Title"]})
+                # Apply institution normalization to handle department prefixes
+                normalized_institution = normalize_institution_name(s)
+                if normalized_institution:  # Only add if normalization succeeded
+                    institutions_list.append({"Abstract #": row["Abstract #"], "Institution": normalized_institution, "Title": row["Title"]})
 
     if not institutions_list:
         return pd.DataFrame(columns=["#Unique Abstracts", "Institutions", "Main focus area"])
@@ -3194,7 +3223,15 @@ def stream_chat_api():
                 # AI-FIRST APPROACH: Handle institutions vs authors appropriately
                 if institution_name:
                     # Handle institution lookup - ALWAYS do direct institution search first
+                    # First try exact search with original name
                     mask = safe_contains(filtered_df["Institutions"], institution_name, regex=True)
+
+                    # If no results, also try searching for normalized versions in the data
+                    if mask.sum() == 0:
+                        # Create a normalized search by looking for institutions that would normalize to the same thing
+                        normalized_target = normalize_institution_name(institution_name)
+                        if normalized_target != institution_name:
+                            mask = safe_contains(filtered_df["Institutions"], normalized_target, regex=True)
                     institution_results = filtered_df.loc[mask, ["Abstract #","Poster #","Title","Authors","Institutions"]].drop_duplicates(subset=["Abstract #"])
 
                     if not institution_results.empty:
@@ -3532,6 +3569,14 @@ def handle_chat_intent(intent: str, slots: Dict[str, Any], ta_filter: str, filte
             return "Please specify the institution, e.g., **all abstracts from Memorial Sloan Kettering**.", tables, None
         mask = safe_contains(filtered_df["Institutions"], institution, regex=True)
         res = filtered_df.loc[mask, ["Abstract #","Poster #","Title","Authors","Institutions"]].drop_duplicates(subset=["Abstract #"])
+
+        # If no results, try searching with normalized institution name
+        if res.empty:
+            normalized_institution = normalize_institution_name(institution)
+            if normalized_institution != institution:
+                mask = safe_contains(filtered_df["Institutions"], normalized_institution, regex=True)
+                res = filtered_df.loc[mask, ["Abstract #","Poster #","Title","Authors","Institutions"]].drop_duplicates(subset=["Abstract #"])
+
         if res.empty:
             return f"No abstracts found for **{institution}** under **{ta_filter}** in the CSV.", tables, None
         msg = f"Here are the abstracts associated with **{institution}** (TA scope: **{ta_filter}**)."
