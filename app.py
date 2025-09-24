@@ -119,8 +119,8 @@ def clean_filename(s: str) -> str:
 
 def normalize_institution_name(institution_text: str) -> str:
     """
-    Normalize institution names by handling department prefixes.
-    Rule: If 'Department' is detected, use the institution name after the semicolon.
+    Normalize institution names using heuristic rules to extract the main institution.
+    Handles comma-separated affiliations like "Department, Division, University".
     """
     if not institution_text or pd.isna(institution_text):
         return ""
@@ -128,20 +128,47 @@ def normalize_institution_name(institution_text: str) -> str:
     # Clean up the text
     institution_text = str(institution_text).strip()
 
-    # If "Department" is in the text and there's a semicolon, use what comes after
-    if "Department" in institution_text and ";" in institution_text:
-        parts = institution_text.split(";")
-        # Find the first part after a department that isn't also a department
-        for part in parts[1:]:  # Skip the first part (which contains "Department")
-            clean_part = part.strip()
-            if clean_part and "Department" not in clean_part:
-                return clean_part
+    # Split by commas to get all parts
+    parts = [part.strip() for part in institution_text.split(",")]
 
-    # Otherwise, use the first part before any semicolon (or the whole thing if no semicolon)
-    if ";" in institution_text:
-        return institution_text.split(";")[0].strip()
+    # Priority keywords that indicate main institutions
+    university_keywords = ["university", "college", "school of medicine"]
+    hospital_keywords = ["hospital", "medical center", "health system", "clinic"]
+    cancer_center_keywords = ["cancer center", "cancer centre", "oncology center"]
 
-    return institution_text
+    # Skip keywords that indicate sub-units
+    skip_keywords = ["department", "division", "section", "unit"]
+
+    # Find the best match using priority order
+    best_match = ""
+
+    # First priority: Look for universities/colleges
+    for part in parts:
+        part_lower = part.lower()
+        if any(keyword in part_lower for keyword in university_keywords):
+            if not any(skip in part_lower for skip in skip_keywords):
+                return part
+
+    # Second priority: Look for hospitals/medical centers
+    for part in parts:
+        part_lower = part.lower()
+        if any(keyword in part_lower for keyword in hospital_keywords):
+            if not any(skip in part_lower for skip in skip_keywords):
+                return part
+
+    # Third priority: Look for cancer centers (but only if no university/hospital found)
+    for part in parts:
+        part_lower = part.lower()
+        if any(keyword in part_lower for keyword in cancer_center_keywords):
+            if not any(skip in part_lower for skip in skip_keywords):
+                return part
+
+    # If no priority matches found, filter out standalone departments
+    if len(parts) == 1 and any(skip in parts[0].lower() for skip in skip_keywords):
+        return ""  # Filter out standalone departments/divisions
+
+    # Fallback: return the last part (often the main institution)
+    return parts[-1] if parts else ""
 
 def extract_number_default(q: str, default_n: int = 20) -> int:
     nums = re.findall(r"\b(\d{1,3})\b", q)
@@ -455,6 +482,8 @@ Context:
 - Focus on identifying institutional research strengths and partnership opportunities
 - Analyze research focus areas, collaborative patterns, and institutional leadership
 - This is descriptive analysis focused on research landscape intelligence
+
+**Important Note**: Institution counts are normalized from complex affiliation strings (e.g., "Department of Oncology, University of Texas" → "University of Texas"). Some abstracts may be grouped under parent institutions rather than specific departments or cancer centers.
 
 Based on the conference data and institutional activity tables provided, write a natural, flowing analysis that covers:
 
