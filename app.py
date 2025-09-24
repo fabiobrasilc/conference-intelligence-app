@@ -894,7 +894,7 @@ def classify_drug_by_name(commercial_name: str, generic_name: str) -> str:
 
         # ADCs (Antibody-Drug Conjugates) - key in bladder cancer
         "enfortumab vedotin": "ADC", "enfortumab": "ADC", "padcev": "ADC",
-        "sacituzumab govitecan": "ADC", "sacituzumab": "ADC", "trodelvy": "ADC",
+        "sacituzumab govitecan": "ADC", "sacituzumab": "ADC", "trodelvy": "ADC", "rad-sg": "ADC",
         "trastuzumab deruxtecan": "ADC", "deruxtecan": "ADC", "enhertu": "ADC",
         "disitamab vedotin": "ADC", "disitamab": "ADC",
 
@@ -929,6 +929,49 @@ def classify_drug_by_name(commercial_name: str, generic_name: str) -> str:
         return "FGFR"
 
     return None  # Skip unknown drugs (safe approach)
+
+def extract_phase_and_setting(title_lower: str) -> str:
+    """
+    Extract study phase and therapy line setting from title
+    """
+    import re
+
+    phase_info = []
+
+    # Phase detection patterns
+    phase_patterns = {
+        "Phase I": ["phase i", "phase 1", "phase one", "first-in-human", "dose escalation", "dose finding"],
+        "Phase II": ["phase ii", "phase 2", "phase two"],
+        "Phase III": ["phase iii", "phase 3", "phase three", "randomized controlled", "pivotal"],
+        "Phase I/II": ["phase i/ii", "phase 1/2", "phase i-ii"],
+        "Phase II/III": ["phase ii/iii", "phase 2/3", "phase ii-iii"]
+    }
+
+    # Therapy line patterns
+    line_patterns = {
+        "1st line": ["first line", "first-line", "1st line", "1l ", "frontline", "front-line", "previously untreated", "treatment-naive", "treatment naive"],
+        "2nd line": ["second line", "second-line", "2nd line", "2l ", "previously treated"],
+        "3rd+ line": ["third line", "third-line", "3rd line", "heavily pretreated", "multiple prior"],
+        "Maintenance": ["maintenance", "switch maintenance", "continuation maintenance"],
+        "Neoadjuvant": ["neoadjuvant", "neo-adjuvant", "preoperative"],
+        "Adjuvant": ["adjuvant", "post-operative", "postoperative"],
+        "Metastatic": ["metastatic", "advanced", "locally advanced"]
+    }
+
+    # Check for phase
+    for phase_name, keywords in phase_patterns.items():
+        if any(keyword in title_lower for keyword in keywords):
+            phase_info.append(phase_name)
+            break  # Take first match to avoid duplicates
+
+    # Check for therapy line/setting
+    for line_name, keywords in line_patterns.items():
+        if any(keyword in title_lower for keyword in keywords):
+            phase_info.append(line_name)
+            break  # Take first match to avoid duplicates
+
+    # Return combined information or empty if none found
+    return ", ".join(phase_info) if phase_info else ""
 
 def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -1047,15 +1090,19 @@ def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
             sorted_categories = sorted(list(found_categories))
             combined_moa = ", ".join(sorted_categories)
 
+            # Extract phase and therapy line information
+            phase_setting = extract_phase_and_setting(title_l)
+
             rows.append({
                 "Biomarker / MOA": combined_moa,
+                "Phase/Setting": phase_setting,
                 "Abstract #": r["Abstract #"],
                 "Title": r["Title"]
             })
 
     if rows:
         return pd.DataFrame(rows).drop_duplicates(subset=["Biomarker / MOA", "Abstract #"])
-    return pd.DataFrame(columns=["Biomarker / MOA", "Abstract #", "Title"])
+    return pd.DataFrame(columns=["Biomarker / MOA", "Phase/Setting", "Abstract #", "Title"])
 
 # Cached-like helpers
 def get_top_authors(filtered_sig: str, filtered_df: pd.DataFrame, n: int = 20):
