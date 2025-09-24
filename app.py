@@ -960,7 +960,7 @@ class QueryPlan:
     def needs_institution_analysis(self) -> bool:
         return self.search_strategy.get("get_institution_data", False)
 
-def analyze_user_query_ai(query: str, ta_filter: str) -> QueryPlan:
+def analyze_user_query_ai(query: str, ta_filter: str, conversation_history: list = None) -> QueryPlan:
     """
     True AI-powered query understanding that determines what the user wants
     without forcing rigid categories. Flexible and context-aware.
@@ -982,8 +982,18 @@ def analyze_user_query_ai(query: str, ta_filter: str) -> QueryPlan:
             confidence=0.0
         )
 
-    system_prompt = """You are an intelligent assistant helping analyze user requests for medical conference data. Your job is to understand what the user actually wants and determine the best way to help them.
+    # Build conversation context if available
+    conversation_context = ""
+    if conversation_history:
+        conversation_context = "\n\nConversation History (for understanding pronouns and references):\n"
+        for msg in conversation_history:
+            role = msg.get('role', 'unknown')
+            content = msg.get('content', '')[:300] + ('...' if len(msg.get('content', '')) > 300 else '')
+            conversation_context += f"{role.title()}: {content}\n"
+        conversation_context += "\n"
 
+    system_prompt = f"""You are an intelligent assistant helping analyze user requests for medical conference data. Your job is to understand what the user actually wants and determine the best way to help them.
+{conversation_context}
 Available conference data includes:
 - Abstract titles, authors, institutions, poster numbers
 - Semantic search across all text
@@ -999,6 +1009,9 @@ When users mention specific people (e.g., "Petros Grivas", "John Smith", "Dr. An
 - Collaboration patterns and institutional affiliations
 - Strategic analysis of their work
 → Set response_type: "specific_lookup", get_author_data: true, and extract the name in "authors" field
+
+**IMPORTANT: PRONOUN RESOLUTION**
+If the user uses pronouns (he, she, they, him, her) or refers to "the author", "this person", look at the conversation history to identify who they're referring to. Extract the actual name from the previous context.
 
 EXAMPLES OF USER INTENT PATTERNS:
 
@@ -3148,7 +3161,7 @@ def stream_chat_api():
                 filtered_df = df_global.copy()
 
             # Analyze the query and generate intelligent response using existing logic
-            plan = analyze_user_query_ai(user_query, ta_filter)
+            plan = analyze_user_query_ai(user_query, ta_filter, conversation_history)
             print(f"🔍 CHAT STREAMING DEBUG - Query: '{user_query}' | Plan: {plan.response_type} | Entities: {plan.primary_entities}")
             context = gather_intelligent_context(plan, ta_filter, filtered_df)
 
@@ -3358,10 +3371,15 @@ def chat_api():
     data = request.get_json()
     user_message = data.get('message')
     ta_filter = data.get('ta_filter', 'All')
+    conversation_history = data.get('conversation_history', [])
     use_legacy = data.get('use_legacy', False)  # Allow fallback to old system if needed
 
     if not user_message:
         return jsonify({"error": "No message provided"}), 400
+
+    # Limit conversation history to last 20 messages (10 exchanges)
+    if len(conversation_history) > 20:
+        conversation_history = conversation_history[-20:]
 
     # Filter data based on TA
     if ta_filter == "Bladder Cancer":
@@ -3381,7 +3399,7 @@ def chat_api():
         print(f"AI-First: Analyzing query: {user_message}")
 
         # Step 1: AI analyzes the query and creates execution plan
-        plan = analyze_user_query_ai(user_message, ta_filter)
+        plan = analyze_user_query_ai(user_message, ta_filter, conversation_history)
         print(f"AI-First: Plan created - Intent: {plan.intent_type}, Confidence: {plan.confidence}")
 
         # Step 2: Gather intelligent context based on plan
