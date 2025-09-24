@@ -13,6 +13,7 @@ from collections import Counter
 from datetime import datetime
 from dataclasses import dataclass
 import os
+import time
 from dotenv import load_dotenv
 import hashlib  # <-- Added (used by file_md5 / df_sig)
 
@@ -28,7 +29,13 @@ CSV_FILE = Path(__file__).parent / "ASCO GU 2025 Poster Author Affiliations info
 CHROMA_DB_PATH = "./chroma_conference_db"
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+# Configure OpenAI client with robust connection settings for Railway deployment
+client = OpenAI(
+    api_key=OPENAI_API_KEY,
+    timeout=300.0,  # 5-minute timeout for long streaming operations
+    max_retries=3,
+    http_client=None  # Let OpenAI handle connection pooling
+) if OPENAI_API_KEY else None
 
 # --- Global variables ---
 chroma_client = None
@@ -1603,6 +1610,13 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
                 try:
                     print(f"🔧 Starting streaming for KOL {i}/{len(top_15_authors)}: {author}")
 
+                    # Send progress update to keep connection alive
+                    yield sse_event("progress", {
+                        "message": f"Processing KOL {i}/{len(top_15_authors)}: {author}",
+                        "current": i,
+                        "total": len(top_15_authors)
+                    })
+
                     # Signal start of new KOL profile
                     yield sse_event("kol_start", {"author": author})
 
@@ -1622,11 +1636,14 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
 
                     profile_content = ""
                     token_count = 0
+                    last_token_time = time.time()
+
                     for chunk in stream:
                         if chunk.choices[0].delta.content is not None:
                             token = chunk.choices[0].delta.content
                             profile_content += token
                             token_count += 1
+                            last_token_time = time.time()
 
                             # Stream each token with author context
                             yield sse_event("token", {
@@ -1634,6 +1651,11 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
                                 "section": "kol_profile",
                                 "author": author
                             })
+
+                        # Send keep-alive ping every 5 seconds during streaming
+                        elif time.time() - last_token_time > 5:
+                            yield sse_event("ping", {"timestamp": int(time.time())})
+                            last_token_time = time.time()
 
                     print(f"🔧 Completed streaming for {author}: {token_count} tokens, {len(profile_content)} chars")
 
