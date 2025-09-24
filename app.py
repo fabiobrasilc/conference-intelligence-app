@@ -46,8 +46,8 @@ if OPENAI_API_KEY:
 
     client = OpenAI(
         api_key=OPENAI_API_KEY,
-        timeout=300.0,
-        max_retries=2,  # Reduced from 3
+        timeout=60.0,   # More realistic timeout per request
+        max_retries=2,
         http_client=custom_http_client
     )
 else:
@@ -1516,6 +1516,9 @@ def generate_kol_analysis_streaming(
         return
 
     try:
+        # Send immediate heartbeat to prevent proxy timeout
+        yield sse_event("status", {"message": "⏳ Starting KOL analysis..."})
+
         # Prepare data summaries
         top_15_authors = top_authors_table.head(15)['Authors'].tolist()
         total_authors = len(top_15_authors)
