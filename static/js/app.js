@@ -598,8 +598,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
         eventSource.onerror = function(error) {
             console.error('❌ KOL analysis stream error:', error);
+
+            // Check if we received substantial content before the error
+            const hasSubstantialContent = contentDiv.innerHTML.includes('Executive Summary') ||
+                                        contentDiv.querySelectorAll('h3').length > 0;
+
             eventSource.close();
-            contentDiv.innerHTML += '<p><em>Connection error occurred. Please try again.</em></p>';
+
+            if (hasSubstantialContent) {
+                contentDiv.innerHTML += '<p><em>⚠️ Connection interrupted during analysis. Partial results shown above.</em></p>';
+            } else {
+                contentDiv.innerHTML += '<p><em>Connection error occurred. Please try again.</em></p>';
+            }
         };
     }
 
