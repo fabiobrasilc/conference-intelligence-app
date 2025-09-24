@@ -901,13 +901,21 @@ def classify_drug_by_name(commercial_name: str, generic_name: str) -> str:
     fgfr_patterns = ["fgfr", "fibroblast"]
     fgfr_drugs = ["balversa", "erdafitinib", "pemazyre", "pemigatinib"]
 
-    # Check patterns
+    # Return all matching patterns (support multiple MOAs)
+    categories = []
+
     if any(pattern in name_lower for pattern in ici_patterns) or any(drug in name_lower for drug in ici_drugs):
-        return "ICI"
-    elif any(pattern in name_lower for pattern in adc_patterns) or any(drug in name_lower for drug in adc_drugs):
-        return "ADC"
-    elif any(pattern in name_lower for pattern in fgfr_patterns) or any(drug in name_lower for drug in fgfr_drugs):
-        return "FGFR"
+        categories.append("ICI")
+    if any(pattern in name_lower for pattern in adc_patterns) or any(drug in name_lower for drug in adc_drugs):
+        categories.append("ADC")
+    if any(pattern in name_lower for pattern in fgfr_patterns) or any(drug in name_lower for drug in fgfr_drugs):
+        categories.append("FGFR")
+
+    # Return single category or combination
+    if len(categories) == 1:
+        return categories[0]
+    elif len(categories) > 1:
+        return "+".join(sorted(categories))  # e.g., "ADC+ICI"
 
     return None  # Unknown classification
 
@@ -968,7 +976,19 @@ def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
                     if drug_candidate in drug_moa_map:
                         found_categories.add(drug_moa_map[drug_candidate])
 
-        # Step 2: Check for biomarkers (non-overlapping with drug classifications)
+        # Step 2: Check for therapy combinations and additional MOAs
+        combination_keywords = {
+            "Chemotherapy": ["chemotherapy", "chemo", "platinum", "cisplatin", "carboplatin", "gemcitabine", "paclitaxel", "docetaxel", "pemetrexed"],
+            "Targeted": ["targeted therapy", "tyrosine kinase", "kinase inhibitor", "small molecule"],
+            "Radiation": ["radiation", "radiotherapy", "radioimmunotherapy", "chemoradiation"],
+            "Hormonal": ["hormone therapy", "androgen deprivation", "adt", "enzalutamide", "abiraterone"]
+        }
+
+        for therapy_type, keywords in combination_keywords.items():
+            if any(keyword in title_l for keyword in keywords):
+                found_categories.add(therapy_type)
+
+        # Step 3: Check for biomarkers (non-overlapping with drug classifications)
         for biomarker, keywords in biomarker_keywords.items():
             if any(keyword in title_l for keyword in keywords):
                 # Only add PD-L1 if we haven't already found ICIs (avoid overlap)
@@ -976,7 +996,7 @@ def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
                     continue  # Skip PD-L1 if already classified as ICI
                 found_categories.add(biomarker)
 
-        # Step 3: Fallback to broader keyword matching for missed cases
+        # Step 4: Fallback to broader keyword matching for missed cases (only if no categories found)
         if not found_categories:
             fallback_keywords = {
                 "ICI": ["checkpoint", "immunotherapy", "immune checkpoint"],
