@@ -3169,17 +3169,17 @@ def stream_chat_api():
             if plan.response_type == "specific_lookup":
                 # TRUE STREAMING: Stream directly from sophisticated prompt without pre-generation
 
-                # Extract author name or institution from query - prioritize institutions
+                # Extract author name or institution from query - prioritize authors for person lookups
                 author_name = None
                 institution_name = None
 
-                # First check if institutions are mentioned
-                if plan.primary_entities.get("institutions"):
-                    institution_name = plan.primary_entities["institutions"][0]
-
-                # If no institutions, then check for authors
-                if not institution_name and plan.primary_entities.get("authors"):
+                # First check if authors are mentioned (person names take priority)
+                if plan.primary_entities.get("authors"):
                     author_name = plan.primary_entities["authors"][0]
+
+                # If no authors, then check for institutions
+                if not author_name and plan.primary_entities.get("institutions"):
+                    institution_name = plan.primary_entities["institutions"][0]
 
                 # Fallback: look for any entity with 2+ words (could be author or institution)
                 if not author_name and not institution_name:
