@@ -527,6 +527,8 @@ REQUIREMENTS:
 - Use only provided data and patterns - acknowledge absences explicitly
 - Strategic trend analysis grounded in actual conference data
 - Forward-looking perspective on scientific and clinical implications
+- DO NOT include a "References" section (the table already provides this information)
+- DO NOT include "Actionable next steps for Medical Affairs" (this is covered by the Strategic Recommendations button)
 
 Deliver actionable scientific intelligence for medical affairs strategic planning."""
     },
@@ -2296,7 +2298,7 @@ Write a comprehensive, natural intelligence report based on this data."""
             reasoning_effort="minimal",
             verbosity="low",
             messages=[{"role": "user", "content": insights_prompt}],
-            max_completion_tokens=3000,
+            max_completion_tokens=5000,
             stream=True
         )
 
