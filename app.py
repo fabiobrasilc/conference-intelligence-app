@@ -992,8 +992,8 @@ def analyze_user_query_ai(query: str, ta_filter: str, conversation_history: list
             conversation_context += f"{role.title()}: {content}\n"
         conversation_context += "\n"
 
-    system_prompt = f"""You are an intelligent assistant helping analyze user requests for medical conference data. Your job is to understand what the user actually wants and determine the best way to help them.
-{conversation_context}
+    system_prompt = """You are an intelligent assistant helping analyze user requests for medical conference data. Your job is to understand what the user actually wants and determine the best way to help them.
+""" + conversation_context + """
 Available conference data includes:
 - Abstract titles, authors, institutions, poster numbers
 - Semantic search across all text
