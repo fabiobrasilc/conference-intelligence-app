@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let currentTaFilter = 'All'; // Default TA
     let currentSearch = { keyword: '', field: 'All' }; // Track current search state
+    let conversationHistory = []; // Store conversation history (last 10 exchanges)
 
     // --- Utility Functions ---
     function getOrderedHeaders(dataObject) {
@@ -1101,74 +1102,144 @@ document.addEventListener('DOMContentLoaded', function() {
         let currentParagraphContent = '';
         let hasReceivedTables = false; // Track if we've already received tables via SSE
 
-        // Create EventSource for token streaming
-        const eventSource = new EventSource(`/api/chat/stream?message=${encodeURIComponent(userMessage)}&ta_filter=${encodeURIComponent(currentTaFilter)}`);
+        // Store user message in conversation history
+        conversationHistory.push({ role: 'user', content: userMessage });
 
-        eventSource.onopen = function() {
+        // Limit conversation history to last 20 messages (10 exchanges)
+        if (conversationHistory.length > 20) {
+            conversationHistory = conversationHistory.slice(-20);
+        }
+
+        // Use fetch with streaming for POST support with conversation history
+        fetch('/api/chat/stream', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: userMessage,
+                ta_filter: currentTaFilter,
+                conversation_history: conversationHistory
+            })
+        })
+        .then(response => {
             console.log('🔗 Connected to chat stream');
-        };
 
-        // Handle table events
-        eventSource.addEventListener('table', function(event) {
-            const { title, rows } = JSON.parse(event.data);
-            console.log(`📊 Adding table: ${title} with ${rows.length} rows`);
-            displayTableInChat(title, rows);
-            hasReceivedTables = true; // Mark that we've received tables via SSE
-        });
-
-        eventSource.onmessage = function(event) {
-            const token = event.data;
-
-            if (token === '[DONE]') {
-                // Stream complete - now check for relevant tables
-                console.log('🎉 Chat stream complete!');
-                eventSource.close();
-
-                // After streaming completes, check if we should add tables (only if not already received)
-                if (!hasReceivedTables) {
-                    checkAndAddRelevantTables(userMessage, streamingMessageId);
-                }
-                return;
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            // Check for paragraph break signal
-            if (token === '|||PARAGRAPH_BREAK|||') {
-                // Finalize current paragraph and start a new one
-                currentParagraphContent = '';
-                const newParagraph = document.createElement('p');
-                contentDiv.appendChild(newParagraph);
-                return;
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            function processStream() {
+                return reader.read().then(({ done, value }) => {
+                    if (done) {
+                        console.log('🎉 Chat stream complete!');
+
+                        // Store assistant response in conversation history
+                        if (fullContent.trim()) {
+                            conversationHistory.push({ role: 'assistant', content: fullContent.trim() });
+
+                            // Limit conversation history to last 20 messages (10 exchanges)
+                            if (conversationHistory.length > 20) {
+                                conversationHistory = conversationHistory.slice(-20);
+                            }
+                        }
+
+                        // After streaming completes, check if we should add tables (only if not already received)
+                        if (!hasReceivedTables) {
+                            checkAndAddRelevantTables(userMessage, streamingMessageId);
+                        }
+                        return;
+                    }
+
+                    // Decode chunk and process SSE format
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const eventData = line.slice(6); // Remove 'data: ' prefix
+
+                            // Handle special events
+                            if (eventData.startsWith('{') && (eventData.includes('"title"') && eventData.includes('"rows"'))) {
+                                // This is a table event
+                                try {
+                                    const { title, rows } = JSON.parse(eventData);
+                                    console.log(`📊 Adding table: ${title} with ${rows.length} rows`);
+                                    displayTableInChat(title, rows);
+                                    hasReceivedTables = true;
+                                } catch (e) {
+                                    console.error('Error parsing table data:', e);
+                                }
+                                continue;
+                            }
+
+                            if (eventData === '[DONE]') {
+                                console.log('🎉 Chat stream complete!');
+
+                                // Store assistant response in conversation history
+                                if (fullContent.trim()) {
+                                    conversationHistory.push({ role: 'assistant', content: fullContent.trim() });
+
+                                    // Limit conversation history to last 20 messages (10 exchanges)
+                                    if (conversationHistory.length > 20) {
+                                        conversationHistory = conversationHistory.slice(-20);
+                                    }
+                                }
+
+                                // After streaming completes, check if we should add tables (only if not already received)
+                                if (!hasReceivedTables) {
+                                    checkAndAddRelevantTables(userMessage, streamingMessageId);
+                                }
+                                return;
+                            }
+
+                            // Check for paragraph break signal
+                            if (eventData === '|||PARAGRAPH_BREAK|||') {
+                                // Finalize current paragraph and start a new one
+                                currentParagraphContent = '';
+                                const newParagraph = document.createElement('p');
+                                contentDiv.appendChild(newParagraph);
+                                continue;
+                            }
+
+                            // Regular token - append to content
+                            fullContent += eventData;
+                            currentParagraphContent += eventData;
+
+                            // Get or create the current paragraph element
+                            let currentParagraph = contentDiv.lastElementChild;
+                            if (!currentParagraph || currentParagraph.tagName !== 'P') {
+                                currentParagraph = document.createElement('p');
+                                contentDiv.appendChild(currentParagraph);
+                            }
+
+                            // Apply simple markdown formatting and update only the current paragraph
+                            const formattedContent = currentParagraphContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                            currentParagraph.innerHTML = formattedContent;
+
+                            // Auto-scroll to bottom
+                            chatHistory.scrollTop = chatHistory.scrollHeight;
+                        }
+                    }
+
+                    // Continue processing the stream
+                    return processStream();
+                });
             }
 
-            // Append token to both full content and current paragraph content
-            fullContent += token;
-            currentParagraphContent += token;
-
-            // Get or create the current paragraph element
-            let currentParagraph = contentDiv.lastElementChild;
-            if (!currentParagraph || currentParagraph.tagName !== 'P') {
-                currentParagraph = document.createElement('p');
-                contentDiv.appendChild(currentParagraph);
-            }
-
-            // Apply simple markdown formatting and update only the current paragraph
-            const formattedContent = currentParagraphContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            currentParagraph.innerHTML = formattedContent;
-
-            // Auto-scroll to bottom
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-        };
-
-        eventSource.onerror = function(event) {
-            console.error('💥 Chat EventSource failed:', event);
+            return processStream();
+        })
+        .catch(error => {
+            console.error('💥 Chat fetch failed:', error);
 
             if (fullContent.trim() === '') {
                 // No content received, show error
                 contentDiv.innerHTML = '❌ Connection failed during chat response. Please try again.';
             }
-
-            eventSource.close();
-        };
+        });
     });
 
     // Function to check if query needs data tables and add them
@@ -1183,7 +1254,11 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: userMessage, ta_filter: currentTaFilter })
+                body: JSON.stringify({
+                    message: userMessage,
+                    ta_filter: currentTaFilter,
+                    conversation_history: conversationHistory
+                })
             })
             .then(response => response.json())
             .then(data => {
