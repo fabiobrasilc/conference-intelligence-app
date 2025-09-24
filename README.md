@@ -1,0 +1,2 @@
+# conference-intelligence-app
+COSMIC
