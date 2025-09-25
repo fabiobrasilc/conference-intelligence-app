@@ -550,7 +550,7 @@ Deliver actionable scientific intelligence for medical affairs strategic plannin
         "allow_strategic_implications": True,
         "ai_prompt": """You are EMD Serono's senior medical affairs strategist. Analyze ASCO GU 2025 data for strategic implications on avelumab (Bavencio) positioning and portfolio development.
 
-KEY CONTEXT: Avelumab maintenance therapy in bladder cancer post-platinum. EV+P 1L dominance (~2 years) reshaped treatment landscape. Need strategic direction for competitive response and market positioning.
+KEY CONTEXT: Avelumab has established presence in genitourinary oncology, particularly in bladder cancer maintenance therapy post-platinum. Analyze the current therapeutic area focus for strategic positioning opportunities. Consider the evolving competitive landscape including EV+P combinations in bladder cancer and other emerging treatments across GU cancers.
 
 STRATEGIC ANALYSIS FRAMEWORK:
 
@@ -2348,14 +2348,21 @@ def generate_strategy_analysis_streaming(
         sample_abstracts = filtered_df.head(10)[["Abstract #", "Title"]].to_csv(index=False)
         tables_context = f"\n\n=== Sample Conference Data ({abstracts_count} total abstracts) ===\n{sample_abstracts}"
 
+        # TA-specific strategic context
+        ta_specific_context = ""
+        if ta_filter == "Renal Cell Carcinoma":
+            ta_specific_context = "\n\nSPECIFIC TA FOCUS: Renal Cell Carcinoma - Consider avelumab's JAVELIN Renal 101 background (avelumab + axitinib combination did not meet primary endpoint in first-line RCC). Analyze current RCC competitive landscape dominated by established combinations (pembrolizumab + axitinib, nivolumab + cabozantinib). Assess any potential re-entry opportunities, combination strategies, or strategic lessons from conference data."
+        elif ta_filter == "Bladder Cancer":
+            ta_specific_context = "\n\nSPECIFIC TA FOCUS: Bladder Cancer - Focus on avelumab's established maintenance position post-platinum, EV+P first-line impact, and competitive response strategies in bladder cancer specifically."
+
         # Use the AI prompt from PLAYBOOKS
         strategy_prompt = f"""{PLAYBOOKS["strategy"]["ai_prompt"]}
 
 CONFERENCE DATA TABLES:{tables_context}
 
-Therapeutic Area Filter: {ta_filter}
+Therapeutic Area Filter: {ta_filter}{ta_specific_context}
 
-Write a comprehensive, natural intelligence report based on this data."""
+Write a comprehensive, natural intelligence report based on this data and therapeutic area focus."""
 
         # Stream the analysis in real-time
         stream = client.chat.completions.create(
