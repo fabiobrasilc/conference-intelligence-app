@@ -1212,17 +1212,17 @@ Only include drugs you're confident about. For combination drugs, list both comp
 Drugs to map: {drugs_text}"""
 
     try:
-        response = client.chat.completions.create(
+        response = client.responses.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
-            messages=[{"role": "user", "content": prompt}],
-            max_completion_tokens=500
+            input=[{"role": "user", "content": prompt}],
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=500
         )
 
         # Parse the response into a dictionary
         drug_company_map = {}
-        for line in response.choices[0].message.content.split('\n'):
+        for line in response.output_text.split('\n'):
             if ':' in line:
                 parts = line.split(':', 1)
                 if len(parts) == 2:
@@ -2000,18 +2000,18 @@ Determine the optimal execution strategy and return ONLY valid JSON format match
 """
 
     try:
-        resp = client.chat.completions.create(
+        resp = client.responses.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
-            messages=[
+            input=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_completion_tokens=400,
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=400,
         )
 
-        txt = resp.choices[0].message.content.strip()
+        txt = resp.output_text.strip()
         print(f"🔍 RAW AI RESPONSE: {txt[:200]}...")  # Debug output
 
         if txt.startswith("```"):
@@ -2207,15 +2207,15 @@ User query: {query}
 Return only JSON.
 """
     try:
-        resp = client.chat.completions.create(
+        resp = client.responses.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
-            messages=[{"role": "system", "content": system},
-                      {"role": "user", "content": user}],
-            max_completion_tokens=180,
+            input=[{"role": "system", "content": system},
+                   {"role": "user", "content": user}],
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=180,
         )
-        txt = resp.choices[0].message.content.strip()
+        txt = resp.output_text.strip()
         if txt.startswith("```"):
             txt = re.sub(r"^```(json)?", "", txt).strip()
             if txt.endswith("```"):
@@ -2348,14 +2348,14 @@ Format your response as:
 etc."""
 
             try:
-                batch_response = client.chat.completions.create(
+                batch_response = client.responses.create(
                     model="gpt-5-mini",
-                    reasoning_effort="minimal",
-                    verbosity="low",
-                    messages=[{"role": "user", "content": batch_prompt}],
-                            max_completion_tokens=1600  # Increased for batch processing
+                    input=[{"role": "user", "content": batch_prompt}],
+                    reasoning={"effort": "low"},
+                    text={"verbosity": "low"},
+                    max_output_tokens=1600  # Increased for batch processing
                 )
-                batch_profiles = batch_response.choices[0].message.content
+                batch_profiles = batch_response.output_text
 
                 # Split the batch response and add individual profiles
                 # The response should already be formatted correctly
@@ -2381,14 +2381,14 @@ Paragraph 2: Key strategic opportunities and geographic considerations.
 
 Keep it concise and actionable."""
 
-        summary_response = client.chat.completions.create(
+        summary_response = client.responses.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
-            messages=[{"role": "user", "content": summary_prompt}],
-            max_completion_tokens=500
+            input=[{"role": "user", "content": summary_prompt}],
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=500
         )
-        strategic_summary = summary_response.choices[0].message.content
+        strategic_summary = summary_response.output_text
 
         # Combine analyses
         final_analysis = f"""# 👥 KOL Analysis — Data-Driven Intelligence Report
@@ -2433,21 +2433,23 @@ def extract_author_name_from_query(query: str) -> str:
 def yield_hybrid_stream(prompt: str, section: str):
     """Helper function to yield hybrid streaming events"""
     try:
-        stream = client.chat.completions.create(
+        from openai import Stream
+
+        stream: Stream[object] = client.responses.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
-            messages=[{"role": "user", "content": prompt}],
-            max_completion_tokens=2000,
-            stream=True
+            input=[{"role": "user", "content": prompt}],
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=2000,
+            stream=True,
         )
 
         current_content = ""
         last_boundary_pos = 0
 
-        for chunk in stream:
-            if chunk.choices[0].delta.content is not None:
-                token = chunk.choices[0].delta.content
+        for event in stream:
+            if event.type == "response.output_text.delta":
+                token = event.delta
                 current_content += token
 
                 # Stream the token immediately
@@ -2459,8 +2461,9 @@ def yield_hybrid_stream(prompt: str, section: str):
                     yield sse_event("paragraph_boundary", {"section": section})
                     last_boundary_pos = boundary_pos + 2
 
-        # Send completion signal
-        yield sse_event("done", {})
+            elif event.type == "response.completed":
+                # Send completion signal
+                yield sse_event("done", {})
 
     except Exception as e:
         print(f"🚨 ERROR in yield_hybrid_stream: {str(e)}")
@@ -2527,24 +2530,24 @@ Write ONE comprehensive paragraph (4-6 sentences) that covers:
 Make it flow naturally as a single, well-structured paragraph without internal breaks."""
 
         # Stream executive summary tokens in real-time
-        summary_stream = client.chat.completions.create(
+        summary_stream = client.responses.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
-            messages=[
+            input=[
                 {"role": "system", "content": "You are a medical affairs analyst. Provide comprehensive analysis immediately without delay. Start your response right away."},
                 {"role": "user", "content": executive_summary_prompt}
             ],
-            max_completion_tokens=500,  # Increased for executive summary
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=500,  # Increased for executive summary
             stream=True
         )
 
         # Stream tokens and detect paragraph boundaries
         current_content = ""
         last_boundary_pos = 0
-        for chunk in summary_stream:
-            if chunk.choices[0].delta.content:
-                token = chunk.choices[0].delta.content
+        for event in summary_stream:
+            if event.type == "response.output_text.delta":
+                token = event.delta
                 current_content += token
 
                 # Stream the token immediately
@@ -2607,15 +2610,15 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
 
                     # Stream the analysis token by token
                     print(f"🔧 Prompt length: {len(individual_prompt)} chars")
-                    stream = client.chat.completions.create(
+                    stream = client.responses.create(
                         model="gpt-5-mini",
-                        reasoning_effort="minimal",
-                        verbosity="low",
-                        messages=[
+                        input=[
                             {"role": "system", "content": "You are a medical affairs analyst. Provide comprehensive analysis immediately without delay. Start your response right away."},
                             {"role": "user", "content": individual_prompt}
                         ],
-                                    max_completion_tokens=600,  # Increased for more complete responses
+                        reasoning={"effort": "low"},
+                        text={"verbosity": "low"},
+                        max_output_tokens=600,  # Increased for more complete responses
                         stream=True
                     )
 
@@ -2623,9 +2626,9 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
                     token_count = 0
                     last_token_time = time.time()
 
-                    for chunk in stream:
-                        if chunk.choices[0].delta.content is not None:
-                            token = chunk.choices[0].delta.content
+                    for event in stream:
+                        if event.type == "response.output_text.delta":
+                            token = event.delta
                             profile_content += token
                             token_count += 1
                             last_token_time = time.time()
@@ -2733,19 +2736,21 @@ Therapeutic Area Filter: {ta_filter}
 
 Write a comprehensive, natural intelligence report based on this data."""
 
-        # Stream the analysis in real-time
-        stream = client.chat.completions.create(
+        # Stream the analysis in real-time using new Responses API
+        from openai import Stream
+
+        stream: Stream[object] = client.responses.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
-            messages=[{"role": "user", "content": competitor_prompt}],
-            max_completion_tokens=3000,
-            stream=True
+            input=[{"role": "user", "content": competitor_prompt}],
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=3000,
+            stream=True,
         )
 
-        for chunk in stream:
-            if chunk.choices[0].delta.content is not None:
-                token = chunk.choices[0].delta.content
+        for event in stream:
+            if event.type == "response.output_text.delta":
+                token = event.delta
 
                 # Stream each token
                 yield sse_event("token", {
@@ -2753,8 +2758,9 @@ Write a comprehensive, natural intelligence report based on this data."""
                     "section": "competitor_analysis"
                 })
 
-        # Signal end of stream
-        yield sse_event("end", {"message": "Competitor analysis complete"})
+            elif event.type == "response.completed":
+                # Signal end of stream
+                yield sse_event("end", {"message": "Competitor analysis complete"})
 
     except Exception as e:
         print(f"🚨 ERROR in competitor streaming: {str(e)}")
@@ -2804,19 +2810,21 @@ Therapeutic Area Filter: {ta_filter}
 
 Write a comprehensive, natural intelligence report based on this data."""
 
-        # Stream the analysis in real-time
-        stream = client.chat.completions.create(
+        # Stream the analysis in real-time using new Responses API
+        from openai import Stream
+
+        stream: Stream[object] = client.responses.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
-            messages=[{"role": "user", "content": institution_prompt}],
-            max_completion_tokens=3000,
-            stream=True
+            input=[{"role": "user", "content": institution_prompt}],
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=3000,
+            stream=True,
         )
 
-        for chunk in stream:
-            if chunk.choices[0].delta.content is not None:
-                token = chunk.choices[0].delta.content
+        for event in stream:
+            if event.type == "response.output_text.delta":
+                token = event.delta
 
                 # Stream each token
                 yield sse_event("token", {
@@ -2824,8 +2832,9 @@ Write a comprehensive, natural intelligence report based on this data."""
                     "section": "institution_analysis"
                 })
 
-        # Signal end of stream
-        yield sse_event("end", {"message": "Institution analysis complete"})
+            elif event.type == "response.completed":
+                # Signal end of stream
+                yield sse_event("end", {"message": "Institution analysis complete"})
 
     except Exception as e:
         print(f"🚨 ERROR in institution streaming: {str(e)}")
@@ -2875,19 +2884,21 @@ Therapeutic Area Filter: {ta_filter}
 
 Write a comprehensive, natural intelligence report based on this data."""
 
-        # Stream the analysis in real-time
-        stream = client.chat.completions.create(
+        # Stream the analysis in real-time using new Responses API
+        from openai import Stream
+
+        stream: Stream[object] = client.responses.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
-            messages=[{"role": "user", "content": insights_prompt}],
-            max_completion_tokens=5000,
-            stream=True
+            input=[{"role": "user", "content": insights_prompt}],
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=5000,
+            stream=True,
         )
 
-        for chunk in stream:
-            if chunk.choices[0].delta.content is not None:
-                token = chunk.choices[0].delta.content
+        for event in stream:
+            if event.type == "response.output_text.delta":
+                token = event.delta
 
                 # Stream each token
                 yield sse_event("token", {
@@ -2895,8 +2906,9 @@ Write a comprehensive, natural intelligence report based on this data."""
                     "section": "insights_analysis"
                 })
 
-        # Signal end of stream
-        yield sse_event("end", {"message": "Insights analysis complete"})
+            elif event.type == "response.completed":
+                # Signal end of stream
+                yield sse_event("end", {"message": "Insights analysis complete"})
 
     except Exception as e:
         print(f"🚨 ERROR in insights streaming: {str(e)}")
@@ -2943,19 +2955,21 @@ Therapeutic Area Filter: {ta_filter}{ta_specific_context}
 
 Write a comprehensive, natural intelligence report based on this data and therapeutic area focus."""
 
-        # Stream the analysis in real-time
-        stream = client.chat.completions.create(
+        # Stream the analysis in real-time using new Responses API
+        from openai import Stream
+
+        stream: Stream[object] = client.responses.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
-            messages=[{"role": "user", "content": strategy_prompt}],
-            max_completion_tokens=3000,
-            stream=True
+            input=[{"role": "user", "content": strategy_prompt}],
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=3000,
+            stream=True,
         )
 
-        for chunk in stream:
-            if chunk.choices[0].delta.content is not None:
-                token = chunk.choices[0].delta.content
+        for event in stream:
+            if event.type == "response.output_text.delta":
+                token = event.delta
 
                 # Stream each token
                 yield sse_event("token", {
@@ -2963,8 +2977,9 @@ Write a comprehensive, natural intelligence report based on this data and therap
                     "section": "strategy_analysis"
                 })
 
-        # Signal end of stream
-        yield sse_event("end", {"message": "Strategy analysis complete"})
+            elif event.type == "response.completed":
+                # Signal end of stream
+                yield sse_event("end", {"message": "Strategy analysis complete"})
 
     except Exception as e:
         print(f"🚨 ERROR in strategy streaming: {str(e)}")
@@ -3030,14 +3045,14 @@ Therapeutic Area Filter: {ta_filter}
 Write a comprehensive, natural intelligence report based on this data."""
 
         try:
-            response = client.chat.completions.create(
+            response = client.responses.create(
                 model="gpt-5-mini",
-                reasoning_effort="minimal",
-                verbosity="low",
-                messages=[{"role": "user", "content": ai_prompt}],
-                    max_completion_tokens=3000
+                input=[{"role": "user", "content": ai_prompt}],
+                reasoning={"effort": "low"},
+                text={"verbosity": "low"},
+                max_output_tokens=3000
             )
-            return response.choices[0].message.content
+            return response.output_text
         except Exception as e:
             return f"Error generating AI response: {str(e)}"
 
@@ -3218,17 +3233,17 @@ Generate a comprehensive {framework['focus']} analysis that intelligently adapts
 - Do NOT invent statistics or data not present in the provided context
 """
     try:
-        response = client.chat.completions.create(
+        response = client.responses.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
-            messages=[
+            input=[
                 {"role": "system", "content": f"You are an expert medical affairs analyst providing {framework['focus']} for EMD Serono. Focus on delivering relevant, data-driven insights that directly address the analysis objectives."},
                 {"role": "user", "content": prompt}
             ],
-            max_completion_tokens=1600,
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=1600,
         )
-        return response.choices[0].message.content
+        return response.output_text
     except Exception as e:
         print(f"Error generating AI-enhanced analysis: {e}")
         return f"Error generating analysis: {str(e)}"
@@ -3309,18 +3324,18 @@ Please provide a helpful, direct response to the user's question. Focus on being
 """
 
     try:
-        response = client.chat.completions.create(
+        response = client.responses.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
-            messages=[
+            input=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_completion_tokens=800,
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=800,
         )
 
-        response_text = response.choices[0].message.content
+        response_text = response.output_text
         return response_text, tables_to_attach
 
     except Exception as e:
@@ -3477,15 +3492,15 @@ Provide a comprehensive analysis covering:
 Write natural, detailed paragraphs for each section. Be specific about their research contributions and strategic value for medical affairs."""
 
             try:
-                author_analysis = client.chat.completions.create(
+                author_analysis = client.responses.create(
                     model="gpt-5-mini",
-                    reasoning_effort="minimal",
-                    verbosity="low",
-                    messages=[{"role": "user", "content": author_context}],
-                            max_completion_tokens=800
+                    input=[{"role": "user", "content": author_context}],
+                    reasoning={"effort": "low"},
+                    text={"verbosity": "low"},
+                    max_output_tokens=800
                 )
 
-                author_profile = author_analysis.choices[0].message.content
+                author_profile = author_analysis.output_text
                 response = f"## KOL Profile: {author_name}\n\n{author_profile}\n\n**Research Activity**: Found **{len(context.author_data)} abstracts** by this author in {ta_filter}. See detailed studies in the table below."
 
             except Exception as e:
@@ -3559,17 +3574,17 @@ Context from conference abstracts:
 
 Generate a comprehensive narrative response that includes analysis, context, and implications of the conference data related to this question.
 """
-        resp = client.chat.completions.create(
+        resp = client.responses.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
-            messages=[
-                {"role":"system","content":"You are a world-class medical affairs strategist providing comprehensive, analytical responses for EMD Serono."},
-                {"role":"user","content":prompt}
+            input=[
+                {"role": "system", "content": "You are a world-class medical affairs strategist providing comprehensive, analytical responses for EMD Serono."},
+                {"role": "user", "content": prompt},
             ],
-            max_completion_tokens=800,
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=800,
         )
-        narrative = resp.choices[0].message.content
+        narrative = resp.output_text
         hits = ctx_df[["Abstract #","Poster #","Title","Authors","Institutions"]].head(20)
         return narrative, hits
     except Exception as e:
@@ -4084,23 +4099,23 @@ Provide a comprehensive analysis covering:
 Deliver insights in paragraph form, 150-200 words."""
 
             # Stream the AI response
-            stream = client.chat.completions.create(
+            stream = client.responses.create(
                 model="gpt-5-mini",
-                reasoning_effort="minimal",
-                verbosity="low",
-                messages=[
+                input=[
                     {"role": "system", "content": "You are a medical affairs analyst. Provide strategic insights immediately without delay."},
                     {"role": "user", "content": individual_prompt}
                 ],
-                max_completion_tokens=300,
+                reasoning={"effort": "low"},
+                text={"verbosity": "low"},
+                max_output_tokens=300,
                 stream=True
             )
 
             profile_content = ""
 
-            for chunk in stream:
-                if chunk.choices[0].delta.content:
-                    token = chunk.choices[0].delta.content
+            for event in stream:
+                if event.type == "response.output_text.delta":
+                    token = event.delta
                     profile_content += token
                     yield sse_event("token", {"token": token})
 
@@ -4598,18 +4613,18 @@ Study Details:
 Provide a brief summary of these findings, mentioning the count and any notable patterns in the research areas or institutions involved."""
 
                         # Stream AI analysis of the drug data
-                        stream = client.chat.completions.create(
+                        stream = client.responses.create(
                             model="gpt-5-mini",
-                            reasoning_effort="minimal",
-                            verbosity="low",
-                            messages=[{"role": "user", "content": streaming_prompt}],
-                            max_completion_tokens=1000,
+                            input=[{"role": "user", "content": streaming_prompt}],
+                            reasoning={"effort": "low"},
+                            text={"verbosity": "low"},
+                            max_output_tokens=1000,
                             stream=True
                         )
 
-                        for chunk in stream:
-                            if chunk.choices[0].delta.content is not None:
-                                token = chunk.choices[0].delta.content
+                        for event in stream:
+                            if event.type == "response.output_text.delta":
+                                token = event.delta
                                 import json
                                 yield f"data: {json.dumps({'text': token})}\n\n"
 
@@ -4654,23 +4669,25 @@ Based on the user's query and the relevant conference data above, provide a comp
 
 Write a natural, conversational response that directly answers the user's question."""
 
-            # Enhanced streaming with paragraph boundary detection
-            stream = client.chat.completions.create(
+            # Enhanced streaming with paragraph boundary detection using new Responses API
+            from openai import Stream
+
+            stream: Stream[object] = client.responses.create(
                 model="gpt-5-mini",
-                reasoning_effort="minimal",
-                verbosity="low",
-                messages=[{"role": "user", "content": streaming_prompt}],
-                    max_completion_tokens=2000,
-                stream=True
+                input=[{"role": "user", "content": streaming_prompt}],
+                reasoning={"effort": "low"},
+                text={"verbosity": "low"},
+                max_output_tokens=2000,
+                stream=True,
             )
 
             # Track content for paragraph detection
             accumulated_content = ""
             last_boundary_pos = 0
 
-            for chunk in stream:
-                if chunk.choices[0].delta.content is not None:
-                    token = chunk.choices[0].delta.content
+            for event in stream:
+                if event.type == "response.output_text.delta":
+                    token = event.delta
                     accumulated_content += token
 
                     # Send the token in JSON format for frontend compatibility
@@ -4684,8 +4701,9 @@ Write a natural, conversational response that directly answers the user's questi
                         yield f"data: |||PARAGRAPH_BREAK|||\n\n"
                         last_boundary_pos = boundary_pos + 2
 
-            # Send completion signal
-            yield "data: [DONE]\n\n"
+                elif event.type == "response.completed":
+                    # Send completion signal
+                    yield "data: [DONE]\n\n"
 
         except Exception as e:
             print(f"🚨 ERROR in chat streaming: {str(e)}")
