@@ -125,11 +125,25 @@ ESMO_DRUG_FILTERS = {
 
 ESMO_THERAPEUTIC_AREAS = {
     "All Therapeutic Areas": {"keywords": []},
-    "Bladder Cancer": {"keywords": ["Urothelial; Avelumab", "bladder"]},
-    "Lung Cancer": {"keywords": ["NSCLC; Tepotinib", "NSCLC", "EGFR"]},
-    "Colorectal Cancer": {"keywords": ["colorectal", "CRC"]},
-    "Head and Neck Cancer": {"keywords": ["head and neck"]},
-    "Other Cancers": {"keywords": []}
+    "Bladder Cancer": {
+        "keywords": ["bladder", "urothelial", "uroepithelial", "transitional cell", "GU", "genitourinary"],
+        "exclusions": ["prostate"]  # Exclude prostate cancer
+    },
+    "Renal Cancer": {
+        "keywords": ["renal", "renal cell", "RCC"]
+    },
+    "Lung Cancer": {
+        "keywords": ["NSCLC", "non-small cell lung cancer", "non-small-cell lung cancer", "MET", "ALK", "EGFR", "KRAS"]
+    },
+    "Colorectal Cancer": {
+        "keywords": ["colorectal", "CRC", "colon", "rectal", "GI", "gastrointestinal", "bowel", "KRAS", "MSI", "microsatellite"]
+    },
+    "Head and Neck Cancer": {
+        "keywords": ["head and neck", "head & neck", "H&N", "HNSCC", "SCCHN", "squamous cell carcinoma of the head", "oral", "pharyngeal", "laryngeal"]
+    },
+    "TGCT": {
+        "keywords": ["TGCT", "PVNS", "tenosynovial giant cell tumor", "pigmented villonodular synovitis"]
+    }
 }
 
 ESMO_SESSION_TYPES = {
@@ -372,14 +386,39 @@ def get_filtered_dataframe(drug_filter: str = "All EMD Portfolio", ta_filter: st
 
     # Stage 2: Therapeutic Area Filtering - Search across Title and Theme columns
     if ta_filter != "All Therapeutic Areas" and ta_filter in ESMO_THERAPEUTIC_AREAS:
-        # Get keywords for this therapeutic area and search in Title and Theme columns
         ta_config = ESMO_THERAPEUTIC_AREAS[ta_filter]
+
         if ta_config.get("keywords"):
-            keyword_pattern = "|".join(ta_config["keywords"])
-            title_mask = df["Title"].str.contains(keyword_pattern, case=False, na=False)
-            theme_mask = df["Theme"].str.contains(keyword_pattern, case=False, na=False)
-            ta_mask = title_mask | theme_mask
+            # Create masks for each keyword to handle phrase matching properly
+            ta_mask = pd.Series([False] * len(df))
+
+            for keyword in ta_config["keywords"]:
+                # For multi-word phrases like "non-small cell lung cancer", use word boundaries
+                if len(keyword.split()) > 1:
+                    # Use word boundary matching for phrases to ensure complete phrase detection
+                    import re
+                    pattern = r'\b' + re.escape(keyword) + r'\b'
+                    title_matches = df["Title"].str.contains(pattern, case=False, na=False, regex=True)
+                    theme_matches = df["Theme"].str.contains(pattern, case=False, na=False, regex=True)
+                else:
+                    # For single words, use simple case-insensitive matching
+                    title_matches = df["Title"].str.contains(keyword, case=False, na=False, regex=False)
+                    theme_matches = df["Theme"].str.contains(keyword, case=False, na=False, regex=False)
+
+                ta_mask = ta_mask | title_matches | theme_matches
+
+            # Apply keyword filtering
             df = df[ta_mask]
+
+            # Apply exclusions if specified (e.g., exclude prostate from bladder cancer results)
+            if ta_config.get("exclusions"):
+                for exclusion in ta_config["exclusions"]:
+                    # Remove rows that contain exclusion terms
+                    exclusion_mask = (
+                        df["Title"].str.contains(exclusion, case=False, na=False, regex=False) |
+                        df["Theme"].str.contains(exclusion, case=False, na=False, regex=False)
+                    )
+                    df = df[~exclusion_mask]  # ~ means NOT, so keep rows that don't match exclusion
 
     return df
 
@@ -3656,9 +3695,31 @@ def get_data_api():
         working_df = working_df[session_mask]
         print(f"SIMPLE SESSION DEBUG: After session filtering: {len(working_df)} rows")
 
-    # For now, use the simple filtered result (ignore complex multi-filtering)
-    filtered_df = working_df
-    filter_context = {"total_sessions": len(filtered_df), "filter_summary": f"Sessions: {session_filters}"}
+    # Apply date filter if provided
+    if date_filters and date_filters != ["All Days"]:
+        print(f"SIMPLE DATE DEBUG: date_filters={date_filters}")
+        date_mask = pd.Series([False] * len(working_df))
+
+        for date_filter in date_filters:
+            if date_filter != "All Days" and date_filter in ESMO_DATE_FILTERS:
+                date_keywords = ESMO_DATE_FILTERS[date_filter]
+                for keyword in date_keywords:
+                    keyword_matches = working_df['Date'].astype(str).str.contains(keyword, case=False, na=False, regex=False)
+                    date_mask = date_mask | keyword_matches
+                    print(f"SIMPLE DATE DEBUG: '{keyword}' matches: {keyword_matches.sum()}")
+
+        working_df = working_df[date_mask]
+        print(f"SIMPLE DATE DEBUG: After date filtering: {len(working_df)} rows")
+
+    # Apply proper multi-filtering logic for drug and TA filters
+    if drug_filters or ta_filters:
+        # Use the comprehensive multi-filter function
+        filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
+        filter_context = get_filter_context_multi(drug_filters, ta_filters, session_filters, date_filters)
+    else:
+        # Only session/date filters applied - use the simple result
+        filtered_df = working_df
+        filter_context = {"total_sessions": len(filtered_df), "filter_summary": f"Sessions: {session_filters}, Dates: {date_filters}"}
 
     # Limit to first 50 only when no filters are applied (to improve performance)
     display_df = filtered_df
@@ -3859,8 +3920,8 @@ def highlight_search_results(df: pd.DataFrame, keyword: str) -> pd.DataFrame:
     # Create a copy to avoid modifying original data
     highlighted_df = df.copy()
 
-    # Define ESMO columns to highlight - using actual dataset columns only
-    text_columns = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Session', 'Theme', 'Room']
+    # Define ESMO columns to highlight - ALL columns from ESMO dataset
+    text_columns = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier', 'Room', 'Date', 'Time', 'Session', 'Theme']
 
     # Create highlight pattern - case insensitive
     pattern = re.compile(f'({re.escape(keyword)})', re.IGNORECASE)
