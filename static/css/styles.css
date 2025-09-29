@@ -90,7 +90,7 @@ body{
 .filterbar .spacer{ flex:1; }
 
 #searchInput{
-  height:44px; border-radius:12px 0 0 12px; border:2px solid var(--ink-2);
+  height:44px; border-radius:12px 0 0 12px; border:1px solid var(--ink-2);
 }
 #searchBtn{
   --bs-btn-color:#fff; --bs-btn-bg:var(--brand); --bs-btn-border-color:var(--brand);
@@ -188,3 +188,4 @@ body{
   .appbar{flex-direction:column; align-items:flex-start; gap:6px;}
   .appbar-tabs{gap:8px;}
 }
+
