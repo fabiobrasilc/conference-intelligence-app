@@ -129,8 +129,24 @@ ESMO_THERAPEUTIC_AREAS = {
     "Lung Cancer": ["NSCLC; Tepotinib", "NSCLC", "EGFR"],
     "Colorectal Cancer": ["colorectal", "CRC"],
     "Head and Neck Cancer": ["head and neck"],
-    "Gynecologic Cancer": ["gynecologic", "ovarian", "cervical"],
     "Other Cancers": []
+}
+
+ESMO_SESSION_TYPES = {
+    "All Session Types": [],
+    "Educational Session": ["Educational Session"],
+    "Proffered Paper": ["Proffered Paper"],
+    "Mini Oral Session": ["Mini Oral Session"],
+    "Symposium": ["Symposium"],
+    "Special Session": ["Special Session"],
+    "Multidisciplinary Session": ["Multidisciplinary Session"],
+    "Young Oncologists Session": ["Young Oncologists Session"],
+    "Patient Advocacy Session": ["Patient Advocacy Session"],
+    "Industry-Sponsored Symposium": ["Industry-Sponsored Symposium"],
+    "Challenge Your Expert": ["Challenge Your Expert"],
+    "Keynote Lecture": ["Keynote Lecture"],
+    "Highlights": ["Highlights"],
+    "Eons Session": ["Eons Session"]
 }
 
 # =========================
@@ -374,9 +390,31 @@ def get_available_therapeutic_areas() -> List[str]:
     """Get list of available therapeutic areas"""
     return list(ESMO_THERAPEUTIC_AREAS.keys())
 
-def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str]) -> pd.DataFrame:
+def get_available_session_types() -> List[str]:
+    """Get list of available session types"""
+    return list(ESMO_SESSION_TYPES.keys())
+
+def apply_session_filter(df: pd.DataFrame, session_filters: List[str]) -> pd.DataFrame:
+    """Apply session type filters to dataframe"""
+    if not session_filters or "All Session Types" in session_filters:
+        return df
+
+    # Collect all session keywords from selected filters
+    session_keywords = []
+    for session_filter in session_filters:
+        if session_filter in ESMO_SESSION_TYPES:
+            session_keywords.extend(ESMO_SESSION_TYPES[session_filter])
+
+    if not session_keywords:
+        return df
+
+    # Filter by session type (note: using 'Sesstion' due to typo in CSV header)
+    session_mask = df['Sesstion'].isin(session_keywords)
+    return df[session_mask]
+
+def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str], session_filters: List[str] = None) -> pd.DataFrame:
     """
-    Filter ESMO 2025 dataframe by multiple drug focus AND multiple therapeutic area filters.
+    Filter ESMO 2025 dataframe by multiple drug focus, therapeutic area, and session type filters.
     Combines results from multiple filters with OR logic.
     If no filters provided, returns all data.
     """
@@ -384,7 +422,7 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str])
         return pd.DataFrame()
 
     # If no filters selected, return all data
-    if not drug_filters and not ta_filters:
+    if not drug_filters and not ta_filters and not session_filters:
         return df_global.copy()
 
     all_results = []
@@ -407,18 +445,40 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str])
         # Only TA filters selected - not implemented yet
         pass
 
+    # If we have session filters, apply them
+    if session_filters and session_filters != ["All Session Types"]:
+        if all_results:
+            # Apply session filtering to existing results
+            session_filtered_results = []
+            for result_df in all_results:
+                session_filtered = apply_session_filter(result_df, session_filters)
+                if not session_filtered.empty:
+                    session_filtered_results.append(session_filtered)
+            all_results = session_filtered_results
+        else:
+            # Only session filters applied, filter entire dataset
+            session_filtered = apply_session_filter(df_global, session_filters)
+            if not session_filtered.empty:
+                all_results.append(session_filtered)
+
+    # If no results yet but we have only session filters
+    if not all_results and session_filters and session_filters != ["All Session Types"]:
+        session_filtered = apply_session_filter(df_global, session_filters)
+        if not session_filtered.empty:
+            all_results.append(session_filtered)
+
     if not all_results:
         return pd.DataFrame()
 
     # Combine all results and remove duplicates
     combined_df = pd.concat(all_results, ignore_index=True)
-    combined_df = combined_df.drop_duplicates(subset=["identifier"], keep='first')
+    combined_df = combined_df.drop_duplicates(subset=["Identifier"], keep='first')
 
     return combined_df
 
-def get_filter_context_multi(drug_filters: List[str], ta_filters: List[str]) -> Dict[str, Any]:
+def get_filter_context_multi(drug_filters: List[str], ta_filters: List[str], session_filters: List[str] = None) -> Dict[str, Any]:
     """Generate filter context information for multiple filters"""
-    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters)
+    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters)
     total_sessions = len(filtered_df)
     total_available = len(df_global) if df_global is not None else 0
 
@@ -3429,6 +3489,7 @@ def get_conference_info():
         return jsonify({
             "name": "ESMO 2025",
             "therapeutic_areas": get_available_therapeutic_areas(),
+            "session_types": get_available_session_types(),
             "features": {
                 "single_author_per_session": True,
                 "geographic_data": True,
@@ -3452,29 +3513,26 @@ def get_data_api():
     # Handle both old single-parameter format and new array format for backward compatibility
     drug_filters = request.args.getlist('drug_filters')
     ta_filters = request.args.getlist('ta_filters')
+    session_filters = request.args.getlist('session_filters')
 
     # Backward compatibility: if no array parameters, check for old single parameters
     if not drug_filters and request.args.get('drug_filter'):
         drug_filters = [request.args.get('drug_filter')]
     if not ta_filters and request.args.get('ta_filter'):
         ta_filters = [request.args.get('ta_filter')]
+    if not session_filters and request.args.get('session_filter'):
+        session_filters = [request.args.get('session_filter')]
 
-    # Backward compatibility: if no array parameters, check for old single parameters
-    if not drug_filters and request.args.get('drug_filter'):
-        drug_filters = [request.args.get('drug_filter')]
-    if not ta_filters and request.args.get('ta_filter'):
-        ta_filters = [request.args.get('ta_filter')]
-
-    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters)
-    filter_context = get_filter_context_multi(drug_filters, ta_filters)
+    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters)
+    filter_context = get_filter_context_multi(drug_filters, ta_filters, session_filters)
 
     # Limit to first 50 only when no filters are applied (to improve performance)
     display_df = filtered_df
-    if not drug_filters and not ta_filters:
+    if not drug_filters and not ta_filters and not session_filters:
         display_df = filtered_df.head(50)
 
-    # Use original dataset column names that the frontend expects
-    display_columns = ["Title", "Speakers", "Speaker Location", "Affiliation", "Identifier", "Room", "Date", "Time", "Session", "Theme"]
+    # Use original dataset column names that the frontend expects (note: 'Sesstion' has typo in CSV)
+    display_columns = ["Title", "Speakers", "Speaker Location", "Affiliation", "Identifier", "Room", "Date", "Time", "Sesstion", "Theme"]
     valid_columns = [col for col in display_columns if col in display_df.columns]
 
     return jsonify({
@@ -3567,25 +3625,23 @@ def search_data_api():
     # Get filters using the same parameter names as /api/data (with backward compatibility)
     drug_filters = request.args.getlist('drug_filters')
     ta_filters = request.args.getlist('ta_filters')
+    session_filters = request.args.getlist('session_filters')
 
     # Backward compatibility: if no array parameters, check for old single parameters
     if not drug_filters and request.args.get('drug_filter'):
         drug_filters = [request.args.get('drug_filter')]
     if not ta_filters and request.args.get('ta_filter'):
         ta_filters = [request.args.get('ta_filter')]
+    if not session_filters and request.args.get('session_filter'):
+        session_filters = [request.args.get('session_filter')]
 
-    # Backward compatibility: if no array parameters, check for old single parameters
-    if not drug_filters and request.args.get('drug_filter'):
-        drug_filters = [request.args.get('drug_filter')]
-    if not ta_filters and request.args.get('ta_filter'):
-        ta_filters = [request.args.get('ta_filter')]
     keyword = request.args.get('keyword', '').strip()
 
     if not keyword:
         return jsonify([])
 
-    # For search, always use full dataset for now (as per user requirement)
-    current_df = df_global.copy()
+    # Apply filters first, then search within filtered results
+    current_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters)
 
     # Search across all fields using ESMO column structure
     print(f"SEARCH DEBUG: Searching for '{keyword}' in dataframe with {len(current_df)} rows")
