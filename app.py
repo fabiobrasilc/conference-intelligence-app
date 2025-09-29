@@ -408,8 +408,8 @@ def apply_session_filter(df: pd.DataFrame, session_filters: List[str]) -> pd.Dat
     if not session_keywords:
         return df
 
-    # Filter by session type (note: using 'Sesstion' due to typo in CSV header)
-    session_mask = df['Sesstion'].isin(session_keywords)
+    # Filter by session type
+    session_mask = df['Session'].isin(session_keywords)
     return df[session_mask]
 
 def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str], session_filters: List[str] = None) -> pd.DataFrame:
@@ -1085,8 +1085,6 @@ Drugs to map: {drugs_text}"""
     try:
         response = client.chat.completions.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
             messages=[{"role": "user", "content": prompt}],
             max_completion_tokens=500
         )
@@ -1873,8 +1871,6 @@ Determine the optimal execution strategy and return ONLY valid JSON format match
     try:
         resp = client.chat.completions.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -2080,8 +2076,6 @@ Return only JSON.
     try:
         resp = client.chat.completions.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
             messages=[{"role": "system", "content": system},
                       {"role": "user", "content": user}],
             max_completion_tokens=180,
@@ -2221,8 +2215,6 @@ etc."""
             try:
                 batch_response = client.chat.completions.create(
                     model="gpt-5-mini",
-                    reasoning_effort="minimal",
-                    verbosity="low",
                     messages=[{"role": "user", "content": batch_prompt}],
                             max_completion_tokens=1600  # Increased for batch processing
                 )
@@ -2254,8 +2246,6 @@ Keep it concise and actionable."""
 
         summary_response = client.chat.completions.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
             messages=[{"role": "user", "content": summary_prompt}],
             max_completion_tokens=500
         )
@@ -2306,8 +2296,6 @@ def yield_hybrid_stream(prompt: str, section: str):
     try:
         stream = client.chat.completions.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
             messages=[{"role": "user", "content": prompt}],
             max_completion_tokens=2000,
             stream=True
@@ -2400,8 +2388,6 @@ Make it flow naturally as a single, well-structured paragraph without internal b
         # Stream executive summary tokens in real-time
         summary_stream = client.chat.completions.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
             messages=[
                 {"role": "system", "content": "You are a medical affairs analyst. Provide comprehensive analysis immediately without delay. Start your response right away."},
                 {"role": "user", "content": executive_summary_prompt}
@@ -2480,8 +2466,6 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
                     print(f"🔧 Prompt length: {len(individual_prompt)} chars")
                     stream = client.chat.completions.create(
                         model="gpt-5-mini",
-                        reasoning_effort="minimal",
-                        verbosity="low",
                         messages=[
                             {"role": "system", "content": "You are a medical affairs analyst. Provide comprehensive analysis immediately without delay. Start your response right away."},
                             {"role": "user", "content": individual_prompt}
@@ -2607,8 +2591,6 @@ Write a comprehensive, natural intelligence report based on this data."""
         # Stream the analysis in real-time
         stream = client.chat.completions.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
             messages=[{"role": "user", "content": competitor_prompt}],
             max_completion_tokens=3000,
             stream=True
@@ -2678,8 +2660,6 @@ Write a comprehensive, natural intelligence report based on this data."""
         # Stream the analysis in real-time
         stream = client.chat.completions.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
             messages=[{"role": "user", "content": institution_prompt}],
             max_completion_tokens=3000,
             stream=True
@@ -2749,8 +2729,6 @@ Write a comprehensive, natural intelligence report based on this data."""
         # Stream the analysis in real-time
         stream = client.chat.completions.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
             messages=[{"role": "user", "content": insights_prompt}],
             max_completion_tokens=5000,
             stream=True
@@ -2817,8 +2795,6 @@ Write a comprehensive, natural intelligence report based on this data and therap
         # Stream the analysis in real-time
         stream = client.chat.completions.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
             messages=[{"role": "user", "content": strategy_prompt}],
             max_completion_tokens=3000,
             stream=True
@@ -2903,8 +2879,6 @@ Write a comprehensive, natural intelligence report based on this data."""
         try:
             response = client.chat.completions.create(
                 model="gpt-5-mini",
-                reasoning_effort="minimal",
-                verbosity="low",
                 messages=[{"role": "user", "content": ai_prompt}],
                     max_completion_tokens=3000
             )
@@ -3091,8 +3065,6 @@ Generate a comprehensive {framework['focus']} analysis that intelligently adapts
     try:
         response = client.chat.completions.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
             messages=[
                 {"role": "system", "content": f"You are an expert medical affairs analyst providing {framework['focus']} for EMD Serono. Focus on delivering relevant, data-driven insights that directly address the analysis objectives."},
                 {"role": "user", "content": prompt}
@@ -3182,8 +3154,6 @@ Please provide a helpful, direct response to the user's question. Focus on being
     try:
         response = client.chat.completions.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -3350,8 +3320,6 @@ Write natural, detailed paragraphs for each section. Be specific about their res
             try:
                 author_analysis = client.chat.completions.create(
                     model="gpt-5-mini",
-                    reasoning_effort="minimal",
-                    verbosity="low",
                     messages=[{"role": "user", "content": author_context}],
                             max_completion_tokens=800
                 )
@@ -3432,8 +3400,6 @@ Generate a comprehensive narrative response that includes analysis, context, and
 """
         resp = client.chat.completions.create(
             model="gpt-5-mini",
-            reasoning_effort="minimal",
-            verbosity="low",
             messages=[
                 {"role":"system","content":"You are a world-class medical affairs strategist providing comprehensive, analytical responses for EMD Serono."},
                 {"role":"user","content":prompt}
@@ -3531,8 +3497,8 @@ def get_data_api():
     if not drug_filters and not ta_filters and not session_filters:
         display_df = filtered_df.head(50)
 
-    # Use original dataset column names that the frontend expects (note: 'Sesstion' has typo in CSV)
-    display_columns = ["Title", "Speakers", "Speaker Location", "Affiliation", "Identifier", "Room", "Date", "Time", "Sesstion", "Theme"]
+    # Use original dataset column names that the frontend expects
+    display_columns = ["Title", "Speakers", "Speaker Location", "Affiliation", "Identifier", "Room", "Date", "Time", "Session", "Theme"]
     valid_columns = [col for col in display_columns if col in display_df.columns]
 
     return jsonify({
@@ -3765,8 +3731,6 @@ Deliver insights in paragraph form, 150-200 words."""
             # Stream the AI response
             stream = client.chat.completions.create(
                 model="gpt-5-mini",
-                reasoning_effort="minimal",
-                verbosity="low",
                 messages=[
                     {"role": "system", "content": "You are a medical affairs analyst. Provide strategic insights immediately without delay."},
                     {"role": "user", "content": individual_prompt}
@@ -4335,7 +4299,7 @@ Write a natural, conversational response that directly answers the user's questi
                 reasoning_effort="minimal",
                 verbosity="low",
                 messages=[{"role": "user", "content": streaming_prompt}],
-                    max_completion_tokens=2000,
+                max_completion_tokens=2000,
                 stream=True
             )
 
