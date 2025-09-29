@@ -53,7 +53,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "a_strong_fallback_secret_key_change_me")
 
 from pathlib import Path
-CSV_FILE = Path(__file__).parent / "ASCO GU 2025 Poster Author Affiliations info.csv"
+CSV_FILE = Path(__file__).parent / "ESMO_2025_FINAL_20250929.csv"
 
 CHROMA_DB_PATH = "./chroma_conference_db"
 
@@ -87,8 +87,154 @@ chroma_client = None
 collection = None
 csv_hash_global = None
 df_global = None
-bladder_keywords_global = None
-renal_keywords_global = None
+
+# ESMO 2025 Drug-Centric + Therapeutic Area Configuration
+ESMO_DRUG_FILTERS = {
+    "Competitive Landscape": {
+        "keywords": [],
+        "main_filters": [],
+        "description": "All competitive drugs and broader oncology landscape",
+        "show_all": True
+    },
+    "All EMD Portfolio": {
+        "keywords": ["avelumab", "bavencio", "tepotinib", "cetuximab", "erbitux"],
+        "main_filters": ["Urothelial; Avelumab", "NSCLC; Tepotinib"],
+        "description": "All EMD Serono drugs across therapeutic areas"
+    },
+    "Avelumab Focus": {
+        "keywords": ["avelumab", "bavencio"],
+        "main_filters": ["Urothelial; Avelumab"],
+        "description": "Avelumab/Bavencio across all indications"
+    },
+    "Tepotinib Focus": {
+        "keywords": ["tepotinib"],
+        "main_filters": ["NSCLC; Tepotinib"],
+        "description": "Tepotinib in NSCLC and other indications"
+    },
+    "Cetuximab Focus": {
+        "keywords": ["cetuximab", "erbitux"],
+        "main_filters": [],
+        "description": "Cetuximab/Erbitux in colorectal and head & neck"
+    },
+    "Competitive Landscape": {
+        "keywords": [],
+        "main_filters": [],
+        "description": "All sessions for competitive analysis"
+    }
+}
+
+ESMO_THERAPEUTIC_AREAS = {
+    "All Therapeutic Areas": [],
+    "Bladder Cancer": ["Urothelial; Avelumab", "bladder"],
+    "Lung Cancer": ["NSCLC; Tepotinib", "NSCLC", "EGFR"],
+    "Colorectal Cancer": ["colorectal", "CRC"],
+    "Head and Neck Cancer": ["head and neck"],
+    "Gynecologic Cancer": ["gynecologic", "ovarian", "cervical"],
+    "Other Cancers": []
+}
+
+# =========================
+# Conference Data Model
+# =========================
+
+@dataclass
+class ConferenceConfig:
+    """
+    Configuration for each supported conference with schema mapping and metadata
+    """
+    id: str                          # Unique identifier (e.g., "ASCO_GU_2025", "ESMO_2025")
+    name: str                        # Display name
+    csv_file: str                    # Path to CSV data file
+    encoding: str = "utf-8"          # File encoding
+
+    # Column mappings from source CSV to unified schema
+    column_mapping: dict = None      # Maps source columns to standard names
+
+    # Therapeutic area handling
+    ta_column: str = "ta"            # Column containing therapeutic area classification
+    ta_mapping: dict = None          # Maps values to standardized TA names
+
+    # Conference-specific metadata
+    has_multi_authors: bool = True   # Whether conference supports multiple authors per session
+    has_geographic_data: bool = False # Whether location data is available
+    has_session_metadata: bool = False # Whether dates/times/rooms are available
+
+    # Data quality flags
+    affiliation_quality: str = "high"    # "high", "medium", "low" - affects user warnings
+    affiliation_source: str = "scraped"  # "scraped", "api_derived", "manual"
+
+    def __post_init__(self):
+        if self.column_mapping is None:
+            self.column_mapping = {}
+        if self.ta_mapping is None:
+            self.ta_mapping = {}
+
+def get_conference_configs() -> Dict[str, ConferenceConfig]:
+    """
+    Define all supported conference configurations
+    """
+    return {
+        "ASCO_GU_2025": ConferenceConfig(
+            id="ASCO_GU_2025",
+            name="ASCO GU 2025",
+            csv_file="ASCO GU 2025 Poster Author Affiliations info.csv",
+            encoding="utf-8",
+            column_mapping={
+                "Abstract #": "abstract_id",
+                "Poster #": "session_id",
+                "Title": "title",
+                "Authors": "authors",
+                "Institutions": "institutions",
+                "ta": "therapeutic_area"
+            },
+            ta_column="ta",
+            ta_mapping={
+                "bladder": "Bladder Cancer",
+                "renal": "Renal Cell Carcinoma"
+            },
+            has_multi_authors=True,
+            has_geographic_data=False,
+            has_session_metadata=False,
+            affiliation_quality="high",
+            affiliation_source="scraped"
+        ),
+
+        "ESMO_2025": ConferenceConfig(
+            id="ESMO_2025",
+            name="ESMO 2025",
+            csv_file="esmo2025_all.csv",
+            encoding="latin-1",
+            column_mapping={
+                "identifier": "abstract_id",
+                "session_type": "session_id",
+                "study_title": "title",
+                "speaker": "authors",
+                "affiliation": "institutions",
+                "main_filters": "therapeutic_area",
+                "location": "speaker_location",
+                "date": "session_date",
+                "time": "session_time",
+                "room": "session_room",
+                "session_category": "session_category"
+            },
+            ta_column="main_filters",
+            ta_mapping={
+                "Urothelial; Avelumab": "Bladder Cancer",
+                "NSCLC; Tepotinib": "Lung Cancer",
+                "NSCLC": "Lung Cancer",
+                "colorectal": "Colorectal Cancer",
+                "CRC": "Colorectal Cancer",
+                "head and neck": "Head and Neck Cancer",
+                "EGFR": "Lung Cancer",
+                "bladder": "Bladder Cancer"
+            },
+            has_multi_authors=False,
+            has_geographic_data=True,
+            has_session_metadata=True,
+            affiliation_quality="medium",
+            affiliation_source="api_derived"
+        )
+    }
 
 # =========================
 # Global Helpers
@@ -170,6 +316,126 @@ def normalize_institution_name(institution_text: str) -> str:
     # Fallback: return the last part (often the main institution)
     return parts[-1] if parts else ""
 
+def get_filtered_dataframe(drug_filter: str = "All EMD Portfolio", ta_filter: str = "All Therapeutic Areas") -> pd.DataFrame:
+    """
+    Filter ESMO 2025 dataframe by drug focus AND therapeutic area.
+    Two-stage filtering approach for comprehensive coverage.
+
+    Args:
+        drug_filter: Drug focus filter ("Avelumab Focus", "All EMD Portfolio", etc.)
+        ta_filter: Therapeutic area filter ("Bladder Cancer", "All Therapeutic Areas", etc.)
+
+    Returns:
+        Filtered dataframe copy with filter context
+    """
+    if df_global is None:
+        return pd.DataFrame()
+
+    df = df_global.copy()
+
+    # Stage 1: Drug Focus Filtering - SIMPLIFIED: search keywords in study_title only
+    if drug_filter in ESMO_DRUG_FILTERS:
+        drug_config = ESMO_DRUG_FILTERS[drug_filter]
+
+        # Use simple keyword search in study_title column
+        if drug_config["keywords"]:
+            keyword_pattern = "|".join(drug_config["keywords"])
+            mask = df["study_title"].str.contains(keyword_pattern, case=False, na=False)
+            df = df[mask]
+
+    # Stage 2: Therapeutic Area Filtering - Using main_filters column we generated
+    if ta_filter != "All Therapeutic Areas" and ta_filter in ESMO_THERAPEUTIC_AREAS:
+        # Filter using the main_filters column which contains our generated therapeutic area tags
+        ta_mask = df["main_filters"].str.contains(ta_filter, case=False, na=False)
+        df = df[ta_mask]
+
+    return df
+
+def get_filter_context(drug_filter: str, ta_filter: str) -> Dict[str, Any]:
+    """
+    Get context information about current filter selection for UI display
+    """
+    df_filtered = get_filtered_dataframe(drug_filter, ta_filter)
+
+    return {
+        "drug_filter": drug_filter,
+        "ta_filter": ta_filter,
+        "total_sessions": len(df_filtered),
+        "total_available": len(df_global) if df_global is not None else 0,
+        "drug_description": ESMO_DRUG_FILTERS.get(drug_filter, {}).get("description", ""),
+        "filter_summary": f"{drug_filter} + {ta_filter}"
+    }
+
+def get_available_drug_filters() -> List[str]:
+    """Get list of available drug focus filters"""
+    return list(ESMO_DRUG_FILTERS.keys())
+
+def get_available_therapeutic_areas() -> List[str]:
+    """Get list of available therapeutic areas"""
+    return list(ESMO_THERAPEUTIC_AREAS.keys())
+
+def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str]) -> pd.DataFrame:
+    """
+    Filter ESMO 2025 dataframe by multiple drug focus AND multiple therapeutic area filters.
+    Combines results from multiple filters with OR logic.
+    If no filters provided, returns all data.
+    """
+    if df_global is None or df_global.empty:
+        return pd.DataFrame()
+
+    # If no filters selected, return all data
+    if not drug_filters and not ta_filters:
+        return df_global.copy()
+
+    all_results = []
+
+    # Handle different filter scenarios
+    if drug_filters and ta_filters:
+        # Both drug and TA filters selected - combine them
+        for drug_filter in drug_filters:
+            for ta_filter in ta_filters:
+                filtered_df = get_filtered_dataframe(drug_filter, ta_filter)
+                if not filtered_df.empty:
+                    all_results.append(filtered_df)
+    elif drug_filters and not ta_filters:
+        # Only drug filters selected - use "All Therapeutic Areas" as default
+        for drug_filter in drug_filters:
+            filtered_df = get_filtered_dataframe(drug_filter, "All Therapeutic Areas")
+            if not filtered_df.empty:
+                all_results.append(filtered_df)
+    elif ta_filters and not drug_filters:
+        # Only TA filters selected - not implemented yet
+        pass
+
+    if not all_results:
+        return pd.DataFrame()
+
+    # Combine all results and remove duplicates
+    combined_df = pd.concat(all_results, ignore_index=True)
+    combined_df = combined_df.drop_duplicates(subset=["identifier"], keep='first')
+
+    return combined_df
+
+def get_filter_context_multi(drug_filters: List[str], ta_filters: List[str]) -> Dict[str, Any]:
+    """Generate filter context information for multiple filters"""
+    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters)
+    total_sessions = len(filtered_df)
+    total_available = len(df_global) if df_global is not None else 0
+
+    # Handle empty filters case
+    if not drug_filters and not ta_filters:
+        drug_summary = "All Drugs"
+        ta_summary = "All Therapeutic Areas"
+    else:
+        drug_summary = ", ".join(drug_filters) if drug_filters else "All Drugs"
+        ta_summary = ", ".join(ta_filters) if ta_filters else "All Therapeutic Areas"
+
+    return {
+        "total_sessions": total_sessions,
+        "total_available": total_available,
+        "filter_summary": f"{drug_summary} + {ta_summary}"
+    }
+
 def extract_number_default(q: str, default_n: int = 20) -> int:
     nums = re.findall(r"\b(\d{1,3})\b", q)
     if not nums:
@@ -186,39 +452,115 @@ def normalize_txt(s: str) -> str:
 # =========================
 # Load / Prepare Data
 # =========================
-def load_and_prepare_data():
+def load_and_prepare_esmo_data():
+    """
+    Load and prepare ESMO 2025 data with proper schema handling
+    """
     data_path = Path(CSV_FILE)
     if not data_path.exists():
-        raise FileNotFoundError(f"Data file not found: {CSV_FILE}")
+        raise FileNotFoundError(f"ESMO data file not found: {CSV_FILE}")
 
-    df = pd.read_csv(data_path, encoding="utf-8-sig").fillna("")
+    # Load with latin-1 encoding for ESMO data
+    try:
+        df = pd.read_csv(data_path, encoding="latin-1").fillna("")
+    except UnicodeDecodeError:
+        # Fallback encoding
+        df = pd.read_csv(data_path, encoding="utf-8-sig").fillna("")
 
-    # TA tagging (title-based)
-    bladder_keywords = ["bladder", "urothelial", r"\buc\b", r"\bmuc\b"]
-    renal_keywords = [
-        "renal", "kidney", "rcc", "ccrcc", "nccrcc", "prcc", "chrcc",
-        "renal cell", "clear cell", "papillary", "chromophobe"
-    ]
-    is_bladder = safe_contains(df["Title"], "|".join(bladder_keywords), regex=True)
-    is_renal   = safe_contains(df["Title"], "|".join(renal_keywords), regex=True)
-    df["ta"] = "other"
-    df.loc[is_bladder, "ta"] = "bladder"
-    df.loc[is_renal,   "ta"] = "renal"
+    # New dataset columns: Title,Speakers,Speaker Location,Affiliation,Identifier,Room,Date,Time,Session,Theme
+    print(f"Loaded ESMO data: {len(df)} sessions")
+    print(f"Columns: {list(df.columns)}")
 
-    # Combined text for embeddings
+    # Fix typo in column name if present
+    if "Sesstion" in df.columns:
+        df = df.rename(columns={"Sesstion": "Session"})
+
+    # Create column mapping from new dataset to expected schema
+    column_mapping = {
+        "Title": "study_title",
+        "Speakers": "speaker",
+        "Speaker Location": "location",
+        "Affiliation": "affiliation",
+        "Identifier": "identifier",
+        "Room": "room",
+        "Date": "date",
+        "Time": "time",
+        "Session": "session_type",
+        "Theme": "session_category"
+    }
+
+    # Apply the mapping to create expected columns
+    for old_col, new_col in column_mapping.items():
+        if old_col in df.columns:
+            df[new_col] = df[old_col]
+
+    # Create legacy columns for backward compatibility
+    df["Abstract #"] = df["identifier"]
+    df["Poster #"] = df["session_type"]
+    df["Title"] = df["study_title"]
+    df["Authors"] = df["speaker"]
+    df["Institutions"] = df["affiliation"]
+
+    # Generate main_filters column for drug/TA filtering based on session themes and titles
+    def generate_main_filters(row):
+        title = str(row.get("study_title", "")).lower()
+        theme = str(row.get("session_category", "")).lower()
+
+        filters = []
+
+        # Drug detection
+        if any(term in title for term in ["avelumab", "bavencio"]):
+            filters.append("Avelumab Focus")
+        if any(term in title for term in ["tepotinib"]):
+            filters.append("Tepotinib Focus")
+        if any(term in title for term in ["cetuximab", "erbitux"]):
+            filters.append("Cetuximab Focus")
+
+        # Therapeutic area detection
+        if any(term in title + " " + theme for term in ["bladder", "urothelial"]):
+            filters.append("Bladder Cancer")
+        if any(term in title + " " + theme for term in ["lung", "nsclc", "sclc"]):
+            filters.append("Lung Cancer")
+        if any(term in title + " " + theme for term in ["colorectal", "crc", "colon"]):
+            filters.append("Colorectal Cancer")
+        if any(term in title + " " + theme for term in ["head", "neck", "hnc"]):
+            filters.append("Head and Neck Cancer")
+        if any(term in title + " " + theme for term in ["gynecologic", "ovarian", "cervical", "endometrial"]):
+            filters.append("Gynecologic Cancer")
+
+        return "|".join(filters) if filters else "General Oncology"
+
+    df["main_filters"] = df.apply(generate_main_filters, axis=1)
+
+    # Ensure required columns exist
+    if "Abstract #" not in df.columns:
+        df["Abstract #"] = df.index.astype(str)
+    if "Poster #" not in df.columns:
+        df["Poster #"] = df.get("session_type", "")
+
+    # Create combined text for embeddings (adapted for ESMO schema)
     df["combined_text"] = (
         "Title: " + df["Title"].astype(str)
-        + " | Authors: " + df["Authors"].astype(str)
-        + " | Institutions: " + df["Institutions"].astype(str)
-        + " | Abstract #: " + df["Abstract #"].astype(str)
-        + " | Poster #: " + df["Poster #"].astype(str)
+        + " | Speaker: " + df["Authors"].astype(str)
+        + " | Institution: " + df["Institutions"].astype(str)
+        + " | Session: " + df["Poster #"].astype(str)
+        + " | ID: " + df["Abstract #"].astype(str)
     )
 
-    # Normalize delimiters
-    for col in ["Authors", "Institutions"]:
-        df[col] = df[col].astype(str).str.replace(r"\s*[,/]\s*", "; ", regex=True)
+    # Add geographic data if available
+    if "location" in df.columns:
+        df["combined_text"] += " | Location: " + df["location"].astype(str)
 
-    return df, bladder_keywords, renal_keywords, file_md5(data_path)
+    # Add session metadata if available
+    for col in ["date", "time", "room", "session_category"]:
+        if col in df.columns:
+            df["combined_text"] += f" | {col.title()}: " + df[col].astype(str)
+
+    # Normalize affiliations (single author per session in ESMO)
+    if "Institutions" in df.columns:
+        df["Institutions"] = df["Institutions"].astype(str)
+
+    return df, file_md5(data_path)
 
 # =========================
 # Vector DB
@@ -252,7 +594,7 @@ def setup_vector_db(csv_hash: str):
             print(f"Error cleaning old collections: {e}")
 
         collection = chroma_client.create_collection(name=collection_name, embedding_function=openai_ef)
-        df, _, _, _ = load_and_prepare_data()
+        df, _ = load_and_prepare_esmo_data()
         texts = df["combined_text"].tolist()
 
         ids, seen = [], set()
@@ -348,9 +690,9 @@ PLAYBOOKS: Dict[str, Dict[str, Any]] = {
         ],
         "allow_soc": True,
         "allow_strategic_implications": False,
-        "ai_prompt": """You are EMD Serono's competitive intelligence analyst focused on avelumab (Bavencio) positioning in bladder cancer maintenance therapy.
+        "ai_prompt": """You are EMD Serono's competitive intelligence analyst focused on our multi-therapeutic area oncology portfolio at ESMO 2025.
 
-KEY CONTEXT: EV+P dominance in 1L (~2 years) fundamentally reshaped our competitive landscape. Medical affairs needs actionable intelligence on threats and opportunities.
+KEY CONTEXT: Analyze competitive landscape across EMD Serono's focus areas - Avelumab (bladder cancer maintenance), Tepotinib (NSCLC MET exon 14), and Cetuximab (colorectal/head & neck). ESMO represents broader oncology landscape beyond our traditional GU focus.
 
 STRATEGIC ANALYSIS FRAMEWORK:
 
@@ -548,9 +890,9 @@ Deliver actionable scientific intelligence for medical affairs strategic plannin
         ],
         "allow_soc": False,
         "allow_strategic_implications": True,
-        "ai_prompt": """You are EMD Serono's senior medical affairs strategist. Analyze ASCO GU 2025 data for strategic implications on avelumab (Bavencio) positioning and portfolio development.
+        "ai_prompt": """You are EMD Serono's senior medical affairs strategist. Analyze ESMO 2025 data for strategic implications across our oncology portfolio - Avelumab (bladder), Tepotinib (lung), and Cetuximab (colorectal/H&N).
 
-KEY CONTEXT: Avelumab has established presence in genitourinary oncology, particularly in bladder cancer maintenance therapy post-platinum. Analyze the current therapeutic area focus for strategic positioning opportunities. Consider the evolving competitive landscape including EV+P combinations in bladder cancer and other emerging treatments across GU cancers.
+KEY CONTEXT: ESMO 2025 offers broader oncology landscape analysis beyond our traditional GU focus. Assess competitive positioning across multiple therapeutic areas where EMD Serono has established or emerging presence. Consider geographic market dynamics and European oncology trends.
 
 STRATEGIC ANALYSIS FRAMEWORK:
 
@@ -1172,6 +1514,54 @@ def get_top_authors(filtered_sig: str, filtered_df: pd.DataFrame, n: int = 20):
 
 def get_top_institutions(filtered_sig: str, filtered_df: pd.DataFrame, n: int = 20):
     return count_top_institutions(filtered_df, n)
+
+def get_geographic_distribution(filtered_df: pd.DataFrame, n: int = 15) -> pd.DataFrame:
+    """
+    Analyze geographic distribution of ESMO speakers by location
+    New capability enabled by ESMO's location data
+    """
+    if "location" not in filtered_df.columns:
+        return pd.DataFrame()
+
+    # Clean and parse location data
+    locations = filtered_df["location"].fillna("Unknown").str.strip()
+
+    # Extract country (typically last part after comma)
+    countries = []
+    cities = []
+
+    for loc in locations:
+        if pd.isna(loc) or loc == "Unknown" or loc == "":
+            countries.append("Unknown")
+            cities.append("Unknown")
+        else:
+            parts = [part.strip() for part in str(loc).split(",")]
+            if len(parts) >= 2:
+                cities.append(parts[0])
+                countries.append(parts[-1])
+            else:
+                cities.append(str(loc))
+                countries.append("Unknown")
+
+    # Count by country
+    country_counts = pd.Series(countries).value_counts().head(n)
+
+    # Create geographic summary table
+    geo_data = []
+    for country, count in country_counts.items():
+        # Get cities for this country
+        country_mask = pd.Series(countries) == country
+        country_cities = pd.Series(cities)[country_mask].value_counts().head(3)
+        top_cities = "; ".join([f"{city} ({cnt})" for city, cnt in country_cities.items()])
+
+        geo_data.append({
+            "Country": country,
+            "Sessions": count,
+            "Top Cities": top_cities,
+            "Percentage": f"{count/len(filtered_df)*100:.1f}%"
+        })
+
+    return pd.DataFrame(geo_data)
 
 def build_competitor_tables(filtered_sig: str, filtered_df: pd.DataFrame, competitors_to_check: List[Tuple[str, List[str]]]):
     comp = create_competitor_abstracts_table(filtered_df, competitors_to_check)
@@ -2768,12 +3158,7 @@ def handle_data_table_request(query: str, plan: QueryPlan, context: ContextPacka
         n = extract_number_default(query, 20)
 
         # Get the current filtered data
-        if ta_filter == "Bladder Cancer":
-            current_df = df_global[df_global["ta"] == "bladder"].copy()
-        elif ta_filter == "Renal Cell Carcinoma":
-            current_df = df_global[df_global["ta"] == "renal"].copy()
-        else:
-            current_df = df_global.copy()
+        current_df = get_filtered_dataframe(ta_filter)
 
         # For data table requests, users might want individual abstracts OR summary stats
         # Let's provide both: summary stats + recent individual abstracts from top authors
@@ -2810,12 +3195,8 @@ def handle_data_table_request(query: str, plan: QueryPlan, context: ContextPacka
 
         n = extract_number_default(query, 20)
 
-        if ta_filter == "Bladder Cancer":
-            current_df = df_global[df_global["ta"] == "bladder"].copy()
-        elif ta_filter == "Renal Cell Carcinoma":
-            current_df = df_global[df_global["ta"] == "renal"].copy()
-        else:
-            current_df = df_global.copy()
+        # Use the main global dataset for institution analysis
+        current_df = df_global.copy()
 
         # Similar approach for institutions - summary + individual abstracts
         top_institutions_summary = get_top_institutions(df_sig(current_df), current_df, min(n, 15))
@@ -3008,23 +3389,31 @@ Generate a comprehensive narrative response that includes analysis, context, and
 
 # --- Global Initialization ---
 def initialize_app_globals():
-    global df_global, bladder_keywords_global, renal_keywords_global, csv_hash_global, collection
+    """
+    Initialize application globals for ESMO 2025 data
+    """
+    global df_global, csv_hash_global, collection
 
     if df_global is None:
-        print("Initializing application globals (data and vector DB)...")
+        print("Initializing ESMO 2025 application globals...")
         try:
-            df_global, bladder_keywords_global, renal_keywords_global, csv_hash_global = load_and_prepare_data()
-            print(f"Data loaded successfully. CSV hash: {csv_hash_global[:8]}")
+            # Load ESMO 2025 data
+            df_global, csv_hash_global = load_and_prepare_esmo_data()
+            print(f"ESMO data loaded successfully. Hash: {csv_hash_global[:8]}")
+
+            # Setup vector database
             collection = setup_vector_db(csv_hash_global)
             if collection is None:
                 print("Warning: Vector database could not be fully set up. AI features may be limited.")
+
             return True
         except FileNotFoundError as e:
-            print(f"FATAL ERROR: Data file not found: {e}")
+            print(f"FATAL ERROR: ESMO data file not found: {e}")
             return False
         except Exception as e:
-            print(f"FATAL ERROR during data/vector DB initialization: {e}")
+            print(f"FATAL ERROR during ESMO initialization: {e}")
             return False
+
     return True
 
 # --- Flask Routes ---
@@ -3032,60 +3421,195 @@ def initialize_app_globals():
 def index():
     return render_template('index.html')
 
+# ESMO 2025 Conference Info API
+@app.route('/api/conference/info')
+def get_conference_info():
+    """Get ESMO 2025 conference information"""
+    try:
+        return jsonify({
+            "name": "ESMO 2025",
+            "therapeutic_areas": get_available_therapeutic_areas(),
+            "features": {
+                "single_author_per_session": True,
+                "geographic_data": True,
+                "session_metadata": True,
+                "emds_drug_focus": list(ESMO_EMD_FOCUS.keys())
+            },
+            "data_quality": {
+                "affiliation_source": "PubMed/ORCID API derived",
+                "affiliation_accuracy": "Medium (7% missing, potential lag from latest publications)",
+                "total_sessions": len(df_global) if df_global is not None else 0
+            }
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/data')
 def get_data_api():
     if not initialize_app_globals():
         return jsonify({"error": "Application data could not be loaded. Check server logs for details."}), 500
 
-    ta_filter = request.args.get('ta', 'All')
-    if ta_filter == "Bladder Cancer":
-        filtered_df = df_global[df_global["ta"] == "bladder"].copy()
-    elif ta_filter == "Renal Cell Carcinoma":
-        filtered_df = df_global[df_global["ta"] == "renal"].copy()
-    else:
-        filtered_df = df_global.copy()
+    # Handle both old single-parameter format and new array format for backward compatibility
+    drug_filters = request.args.getlist('drug_filters')
+    ta_filters = request.args.getlist('ta_filters')
 
-    display_columns = ["Abstract #", "Poster #", "Title", "Authors", "Institutions"]
-    valid_columns = [col for col in display_columns if col in filtered_df.columns]
-    return jsonify(filtered_df[valid_columns].to_dict('records'))
+    # Backward compatibility: if no array parameters, check for old single parameters
+    if not drug_filters and request.args.get('drug_filter'):
+        drug_filters = [request.args.get('drug_filter')]
+    if not ta_filters and request.args.get('ta_filter'):
+        ta_filters = [request.args.get('ta_filter')]
+
+    # Backward compatibility: if no array parameters, check for old single parameters
+    if not drug_filters and request.args.get('drug_filter'):
+        drug_filters = [request.args.get('drug_filter')]
+    if not ta_filters and request.args.get('ta_filter'):
+        ta_filters = [request.args.get('ta_filter')]
+
+    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters)
+    filter_context = get_filter_context_multi(drug_filters, ta_filters)
+
+    # Limit to first 50 only when no filters are applied (to improve performance)
+    display_df = filtered_df
+    if not drug_filters and not ta_filters:
+        display_df = filtered_df.head(50)
+
+    # Use original dataset column names that the frontend expects
+    display_columns = ["Title", "Speakers", "Speaker Location", "Affiliation", "Identifier", "Room", "Date", "Time", "Session", "Theme"]
+    valid_columns = [col for col in display_columns if col in display_df.columns]
+
+    return jsonify({
+        "data": display_df[valid_columns].to_dict('records'),
+        "total": len(filtered_df),
+        "showing": len(display_df),
+        "filter_context": filter_context,
+        "available_filters": {
+            "drug_filters": get_available_drug_filters(),
+            "ta_filters": get_available_therapeutic_areas()
+        }
+    })
+
+@app.route('/api/debug/filter')
+def debug_filter():
+    """Debug endpoint to test filtering logic"""
+    drug_filter = request.args.get('drug_filter', 'Avelumab Focus')
+    print(f"DEBUG: Testing filter '{drug_filter}'")
+
+    try:
+        filtered_df = get_filtered_dataframe(drug_filter, "All Therapeutic Areas")
+        result_count = len(filtered_df)
+        print(f"DEBUG: Filter returned {result_count} results")
+
+        if result_count > 0:
+            sample_titles = filtered_df['study_title'].head(3).tolist()
+            return jsonify({
+                "filter": drug_filter,
+                "count": result_count,
+                "sample_titles": sample_titles
+            })
+        else:
+            return jsonify({
+                "filter": drug_filter,
+                "count": 0,
+                "error": "No results found"
+            })
+    except Exception as e:
+        print(f"DEBUG: Error in filtering: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/debug/search')
+def debug_search():
+    """Debug endpoint to test search logic"""
+    keyword = request.args.get('keyword', 'tepotinib')
+    print(f"DEBUG SEARCH: Testing search for '{keyword}'")
+
+    try:
+        # Use full dataset for search test
+        current_df = df_global.copy()
+        print(f"DEBUG SEARCH: Starting with {len(current_df)} total records")
+
+        # Search across all fields using ESMO column structure
+        mask = (
+            safe_contains(current_df["study_title"], keyword, regex=False) |
+            safe_contains(current_df["speaker"], keyword, regex=False) |
+            safe_contains(current_df["affiliation"], keyword, regex=False) |
+            safe_contains(current_df["location"], keyword, regex=False) |
+            current_df["identifier"].astype(str).str.contains(keyword, case=False, na=False, regex=False) |
+            safe_contains(current_df["session_category"], keyword, regex=False) |
+            safe_contains(current_df["main_filters"], keyword, regex=False)
+        )
+
+        search_results_df = current_df.loc[mask]
+        result_count = len(search_results_df)
+        print(f"DEBUG SEARCH: Found {result_count} results")
+
+        if result_count > 0:
+            sample_titles = search_results_df['study_title'].head(3).tolist()
+            return jsonify({
+                "keyword": keyword,
+                "count": result_count,
+                "sample_titles": sample_titles
+            })
+        else:
+            return jsonify({
+                "keyword": keyword,
+                "count": 0,
+                "error": "No results found"
+            })
+    except Exception as e:
+        print(f"DEBUG SEARCH: Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/search')
 def search_data_api():
     if not initialize_app_globals():
         return jsonify({"error": "Application data could not be loaded. Check server logs for details."}), 500
 
-    ta_filter = request.args.get('ta', 'All')
+    # Get filters using the same parameter names as /api/data (with backward compatibility)
+    drug_filters = request.args.getlist('drug_filters')
+    ta_filters = request.args.getlist('ta_filters')
+
+    # Backward compatibility: if no array parameters, check for old single parameters
+    if not drug_filters and request.args.get('drug_filter'):
+        drug_filters = [request.args.get('drug_filter')]
+    if not ta_filters and request.args.get('ta_filter'):
+        ta_filters = [request.args.get('ta_filter')]
+
+    # Backward compatibility: if no array parameters, check for old single parameters
+    if not drug_filters and request.args.get('drug_filter'):
+        drug_filters = [request.args.get('drug_filter')]
+    if not ta_filters and request.args.get('ta_filter'):
+        ta_filters = [request.args.get('ta_filter')]
     keyword = request.args.get('keyword', '').strip()
-    search_field = request.args.get('field', 'All')
 
     if not keyword:
         return jsonify([])
 
-    if ta_filter == "Bladder Cancer":
-        current_df = df_global[df_global["ta"] == "bladder"].copy()
-    elif ta_filter == "Renal Cell Carcinoma":
-        current_df = df_global[df_global["ta"] == "renal"].copy()
-    else:
-        current_df = df_global.copy()
+    # For search, always use full dataset for now (as per user requirement)
+    current_df = df_global.copy()
 
-    if search_field == "All":
-        mask = (
-            safe_contains(current_df["Title"], keyword, regex=False) |
-            safe_contains(current_df["Authors"], keyword, regex=False) |
-            safe_contains(current_df["Institutions"], keyword, regex=False) |
-            current_df["Abstract #"].astype(str).str.contains(keyword, case=False, na=False, regex=False) |
-            current_df["Poster #"].astype(str).str.contains(keyword, case=False, na=False, regex=False)
-        )
-    elif search_field in ["Abstract #", "Poster #"]:
-        mask = current_df[search_field].astype(str).str.contains(keyword, case=False, na=False, regex=False)
-    elif search_field in current_df.columns:
-        mask = safe_contains(current_df[search_field], keyword, regex=False)
-    else:
-        mask = pd.Series(False, index=current_df.index)
+    # Search across all fields using ESMO column structure
+    print(f"SEARCH DEBUG: Searching for '{keyword}' in dataframe with {len(current_df)} rows")
+    print(f"SEARCH DEBUG: Available columns: {list(current_df.columns)}")
 
-    display_columns = ["Abstract #", "Poster #", "Title", "Authors", "Institutions"]
+    # Search only in relevant text fields using original dataset column names
+    search_columns = ['Title', 'Speakers', 'Affiliation', 'Theme']
+
+    mask = pd.Series([False] * len(current_df))
+    for col in search_columns:
+        if col in current_df.columns:
+            col_mask = current_df[col].astype(str).str.contains(keyword, case=False, na=False, regex=False)
+            mask = mask | col_mask
+            print(f"SEARCH DEBUG: {col} matches: {col_mask.sum()}")
+
+    print(f"SEARCH DEBUG: Total matches: {mask.sum()}")
+    print(f"SEARCH DEBUG: Total mask matches: {mask.sum()}")
+
+    # Use original dataset column names for search results display
+    display_columns = ["Title", "Speakers", "Speaker Location", "Affiliation", "Identifier", "Room", "Date", "Time", "Session", "Theme"]
     valid_columns = [col for col in display_columns if col in current_df.columns]
     search_results_df = current_df.loc[mask, valid_columns]
+    result_count = len(search_results_df)
+    print(f"SEARCH DEBUG: keyword='{keyword}', found {result_count} results")
     return jsonify(search_results_df.to_dict('records'))
 
 # API Endpoint to run a specific playbook
@@ -3098,14 +3622,16 @@ def stream_kol_analysis():
     if not initialize_app_globals():
         return "data: Error: Application data could not be loaded\n\n", 500, {'Content-Type': 'text/event-stream'}
 
-    ta_filter = request.args.get('ta', 'All')
+    drug_filters = request.args.getlist('drug_filters')
+    ta_filters = request.args.getlist('ta_filters')
 
-    if ta_filter == "Bladder Cancer":
-        filtered_df_for_playbook = df_global[df_global["ta"] == "bladder"].copy()
-    elif ta_filter == "Renal Cell Carcinoma":
-        filtered_df_for_playbook = df_global[df_global["ta"] == "renal"].copy()
-    else:
-        filtered_df_for_playbook = df_global.copy()
+    # Backward compatibility: if no array parameters, check for old single parameters
+    if not drug_filters and request.args.get('drug_filter'):
+        drug_filters = [request.args.get('drug_filter')]
+    if not ta_filters and request.args.get('ta_filter'):
+        ta_filters = [request.args.get('ta_filter')]
+
+    filtered_df_for_playbook = get_filtered_dataframe_multi(drug_filters, ta_filters)
 
     # Generate top authors table
     top_authors_table = get_top_authors(df_sig(filtered_df_for_playbook), filtered_df_for_playbook, 20)
@@ -3136,12 +3662,7 @@ def stream_single_kol():
         return jsonify({"error": "Author name required"}), 400
 
     # Filter data based on therapeutic area
-    if ta_filter == "Bladder Cancer":
-        filtered_df = df_global[df_global["ta"] == "bladder"].copy()
-    elif ta_filter == "Renal Cell Carcinoma":
-        filtered_df = df_global[df_global["ta"] == "renal"].copy()
-    else:
-        filtered_df = df_global.copy()
+    filtered_df = get_filtered_dataframe(ta_filter)
 
     def generate():
         try:
@@ -3227,12 +3748,7 @@ def get_kol_list():
     ta_filter = request.args.get('ta', 'All')
 
     # Filter data based on therapeutic area
-    if ta_filter == "Bladder Cancer":
-        filtered_df = df_global[df_global["ta"] == "bladder"].copy()
-    elif ta_filter == "Renal Cell Carcinoma":
-        filtered_df = df_global[df_global["ta"] == "renal"].copy()
-    else:
-        filtered_df = df_global.copy()
+    filtered_df = get_filtered_dataframe(ta_filter)
 
     # Get top authors table
     top_authors_table = get_top_authors(df_sig(filtered_df), filtered_df, 20)
@@ -3256,14 +3772,16 @@ def stream_competitor_analysis():
     if not initialize_app_globals():
         return "data: Error: Application data could not be loaded\n\n", 500, {'Content-Type': 'text/event-stream'}
 
-    ta_filter = request.args.get('ta', 'All')
+    drug_filters = request.args.getlist('drug_filters')
+    ta_filters = request.args.getlist('ta_filters')
 
-    if ta_filter == "Bladder Cancer":
-        filtered_df_for_playbook = df_global[df_global["ta"] == "bladder"].copy()
-    elif ta_filter == "Renal Cell Carcinoma":
-        filtered_df_for_playbook = df_global[df_global["ta"] == "renal"].copy()
-    else:
-        filtered_df_for_playbook = df_global.copy()
+    # Backward compatibility: if no array parameters, check for old single parameters
+    if not drug_filters and request.args.get('drug_filter'):
+        drug_filters = [request.args.get('drug_filter')]
+    if not ta_filters and request.args.get('ta_filter'):
+        ta_filters = [request.args.get('ta_filter')]
+
+    filtered_df_for_playbook = get_filtered_dataframe_multi(drug_filters, ta_filters)
 
     # Generate competitor tables (same logic as regular competitor endpoint)
     competitors_to_check = [
@@ -3301,14 +3819,16 @@ def stream_institution_analysis():
     if not initialize_app_globals():
         return "data: Error: Application data could not be loaded\n\n", 500, {'Content-Type': 'text/event-stream'}
 
-    ta_filter = request.args.get('ta', 'All')
+    drug_filters = request.args.getlist('drug_filters')
+    ta_filters = request.args.getlist('ta_filters')
 
-    if ta_filter == "Bladder Cancer":
-        filtered_df_for_playbook = df_global[df_global["ta"] == "bladder"].copy()
-    elif ta_filter == "Renal Cell Carcinoma":
-        filtered_df_for_playbook = df_global[df_global["ta"] == "renal"].copy()
-    else:
-        filtered_df_for_playbook = df_global.copy()
+    # Backward compatibility: if no array parameters, check for old single parameters
+    if not drug_filters and request.args.get('drug_filter'):
+        drug_filters = [request.args.get('drug_filter')]
+    if not ta_filters and request.args.get('ta_filter'):
+        ta_filters = [request.args.get('ta_filter')]
+
+    filtered_df_for_playbook = get_filtered_dataframe_multi(drug_filters, ta_filters)
 
     # Generate top institutions table
     top_institutions_table = get_top_institutions(df_sig(filtered_df_for_playbook), filtered_df_for_playbook, 20)
@@ -3331,14 +3851,16 @@ def stream_insights_analysis():
     if not initialize_app_globals():
         return "data: Error: Application data could not be loaded\n\n", 500, {'Content-Type': 'text/event-stream'}
 
-    ta_filter = request.args.get('ta', 'All')
+    drug_filters = request.args.getlist('drug_filters')
+    ta_filters = request.args.getlist('ta_filters')
 
-    if ta_filter == "Bladder Cancer":
-        filtered_df_for_playbook = df_global[df_global["ta"] == "bladder"].copy()
-    elif ta_filter == "Renal Cell Carcinoma":
-        filtered_df_for_playbook = df_global[df_global["ta"] == "renal"].copy()
-    else:
-        filtered_df_for_playbook = df_global.copy()
+    # Backward compatibility: if no array parameters, check for old single parameters
+    if not drug_filters and request.args.get('drug_filter'):
+        drug_filters = [request.args.get('drug_filter')]
+    if not ta_filters and request.args.get('ta_filter'):
+        ta_filters = [request.args.get('ta_filter')]
+
+    filtered_df_for_playbook = get_filtered_dataframe_multi(drug_filters, ta_filters)
 
     # Generate biomarker MOA hits table
     biomarker_moa_table = get_biomarker_moa_hits(df_sig(filtered_df_for_playbook), filtered_df_for_playbook)
@@ -3361,14 +3883,16 @@ def stream_strategy_analysis():
     if not initialize_app_globals():
         return "data: Error: Application data could not be loaded\n\n", 500, {'Content-Type': 'text/event-stream'}
 
-    ta_filter = request.args.get('ta', 'All')
+    drug_filters = request.args.getlist('drug_filters')
+    ta_filters = request.args.getlist('ta_filters')
 
-    if ta_filter == "Bladder Cancer":
-        filtered_df_for_playbook = df_global[df_global["ta"] == "bladder"].copy()
-    elif ta_filter == "Renal Cell Carcinoma":
-        filtered_df_for_playbook = df_global[df_global["ta"] == "renal"].copy()
-    else:
-        filtered_df_for_playbook = df_global.copy()
+    # Backward compatibility: if no array parameters, check for old single parameters
+    if not drug_filters and request.args.get('drug_filter'):
+        drug_filters = [request.args.get('drug_filter')]
+    if not ta_filters and request.args.get('ta_filter'):
+        ta_filters = [request.args.get('ta_filter')]
+
+    filtered_df_for_playbook = get_filtered_dataframe_multi(drug_filters, ta_filters)
 
     # For strategy analysis, we use basic context data from the filtered dataset
     # No additional table preparation needed beyond the filtered dataframe
@@ -3391,12 +3915,7 @@ def run_playbook_api_route(playbook_key):
     if playbook_key not in PLAYBOOKS:
         return jsonify({"error": "Invalid playbook key"}), 400
 
-    if ta_filter == "Bladder Cancer":
-        filtered_df_for_playbook = df_global[df_global["ta"] == "bladder"].copy()
-    elif ta_filter == "Renal Cell Carcinoma":
-        filtered_df_for_playbook = df_global[df_global["ta"] == "renal"].copy()
-    else:
-        filtered_df_for_playbook = df_global.copy()
+    filtered_df_for_playbook = get_filtered_dataframe(ta_filter)
 
     pb = PLAYBOOKS.get(playbook_key)
     tables_for_prompt: Dict[str, pd.DataFrame] = {}
@@ -3505,10 +4024,18 @@ def stream_chat_api():
     def generate():
         try:
             # Use the existing AI query analysis and response generation logic
+            # Simple filtering approach that works with our dataset
             if ta_filter == "Bladder Cancer":
-                filtered_df = df_global[df_global["ta"] == "bladder"].copy()
-            elif ta_filter == "Renal Cell Carcinoma":
-                filtered_df = df_global[df_global["ta"] == "renal"].copy()
+                # Filter for bladder cancer using main_filters
+                filtered_df = df_global[df_global["main_filters"].str.contains("Bladder Cancer", case=False, na=False)].copy()
+            elif ta_filter == "Lung Cancer":
+                filtered_df = df_global[df_global["main_filters"].str.contains("Lung Cancer", case=False, na=False)].copy()
+            elif ta_filter == "Colorectal Cancer":
+                filtered_df = df_global[df_global["main_filters"].str.contains("Colorectal Cancer", case=False, na=False)].copy()
+            elif ta_filter == "Head and Neck Cancer":
+                filtered_df = df_global[df_global["main_filters"].str.contains("Head and Neck Cancer", case=False, na=False)].copy()
+            elif ta_filter == "Gynecologic Cancer":
+                filtered_df = df_global[df_global["main_filters"].str.contains("Gynecologic Cancer", case=False, na=False)].copy()
             else:
                 filtered_df = df_global.copy()
 
@@ -3547,15 +4074,15 @@ def stream_chat_api():
                 if institution_name:
                     # Handle institution lookup - ALWAYS do direct institution search first
                     # First try exact search with original name
-                    mask = safe_contains(filtered_df["Institutions"], institution_name, regex=True)
+                    mask = safe_contains(filtered_df["Affiliation"], institution_name, regex=True)
 
                     # If no results, also try searching for normalized versions in the data
                     if mask.sum() == 0:
                         # Create a normalized search by looking for institutions that would normalize to the same thing
                         normalized_target = normalize_institution_name(institution_name)
                         if normalized_target != institution_name:
-                            mask = safe_contains(filtered_df["Institutions"], normalized_target, regex=True)
-                    institution_results = filtered_df.loc[mask, ["Abstract #","Poster #","Title","Authors","Institutions"]].drop_duplicates(subset=["Abstract #"])
+                            mask = safe_contains(filtered_df["Affiliation"], normalized_target, regex=True)
+                    institution_results = filtered_df.loc[mask, ["Identifier","Session","Title","Speakers","Affiliation"]].drop_duplicates(subset=["Identifier"])
 
                     if not institution_results.empty:
                         # EMIT TABLE FIRST - showing all institution's studies
@@ -3651,9 +4178,72 @@ Respond naturally to exactly what the user asked - don't follow rigid frameworks
 
                     # Stream the simple response immediately
                     for char in simple_response:
-                        yield f"data: {char}\n\n"
+                        import json
+                        yield f"data: {json.dumps({'text': char})}\n\n"
                     yield f"data: [DONE]\n\n"
                     return
+
+            elif plan.response_type == "data_table":
+                # Handle data table requests (drug counts, author lists, etc.)
+                drug_entities = plan.primary_entities.get("drugs", [])
+
+                if drug_entities:
+                    # Search for drug mentions in the dataset
+                    drug_name = drug_entities[0].lower()
+
+                    # Search in title column for drug mentions
+                    mask = filtered_df["Title"].str.contains(drug_name, case=False, na=False)
+
+                    drug_results = filtered_df[mask]
+
+                    if not drug_results.empty:
+                        # Generate table with drug studies
+                        table_data = drug_results[["Identifier","Session","Title","Speakers","Affiliation"]].to_dict('records')
+                        table_title = f"📊 {drug_entities[0].title()} Studies - ESMO 2025 ({len(drug_results)} sessions)"
+
+                        yield sse_event("table", {
+                            "title": table_title,
+                            "rows": table_data
+                        })
+
+                        # Stream response about the findings
+                        drug_data = f"Found {len(drug_results)} studies mentioning {drug_entities[0]}:\n\n" + drug_results[["Identifier","Title","Speakers"]].to_csv(index=False)
+
+                        streaming_prompt = f"""Based on the ESMO 2025 conference data, I found {len(drug_results)} studies mentioning {drug_entities[0]}.
+
+Study Details:
+{drug_data}
+
+Provide a brief summary of these findings, mentioning the count and any notable patterns in the research areas or institutions involved."""
+
+                        # Stream AI analysis of the drug data
+                        stream = client.chat.completions.create(
+                            model="gpt-5-mini",
+                            reasoning_effort="minimal",
+                            verbosity="low",
+                            messages=[{"role": "user", "content": streaming_prompt}],
+                            max_completion_tokens=1000,
+                            stream=True
+                        )
+
+                        for chunk in stream:
+                            if chunk.choices[0].delta.content is not None:
+                                token = chunk.choices[0].delta.content
+                                import json
+                                yield f"data: {json.dumps({'text': token})}\n\n"
+
+                        yield "data: [DONE]\n\n"
+                        return
+                    else:
+                        # No drug data found - stream simple response
+                        simple_response = f"I searched the ESMO 2025 dataset but couldn't find any studies specifically mentioning {drug_entities[0]}. This could be because: 1) The drug name appears in abstracts not included in our dataset, 2) It's mentioned under a different name or in combination with other drugs, or 3) The studies might be in therapeutic areas not well represented in this dataset."
+
+                        for char in simple_response:
+                            import json
+                            yield f"data: {json.dumps({'text': char})}\n\n"
+                        yield f"data: [DONE]\n\n"
+                        return
+
             else:
                 # Use generic response for other query types
                 if context.semantic_results is not None and not context.semantic_results.empty:
@@ -3671,7 +4261,7 @@ Respond naturally to exactly what the user asked - don't follow rigid frameworks
                         conversation_context += f"{role.title()}: {content}\n"
                     conversation_context += "\n"
 
-                streaming_prompt = f"""You are a medical affairs AI assistant analyzing conference data from ASCO GU 2025.
+                streaming_prompt = f"""You are a medical affairs AI assistant analyzing conference data from ESMO 2025.
 {conversation_context}
 Current User Query: "{user_query}"
 Therapeutic Area Filter: {ta_filter}
@@ -3679,7 +4269,7 @@ Therapeutic Area Filter: {ta_filter}
 Relevant Conference Data:
 {semantic_data}
 
-Based on the user's query and the relevant conference data above, provide a comprehensive and helpful response. Be specific, cite abstract numbers when relevant, and focus on actionable insights for medical affairs professionals.
+Based on the user's query and the relevant conference data above, provide a comprehensive and helpful response. Be specific, cite session identifiers when relevant, and focus on actionable insights for medical affairs professionals.
 
 Write a natural, conversational response that directly answers the user's question."""
 
@@ -3702,8 +4292,9 @@ Write a natural, conversational response that directly answers the user's questi
                     token = chunk.choices[0].delta.content
                     accumulated_content += token
 
-                    # Send the token (legacy format for compatibility)
-                    yield f"data: {token}\n\n"
+                    # Send the token in JSON format for frontend compatibility
+                    import json
+                    yield f"data: {json.dumps({'text': token})}\n\n"
 
                     # Check for NEW paragraph boundaries
                     boundary_pos = accumulated_content.find('\n\n', last_boundary_pos)
@@ -3742,12 +4333,7 @@ def chat_api():
         conversation_history = conversation_history[-20:]
 
     # Filter data based on TA
-    if ta_filter == "Bladder Cancer":
-        current_df = df_global[df_global["ta"] == "bladder"].copy()
-    elif ta_filter == "Renal Cell Carcinoma":
-        current_df = df_global[df_global["ta"] == "renal"].copy()
-    else:
-        current_df = df_global.copy()
+    current_df = get_filtered_dataframe(ta_filter)
 
     # Use legacy system if explicitly requested or for simple queries
     simple_queries = ["hi", "hello", "help", "top authors", "top institutions"]
@@ -3990,18 +4576,14 @@ def export_data():
             return jsonify({"error": "No JSON data provided"}), 400
 
         export_format = data.get('format', '').lower()
-        ta_filter = data.get('ta_filter', 'All')
+        drug_filters = data.get('drug_filters', [])
+        ta_filters = data.get('ta_filters', [])
 
         if export_format not in ['csv', 'excel']:
             return jsonify({"error": "Unsupported format. Use 'csv' or 'excel'"}), 400
 
-        # Fix 1: Use df_global and apply proper filtering
-        if ta_filter == "Bladder Cancer":
-            filtered_df = df_global[df_global["ta"] == "bladder"].copy()
-        elif ta_filter == "Renal Cell Carcinoma":
-            filtered_df = df_global[df_global["ta"] == "renal"].copy()
-        else:
-            filtered_df = df_global.copy()
+        # Use multi-filter approach
+        filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters)
 
         # Fix 3: Sanitize data to prevent CSV injection
         for col in filtered_df.select_dtypes(include=['object']).columns:
@@ -4014,7 +4596,9 @@ def export_data():
 
             response = make_response(output.getvalue())
             response.headers["Content-Type"] = "text/csv"
-            response.headers["Content-Disposition"] = f"attachment; filename=asco_gu_2025_{ta_filter.lower().replace(' ', '_')}.csv"
+            drug_filename = "_".join(drug_filters).replace(' ', '_')
+            ta_filename = "_".join(ta_filters).replace(' ', '_')
+            response.headers["Content-Disposition"] = f"attachment; filename=esmo_2025_{drug_filename}_{ta_filename}.csv"
             return response
 
         else:  # excel
