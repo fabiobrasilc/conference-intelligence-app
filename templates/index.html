@@ -2,170 +2,272 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>v15 — AI-FIRST NATURAL STREAMING — Data Explorer</title>
+    <title>ESMO 2025 — Conference Intelligence Platform</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <!-- Bootstrap (optional but handy) -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-      crossorigin="anonymous"
-    />
-
-    <!-- App styles -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
   </head>
   <body>
-    <div class="d-flex">
-      <!-- Sidebar -->
-      <div class="sidebar bg-light border-end" style="width: 280px; min-height: 100vh;">
-        <div class="p-3">
-          <h5 class="mb-3">🎛️ Control Dock</h5>
+    <div class="container-fluid">
 
-          <!-- Therapeutic Area Filter -->
-          <div class="mb-4">
-            <label class="form-label">🎯 Therapeutic Area</label>
-            <div class="border rounded p-2 bg-white">
-              <div class="form-check">
-                <input class="form-check-input ta-filter-checkbox" type="checkbox" value="All" id="taFilter_All" checked>
-                <label class="form-check-label" for="taFilter_All">
-                  All GU Cancers
-                </label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input ta-filter-checkbox" type="checkbox" value="Bladder Cancer" id="taFilter_Bladder">
-                <label class="form-check-label" for="taFilter_Bladder">
-                  Bladder Cancer
-                </label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input ta-filter-checkbox" type="checkbox" value="Renal Cell Carcinoma" id="taFilter_Renal">
-                <label class="form-check-label" for="taFilter_Renal">
-                  Renal Cell Carcinoma
-                </label>
-              </div>
-            </div>
-            <div id="filterInfo" class="small text-muted mt-1">Loading...</div>
-          </div>
-
-          <!-- Quick Intelligence Playbooks -->
-          <div class="mb-4">
-            <label class="form-label">⚡ Quick Intelligence</label>
-            <p class="small text-muted mb-2">Click to analyze → opens AI tab</p>
-            <div class="d-grid gap-2">
-              <button class="btn btn-outline-primary playbook-button" data-playbook="competitor">🏆 Competitor Intelligence</button>
-              <button class="btn btn-outline-primary playbook-button" data-playbook="kol">👥 KOL Analysis</button>
-              <button class="btn btn-outline-primary playbook-button" data-playbook="institution">🏥 Institution Analysis</button>
-              <button class="btn btn-outline-primary playbook-button" data-playbook="insights">🧭 Insights & Trends</button>
-              <button class="btn btn-outline-primary playbook-button" data-playbook="strategy">📋 Strategic Recommendations</button>
+      <!-- App Bar -->
+      <div class="row mt-3">
+        <div class="col-12">
+          <div class="appbar">
+            <h1 class="appbar-title">ESMO 2025 Conference Intelligence</h1>
+            <div class="appbar-tabs" role="tablist" aria-label="Main sections">
+              <button class="appbar-tab active" data-bs-toggle="tab" data-bs-target="#data-explorer" type="button" role="tab" aria-controls="data-explorer" aria-selected="true">Data Explorer</button>
+              <span>|</span>
+              <button class="appbar-tab" data-bs-toggle="tab" data-bs-target="#ai-assistant" type="button" role="tab" aria-controls="ai-assistant" aria-selected="false">AI Assistant</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Main Content -->
-      <div class="flex-grow-1">
-        <div class="container-fluid py-4">
-          <header class="mb-4">
-            <h1 class="h3 mb-1">COSMIC - COnference and Scientific Meeting Intelligence Companion</h1>
-            <p class="text-muted mb-0" id="statusLine">AI-powered conference intelligence for medical affairs and competitive insights</p>
-          </header>
-
-      <!-- Tabs -->
-      <ul class="nav nav-tabs" id="mainTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="explorer-tab" data-bs-toggle="tab" data-bs-target="#explorer" type="button" role="tab" aria-controls="explorer" aria-selected="true">
-            Data Explorer
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="ai-tab" data-bs-toggle="tab" data-bs-target="#ai" type="button" role="tab" aria-controls="ai" aria-selected="false">
-            AI Assistant
-          </button>
-        </li>
+      <!-- Hidden default nav-tabs (for bootstrap mechanics) -->
+      <ul class="nav nav-tabs" id="mainTabs" role="tablist" style="display:none;">
+        <li class="nav-item"><button class="nav-link active" id="data-explorer-tab" data-bs-toggle="tab" data-bs-target="#data-explorer" type="button" role="tab">Data Explorer</button></li>
+        <li class="nav-item"><button class="nav-link" id="ai-assistant-tab" data-bs-toggle="tab" data-bs-target="#ai-assistant" type="button" role="tab">AI Assistant</button></li>
       </ul>
 
-      <div class="tab-content pt-3">
-        <!-- Data Explorer tab -->
-        <div class="tab-pane fade show active" id="explorer" role="tabpanel" aria-labelledby="explorer-tab">
-          <!-- Search UI (required by app.js) -->
-          <div class="row g-2 align-items-end mb-3">
-            <div class="col-md-3">
-              <label for="searchField" class="form-label">Search field</label>
-              <select id="searchField" class="form-select">
-                <option value="All" selected>All fields</option>
-                <option value="Title">Title</option>
-                <option value="Authors">Authors</option>
-                <option value="Institutions">Institutions</option>
-                <option value="Abstract #">Abstract #</option>
-                <option value="Poster #">Poster #</option>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label for="keywordSearch" class="form-label">Keyword</label>
-              <input id="keywordSearch" type="text" class="form-control" placeholder="Type a term and press Enter…" />
-            </div>
-            <div class="col-md-3">
-              <button id="searchButton" class="btn btn-primary w-100">Search</button>
-            </div>
-          </div>
+      <div class="tab-content" id="mainTabContent">
 
-          <div id="search-results-info" class="alert alert-info" style="display:none;"></div>
+        <!-- ===================== DATA EXPLORER ===================== -->
+        <div class="tab-pane fade show active" id="data-explorer" role="tabpanel" aria-labelledby="data-explorer-tab">
+          <div class="row py-3"><div class="col-12">
 
-          <!-- Data table container -->
-          <div id="data-table-container" class="table-responsive">
-            <!-- Table will be dynamically created -->
-          </div>
+            <!-- Filter Bar -->
+            <div class="filterbar mb-2">
+              <button class="filter-toggle" data-bs-toggle="collapse" data-bs-target="#explorerFilters" aria-expanded="false" aria-controls="explorerFilters">
+                <span class="icon">🧰</span> Filters
+              </button>
+              <div class="summary" id="filterSummary">All Drugs + All Therapeutic Areas</div>
+              <div class="spacer"></div>
+              <div class="input-group" style="max-width:520px;">
+                <input type="text" class="form-control" id="searchInput" placeholder="Search titles, authors, institutions..." />
+                <button class="btn btn-outline-primary" id="searchBtn">🔍</button>
+              </div>
+            </div>
 
-          <!-- Download buttons placeholder -->
-          <div id="download-button-container" class="mt-3">
-            <!-- Download buttons will be added dynamically -->
-          </div>
+            <!-- Expanded Filters -->
+            <div class="collapse filters-collapse mb-3" id="explorerFilters">
+              <div class="row g-3">
+                <div class="col-lg-6">
+                  <label class="form-label mb-1 fw-bold">🎯 Drug Focus</label>
+                  <div class="d-flex flex-wrap gap-3">
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input drug-filter-checkbox" type="checkbox" value="Avelumab Focus" id="drug_avelumab">
+                      <label class="form-check-label ms-2" for="drug_avelumab">Avelumab</label>
+                    </div>
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input drug-filter-checkbox" type="checkbox" value="Tepotinib Focus" id="drug_tepotinib">
+                      <label class="form-check-label ms-2" for="drug_tepotinib">Tepotinib</label>
+                    </div>
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input drug-filter-checkbox" type="checkbox" value="Cetuximab Focus" id="drug_cetuximab">
+                      <label class="form-check-label ms-2" for="drug_cetuximab">Cetuximab</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-6">
+                  <label class="form-label mb-1 fw-bold">🏥 Therapeutic Area</label>
+                  <div class="d-flex flex-wrap gap-3">
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input ta-filter-checkbox" type="checkbox" value="Bladder Cancer" id="ta_bladder">
+                      <label class="form-check-label ms-2" for="ta_bladder">Bladder</label>
+                    </div>
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input ta-filter-checkbox" type="checkbox" value="Lung Cancer" id="ta_lung">
+                      <label class="form-check-label ms-2" for="ta_lung">Lung</label>
+                    </div>
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input ta-filter-checkbox" type="checkbox" value="Colorectal Cancer" id="ta_colorectal">
+                      <label class="form-check-label ms-2" for="ta_colorectal">Colorectal</label>
+                    </div>
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input ta-filter-checkbox" type="checkbox" value="Head and Neck Cancer" id="ta_head_neck">
+                      <label class="form-check-label ms-2" for="ta_head_neck">Head &amp; Neck</label>
+                    </div>
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input ta-filter-checkbox" type="checkbox" value="Gynecologic Cancer" id="ta_gynecologic">
+                      <label class="form-check-label ms-2" for="ta_gynecologic">Gynecologic</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="card">
+              <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                  <h5 class="mb-0">
+                    Conference Data —
+                    <small id="filterContext" class="text-muted">Loading filter context...</small>
+                  </h5>
+                  <button class="btn btn-outline-secondary" id="exportBtn">Download table</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="tableContainer">
+                  <div class="text-center py-4">
+                    <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    <p class="mt-2 mb-0">Loading ESMO 2025 data...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div></div>
         </div>
 
-        <!-- AI Assistant tab -->
-        <div class="tab-pane fade" id="ai" role="tabpanel" aria-labelledby="ai-tab">
-          <!-- Tables generated by playbooks or general AI -->
-          <div id="tables-container" class="d-grid gap-3 mb-4">
-            <!-- Tables injected by app.js (maps to response.tables) -->
-          </div>
+        <!-- ===================== AI ASSISTANT ===================== -->
+        <div class="tab-pane fade" id="ai-assistant" role="tabpanel" aria-labelledby="ai-assistant-tab">
+          <div class="row py-3"><div class="col-12">
 
-          <!-- Simple chat shell (optional; safe for future use) -->
-          <section>
-            <h2 class="h6 mb-2">Chat</h2>
-            <div id="chat-history" class="border rounded p-3 mb-2" style="min-height: 120px;">
-              <!-- Chat messages appended here -->
+            <!-- AI Filter Bar (no search here) -->
+            <div class="filterbar mb-2">
+              <button class="filter-toggle" data-bs-toggle="collapse" data-bs-target="#aiFilters" aria-expanded="false" aria-controls="aiFilters">
+                <span class="icon">🧰</span> Filters
+              </button>
+              <div class="summary" id="aiFilterSummary">All Drugs + All Therapeutic Areas</div>
+              <div class="spacer"></div>
             </div>
-            <div class="input-group">
-              <input id="chat-input" type="text" class="form-control" placeholder="Ask a question (e.g., ‘top 20 authors’, ‘list avelumab studies’)…" />
-              <button id="send-button" class="btn btn-primary">Send</button>
+
+            <!-- AI Filters (expanded) -->
+            <div class="collapse filters-collapse mb-3" id="aiFilters">
+              <div class="row g-3">
+                <div class="col-lg-6">
+                  <label class="form-label mb-1 fw-bold">🎯 Drug Focus</label>
+                  <div class="d-flex flex-wrap gap-3">
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input ai-drug-filter-checkbox" type="checkbox" value="Avelumab Focus" id="ai_drug_avelumab">
+                      <label class="form-check-label ms-2" for="ai_drug_avelumab">Avelumab</label>
+                    </div>
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input ai-drug-filter-checkbox" type="checkbox" value="Tepotinib Focus" id="ai_drug_tepotinib">
+                      <label class="form-check-label ms-2" for="ai_drug_tepotinib">Tepotinib</label>
+                    </div>
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input ai-drug-filter-checkbox" type="checkbox" value="Cetuximab Focus" id="ai_drug_cetuximab">
+                      <label class="form-check-label ms-2" for="ai_drug_cetuximab">Cetuximab</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-6">
+                  <label class="form-label mb-1 fw-bold">🏥 Therapeutic Area</label>
+                  <div class="d-flex flex-wrap gap-3">
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input ai-ta-filter-checkbox" type="checkbox" value="Bladder Cancer" id="ai_ta_bladder">
+                      <label class="form-check-label ms-2" for="ai_ta_bladder">Bladder</label>
+                    </div>
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input ai-ta-filter-checkbox" type="checkbox" value="Lung Cancer" id="ai_ta_lung">
+                      <label class="form-check-label ms-2" for="ai_ta_lung">Lung</label>
+                    </div>
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input ai-ta-filter-checkbox" type="checkbox" value="Colorectal Cancer" id="ai_ta_colorectal">
+                      <label class="form-check-label ms-2" for="ai_ta_colorectal">Colorectal</label>
+                    </div>
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input ai-ta-filter-checkbox" type="checkbox" value="Head and Neck Cancer" id="ai_ta_head_neck">
+                      <label class="form-check-label ms-2" for="ai_ta_head_neck">Head &amp; Neck</label>
+                    </div>
+                    <div class="form-check d-flex align-items-center">
+                      <input class="form-check-input ai-ta-filter-checkbox" type="checkbox" value="Gynecologic Cancer" id="ai_ta_gynecologic">
+                      <label class="form-check-label ms-2" for="ai_ta_gynecologic">Gynecologic</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div id="aiFilterContext" class="small text-muted">Select filters to focus AI analysis</div>
+                </div>
+              </div>
             </div>
-          </section>
+
+            <!-- NEW: Action Bar (playbooks) -->
+            <div class="actionbar">
+              <div class="label">⚡ Quick Intelligence</div>
+
+              <div class="action-chip playbook-trigger" data-playbook="competitor" title="Run a competitor landscape summary">
+                <div class="icon">🏆</div>
+                <div>
+                  <div class="title">Competitor</div>
+                  <div class="sub">Landscape & counts</div>
+                </div>
+              </div>
+
+              <div class="action-chip playbook-trigger" data-playbook="kol" title="Find key authors and influence">
+                <div class="icon">👥</div>
+                <div>
+                  <div class="title">KOL Analysis</div>
+                  <div class="sub">Authors & impact</div>
+                </div>
+              </div>
+
+              <div class="action-chip playbook-trigger" data-playbook="institution" title="Institution footprint and trial activity">
+                <div class="icon">🏥</div>
+                <div>
+                  <div class="title">Institutions</div>
+                  <div class="sub">Footprint & trials</div>
+                </div>
+              </div>
+
+              <div class="action-chip playbook-trigger" data-playbook="insights" title="Signals, themes, early trends">
+                <div class="icon">📈</div>
+                <div>
+                  <div class="title">Insights</div>
+                  <div class="sub">Signals & themes</div>
+                </div>
+              </div>
+
+              <div class="action-chip playbook-trigger" data-playbook="strategy" title="Implications and next steps">
+                <div class="icon">📋</div>
+                <div>
+                  <div class="title">Strategy</div>
+                  <div class="sub">Recommendations</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chat -->
+            <div class="card">
+              <div class="card-header"><h5 class="mb-0">💬 AI Assistant</h5></div>
+              <div class="card-body">
+                <div id="chatContainer" style="height:400px; overflow-y:auto; padding:1rem; margin-bottom:1rem;">
+                  <div class="text-muted text-center">
+                    <p class="mb-1">Welcome to ESMO 2025 Conference Intelligence! 🧬</p>
+                    <p class="mb-0">Use the Quick Intelligence chips above or ask a question below.</p>
+                  </div>
+                </div>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="userInput" placeholder="Ask about ESMO sessions, competitive landscape, KOLs...">
+                  <button class="btn btn-primary" id="sendChatBtn" type="button">Send</button>
+                </div>
+              </div>
+            </div>
+
+          </div></div>
         </div>
-      </div>
-    </div>
-    </div>
 
-    <!-- Floating Navigation Buttons -->
-    <button class="back-to-top" id="backToTopBtn" title="Go to top">
-      ↑
-    </button>
-    <button class="back-to-bottom" id="backToBottomBtn" title="Go to bottom">
-      ↓
-    </button>
+      </div><!-- /tab-content -->
+    </div><!-- /container-fluid -->
 
-    <!-- Bootstrap JS -->
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-      crossorigin="anonymous"
-    ></script>
-
-    <!-- Papa Parse for CSV handling -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="sha512-dfX5uYVXzyU8+KHqj8bjo7UkOdg18PaOtpa48djpNbZHwExddghZ+ZmzWT06R5v6NSk3ZUfsH6FNEDepLx9hPQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-    <!-- App script -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    <!-- Modal (kept handy) -->
+    <div class="modal fade" id="cellModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable"><div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title" id="cellModalTitle">Details</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="cellModalBody" style="white-space: pre-wrap;"></div>
+      </div></div>
+    </div>
   </body>
 </html>
