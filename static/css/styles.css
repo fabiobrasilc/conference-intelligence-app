@@ -90,7 +90,7 @@ body{
 .filterbar .spacer{ flex:1; }
 
 #searchInput{
-  height:44px; border-radius:12px 0 0 12px; border:1px solid var(--stroke);
+  height:44px; border-radius:12px 0 0 12px; border:2px solid var(--ink-2);
 }
 #searchBtn{
   --bs-btn-color:#fff; --bs-btn-bg:var(--brand); --bs-btn-border-color:var(--brand);
@@ -123,7 +123,7 @@ body{
 }
 
 /* Sticky header + base row height */
-.table-fixed thead th{ position:sticky; top:0; z-index:2; background:var(--card); }
+.table-fixed thead th{ position:sticky; top:0; z-index:2; background:var(--card); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .table-fixed tbody tr{ height:30px; }
 
 /* Fallback column widths (sync with JS colWidths) */
@@ -139,9 +139,9 @@ body{
 .table-fixed col:nth-child(10){ width:15%; } /* Theme */
 
 /* Single-line by default; expand on hover/tap */
-.table-fixed td{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.table-fixed td{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:all 0.3s ease 1s; }
 @media (hover:hover) and (pointer:fine){
-  .table-fixed tbody tr:hover td{ white-space:normal; overflow:visible; text-overflow:clip; }
+  .table-fixed tbody tr:hover td{ white-space:normal; overflow:visible; text-overflow:clip; transition:all 0.3s ease 1s; }
 }
 .table-fixed tbody tr.expanded td{ white-space:normal!important; overflow:visible!important; text-overflow:clip!important; }
 .table-fixed tbody tr:hover{ outline:2px solid color-mix(in oklab, var(--brand) 35%, transparent); outline-offset:-2px; }
@@ -182,6 +182,7 @@ body{
 /* Utilities */
 .section{margin-top:16px; margin-bottom:16px;}
 :focus-visible{outline:none; box-shadow:var(--focus);}
+.text-purple{color:#8b5cf6!important;}
 @media (max-width: 992px){
   #tableViewport{ height:50vh; }
   .appbar{flex-direction:column; align-items:flex-start; gap:6px;}
