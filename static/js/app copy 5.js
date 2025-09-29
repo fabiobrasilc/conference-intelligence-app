@@ -535,12 +535,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      let out = '';            // accumulated playbook text
 
       appendToChat(`
         <div class="d-flex justify-content-start mb-2">
           <div class="bg-light border rounded p-3" style="max-width:90%;">
-            <div id="playbook-content" class="chat-stream"></div>
+            <div id="playbook-content"></div>
           </div>
         </div>`);
 
@@ -559,9 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
               const parsed = JSON.parse(dataStr);
               if (parsed.text) {
-                // accumulate and render safely
-                out += parsed.text;          // preserve \n as-is
-                contentDiv.textContent = out;
+                contentDiv.innerHTML += escapeHtml(parsed.text);
                 chatContainer.scrollTop = chatContainer.scrollHeight;
               }
             } catch (e) {}
@@ -612,7 +609,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="d-flex justify-content-start mb-2">
           <div class="bg-light border rounded p-3" style="max-width:90%;">
             <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-            <div id="${responseId}" class="chat-stream">Thinking...</div>
+            <div id="${responseId}">Thinking...</div>
           </div>
         </div>`);
 
@@ -632,10 +629,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      let out = '';            // accumulated assistant text
 
       const contentDiv = document.getElementById(responseId);
-      contentDiv.textContent = '';  // clear "Thinking..." safely
+      contentDiv.innerHTML = ''; // Clear loading message
 
       // Remove the spinner that's in the same parent div
       const spinnerEl = contentDiv.parentElement.querySelector('.spinner-border');
@@ -672,9 +668,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Handle regular text events
                 const parsed = JSON.parse(dataStr);
                 if (parsed.text) {
-                  // accumulate and render safely
-                  out += parsed.text;          // preserve \n as-is
-                  contentDiv.textContent = out;
+                  contentDiv.innerHTML += escapeHtml(parsed.text);
                   chatContainer.scrollTop = chatContainer.scrollHeight;
                 }
               }

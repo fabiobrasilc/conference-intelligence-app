@@ -851,7 +851,7 @@ def format_search_results(results) -> pd.DataFrame:
 # =========================
 PLAYBOOKS: Dict[str, Dict[str, Any]] = {
     "competitor": {
-        "button_label": "🏆 Competitor Intelligence",
+        "button_label": "Competitor Intelligence",
         "subtitle": "Conference Landscape",
         "sections": [
             "Executive Summary",
@@ -910,7 +910,7 @@ REQUIREMENTS:
 Deliver concise intelligence brief with clear competitive response direction."""
     },
     "kol": {
-        "button_label": "👥 KOL Analysis",
+        "button_label": "KOL Analysis",
         "subtitle": "People & Themes",
         "sections": [
             "Executive Summary",
@@ -1064,7 +1064,7 @@ REQUIREMENTS:
 Deliver actionable scientific intelligence for medical affairs strategic planning."""
     },
     "strategy": {
-        "button_label": "📋 Medical Affairs Strategy",
+        "button_label": "Medical Affairs Strategy",
         "subtitle": "Portfolio Implications",
         "sections": [
             "Executive Summary",
@@ -2008,7 +2008,7 @@ Determine the optimal execution strategy and return ONLY valid JSON format match
             ],
             reasoning={"effort": "low"},
             text={"verbosity": "low"},
-            max_output_tokens=400,
+            max_output_tokens=1200,
         )
 
         txt = resp.output_text.strip()
@@ -2412,7 +2412,7 @@ Keep it concise and actionable."""
         strategic_summary = summary_response.output_text
 
         # Combine analyses
-        final_analysis = f"""# 👥 KOL Analysis — Data-Driven Intelligence Report
+        final_analysis = f"""# KOL Analysis — Data-Driven Intelligence Report
 
 ## Strategic Summary
 {strategic_summary}
@@ -2520,7 +2520,7 @@ def generate_kol_analysis_streaming(
         top_institutions = filtered_df['Institutions'].str.split(';').explode().value_counts().head(10).index.tolist()
 
         # Emit report title
-        yield sse_event("heading", {"level": 1, "text": "👥 KOL Analysis — Data-Driven Intelligence Report"})
+        yield sse_event("heading", {"level": 1, "text": "KOL Analysis — Data-Driven Intelligence Report"})
 
         # Emit the top authors table FIRST (so users see data immediately)
         authors_table_data = top_authors_table.head(15).to_dict('records')
@@ -2687,7 +2687,7 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
                     yield sse_event("kol_end", {"author": author})
             else:
                 # Handle authors with no abstract data
-                print(f"⚠️ No abstract data found for {author}")
+                print(f"WARNING: No abstract data found for {author}")
                 no_data_msg = f"No abstracts found for this author in the filtered dataset."
 
                 # Signal start and stream no data message
@@ -2724,7 +2724,7 @@ def generate_competitor_analysis_streaming(
         abstracts_count = len(filtered_df)
 
         # Emit report title
-        yield sse_event("heading", {"level": 1, "text": "🏆 Competitor Intelligence — Strategic Analysis Report"})
+        yield sse_event("heading", {"level": 1, "text": "Competitor Intelligence — Strategic Analysis Report"})
 
         # Emit tables FIRST (so users see data immediately)
         if not comp_table.empty:
@@ -2954,7 +2954,7 @@ def generate_strategy_analysis_streaming(
         abstracts_count = len(filtered_df)
 
         # Emit report title
-        yield sse_event("heading", {"level": 1, "text": "📋 Strategic Recommendations — Medical Affairs Action Plan"})
+        yield sse_event("heading", {"level": 1, "text": "Strategic Recommendations — Medical Affairs Action Plan"})
 
         # Build basic context from the dataset
         sample_abstracts = filtered_df.head(10)[["Abstract #", "Title"]].to_csv(index=False)
@@ -3307,10 +3307,10 @@ def generate_intelligent_response(query: str, plan: QueryPlan, context: ContextP
         for _, row in context.competitor_data.head(6).iterrows():
             comp_summary.append(f"{row['Competitor']}: {row['Title']} (Abstract #{row['Abstract #']})")
         context_info.append("Competitor activity:\n" + "\n".join(f"- {c}" for c in comp_summary))
-        tables_to_attach.append(("🏆 Competitor Analysis", context.competitor_data, "data"))
+        tables_to_attach.append(("Competitor Analysis", context.competitor_data, "data"))
 
     if context.author_data is not None and not context.author_data.empty:
-        tables_to_attach.append(("👤 Author Analysis", context.author_data, "data"))
+        tables_to_attach.append(("Author Analysis", context.author_data, "data"))
 
     # Build flexible AI prompt based on what user actually wants
     system_prompt = f"""You are a helpful medical affairs assistant providing information about conference data. Your goal is to directly answer the user's question in the most helpful way possible.
@@ -3391,7 +3391,7 @@ def handle_data_table_request(query: str, plan: QueryPlan, context: ContextPacka
 
         if not top_authors_summary.empty:
             # Add summary table
-            tables_to_attach.append((f"👥 Top {len(top_authors_summary)} Authors (Summary)", top_authors_summary, "data"))
+            tables_to_attach.append((f"Top {len(top_authors_summary)} Authors (Summary)", top_authors_summary, "data"))
 
             # Also add individual abstracts from these top authors
             top_author_names = top_authors_summary['Authors'].head(10).tolist()
@@ -3615,9 +3615,9 @@ Generate a comprehensive narrative response that includes analysis, context, and
 # --- Global Initialization ---
 def initialize_app_globals():
     """
-    Initialize application globals for ESMO 2025 data (fast - just loads CSV)
+    Initialize application globals for ESMO 2025 data AND ChromaDB for AI features
     """
-    global df_global, csv_hash_global
+    global df_global, csv_hash_global, collection
 
     if df_global is None:
         print("Initializing ESMO 2025 application globals...")
@@ -3625,6 +3625,15 @@ def initialize_app_globals():
             # Load ESMO 2025 data (fast - just CSV loading)
             df_global, csv_hash_global = load_and_prepare_esmo_data()
             print(f"ESMO data loaded successfully. Hash: {csv_hash_global[:8]}")
+
+            # Initialize ChromaDB in background during startup (30-40 seconds)
+            print("Initializing ChromaDB for AI features (30-40 seconds)...")
+            collection = setup_vector_db(csv_hash_global)
+            if collection is None:
+                print("Warning: Vector database could not be fully set up. AI features may be limited.")
+            else:
+                print("ChromaDB initialization complete - AI features ready!")
+
             return True
         except FileNotFoundError as e:
             print(f"FATAL ERROR: ESMO data file not found: {e}")
@@ -4415,9 +4424,9 @@ def stream_chat_api():
     if not initialize_app_globals():
         return "data: Error: Application data could not be loaded\n\n", 500, {'Content-Type': 'text/event-stream'}
 
-    # Initialize ChromaDB lazily for AI features
-    if not initialize_chromadb_lazy():
-        return "data: Error: AI features could not be initialized\n\n", 500, {'Content-Type': 'text/event-stream'}
+    # Check ChromaDB is available (initialized at startup)
+    if collection is None:
+        return "data: Error: AI features not available\n\n", 500, {'Content-Type': 'text/event-stream'}
 
     try:
         data = request.get_json()
@@ -4457,7 +4466,9 @@ def stream_chat_api():
                 filtered_df = df_global.copy()
 
             # Analyze the query and generate intelligent response using existing logic
+            print(f"[DEBUG] BEFORE analyze_user_query_ai() call")
             plan = analyze_user_query_ai(user_query, ta_filter, conversation_history)
+            print(f"[DEBUG] AFTER analyze_user_query_ai() call - got plan: {plan.response_type}")
             print(f"[DEBUG] CHAT STREAMING DEBUG - Query: '{user_query}' | Plan: {plan.response_type} | Entities: {plan.primary_entities}")
             context = gather_intelligent_context(plan, ta_filter, filtered_df)
 
@@ -4616,7 +4627,7 @@ Respond naturally to exactly what the user asked - don't follow rigid frameworks
                     if not drug_results.empty:
                         # Generate table with drug studies
                         table_data = drug_results[["Identifier","Session","Title","Speakers","Affiliation"]].to_dict('records')
-                        table_title = f"📊 {drug_entities[0].title()} Studies - ESMO 2025 ({len(drug_results)} sessions)"
+                        table_title = f"{drug_entities[0].title()} Studies - ESMO 2025 ({len(drug_results)} sessions)"
 
                         yield sse_event("table", {
                             "title": table_title,
@@ -4746,9 +4757,9 @@ def chat_api():
     if not initialize_app_globals():
         return jsonify({"error": "Application data could not be loaded. Check server logs for details."}), 500
 
-    # Initialize ChromaDB lazily for AI features
-    if not initialize_chromadb_lazy():
-        return jsonify({"error": "AI features could not be initialized. This may take 30-40 seconds on first use."}), 500
+    # Check ChromaDB is available (initialized at startup)
+    if collection is None:
+        return jsonify({"error": "AI features not available"}), 500
 
     data = request.get_json()
     user_message = data.get('message')
@@ -4863,7 +4874,7 @@ def handle_chat_intent(intent: str, slots: Dict[str, Any], ta_filter: str, filte
                if top_auth.empty else
                f"Here are the **top {len(top_auth)} authors** by unique abstracts within **{ta_filter}**. Counts come from the table below.")
         if not top_auth.empty:
-            tables.append((f"👥 Top {len(top_auth)} Authors by Unique Abstracts", top_auth, "data"))
+            tables.append((f"Top {len(top_auth)} Authors by Unique Abstracts", top_auth, "data"))
         return msg, tables, None
 
     if intent == "top_institutions":
@@ -4900,7 +4911,7 @@ def handle_chat_intent(intent: str, slots: Dict[str, Any], ta_filter: str, filte
         if res.empty:
             return f"No abstracts with involvement from **{author}** were found under **{ta_filter}** in the CSV.", tables, None
         msg = f"Here are the abstracts with involvement from **{author}** (TA scope: **{ta_filter}**)."
-        tables.append((f"👤 Abstracts with {author} ({len(res)})", res, "data"))
+        tables.append((f"Abstracts with {author} ({len(res)})", res, "data"))
         return msg, tables, None
 
     if intent == "institution_abstracts":
@@ -4935,7 +4946,7 @@ def handle_chat_intent(intent: str, slots: Dict[str, Any], ta_filter: str, filte
                 if res.empty:
                     return f"No abstracts with involvement from **{author}** were found under **{ta_filter}** in the CSV.", tables, None
                 msg = f"Detected author **{author}**. Showing involved abstracts (TA: **{ta_filter}**)."
-                tables.append((f"👤 Abstracts with {author} ({len(res)})", res, "data"))
+                tables.append((f"Abstracts with {author} ({len(res)})", res, "data"))
                 return msg, tables, None
             narrative, hits = run_general_ai(slots.get("original_query",""), ta_filter, filtered_df)
             if hits is not None and not hits.empty:

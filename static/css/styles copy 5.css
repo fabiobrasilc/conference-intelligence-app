@@ -179,14 +179,6 @@ body{
 #sendChatBtn:hover{background:#16a34a; border-color:#16a34a;}
 #userInput{border:1px solid var(--stroke); border-radius:12px; height:46px;}
 
-/* Chat stream formatting */
-.chat-stream {
-  white-space: pre-wrap;   /* turn \n into visual breaks */
-  word-break: break-word;  /* wrap long tokens/URLs */
-  overflow-wrap: anywhere; /* extra safety for long strings */
-  line-height: 1.5;
-}
-
 /* Table Sorting & Resizing */
 .sortable-header {
   transition: background-color 0.2s ease;
