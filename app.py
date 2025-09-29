@@ -3788,15 +3788,18 @@ def execute_simple_search(keyword: str, df: pd.DataFrame, search_columns: list) 
     # Check if keyword looks like an identifier (LBA, poster numbers, etc.)
     is_identifier_like = bool(re.match(r'^LBA\d*$|^\d+[A-Za-z]+$|^[A-Za-z]+\d+$|^\d+[A-Za-z]$', keyword))
 
-    # Use ALL available columns for comprehensive search, but prioritize main ones
-    primary_columns = ['Title', 'Speakers', 'Affiliation', 'Identifier', 'Session', 'Theme']
-    secondary_columns = ['Authors', 'Institutions', 'Speaker Location', 'Room', 'Date', 'Time']
+    # ESMO 2025 dataset columns only - exact column names from CSV
+    esmo_columns = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier', 'Room', 'Date', 'Time', 'Session', 'Theme']
 
-    # Combine and deduplicate columns
-    all_search_columns = primary_columns + secondary_columns
-    actual_columns = [col for col in all_search_columns if col in df.columns]
+    # Use only the actual ESMO columns that exist in dataframe
+    actual_columns = [col for col in esmo_columns if col in df.columns]
 
     print(f"SEARCH DEBUG: Searching in {len(actual_columns)} columns: {actual_columns}")
+
+    # Debug: Check Affiliation column specifically for MD Anderson searches
+    if 'Affiliation' in df.columns and 'anderson' in keyword.lower():
+        affiliation_sample = df['Affiliation'].astype(str).str.contains(keyword, case=False, na=False).sum()
+        print(f"SEARCH DEBUG: Affiliation column matches for '{keyword}': {affiliation_sample}")
 
     for col in actual_columns:
         try:
@@ -3826,8 +3829,8 @@ def highlight_search_results(df: pd.DataFrame, keyword: str) -> pd.DataFrame:
     # Create a copy to avoid modifying original data
     highlighted_df = df.copy()
 
-    # Define columns to highlight
-    text_columns = ['Title', 'Speakers', 'Affiliation', 'Session', 'Theme', 'Authors', 'Institutions', 'Speaker Location']
+    # Define ESMO columns to highlight - using actual dataset columns only
+    text_columns = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Session', 'Theme', 'Room']
 
     # Create highlight pattern - case insensitive
     pattern = re.compile(f'({re.escape(keyword)})', re.IGNORECASE)
