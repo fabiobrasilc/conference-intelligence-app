@@ -230,6 +230,47 @@ body{
   display: inline-block;
 }
 
+/* Filter Toggle Buttons */
+.filter-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  margin: 2px;
+}
+
+.filter-toggle-btn:hover {
+  border-color: color-mix(in oklab, var(--brand) 35%, var(--stroke));
+  box-shadow: 0 2px 4px rgba(16,24,40,.08);
+  transform: translateY(-1px);
+}
+
+.filter-toggle-btn.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79,106,246,.25);
+}
+
+.filter-toggle-btn.active:hover {
+  background: var(--brand-600);
+  border-color: var(--brand-600);
+}
+
+.filter-toggle-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+
 /* Utilities */
 .section{margin-top:16px; margin-bottom:16px;}
 :focus-visible{outline:none; box-shadow:var(--focus);}

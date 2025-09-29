@@ -56,133 +56,45 @@
               <div class="row g-3">
                 <div class="col-lg-3">
                   <label class="form-label mb-1 fw-bold">🎯 Drug Focus</label>
-                  <div class="d-flex flex-wrap gap-3">
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input drug-filter-checkbox" type="checkbox" value="Avelumab Focus" id="drug_avelumab">
-                      <label class="form-check-label ms-2" for="drug_avelumab">Avelumab</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input drug-filter-checkbox" type="checkbox" value="Tepotinib Focus" id="drug_tepotinib">
-                      <label class="form-check-label ms-2" for="drug_tepotinib">Tepotinib</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input drug-filter-checkbox" type="checkbox" value="Cetuximab Focus" id="drug_cetuximab">
-                      <label class="form-check-label ms-2" for="drug_cetuximab">Cetuximab</label>
-                    </div>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="filter-toggle-btn drug-filter-btn" data-value="Avelumab Focus">Avelumab</button>
+                    <button class="filter-toggle-btn drug-filter-btn" data-value="Tepotinib Focus">Tepotinib</button>
+                    <button class="filter-toggle-btn drug-filter-btn" data-value="Cetuximab Focus">Cetuximab</button>
                   </div>
                 </div>
 
                 <div class="col-lg-3">
                   <label class="form-label mb-1 fw-bold">🏥 Therapeutic Area</label>
-                  <div class="d-flex flex-wrap gap-3">
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ta-filter-checkbox" type="checkbox" value="Bladder Cancer" id="ta_bladder">
-                      <label class="form-check-label ms-2" for="ta_bladder">Bladder</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ta-filter-checkbox" type="checkbox" value="Lung Cancer" id="ta_lung">
-                      <label class="form-check-label ms-2" for="ta_lung">Lung</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ta-filter-checkbox" type="checkbox" value="Colorectal Cancer" id="ta_colorectal">
-                      <label class="form-check-label ms-2" for="ta_colorectal">Colorectal</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ta-filter-checkbox" type="checkbox" value="Head and Neck Cancer" id="ta_head_neck">
-                      <label class="form-check-label ms-2" for="ta_head_neck">Head &amp; Neck</label>
-                    </div>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="filter-toggle-btn ta-filter-btn" data-value="Bladder Cancer">Bladder</button>
+                    <button class="filter-toggle-btn ta-filter-btn" data-value="Lung Cancer">Lung</button>
+                    <button class="filter-toggle-btn ta-filter-btn" data-value="Colorectal Cancer">Colorectal</button>
+                    <button class="filter-toggle-btn ta-filter-btn" data-value="Head and Neck Cancer">Head & Neck</button>
                   </div>
                 </div>
 
                 <div class="col-lg-3">
                   <label class="form-label mb-1 fw-bold">📋 Session Type</label>
-                  <div class="d-flex flex-wrap gap-3">
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="Proffered Paper" id="session_proffered">
-                      <label class="form-check-label ms-2" for="session_proffered">Proffered Paper</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="Mini Oral Session" id="session_mini_oral">
-                      <label class="form-check-label ms-2" for="session_mini_oral">Mini Oral</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="Educational Session" id="session_educational">
-                      <label class="form-check-label ms-2" for="session_educational">Educational</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="Symposium" id="session_symposium">
-                      <label class="form-check-label ms-2" for="session_symposium">Symposium</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="Special Session" id="session_special">
-                      <label class="form-check-label ms-2" for="session_special">Special</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="Multidisciplinary Session" id="session_multidisciplinary">
-                      <label class="form-check-label ms-2" for="session_multidisciplinary">Multidisciplinary</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="Industry-Sponsored Symposium" id="session_industry">
-                      <label class="form-check-label ms-2" for="session_industry">Industry-Sponsored</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="Challenge Your Expert" id="session_challenge">
-                      <label class="form-check-label ms-2" for="session_challenge">Challenge Your Expert</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="Young Oncologists Session" id="session_young">
-                      <label class="form-check-label ms-2" for="session_young">Young Oncologists</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="Patient Advocacy Session" id="session_patient">
-                      <label class="form-check-label ms-2" for="session_patient">Patient Advocacy</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="Keynote Lecture" id="session_keynote">
-                      <label class="form-check-label ms-2" for="session_keynote">Keynote Lecture</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="Highlights" id="session_highlights">
-                      <label class="form-check-label ms-2" for="session_highlights">Highlights</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="Eons Session" id="session_eons">
-                      <label class="form-check-label ms-2" for="session_eons">Eons Session</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="ePoster" id="session_eposter">
-                      <label class="form-check-label ms-2" for="session_eposter">ePoster</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input session-filter-checkbox" type="checkbox" value="Poster" id="session_poster">
-                      <label class="form-check-label ms-2" for="session_poster">Poster</label>
-                    </div>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="filter-toggle-btn session-filter-btn" data-value="Proffered Paper">Proffered Paper</button>
+                    <button class="filter-toggle-btn session-filter-btn" data-value="Mini Oral Session">Mini Oral</button>
+                    <button class="filter-toggle-btn session-filter-btn" data-value="Educational Session">Educational</button>
+                    <button class="filter-toggle-btn session-filter-btn" data-value="Symposium">Symposium</button>
+                    <button class="filter-toggle-btn session-filter-btn" data-value="Special Session">Special</button>
+                    <button class="filter-toggle-btn session-filter-btn" data-value="Industry-Sponsored Symposium">Industry-Sponsored</button>
+                    <button class="filter-toggle-btn session-filter-btn" data-value="ePoster">ePoster</button>
+                    <button class="filter-toggle-btn session-filter-btn" data-value="Poster">Poster</button>
                   </div>
                 </div>
 
                 <div class="col-lg-3">
                   <label class="form-label mb-1 fw-bold">📅 Conference Day</label>
-                  <div class="d-flex flex-wrap gap-3">
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input date-filter-checkbox" type="checkbox" value="Day 1 (10/17/2025)" id="date_day1">
-                      <label class="form-check-label ms-2" for="date_day1">Day 1, Oct 17th</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input date-filter-checkbox" type="checkbox" value="Day 2 (10/18/2025)" id="date_day2">
-                      <label class="form-check-label ms-2" for="date_day2">Day 2, Oct 18th</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input date-filter-checkbox" type="checkbox" value="Day 3 (10/19/2025)" id="date_day3">
-                      <label class="form-check-label ms-2" for="date_day3">Day 3, Oct 19th</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input date-filter-checkbox" type="checkbox" value="Day 4 (10/20/2025)" id="date_day4">
-                      <label class="form-check-label ms-2" for="date_day4">Day 4, Oct 20th</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input date-filter-checkbox" type="checkbox" value="Day 5 (10/21/2025)" id="date_day5">
-                      <label class="form-check-label ms-2" for="date_day5">Day 5, Oct 21st</label>
-                    </div>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="filter-toggle-btn date-filter-btn" data-value="Day 1 (10/17/2025)">Day 1, Oct 17th</button>
+                    <button class="filter-toggle-btn date-filter-btn" data-value="Day 2 (10/18/2025)">Day 2, Oct 18th</button>
+                    <button class="filter-toggle-btn date-filter-btn" data-value="Day 3 (10/19/2025)">Day 3, Oct 19th</button>
+                    <button class="filter-toggle-btn date-filter-btn" data-value="Day 4 (10/20/2025)">Day 4, Oct 20th</button>
+                    <button class="filter-toggle-btn date-filter-btn" data-value="Day 5 (10/21/2025)">Day 5, Oct 21st</button>
                   </div>
                 </div>
               </div>
@@ -229,135 +141,22 @@
             <!-- AI Filters (expanded) -->
             <div class="collapse filters-collapse mb-3" id="aiFilters">
               <div class="row g-3">
-                <div class="col-lg-3">
+                <div class="col-lg-6">
                   <label class="form-label mb-1 fw-bold">🎯 Drug Focus</label>
-                  <div class="d-flex flex-wrap gap-3">
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-drug-filter-checkbox" type="checkbox" value="Avelumab Focus" id="ai_drug_avelumab">
-                      <label class="form-check-label ms-2" for="ai_drug_avelumab">Avelumab</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-drug-filter-checkbox" type="checkbox" value="Tepotinib Focus" id="ai_drug_tepotinib">
-                      <label class="form-check-label ms-2" for="ai_drug_tepotinib">Tepotinib</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-drug-filter-checkbox" type="checkbox" value="Cetuximab Focus" id="ai_drug_cetuximab">
-                      <label class="form-check-label ms-2" for="ai_drug_cetuximab">Cetuximab</label>
-                    </div>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="filter-toggle-btn ai-drug-filter-btn" data-value="Avelumab Focus">Avelumab</button>
+                    <button class="filter-toggle-btn ai-drug-filter-btn" data-value="Tepotinib Focus">Tepotinib</button>
+                    <button class="filter-toggle-btn ai-drug-filter-btn" data-value="Cetuximab Focus">Cetuximab</button>
                   </div>
                 </div>
 
-                <div class="col-lg-3">
+                <div class="col-lg-6">
                   <label class="form-label mb-1 fw-bold">🏥 Therapeutic Area</label>
-                  <div class="d-flex flex-wrap gap-3">
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-ta-filter-checkbox" type="checkbox" value="Bladder Cancer" id="ai_ta_bladder">
-                      <label class="form-check-label ms-2" for="ai_ta_bladder">Bladder</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-ta-filter-checkbox" type="checkbox" value="Lung Cancer" id="ai_ta_lung">
-                      <label class="form-check-label ms-2" for="ai_ta_lung">Lung</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-ta-filter-checkbox" type="checkbox" value="Colorectal Cancer" id="ai_ta_colorectal">
-                      <label class="form-check-label ms-2" for="ai_ta_colorectal">Colorectal</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-ta-filter-checkbox" type="checkbox" value="Head and Neck Cancer" id="ai_ta_head_neck">
-                      <label class="form-check-label ms-2" for="ai_ta_head_neck">Head &amp; Neck</label>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="col-lg-3">
-                  <label class="form-label mb-1 fw-bold">📋 Session Type</label>
-                  <div class="d-flex flex-wrap gap-3">
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="Proffered Paper" id="ai_session_proffered">
-                      <label class="form-check-label ms-2" for="ai_session_proffered">Proffered Paper</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="Mini Oral Session" id="ai_session_mini_oral">
-                      <label class="form-check-label ms-2" for="ai_session_mini_oral">Mini Oral</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="Educational Session" id="ai_session_educational">
-                      <label class="form-check-label ms-2" for="ai_session_educational">Educational</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="Symposium" id="ai_session_symposium">
-                      <label class="form-check-label ms-2" for="ai_session_symposium">Symposium</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="Special Session" id="ai_session_special">
-                      <label class="form-check-label ms-2" for="ai_session_special">Special</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="Multidisciplinary Session" id="ai_session_multidisciplinary">
-                      <label class="form-check-label ms-2" for="ai_session_multidisciplinary">Multidisciplinary</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="Industry-Sponsored Symposium" id="ai_session_industry">
-                      <label class="form-check-label ms-2" for="ai_session_industry">Industry-Sponsored</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="Challenge Your Expert" id="ai_session_challenge">
-                      <label class="form-check-label ms-2" for="ai_session_challenge">Challenge Your Expert</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="Young Oncologists Session" id="ai_session_young">
-                      <label class="form-check-label ms-2" for="ai_session_young">Young Oncologists</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="Patient Advocacy Session" id="ai_session_patient">
-                      <label class="form-check-label ms-2" for="ai_session_patient">Patient Advocacy</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="Keynote Lecture" id="ai_session_keynote">
-                      <label class="form-check-label ms-2" for="ai_session_keynote">Keynote Lecture</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="Highlights" id="ai_session_highlights">
-                      <label class="form-check-label ms-2" for="ai_session_highlights">Highlights</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="Eons Session" id="ai_session_eons">
-                      <label class="form-check-label ms-2" for="ai_session_eons">Eons Session</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="ePoster" id="ai_session_eposter">
-                      <label class="form-check-label ms-2" for="ai_session_eposter">ePoster</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-session-filter-checkbox" type="checkbox" value="Poster" id="ai_session_poster">
-                      <label class="form-check-label ms-2" for="ai_session_poster">Poster</label>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="col-lg-3">
-                  <label class="form-label mb-1 fw-bold">📅 Conference Day</label>
-                  <div class="d-flex flex-wrap gap-3">
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-date-filter-checkbox" type="checkbox" value="Day 1 (10/17/2025)" id="ai_date_day1">
-                      <label class="form-check-label ms-2" for="ai_date_day1">Day 1, Oct 17th</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-date-filter-checkbox" type="checkbox" value="Day 2 (10/18/2025)" id="ai_date_day2">
-                      <label class="form-check-label ms-2" for="ai_date_day2">Day 2, Oct 18th</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-date-filter-checkbox" type="checkbox" value="Day 3 (10/19/2025)" id="ai_date_day3">
-                      <label class="form-check-label ms-2" for="ai_date_day3">Day 3, Oct 19th</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-date-filter-checkbox" type="checkbox" value="Day 4 (10/20/2025)" id="ai_date_day4">
-                      <label class="form-check-label ms-2" for="ai_date_day4">Day 4, Oct 20th</label>
-                    </div>
-                    <div class="form-check d-flex align-items-center">
-                      <input class="form-check-input ai-date-filter-checkbox" type="checkbox" value="Day 5 (10/21/2025)" id="ai_date_day5">
-                      <label class="form-check-label ms-2" for="ai_date_day5">Day 5, Oct 21st</label>
-                    </div>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="filter-toggle-btn ai-ta-filter-btn" data-value="Bladder Cancer">Bladder</button>
+                    <button class="filter-toggle-btn ai-ta-filter-btn" data-value="Lung Cancer">Lung</button>
+                    <button class="filter-toggle-btn ai-ta-filter-btn" data-value="Colorectal Cancer">Colorectal</button>
+                    <button class="filter-toggle-btn ai-ta-filter-btn" data-value="Head and Neck Cancer">Head & Neck</button>
                   </div>
                 </div>
 

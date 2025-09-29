@@ -12,19 +12,17 @@ document.addEventListener('DOMContentLoaded', function() {
   const clearSearchBtn = document.getElementById('clearSearchBtn');
   const filterSummary  = document.getElementById('filterSummary');
 
-  // Explorer filters
-  const drugFilterCheckboxes = document.querySelectorAll('.drug-filter-checkbox');
-  const taFilterCheckboxes   = document.querySelectorAll('.ta-filter-checkbox');
-  const sessionFilterCheckboxes = document.querySelectorAll('.session-filter-checkbox');
-  const dateFilterCheckboxes = document.querySelectorAll('.date-filter-checkbox');
+  // Explorer filter buttons (new toggle button system)
+  const drugFilterButtons = document.querySelectorAll('.drug-filter-btn');
+  const taFilterButtons   = document.querySelectorAll('.ta-filter-btn');
+  const sessionFilterButtons = document.querySelectorAll('.session-filter-btn');
+  const dateFilterButtons = document.querySelectorAll('.date-filter-btn');
 
-  // AI filters (no search on AI tab)
+  // AI filter buttons (no search on AI tab)
   const aiFilterSummary = document.getElementById('aiFilterSummary');
-  const aiDrugFilterCheckboxes = document.querySelectorAll('.ai-drug-filter-checkbox');
-  const aiTaFilterCheckboxes   = document.querySelectorAll('.ai-ta-filter-checkbox');
-  const aiSessionFilterCheckboxes = document.querySelectorAll('.ai-session-filter-checkbox');
-  const aiDateFilterCheckboxes = document.querySelectorAll('.ai-date-filter-checkbox');
-  const aiFilterContext        = document.getElementById('aiFilterContext');
+  const aiDrugFilterButtons = document.querySelectorAll('.ai-drug-filter-btn');
+  const aiTaFilterButtons   = document.querySelectorAll('.ai-ta-filter-btn');
+  const aiFilterContext     = document.getElementById('aiFilterContext');
 
   // Playbooks (chips)
   const playbookTriggers = document.querySelectorAll('.playbook-trigger');
@@ -42,31 +40,35 @@ document.addEventListener('DOMContentLoaded', function() {
   // ===== Init =====
   loadData();
 
-  // ===== Helpers =====
-  function getSelectedCheckboxValues(nodeList) {
-    return Array.from(nodeList).filter(cb => cb.checked).map(cb => cb.value);
+  // ===== Toggle Button Helpers =====
+  function getSelectedButtonValues(nodeList) {
+    return Array.from(nodeList).filter(btn => btn.classList.contains('active')).map(btn => btn.dataset.value);
   }
-  function setCheckboxValues(nodeList, values) {
-    nodeList.forEach(cb => { cb.checked = values.includes(cb.value); });
+  function setButtonValues(nodeList, values) {
+    nodeList.forEach(btn => {
+      if (values.includes(btn.dataset.value)) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
   }
   function updateCurrentFilters() {
-    currentFilters.drug_filters = getSelectedCheckboxValues(drugFilterCheckboxes);
-    currentFilters.ta_filters   = getSelectedCheckboxValues(taFilterCheckboxes);
-    currentFilters.session_filters = getSelectedCheckboxValues(sessionFilterCheckboxes);
-    currentFilters.date_filters = getSelectedCheckboxValues(dateFilterCheckboxes);
+    currentFilters.drug_filters = getSelectedButtonValues(drugFilterButtons);
+    currentFilters.ta_filters   = getSelectedButtonValues(taFilterButtons);
+    currentFilters.session_filters = getSelectedButtonValues(sessionFilterButtons);
+    currentFilters.date_filters = getSelectedButtonValues(dateFilterButtons);
   }
   function syncAIFilters() {
-    setCheckboxValues(aiDrugFilterCheckboxes, currentFilters.drug_filters);
-    setCheckboxValues(aiTaFilterCheckboxes,   currentFilters.ta_filters);
-    setCheckboxValues(aiSessionFilterCheckboxes, currentFilters.session_filters);
-    setCheckboxValues(aiDateFilterCheckboxes, currentFilters.date_filters);
+    setButtonValues(aiDrugFilterButtons, currentFilters.drug_filters);
+    setButtonValues(aiTaFilterButtons,   currentFilters.ta_filters);
     updateFilterSummaries();
   }
   function syncExplorerFilters() {
-    setCheckboxValues(drugFilterCheckboxes, currentFilters.drug_filters);
-    setCheckboxValues(taFilterCheckboxes,   currentFilters.ta_filters);
-    setCheckboxValues(sessionFilterCheckboxes, currentFilters.session_filters);
-    setCheckboxValues(dateFilterCheckboxes, currentFilters.date_filters);
+    setButtonValues(drugFilterButtons, currentFilters.drug_filters);
+    setButtonValues(taFilterButtons,   currentFilters.ta_filters);
+    setButtonValues(sessionFilterButtons, currentFilters.session_filters);
+    setButtonValues(dateFilterButtons, currentFilters.date_filters);
     updateFilterSummaries();
   }
   function updateFilterSummaries() {
@@ -79,47 +81,35 @@ document.addEventListener('DOMContentLoaded', function() {
     if (aiFilterContext) aiFilterContext.textContent = `Analyzing: ${drugs} + ${tas} + ${sessions} + ${dates}`;
   }
 
-  // ===== Explorer filter events =====
-  drugFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
+  // ===== Explorer filter button events =====
+  drugFilterButtons.forEach(btn => btn.addEventListener('click', () => {
+    btn.classList.toggle('active');
     updateCurrentFilters(); syncAIFilters(); loadData();
   }));
-  taFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
+  taFilterButtons.forEach(btn => btn.addEventListener('click', () => {
+    btn.classList.toggle('active');
     updateCurrentFilters(); syncAIFilters(); loadData();
   }));
-  sessionFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
+  sessionFilterButtons.forEach(btn => btn.addEventListener('click', () => {
+    btn.classList.toggle('active');
     updateCurrentFilters(); syncAIFilters(); loadData();
   }));
-  dateFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
+  dateFilterButtons.forEach(btn => btn.addEventListener('click', () => {
+    btn.classList.toggle('active');
     updateCurrentFilters(); syncAIFilters(); loadData();
   }));
 
-  // ===== AI filter events (sync back) =====
-  aiDrugFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
-    currentFilters.drug_filters = getSelectedCheckboxValues(aiDrugFilterCheckboxes);
-    currentFilters.ta_filters   = getSelectedCheckboxValues(aiTaFilterCheckboxes);
-    currentFilters.session_filters = getSelectedCheckboxValues(aiSessionFilterCheckboxes);
-    currentFilters.date_filters = getSelectedCheckboxValues(aiDateFilterCheckboxes);
+  // ===== AI filter button events (sync back) =====
+  aiDrugFilterButtons.forEach(btn => btn.addEventListener('click', () => {
+    btn.classList.toggle('active');
+    currentFilters.drug_filters = getSelectedButtonValues(aiDrugFilterButtons);
+    currentFilters.ta_filters   = getSelectedButtonValues(aiTaFilterButtons);
     syncExplorerFilters(); loadData();
   }));
-  aiTaFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
-    currentFilters.drug_filters = getSelectedCheckboxValues(aiDrugFilterCheckboxes);
-    currentFilters.ta_filters   = getSelectedCheckboxValues(aiTaFilterCheckboxes);
-    currentFilters.session_filters = getSelectedCheckboxValues(aiSessionFilterCheckboxes);
-    currentFilters.date_filters = getSelectedCheckboxValues(aiDateFilterCheckboxes);
-    syncExplorerFilters(); loadData();
-  }));
-  aiSessionFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
-    currentFilters.drug_filters = getSelectedCheckboxValues(aiDrugFilterCheckboxes);
-    currentFilters.ta_filters   = getSelectedCheckboxValues(aiTaFilterCheckboxes);
-    currentFilters.session_filters = getSelectedCheckboxValues(aiSessionFilterCheckboxes);
-    currentFilters.date_filters = getSelectedCheckboxValues(aiDateFilterCheckboxes);
-    syncExplorerFilters(); loadData();
-  }));
-  aiDateFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
-    currentFilters.drug_filters = getSelectedCheckboxValues(aiDrugFilterCheckboxes);
-    currentFilters.ta_filters   = getSelectedCheckboxValues(aiTaFilterCheckboxes);
-    currentFilters.session_filters = getSelectedCheckboxValues(aiSessionFilterCheckboxes);
-    currentFilters.date_filters = getSelectedCheckboxValues(aiDateFilterCheckboxes);
+  aiTaFilterButtons.forEach(btn => btn.addEventListener('click', () => {
+    btn.classList.toggle('active');
+    currentFilters.drug_filters = getSelectedButtonValues(aiDrugFilterButtons);
+    currentFilters.ta_filters   = getSelectedButtonValues(aiTaFilterButtons);
     syncExplorerFilters(); loadData();
   }));
 

@@ -3721,6 +3721,85 @@ def debug_search():
         print(f"DEBUG SEARCH: Error: {e}")
         return jsonify({"error": str(e)}), 500
 
+def parse_boolean_query(query: str, df: pd.DataFrame, search_columns: list) -> pd.Series:
+    """
+    Parse and execute boolean search queries with AND, OR, NOT operators
+    Returns a boolean mask for the dataframe
+    """
+    import re
+
+    # If no boolean operators, fall back to original search
+    if not any(op in query.upper() for op in ['AND', 'OR', 'NOT']):
+        return execute_simple_search(query, df, search_columns)
+
+    # Replace boolean operators with symbols for easier parsing
+    normalized_query = query.upper()
+    normalized_query = re.sub(r'\bAND\b', ' & ', normalized_query)
+    normalized_query = re.sub(r'\bOR\b', ' | ', normalized_query)
+    normalized_query = re.sub(r'\bNOT\b', ' ~ ', normalized_query)
+
+    # Split by operators but keep the operators
+    tokens = re.split(r'(\s*[&|~]\s*)', normalized_query)
+    tokens = [token.strip() for token in tokens if token.strip()]
+
+    # Build the boolean mask step by step
+    result_mask = pd.Series([True] * len(df))
+
+    i = 0
+    while i < len(tokens):
+        term = tokens[i].strip()
+
+        if term in ['&', '|', '~']:
+            i += 1
+            continue
+
+        # Get mask for current term
+        if term.startswith('~'):
+            # NOT operation
+            search_term = term[1:].strip()
+            term_mask = ~execute_simple_search(search_term, df, search_columns)
+        else:
+            term_mask = execute_simple_search(term, df, search_columns)
+
+        # Apply operator if we have one
+        if i > 0 and i > 1:
+            prev_op = tokens[i-1].strip()
+            if prev_op == '&':
+                result_mask = result_mask & term_mask
+            elif prev_op == '|':
+                result_mask = result_mask | term_mask
+        else:
+            # First term
+            result_mask = term_mask
+
+        i += 1
+
+    return result_mask
+
+def execute_simple_search(keyword: str, df: pd.DataFrame, search_columns: list) -> pd.Series:
+    """
+    Execute simple search across specified columns
+    Returns a boolean mask for the dataframe
+    """
+    import re
+
+    mask = pd.Series([False] * len(df))
+
+    # Check if keyword looks like an identifier
+    is_identifier_like = bool(re.match(r'^[A-Za-z0-9]+[A-Za-z]$|^[A-Za-z]+[0-9]+$|^LBA\d+$|^\d+[A-Za-z]+$', keyword))
+
+    for col in search_columns:
+        if col in df.columns:
+            if is_identifier_like and col == 'Identifier':
+                # Exact matching for identifiers
+                col_mask = df[col].astype(str).str.upper().str.contains(keyword.upper(), case=False, na=False, regex=False)
+            else:
+                # Regular contains search for other fields
+                col_mask = df[col].astype(str).str.contains(keyword, case=False, na=False, regex=False)
+            mask = mask | col_mask
+
+    return mask
+
 @app.route('/api/search')
 def search_data_api():
     if not initialize_app_globals():
@@ -3750,33 +3829,17 @@ def search_data_api():
     # Apply filters first, then search within filtered results
     current_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
 
-    # Search across all fields using ESMO column structure
+    # Search across all fields with Boolean search support
     print(f"SEARCH DEBUG: Searching for '{keyword}' in dataframe with {len(current_df)} rows")
     print(f"SEARCH DEBUG: Available columns: {list(current_df.columns)}")
 
     # Search ALL text fields for comprehensive results
     search_columns = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Room', 'Date', 'Time', 'Session', 'Theme', 'Identifier']
 
-    mask = pd.Series([False] * len(current_df))
-
-    # Check if keyword looks like an identifier (letters + numbers, like "308p", "LBA110")
-    # Use word boundary matching for better precision
-    import re
-    is_identifier_like = bool(re.match(r'^[A-Za-z0-9]+[A-Za-z]$|^[A-Za-z]+[0-9]+$|^LBA\d+$|^\d+[A-Za-z]+$', keyword))
-
-    for col in search_columns:
-        if col in current_df.columns:
-            if is_identifier_like and col in ['Identifier', 'Title']:
-                # Use word boundary matching for identifier-like searches in key columns
-                col_mask = current_df[col].astype(str).str.contains(rf'\b{re.escape(keyword)}\b', case=False, na=False, regex=True)
-            else:
-                # Use regular contains for other searches
-                col_mask = current_df[col].astype(str).str.contains(keyword, case=False, na=False, regex=False)
-            mask = mask | col_mask
-            print(f"SEARCH DEBUG: {col} matches: {col_mask.sum()}")
+    # Use Boolean search parser (supports AND, OR, NOT)
+    mask = parse_boolean_query(keyword, current_df, search_columns)
 
     print(f"SEARCH DEBUG: Total matches: {mask.sum()}")
-    print(f"SEARCH DEBUG: Total mask matches: {mask.sum()}")
 
     # Use original dataset column names for search results display
     display_columns = ["Title", "Speakers", "Speaker Location", "Affiliation", "Identifier", "Room", "Date", "Time", "Session", "Theme"]
