@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ===== State =====
   let currentFilters = { drug_filters: [], ta_filters: [], session_filters: [], date_filters: [] };
+  let currentTableData = [];
+  let sortState = { column: null, direction: 'asc' };
 
   // ===== Init =====
   loadData();
@@ -212,6 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const hasActiveFilters = currentFilters.drug_filters.length > 0 ||
                             currentFilters.ta_filters.length > 0 ||
                             currentFilters.session_filters.length > 0 ||
+                            currentFilters.date_filters.length > 0 ||
                             (searchInput && searchInput.value.trim().length > 0);
 
     const colorClass = hasActiveFilters ? 'text-purple fw-bold' : '';
@@ -221,8 +224,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ===== Table rendering (fixed layout + hover/tap expand) =====
-  function renderTable(data){
-    if (!data || data.length === 0){
+  function renderTable(data, skipDataUpdate = false){
+    if (!skipDataUpdate) {
+      currentTableData = data || [];
+    }
+
+    if (!currentTableData || currentTableData.length === 0){
       tableContainer.innerHTML = `
         <div class="alert alert-info" role="alert">
           <h4 class="alert-heading">No Results</h4>
@@ -247,15 +254,31 @@ document.addEventListener('DOMContentLoaded', function() {
       'Theme':'15%'
     };
 
+    // Sort data if needed
+    let sortedData = [...currentTableData];
+    if (sortState.column) {
+      sortedData = sortData(sortedData, sortState.column, sortState.direction);
+    }
+
     let html = `
       <div id="tableViewport">
-        <table class="table table-hover table-striped align-middle table-fixed">
+        <table class="table table-hover table-striped align-middle table-fixed" id="dataTable">
           <colgroup>${headers.map(h => `<col style="width:${colWidths[h]||'auto'}">`).join('')}</colgroup>
-          <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+          <thead>
+            <tr>
+              ${headers.map(h => `
+                <th class="sortable-header" data-column="${h}" style="cursor: pointer; user-select: none; position: relative;">
+                  <span class="header-text">${h}</span>
+                  <span class="sort-indicator">${getSortIcon(h)}</span>
+                  <div class="resize-handle" style="position: absolute; right: 0; top: 0; bottom: 0; width: 5px; cursor: col-resize; background: transparent;"></div>
+                </th>
+              `).join('')}
+            </tr>
+          </thead>
           <tbody>
     `;
 
-    data.forEach(row => {
+    sortedData.forEach(row => {
       html += '<tr>';
       headers.forEach(h => {
         const val = row[h] ?? '';
@@ -267,12 +290,146 @@ document.addEventListener('DOMContentLoaded', function() {
     html += `</tbody></table></div>`;
     tableContainer.innerHTML = html;
 
+    // Add event listeners for sorting and resizing
+    addTableInteractivity();
+
     // Mobile: tap toggles expansion
     const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     if (!supportsHover){
       const rows = tableContainer.querySelectorAll('#tableViewport tbody tr');
       rows.forEach(tr => tr.addEventListener('click', () => tr.classList.toggle('expanded')));
     }
+  }
+
+  // ===== Table Sorting & Resizing =====
+  function getSortIcon(column) {
+    if (sortState.column !== column) {
+      return '<i class="bi bi-arrow-down-up" style="opacity: 0.3; margin-left: 5px;"></i>';
+    }
+    const icon = sortState.direction === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down';
+    return `<i class="bi ${icon}" style="margin-left: 5px; color: var(--brand);"></i>`;
+  }
+
+  function sortData(data, column, direction) {
+    return data.sort((a, b) => {
+      let aVal = a[column] ?? '';
+      let bVal = b[column] ?? '';
+
+      // Handle Date column specially
+      if (column === 'Date') {
+        aVal = new Date(aVal);
+        bVal = new Date(bVal);
+      }
+      // Handle Time column specially
+      else if (column === 'Time') {
+        aVal = parseTime(aVal);
+        bVal = parseTime(bVal);
+      }
+      // Handle Identifier column (numeric sorting for mixed content)
+      else if (column === 'Identifier') {
+        const aNum = extractNumber(aVal);
+        const bNum = extractNumber(bVal);
+        if (aNum !== null && bNum !== null) {
+          aVal = aNum;
+          bVal = bNum;
+        } else {
+          aVal = aVal.toString().toLowerCase();
+          bVal = bVal.toString().toLowerCase();
+        }
+      }
+      // Default: string comparison
+      else {
+        aVal = aVal.toString().toLowerCase();
+        bVal = bVal.toString().toLowerCase();
+      }
+
+      let result;
+      if (aVal < bVal) result = -1;
+      else if (aVal > bVal) result = 1;
+      else result = 0;
+
+      return direction === 'desc' ? -result : result;
+    });
+  }
+
+  function parseTime(timeStr) {
+    if (!timeStr) return 0;
+    const match = timeStr.match(/(\d{1,2}):(\d{2})/);
+    if (match) {
+      return parseInt(match[1]) * 60 + parseInt(match[2]);
+    }
+    return 0;
+  }
+
+  function extractNumber(str) {
+    const match = str.toString().match(/(\d+)/);
+    return match ? parseInt(match[1]) : null;
+  }
+
+  function addTableInteractivity() {
+    // Add sorting click handlers
+    const headers = tableContainer.querySelectorAll('.sortable-header');
+    headers.forEach(header => {
+      const headerText = header.querySelector('.header-text');
+      const resizeHandle = header.querySelector('.resize-handle');
+
+      // Sorting - click on header text area (not resize handle)
+      headerText.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleSort(header.dataset.column);
+      });
+
+      // Column resizing
+      let isResizing = false;
+      let startX = 0;
+      let startWidth = 0;
+      let colIndex = Array.from(header.parentElement.children).indexOf(header);
+
+      resizeHandle.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = header.offsetWidth;
+        document.addEventListener('mousemove', handleResize);
+        document.addEventListener('mouseup', stopResize);
+        header.style.userSelect = 'none';
+      });
+
+      function handleResize(e) {
+        if (!isResizing) return;
+        const diff = e.clientX - startX;
+        const newWidth = Math.max(50, startWidth + diff); // Min width 50px
+
+        // Update the colgroup element
+        const table = tableContainer.querySelector('#dataTable');
+        const colGroup = table.querySelector('colgroup');
+        const col = colGroup.children[colIndex];
+        if (col) {
+          col.style.width = newWidth + 'px';
+        }
+      }
+
+      function stopResize() {
+        isResizing = false;
+        header.style.userSelect = '';
+        document.removeEventListener('mousemove', handleResize);
+        document.removeEventListener('mouseup', stopResize);
+      }
+    });
+  }
+
+  function handleSort(column) {
+    if (sortState.column === column) {
+      // Toggle direction
+      sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      // New column
+      sortState.column = column;
+      sortState.direction = 'asc';
+    }
+
+    // Re-render table with new sort
+    renderTable(null, true); // Skip data update, just re-sort current data
   }
 
   // ===== Export =====
