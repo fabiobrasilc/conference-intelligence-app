@@ -543,13 +543,18 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
     combined_df = pd.concat(all_results, ignore_index=True)
     combined_df = combined_df.drop_duplicates(subset=["Identifier"], keep='first')
 
-    # Apply session filters to combined results if specified
-    if session_filters and session_filters != ["All Session Types"]:
-        combined_df = apply_session_filter(combined_df, session_filters)
+    # Only apply session/date filters if they weren't already applied as primary filters
+    # Check if we had drug/TA filters that would need secondary session/date filtering
+    had_primary_filters = drug_filters or ta_filters
 
-    # Apply date filters to combined results if specified
-    if date_filters and date_filters != ["All Days"]:
-        combined_df = apply_date_filter(combined_df, date_filters)
+    if had_primary_filters:
+        # Apply session filters to combined results if specified
+        if session_filters and session_filters != ["All Session Types"]:
+            combined_df = apply_session_filter(combined_df, session_filters)
+
+        # Apply date filters to combined results if specified
+        if date_filters and date_filters != ["All Days"]:
+            combined_df = apply_date_filter(combined_df, date_filters)
 
     return combined_df
 
@@ -631,17 +636,17 @@ def load_and_prepare_esmo_data():
         if old_col in df.columns:
             df[new_col] = df[old_col]
 
-    # Create legacy columns for backward compatibility
-    df["Abstract #"] = df["identifier"]
-    df["Poster #"] = df["session_type"]
-    df["Title"] = df["study_title"]
-    df["Authors"] = df["speaker"]
-    df["Institutions"] = df["affiliation"]
+    # Create legacy columns for backward compatibility using actual ESMO column names
+    df["Abstract #"] = df["Identifier"]  # ESMO has "Identifier" not "identifier"
+    df["Poster #"] = df["Session"]       # Use Session as the session type
+    df["Title"] = df["Title"]           # Already matches
+    df["Authors"] = df["Speakers"]      # ESMO has "Speakers" not "speaker"
+    df["Institutions"] = df["Affiliation"]  # ESMO has "Affiliation" not "affiliation"
 
     # Generate main_filters column for drug/TA filtering based on session themes and titles
     def generate_main_filters(row):
-        title = str(row.get("study_title", "")).lower()
-        theme = str(row.get("session_category", "")).lower()
+        title = str(row.get("Title", "")).lower()         # Use actual ESMO column name
+        theme = str(row.get("Theme", "")).lower()         # Use actual ESMO column name
 
         filters = []
 
@@ -735,14 +740,14 @@ def setup_vector_db(csv_hash: str):
         texts = df["combined_text"].tolist()
 
         ids, seen = [], set()
-        for i, (a, p) in enumerate(zip(df["Abstract #"].astype(str), df["Poster #"].astype(str))):
-            base = f"{a}_{p}".strip("_")
-            if base in seen or base == "":
-                base = f"{a}_{p}_row_{i}"  # Fallback for duplicate/empty identifiers
-            ids.append(f"abstract_{base}")
+        for i, identifier in enumerate(df["Identifier"].astype(str)):
+            base = identifier.strip() if pd.notna(identifier) and identifier.strip() else f"session_{i}"
+            if base in seen:
+                base = f"{base}_row_{i}"  # Fallback for duplicate identifiers
+            ids.append(f"session_{base}")
             seen.add(base)
 
-        metadatas = df[["Abstract #", "Title", "Authors", "Institutions", "Poster #", "ta"]].to_dict("records")
+        metadatas = df[["Identifier", "Title", "Speakers", "Affiliation", "Session", "Theme"]].to_dict("records")
 
         batch_size = 300
         print(f"Adding {len(texts)} documents to ChromaDB...")
