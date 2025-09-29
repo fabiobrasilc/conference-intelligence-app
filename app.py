@@ -137,7 +137,7 @@ ESMO_SESSION_TYPES = {
     "Educational Session": ["Educational Session"],
     "Proffered Paper": ["Proffered Paper"],
     "Mini Oral Session": ["Mini Oral Session"],
-    "Symposium": ["Symposium"],
+    "Symposium": ["Symposium"],  # Will be filtered to exclude Industry-Sponsored
     "Special Session": ["Special Session"],
     "Multidisciplinary Session": ["Multidisciplinary Session"],
     "Young Oncologists Session": ["Young Oncologists Session"],
@@ -146,7 +146,18 @@ ESMO_SESSION_TYPES = {
     "Challenge Your Expert": ["Challenge Your Expert"],
     "Keynote Lecture": ["Keynote Lecture"],
     "Highlights": ["Highlights"],
-    "Eons Session": ["Eons Session"]
+    "Eons Session": ["Eons Session"],
+    "ePoster": ["ePoster"],
+    "Poster": ["Poster"]
+}
+
+ESMO_DATE_FILTERS = {
+    "All Days": [],
+    "Day 1 (10/17/2025)": ["10/17/2025"],
+    "Day 2 (10/18/2025)": ["10/18/2025"],
+    "Day 3 (10/19/2025)": ["10/19/2025"],
+    "Day 4 (10/20/2025)": ["10/20/2025"],
+    "Day 5 (10/21/2025)": ["10/21/2025"]
 }
 
 # =========================
@@ -399,6 +410,10 @@ def get_available_session_types() -> List[str]:
     """Get list of available session types"""
     return list(ESMO_SESSION_TYPES.keys())
 
+def get_available_date_filters() -> List[str]:
+    """Get list of available date filters"""
+    return list(ESMO_DATE_FILTERS.keys())
+
 def apply_session_filter(df: pd.DataFrame, session_filters: List[str]) -> pd.DataFrame:
     """Apply session type filters to dataframe"""
     if not session_filters or "All Session Types" in session_filters:
@@ -415,12 +430,48 @@ def apply_session_filter(df: pd.DataFrame, session_filters: List[str]) -> pd.Dat
 
     # Filter by session type using contains (case-insensitive) for better matching
     session_mask = pd.Series([False] * len(df))
+
+    # Handle special case for "Symposium" filter - should exclude "Industry-Sponsored Symposium"
+    if "Symposium" in session_keywords:
+        # Remove "Symposium" from keywords and handle it separately
+        session_keywords = [k for k in session_keywords if k != "Symposium"]
+
+        # Add "Symposium" sessions but exclude "Industry-Sponsored Symposium"
+        symposium_mask = df['Session'].astype(str).str.contains('Symposium', case=False, na=False, regex=False)
+        industry_symposium_mask = df['Session'].astype(str).str.contains('Industry-Sponsored Symposium', case=False, na=False, regex=False)
+        symposium_only_mask = symposium_mask & ~industry_symposium_mask
+        session_mask = session_mask | symposium_only_mask
+
+    # Handle other session types normally
     for keyword in session_keywords:
         keyword_mask = df['Session'].astype(str).str.contains(keyword, case=False, na=False, regex=False)
         session_mask = session_mask | keyword_mask
+
     return df[session_mask]
 
-def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str], session_filters: List[str] = None) -> pd.DataFrame:
+def apply_date_filter(df: pd.DataFrame, date_filters: List[str]) -> pd.DataFrame:
+    """Apply date filters to dataframe"""
+    if not date_filters or "All Days" in date_filters:
+        return df
+
+    # Collect all date keywords from selected filters
+    date_keywords = []
+    for date_filter in date_filters:
+        if date_filter in ESMO_DATE_FILTERS:
+            date_keywords.extend(ESMO_DATE_FILTERS[date_filter])
+
+    if not date_keywords:
+        return df
+
+    # Filter by date using exact matching
+    date_mask = pd.Series([False] * len(df))
+    for keyword in date_keywords:
+        keyword_mask = df['Date'].astype(str).str.contains(keyword, case=False, na=False, regex=False)
+        date_mask = date_mask | keyword_mask
+
+    return df[date_mask]
+
+def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str], session_filters: List[str] = None, date_filters: List[str] = None) -> pd.DataFrame:
     """
     Filter ESMO 2025 dataframe by multiple drug focus, therapeutic area, and session type filters.
     Combines results from multiple filters with OR logic.
@@ -430,7 +481,7 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
         return pd.DataFrame()
 
     # If no filters selected, return all data
-    if not drug_filters and not ta_filters and not session_filters:
+    if not drug_filters and not ta_filters and not session_filters and not date_filters:
         return df_global.copy()
 
     all_results = []
@@ -478,6 +529,13 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
         if not session_filtered.empty:
             all_results.append(session_filtered)
 
+    # If no results yet but we have only date filters
+    if not all_results and date_filters and date_filters != ["All Days"]:
+        date_filtered = apply_date_filter(df_global, date_filters)
+        if not date_filtered.empty:
+            all_results.append(date_filtered)
+
+    # If no results, return empty dataframe
     if not all_results:
         return pd.DataFrame()
 
@@ -485,11 +543,19 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
     combined_df = pd.concat(all_results, ignore_index=True)
     combined_df = combined_df.drop_duplicates(subset=["Identifier"], keep='first')
 
+    # Apply session filters to combined results if specified
+    if session_filters and session_filters != ["All Session Types"]:
+        combined_df = apply_session_filter(combined_df, session_filters)
+
+    # Apply date filters to combined results if specified
+    if date_filters and date_filters != ["All Days"]:
+        combined_df = apply_date_filter(combined_df, date_filters)
+
     return combined_df
 
-def get_filter_context_multi(drug_filters: List[str], ta_filters: List[str], session_filters: List[str] = None) -> Dict[str, Any]:
+def get_filter_context_multi(drug_filters: List[str], ta_filters: List[str], session_filters: List[str] = None, date_filters: List[str] = None) -> Dict[str, Any]:
     """Generate filter context information for multiple filters"""
-    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters)
+    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
     total_sessions = len(filtered_df)
     total_available = len(df_global) if df_global is not None else 0
 
@@ -3525,6 +3591,7 @@ def get_data_api():
     drug_filters = request.args.getlist('drug_filters')
     ta_filters = request.args.getlist('ta_filters')
     session_filters = request.args.getlist('session_filters')
+    date_filters = request.args.getlist('date_filters')
 
     # Backward compatibility: if no array parameters, check for old single parameters
     if not drug_filters and request.args.get('drug_filter'):
@@ -3533,13 +3600,15 @@ def get_data_api():
         ta_filters = [request.args.get('ta_filter')]
     if not session_filters and request.args.get('session_filter'):
         session_filters = [request.args.get('session_filter')]
+    if not date_filters and request.args.get('date_filter'):
+        date_filters = [request.args.get('date_filter')]
 
-    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters)
-    filter_context = get_filter_context_multi(drug_filters, ta_filters, session_filters)
+    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
+    filter_context = get_filter_context_multi(drug_filters, ta_filters, session_filters, date_filters)
 
     # Limit to first 50 only when no filters are applied (to improve performance)
     display_df = filtered_df
-    if not drug_filters and not ta_filters and not session_filters:
+    if not drug_filters and not ta_filters and not session_filters and not date_filters:
         display_df = filtered_df.head(50)
 
     # Use original dataset column names that the frontend expects
@@ -3637,6 +3706,7 @@ def search_data_api():
     drug_filters = request.args.getlist('drug_filters')
     ta_filters = request.args.getlist('ta_filters')
     session_filters = request.args.getlist('session_filters')
+    date_filters = request.args.getlist('date_filters')
 
     # Backward compatibility: if no array parameters, check for old single parameters
     if not drug_filters and request.args.get('drug_filter'):
@@ -3645,6 +3715,8 @@ def search_data_api():
         ta_filters = [request.args.get('ta_filter')]
     if not session_filters and request.args.get('session_filter'):
         session_filters = [request.args.get('session_filter')]
+    if not date_filters and request.args.get('date_filter'):
+        date_filters = [request.args.get('date_filter')]
 
     keyword = request.args.get('keyword', '').strip()
 
@@ -3652,19 +3724,30 @@ def search_data_api():
         return jsonify([])
 
     # Apply filters first, then search within filtered results
-    current_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters)
+    current_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
 
     # Search across all fields using ESMO column structure
     print(f"SEARCH DEBUG: Searching for '{keyword}' in dataframe with {len(current_df)} rows")
     print(f"SEARCH DEBUG: Available columns: {list(current_df.columns)}")
 
     # Search ALL text fields for comprehensive results
-    search_columns = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Room', 'Session', 'Theme', 'Identifier']
+    search_columns = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Room', 'Date', 'Time', 'Session', 'Theme', 'Identifier']
 
     mask = pd.Series([False] * len(current_df))
+
+    # Check if keyword looks like an identifier (letters + numbers, like "308p", "LBA110")
+    # Use word boundary matching for better precision
+    import re
+    is_identifier_like = bool(re.match(r'^[A-Za-z0-9]+[A-Za-z]$|^[A-Za-z]+[0-9]+$|^LBA\d+$|^\d+[A-Za-z]+$', keyword))
+
     for col in search_columns:
         if col in current_df.columns:
-            col_mask = current_df[col].astype(str).str.contains(keyword, case=False, na=False, regex=False)
+            if is_identifier_like and col in ['Identifier', 'Title']:
+                # Use word boundary matching for identifier-like searches in key columns
+                col_mask = current_df[col].astype(str).str.contains(rf'\b{re.escape(keyword)}\b', case=False, na=False, regex=True)
+            else:
+                # Use regular contains for other searches
+                col_mask = current_df[col].astype(str).str.contains(keyword, case=False, na=False, regex=False)
             mask = mask | col_mask
             print(f"SEARCH DEBUG: {col} matches: {col_mask.sum()}")
 
@@ -4690,4 +4773,3 @@ if __name__ == '__main__':
     else:
         print("Starting Flask server...")
         app.run(debug=True)
-
