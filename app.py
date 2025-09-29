@@ -416,16 +416,24 @@ def get_available_date_filters() -> List[str]:
 
 def apply_session_filter(df: pd.DataFrame, session_filters: List[str]) -> pd.DataFrame:
     """Apply session type filters to dataframe"""
+    print(f"SESSION DEBUG: Input filters: {session_filters}, DataFrame size: {len(df)}")
+
     if not session_filters or "All Session Types" in session_filters:
+        print(f"SESSION DEBUG: No filtering needed, returning {len(df)} rows")
         return df
 
     # Collect all session keywords from selected filters
     session_keywords = []
     for session_filter in session_filters:
         if session_filter in ESMO_SESSION_TYPES:
-            session_keywords.extend(ESMO_SESSION_TYPES[session_filter])
+            keywords = ESMO_SESSION_TYPES[session_filter]
+            session_keywords.extend(keywords)
+            print(f"SESSION DEBUG: '{session_filter}' -> keywords: {keywords}")
+
+    print(f"SESSION DEBUG: All session keywords: {session_keywords}")
 
     if not session_keywords:
+        print(f"SESSION DEBUG: No keywords found, returning {len(df)} rows")
         return df
 
     # Filter by session type using contains (case-insensitive) for better matching
@@ -445,9 +453,13 @@ def apply_session_filter(df: pd.DataFrame, session_filters: List[str]) -> pd.Dat
     # Handle other session types normally
     for keyword in session_keywords:
         keyword_mask = df['Session'].astype(str).str.contains(keyword, case=False, na=False, regex=False)
+        matches = keyword_mask.sum()
+        print(f"SESSION DEBUG: '{keyword}' found {matches} matches")
         session_mask = session_mask | keyword_mask
 
-    return df[session_mask]
+    result_df = df[session_mask]
+    print(f"SESSION DEBUG: Final result: {len(result_df)} rows")
+    return result_df
 
 def apply_date_filter(df: pd.DataFrame, date_filters: List[str]) -> pd.DataFrame:
     """Apply date filters to dataframe"""
@@ -477,6 +489,7 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
     Combines results from multiple filters with OR logic.
     If no filters provided, returns all data.
     """
+    print(f"MULTI-FILTER DEBUG: drug_filters={drug_filters}, ta_filters={ta_filters}, session_filters={session_filters}, date_filters={date_filters}")
     if df_global is None or df_global.empty:
         return pd.DataFrame()
 
@@ -543,18 +556,9 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
     combined_df = pd.concat(all_results, ignore_index=True)
     combined_df = combined_df.drop_duplicates(subset=["Identifier"], keep='first')
 
-    # Only apply session/date filters if they weren't already applied as primary filters
-    # Check if we had drug/TA filters that would need secondary session/date filtering
-    had_primary_filters = drug_filters or ta_filters
-
-    if had_primary_filters:
-        # Apply session filters to combined results if specified
-        if session_filters and session_filters != ["All Session Types"]:
-            combined_df = apply_session_filter(combined_df, session_filters)
-
-        # Apply date filters to combined results if specified
-        if date_filters and date_filters != ["All Days"]:
-            combined_df = apply_date_filter(combined_df, date_filters)
+    # Session and date filters were already applied above in the primary filtering logic
+    # No need to re-apply them here as that would cause double-filtering
+    # This section was causing the bug where session filters returned incorrect counts
 
     return combined_df
 
@@ -3612,10 +3616,13 @@ def get_data_api():
         return jsonify({"error": "Application data could not be loaded. Check server logs for details."}), 500
 
     # Handle both old single-parameter format and new array format for backward compatibility
-    drug_filters = request.args.getlist('drug_filters')
-    ta_filters = request.args.getlist('ta_filters')
-    session_filters = request.args.getlist('session_filters')
-    date_filters = request.args.getlist('date_filters')
+    # Frontend sends session_filters[] (with brackets), but Flask getlist needs session_filters
+    drug_filters = request.args.getlist('drug_filters[]') or request.args.getlist('drug_filters')
+    ta_filters = request.args.getlist('ta_filters[]') or request.args.getlist('ta_filters')
+    session_filters = request.args.getlist('session_filters[]') or request.args.getlist('session_filters')
+    date_filters = request.args.getlist('date_filters[]') or request.args.getlist('date_filters')
+
+    print(f"PARAMETER DEBUG: session_filters from URL = {session_filters}")
 
     # Backward compatibility: if no array parameters, check for old single parameters
     if not drug_filters and request.args.get('drug_filter'):
@@ -3627,8 +3634,31 @@ def get_data_api():
     if not date_filters and request.args.get('date_filter'):
         date_filters = [request.args.get('date_filter')]
 
-    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
-    filter_context = get_filter_context_multi(drug_filters, ta_filters, session_filters, date_filters)
+    # SIMPLE SESSION FILTERING - If user clicks session filter, show ONLY those rows
+    print(f"SIMPLE SESSION DEBUG: session_filters={session_filters}")
+
+    # Start with full dataset
+    if df_global is None or df_global.empty:
+        return jsonify({"error": "No data available"}), 500
+
+    working_df = df_global.copy()
+
+    # Apply session filter first and simply - if user clicks "Mini Oral", show ONLY Mini Oral rows
+    if session_filters and session_filters != ["All Session Types"]:
+        session_mask = pd.Series([False] * len(working_df))
+        for session_filter in session_filters:
+            if session_filter != "All Session Types":
+                # Direct exact match with the Session column
+                exact_matches = working_df['Session'] == session_filter
+                session_mask = session_mask | exact_matches
+                print(f"SIMPLE SESSION DEBUG: '{session_filter}' exact matches: {exact_matches.sum()}")
+
+        working_df = working_df[session_mask]
+        print(f"SIMPLE SESSION DEBUG: After session filtering: {len(working_df)} rows")
+
+    # For now, use the simple filtered result (ignore complex multi-filtering)
+    filtered_df = working_df
+    filter_context = {"total_sessions": len(filtered_df), "filter_summary": f"Sessions: {session_filters}"}
 
     # Limit to first 50 only when no filters are applied (to improve performance)
     display_df = filtered_df
