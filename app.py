@@ -4346,7 +4346,7 @@ Write a natural, conversational response that directly answers the user's questi
                 reasoning_effort="minimal",
                 verbosity="low",
                 messages=[{"role": "user", "content": streaming_prompt}],
-                max_completion_tokens=2000,
+                    max_completion_tokens=2000,
                 stream=True
             )
 
@@ -4690,3 +4690,4 @@ if __name__ == '__main__':
     else:
         print("Starting Flask server...")
         app.run(debug=True)
+
