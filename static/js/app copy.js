@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // Explorer filter bar
   const searchInput    = document.getElementById('searchInput');
   const searchBtn      = document.getElementById('searchBtn');
-  const clearSearchBtn = document.getElementById('clearSearchBtn');
   const filterSummary  = document.getElementById('filterSummary');
 
   // Explorer filters
@@ -126,11 +125,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // ===== Search (Explorer only) =====
   if (searchInput){
     searchInput.addEventListener('input', debounce(handleLiveSearch, 300));
-    searchInput.addEventListener('input', toggleClearButton);
     searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSearch(); });
   }
   if (searchBtn){ searchBtn.addEventListener('click', handleSearch); }
-  if (clearSearchBtn){ clearSearchBtn.addEventListener('click', clearSearch); }
 
   function handleLiveSearch() {
     const q = (searchInput?.value || '').trim();
@@ -160,31 +157,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const drugs = currentFilters.drug_filters.length ? currentFilters.drug_filters.join(', ') : 'All Drugs';
       const tas   = currentFilters.ta_filters.length   ? currentFilters.ta_filters.join(', ')   : 'All Therapeutic Areas';
       const sessions = currentFilters.session_filters.length ? currentFilters.session_filters.join(', ') : 'All Session Types';
-      const dates = currentFilters.date_filters.length ? currentFilters.date_filters.join(', ') : 'All Days';
 
       // Search is always active here, so use purple color
       filterContext.innerHTML = `
-        <span class="text-purple fw-bold">Showing ${data.length.toLocaleString()} of 4,686</span> •
-        Filters: ${drugs} + ${tas} + ${sessions} + ${dates}`;
+        <span class="text-purple fw-bold">Showing ${data.length.toLocaleString()} of 4686</span> •
+        Filters: ${drugs} + ${tas} + ${sessions}`;
     } catch (err) {
       console.error(err);
       showError('Search failed. Please try again.');
-    }
-  }
-
-  // ===== Clear Search =====
-  function toggleClearButton() {
-    const hasText = searchInput && searchInput.value.trim().length > 0;
-    if (clearSearchBtn) {
-      clearSearchBtn.style.display = hasText ? 'block' : 'none';
-    }
-  }
-
-  function clearSearch() {
-    if (searchInput) {
-      searchInput.value = '';
-      toggleClearButton();
-      loadData(); // Return to filtered data view
     }
   }
 
@@ -203,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (payload.error) throw new Error(payload.error);
 
       renderTable(payload.data);
-      updateFilterContext(payload.filter_context, payload.showing, payload.total);
+      updateFilterContext(payload.filter_context);
       updateFilterSummaries();
     } catch (err) {
       console.error(err);
@@ -226,13 +206,9 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>`;
   }
 
-  function updateFilterContext(context, showing, total){
+  function updateFilterContext(context){
     if (!context) return;
     const { total_sessions, total_available, filter_summary } = context;
-
-    // Use the passed showing count if available, otherwise fall back to context
-    const displayCount = showing !== undefined ? showing : total_sessions;
-    const totalCount = total !== undefined ? total : total_available || 4686;
 
     // Check if any filters or search are active
     const hasActiveFilters = currentFilters.drug_filters.length > 0 ||
@@ -244,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const colorClass = hasActiveFilters ? 'text-purple fw-bold' : '';
 
     filterContext.innerHTML = `
-      <span class="${colorClass}">Showing ${displayCount.toLocaleString()} of ${totalCount.toLocaleString()}</span> • ${filter_summary}`;
+      <span class="${colorClass}">Showing ${total_sessions.toLocaleString()} of 4686</span> • ${filter_summary}`;
   }
 
   // ===== Table rendering (fixed layout + hover/tap expand) =====
@@ -397,12 +373,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const headerText = header.querySelector('.header-text');
       const resizeHandle = header.querySelector('.resize-handle');
 
-      // Sorting - click on entire header but exclude resize handle area
-      header.addEventListener('click', (e) => {
-        // Don't sort if clicking on resize handle area
-        if (e.target.closest('.resize-handle')) {
-          return;
-        }
+      // Sorting - click on header text area (not resize handle)
+      headerText.addEventListener('click', (e) => {
         e.stopPropagation();
         handleSort(header.dataset.column);
       });
@@ -414,25 +386,17 @@ document.addEventListener('DOMContentLoaded', function() {
       let colIndex = Array.from(header.parentElement.children).indexOf(header);
 
       resizeHandle.addEventListener('mousedown', (e) => {
-        e.preventDefault();
         e.stopPropagation();
         isResizing = true;
         startX = e.clientX;
         startWidth = header.offsetWidth;
-
-        // Add global event listeners
         document.addEventListener('mousemove', handleResize);
         document.addEventListener('mouseup', stopResize);
-
-        // Prevent text selection during resize
-        document.body.style.userSelect = 'none';
-        document.body.style.cursor = 'col-resize';
+        header.style.userSelect = 'none';
       });
 
       function handleResize(e) {
         if (!isResizing) return;
-        e.preventDefault();
-
         const diff = e.clientX - startX;
         const newWidth = Math.max(50, startWidth + diff); // Min width 50px
 
@@ -445,16 +409,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
 
-      function stopResize(e) {
-        if (!isResizing) return;
-
+      function stopResize() {
         isResizing = false;
-
-        // Restore normal cursor and text selection
-        document.body.style.userSelect = '';
-        document.body.style.cursor = '';
-
-        // Remove global event listeners
+        header.style.userSelect = '';
         document.removeEventListener('mousemove', handleResize);
         document.removeEventListener('mouseup', stopResize);
       }
@@ -735,37 +692,6 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>`;
 
     return html;
-  }
-
-  // ===== Chevron Toggle Functionality =====
-  // Handle chevron rotation for Data Explorer filters
-  const explorerFiltersElement = document.getElementById('explorerFilters');
-  const explorerToggleBtn = document.querySelector('[data-bs-target="#explorerFilters"]');
-  const explorerChevron = explorerToggleBtn?.querySelector('.chevron-icon');
-
-  if (explorerFiltersElement && explorerChevron) {
-    explorerFiltersElement.addEventListener('show.bs.collapse', function () {
-      explorerChevron.textContent = '▲';
-    });
-
-    explorerFiltersElement.addEventListener('hide.bs.collapse', function () {
-      explorerChevron.textContent = '▼';
-    });
-  }
-
-  // Handle chevron rotation for AI Assistant filters
-  const aiFiltersElement = document.getElementById('aiFilters');
-  const aiToggleBtn = document.querySelector('[data-bs-target="#aiFilters"]');
-  const aiChevron = aiToggleBtn?.querySelector('.chevron-icon');
-
-  if (aiFiltersElement && aiChevron) {
-    aiFiltersElement.addEventListener('show.bs.collapse', function () {
-      aiChevron.textContent = '▲';
-    });
-
-    aiFiltersElement.addEventListener('hide.bs.collapse', function () {
-      aiChevron.textContent = '▼';
-    });
   }
 
 });

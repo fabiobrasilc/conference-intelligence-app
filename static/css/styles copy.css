@@ -224,12 +224,6 @@ body{
 .bi-arrow-up::before { content: "↑"; }
 .bi-arrow-down::before { content: "↓"; }
 
-/* Chevron Animation */
-.chevron-icon {
-  transition: transform 0.3s ease;
-  display: inline-block;
-}
-
 /* Utilities */
 .section{margin-top:16px; margin-bottom:16px;}
 :focus-visible{outline:none; box-shadow:var(--focus);}
