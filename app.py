@@ -2012,7 +2012,7 @@ Determine the optimal execution strategy and return ONLY valid JSON format match
         )
 
         txt = resp.output_text.strip()
-        print(f"🔍 RAW AI RESPONSE: {txt[:200]}...")  # Debug output
+        print(f"[DEBUG] RAW AI RESPONSE: {txt[:200]}...")  # Debug output
 
         if txt.startswith("```"):
             txt = re.sub(r"^```(json)?", "", txt).strip()
@@ -2029,7 +2029,28 @@ Determine the optimal execution strategy and return ONLY valid JSON format match
         if json_match:
             txt = json_match.group()
 
-        data = json.loads(txt)
+        # Additional JSON cleaning for common issues
+        txt = txt.replace('\n', ' ').replace('\r', ' ')  # Remove newlines
+        txt = re.sub(r'\s+', ' ', txt)  # Normalize whitespace
+
+        # Print more detailed debug info for JSON issues
+        print(f"[DEBUG] CLEANED JSON (first 500 chars): {txt[:500]}...")
+
+        try:
+            data = json.loads(txt)
+        except json.JSONDecodeError as json_err:
+            print(f"[ERROR] JSON PARSE ERROR: {json_err}")
+            print(f"[ERROR] FULL RAW RESPONSE: {txt}")
+            # Try to fix common JSON issues
+            txt_fixed = txt.replace("'", '"')  # Replace single quotes
+            txt_fixed = re.sub(r',\s*}', '}', txt_fixed)  # Remove trailing commas
+            txt_fixed = re.sub(r',\s*]', ']', txt_fixed)  # Remove trailing commas in arrays
+            try:
+                data = json.loads(txt_fixed)
+                print("[INFO] JSON fixed with basic corrections")
+            except:
+                print("[ERROR] JSON unfixable, using fallback")
+                raise json_err
 
         return QueryPlan(
             user_intent=data.get("user_intent", "General inquiry"),
@@ -2466,7 +2487,7 @@ def yield_hybrid_stream(prompt: str, section: str):
                 yield sse_event("done", {})
 
     except Exception as e:
-        print(f"🚨 ERROR in yield_hybrid_stream: {str(e)}")
+        print(f"[ERROR] ERROR in yield_hybrid_stream: {str(e)}")
         import traceback
         traceback.print_exc()
         yield sse_event("error", {"message": f"Streaming error: {str(e)}"})
@@ -2574,8 +2595,8 @@ Make it flow naturally as a single, well-structured paragraph without internal b
             if not author_abstracts.empty:
                 kol_specific_data[author] = author_abstracts.to_csv(index=False)
 
-        print(f"🔧 Starting KOL analysis for {len(top_15_authors)} authors")
-        print(f"🔧 KOL data available for: {len(kol_specific_data)} authors")
+        print(f"[INFO] Starting KOL analysis for {len(top_15_authors)} authors")
+        print(f"[INFO] KOL data available for: {len(kol_specific_data)} authors")
 
         # Process each KOL
         for i, author in enumerate(top_15_authors, 1):
@@ -2596,7 +2617,7 @@ d) PHARMA COLLABORATIONS: Which pharmaceutical/biotech companies appear in their
 Write ONE comprehensive paragraph that flows naturally covering all four framework elements. Use ONLY the actual data provided above. Cite specific Abstract # examples. Be systematic and thorough."""
 
                 try:
-                    print(f"🔧 Starting streaming for KOL {i}/{len(top_15_authors)}: {author}")
+                    print(f"[INFO] Starting streaming for KOL {i}/{len(top_15_authors)}: {author}")
 
                     # Send progress update to keep connection alive
                     yield sse_event("progress", {
@@ -2609,7 +2630,7 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
                     yield sse_event("kol_start", {"author": author})
 
                     # Stream the analysis token by token
-                    print(f"🔧 Prompt length: {len(individual_prompt)} chars")
+                    print(f"[INFO] Prompt length: {len(individual_prompt)} chars")
                     stream = client.responses.create(
                         model="gpt-5-mini",
                         input=[
@@ -2645,13 +2666,13 @@ Write ONE comprehensive paragraph that flows naturally covering all four framewo
                             yield sse_event("ping", {"timestamp": int(time.time())})
                             last_token_time = time.time()
 
-                    print(f"🔧 Completed streaming for {author}: {token_count} tokens, {len(profile_content)} chars")
+                    print(f"[INFO] Completed streaming for {author}: {token_count} tokens, {len(profile_content)} chars")
 
                     # Signal end of this KOL profile
                     yield sse_event("kol_end", {"author": author})
 
                 except Exception as e:
-                    print(f"🚨 ERROR analyzing {author}: {str(e)}")
+                    print(f"[ERROR] ERROR analyzing {author}: {str(e)}")
                     import traceback
                     traceback.print_exc()
                     error_msg = f"Analysis unavailable: {str(e)[:100]}..."
@@ -2763,7 +2784,7 @@ Write a comprehensive, natural intelligence report based on this data."""
                 yield sse_event("end", {"message": "Competitor analysis complete"})
 
     except Exception as e:
-        print(f"🚨 ERROR in competitor streaming: {str(e)}")
+        print(f"[ERROR] ERROR in competitor streaming: {str(e)}")
         import traceback
         traceback.print_exc()
         yield f"data: Error generating competitor analysis: {str(e)}\n\n"
@@ -2837,7 +2858,7 @@ Write a comprehensive, natural intelligence report based on this data."""
                 yield sse_event("end", {"message": "Institution analysis complete"})
 
     except Exception as e:
-        print(f"🚨 ERROR in institution streaming: {str(e)}")
+        print(f"[ERROR] ERROR in institution streaming: {str(e)}")
         import traceback
         traceback.print_exc()
         yield f"data: Error generating institution analysis: {str(e)}\n\n"
@@ -2911,7 +2932,7 @@ Write a comprehensive, natural intelligence report based on this data."""
                 yield sse_event("end", {"message": "Insights analysis complete"})
 
     except Exception as e:
-        print(f"🚨 ERROR in insights streaming: {str(e)}")
+        print(f"[ERROR] ERROR in insights streaming: {str(e)}")
         import traceback
         traceback.print_exc()
         yield f"data: Error generating insights analysis: {str(e)}\n\n"
@@ -2982,7 +3003,7 @@ Write a comprehensive, natural intelligence report based on this data and therap
                 yield sse_event("end", {"message": "Strategy analysis complete"})
 
     except Exception as e:
-        print(f"🚨 ERROR in strategy streaming: {str(e)}")
+        print(f"[ERROR] ERROR in strategy streaming: {str(e)}")
         import traceback
         traceback.print_exc()
         yield f"data: Error generating strategy analysis: {str(e)}\n\n"
@@ -4437,7 +4458,7 @@ def stream_chat_api():
 
             # Analyze the query and generate intelligent response using existing logic
             plan = analyze_user_query_ai(user_query, ta_filter, conversation_history)
-            print(f"🔍 CHAT STREAMING DEBUG - Query: '{user_query}' | Plan: {plan.response_type} | Entities: {plan.primary_entities}")
+            print(f"[DEBUG] CHAT STREAMING DEBUG - Query: '{user_query}' | Plan: {plan.response_type} | Entities: {plan.primary_entities}")
             context = gather_intelligent_context(plan, ta_filter, filtered_df)
 
             # Check if this should use sophisticated author analysis
@@ -4685,28 +4706,35 @@ Write a natural, conversational response that directly answers the user's questi
             accumulated_content = ""
             last_boundary_pos = 0
 
-            for event in stream:
-                if event.type == "response.output_text.delta":
-                    token = event.delta
-                    accumulated_content += token
+            try:
+                for event in stream:
+                    if event.type == "response.output_text.delta":
+                        token = event.delta
+                        accumulated_content += token
 
-                    # Send the token in JSON format for frontend compatibility
-                    import json
-                    yield f"data: {json.dumps({'text': token})}\n\n"
+                        # Send the token in JSON format for frontend compatibility
+                        import json
+                        yield f"data: {json.dumps({'text': token})}\n\n"
 
-                    # Check for NEW paragraph boundaries
-                    boundary_pos = accumulated_content.find('\n\n', last_boundary_pos)
-                    if boundary_pos != -1:
-                        # Send a special boundary signal
-                        yield f"data: |||PARAGRAPH_BREAK|||\n\n"
-                        last_boundary_pos = boundary_pos + 2
+                        # Check for NEW paragraph boundaries
+                        boundary_pos = accumulated_content.find('\n\n', last_boundary_pos)
+                        if boundary_pos != -1:
+                            # Send a special boundary signal
+                            yield f"data: |||PARAGRAPH_BREAK|||\n\n"
+                            last_boundary_pos = boundary_pos + 2
+                    elif event.type == "response.completed":
+                        # Stream completed successfully
+                        yield f"data: [DONE]\n\n"
+                        break
 
-                elif event.type == "response.completed":
-                    # Send completion signal
-                    yield "data: [DONE]\n\n"
+            except Exception as stream_error:
+                print(f"[ERROR] STREAM ERROR: {stream_error}")
+                yield f"data: {json.dumps({'error': f'Streaming interrupted: {str(stream_error)}'})}\n\n"
+                yield f"data: [DONE]\n\n"
+                return
 
         except Exception as e:
-            print(f"🚨 ERROR in chat streaming: {str(e)}")
+            print(f"[ERROR] ERROR in chat streaming: {str(e)}")
             import traceback
             traceback.print_exc()
             yield sse_event("error", {"message": f"Error generating response: {str(e)}"})
