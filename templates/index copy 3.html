@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ESMO 2025 — Conference Intelligence Platform</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  </head>
+  <body>
+    <div class="container-fluid">
+
+      <!-- App Bar -->
+      <div class="row mt-3">
+        <div class="col-12">
+          <div class="appbar">
+            <h1 class="appbar-title">COSMIC - ESMO 2025 Conference Intelligence</h1>
+            <div class="appbar-tabs" role="tablist" aria-label="Main sections">
+              <button class="appbar-tab active" data-bs-toggle="tab" data-bs-target="#data-explorer" type="button" role="tab" aria-controls="data-explorer" aria-selected="true">Data Explorer</button>
+              <span>|</span>
+              <button class="appbar-tab" data-bs-toggle="tab" data-bs-target="#ai-assistant" type="button" role="tab" aria-controls="ai-assistant" aria-selected="false">AI Assistant</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hidden default nav-tabs (for bootstrap mechanics) -->
+      <ul class="nav nav-tabs" id="mainTabs" role="tablist" style="display:none;">
+        <li class="nav-item"><button class="nav-link active" id="data-explorer-tab" data-bs-toggle="tab" data-bs-target="#data-explorer" type="button" role="tab">Data Explorer</button></li>
+        <li class="nav-item"><button class="nav-link" id="ai-assistant-tab" data-bs-toggle="tab" data-bs-target="#ai-assistant" type="button" role="tab">AI Assistant</button></li>
+      </ul>
+
+      <div class="tab-content" id="mainTabContent">
+
+        <!-- ===================== DATA EXPLORER ===================== -->
+        <div class="tab-pane fade show active" id="data-explorer" role="tabpanel" aria-labelledby="data-explorer-tab">
+          <div class="row py-3"><div class="col-12">
+
+            <!-- Filter Bar -->
+            <div class="filterbar mb-2">
+              <button class="filter-toggle" data-bs-toggle="collapse" data-bs-target="#explorerFilters" aria-expanded="false" aria-controls="explorerFilters">
+                <span class="icon">🧰</span> Filters
+                <span class="chevron-icon">▼</span>
+              </button>
+              <div class="summary" id="filterSummary">All Drugs + All Therapeutic Areas</div>
+              <div class="spacer"></div>
+              <div class="input-group" style="max-width:680px;">
+                <button class="btn btn-outline-secondary" id="clearSearchBtn" title="Clear search" style="display: none;">✕</button>
+                <input type="text" class="form-control" id="searchInput" placeholder="Search titles, authors, institutions..." />
+                <button class="btn btn-outline-primary" id="searchBtn">🔍</button>
+              </div>
+            </div>
+
+            <!-- Expanded Filters -->
+            <div class="collapse filters-collapse mb-3" id="explorerFilters">
+              <div class="row g-3">
+                <div class="col-lg-3">
+                  <label class="form-label mb-1 fw-bold">🎯 Drug Focus</label>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="filter-toggle-btn drug-filter-btn" data-value="Avelumab Focus">Avelumab</button>
+                    <button class="filter-toggle-btn drug-filter-btn" data-value="Tepotinib Focus">Tepotinib</button>
+                    <button class="filter-toggle-btn drug-filter-btn" data-value="Cetuximab Focus">Cetuximab</button>
+                  </div>
+                </div>
+
+                <div class="col-lg-3">
+                  <label class="form-label mb-1 fw-bold">🏥 Therapeutic Area</label>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="filter-toggle-btn ta-filter-btn" data-value="Bladder Cancer">Bladder</button>
+                    <button class="filter-toggle-btn ta-filter-btn" data-value="Lung Cancer">Lung</button>
+                    <button class="filter-toggle-btn ta-filter-btn" data-value="Colorectal Cancer">Colorectal</button>
+                    <button class="filter-toggle-btn ta-filter-btn" data-value="Head and Neck Cancer">Head & Neck</button>
+                  </div>
+                </div>
+
+                <div class="col-lg-3">
+                  <label class="form-label mb-1 fw-bold">📋 Session Type</label>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="filter-toggle-btn session-filter-btn" data-value="Proffered Paper">Proffered Paper</button>
+                    <button class="filter-toggle-btn session-filter-btn" data-value="Mini Oral Session">Mini Oral</button>
+                    <button class="filter-toggle-btn session-filter-btn" data-value="Educational Session">Educational</button>
+                    <button class="filter-toggle-btn session-filter-btn" data-value="Symposium">Symposium</button>
+                    <button class="filter-toggle-btn session-filter-btn" data-value="Special Session">Special</button>
+                    <button class="filter-toggle-btn session-filter-btn" data-value="Industry-Sponsored Symposium">Industry-Sponsored</button>
+                    <button class="filter-toggle-btn session-filter-btn" data-value="ePoster">ePoster</button>
+                    <button class="filter-toggle-btn session-filter-btn" data-value="Poster">Poster</button>
+                  </div>
+                </div>
+
+                <div class="col-lg-3">
+                  <label class="form-label mb-1 fw-bold">📅 Conference Day</label>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="filter-toggle-btn date-filter-btn" data-value="Day 1 (10/17/2025)">Day 1, Oct 17th</button>
+                    <button class="filter-toggle-btn date-filter-btn" data-value="Day 2 (10/18/2025)">Day 2, Oct 18th</button>
+                    <button class="filter-toggle-btn date-filter-btn" data-value="Day 3 (10/19/2025)">Day 3, Oct 19th</button>
+                    <button class="filter-toggle-btn date-filter-btn" data-value="Day 4 (10/20/2025)">Day 4, Oct 20th</button>
+                    <button class="filter-toggle-btn date-filter-btn" data-value="Day 5 (10/21/2025)">Day 5, Oct 21st</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="card">
+              <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                  <h5 class="mb-0">
+                    Conference Data —
+                    <small id="filterContext" class="text-muted">Loading filter context...</small>
+                  </h5>
+                  <button class="btn btn-outline-secondary" id="exportBtn">Download table</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="tableContainer">
+                  <div class="text-center py-4">
+                    <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    <p class="mt-2 mb-0">Loading ESMO 2025 data...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div></div>
+        </div>
+
+        <!-- ===================== AI ASSISTANT ===================== -->
+        <div class="tab-pane fade" id="ai-assistant" role="tabpanel" aria-labelledby="ai-assistant-tab">
+          <div class="row py-3"><div class="col-12">
+
+            <!-- AI Filter Bar (no search here) -->
+            <div class="filterbar mb-2">
+              <button class="filter-toggle" data-bs-toggle="collapse" data-bs-target="#aiFilters" aria-expanded="false" aria-controls="aiFilters">
+                <span class="icon">🧰</span> Filters
+                <span class="chevron-icon">▼</span>
+              </button>
+              <div class="summary" id="aiFilterSummary">All Drugs + All Therapeutic Areas</div>
+              <div class="spacer"></div>
+            </div>
+
+            <!-- AI Filters (expanded) -->
+            <div class="collapse filters-collapse mb-3" id="aiFilters">
+              <div class="row g-3">
+                <div class="col-lg-6">
+                  <label class="form-label mb-1 fw-bold">🎯 Drug Focus</label>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="filter-toggle-btn ai-drug-filter-btn" data-value="Avelumab Focus">Avelumab</button>
+                    <button class="filter-toggle-btn ai-drug-filter-btn" data-value="Tepotinib Focus">Tepotinib</button>
+                    <button class="filter-toggle-btn ai-drug-filter-btn" data-value="Cetuximab Focus">Cetuximab</button>
+                  </div>
+                </div>
+
+                <div class="col-lg-6">
+                  <label class="form-label mb-1 fw-bold">🏥 Therapeutic Area</label>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="filter-toggle-btn ai-ta-filter-btn" data-value="Bladder Cancer">Bladder</button>
+                    <button class="filter-toggle-btn ai-ta-filter-btn" data-value="Lung Cancer">Lung</button>
+                    <button class="filter-toggle-btn ai-ta-filter-btn" data-value="Colorectal Cancer">Colorectal</button>
+                    <button class="filter-toggle-btn ai-ta-filter-btn" data-value="Head and Neck Cancer">Head & Neck</button>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div id="aiFilterContext" class="small text-muted">Select filters to focus AI analysis</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- NEW: Action Bar (playbooks) -->
+            <div class="actionbar">
+              <div class="label">⚡ Quick Intelligence</div>
+
+              <div class="action-chip playbook-trigger" data-playbook="competitor" title="Run a competitor landscape summary">
+                <div class="icon">🏆</div>
+                <div>
+                  <div class="title">Competitor</div>
+                  <div class="sub">Landscape & counts</div>
+                </div>
+              </div>
+
+              <div class="action-chip playbook-trigger" data-playbook="kol" title="Find key authors and influence">
+                <div class="icon">👥</div>
+                <div>
+                  <div class="title">KOL Analysis</div>
+                  <div class="sub">Authors & impact</div>
+                </div>
+              </div>
+
+              <div class="action-chip playbook-trigger" data-playbook="institution" title="Institution footprint and trial activity">
+                <div class="icon">🏥</div>
+                <div>
+                  <div class="title">Institutions</div>
+                  <div class="sub">Footprint & trials</div>
+                </div>
+              </div>
+
+              <div class="action-chip playbook-trigger" data-playbook="insights" title="Signals, themes, early trends">
+                <div class="icon">📈</div>
+                <div>
+                  <div class="title">Insights</div>
+                  <div class="sub">Signals & themes</div>
+                </div>
+              </div>
+
+              <div class="action-chip playbook-trigger" data-playbook="strategy" title="Implications and next steps">
+                <div class="icon">📋</div>
+                <div>
+                  <div class="title">Strategy</div>
+                  <div class="sub">Recommendations</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chat -->
+            <div class="card">
+              <div class="card-header"><h5 class="mb-0">💬 AI Assistant</h5></div>
+              <div class="card-body">
+                <div id="chatContainer" style="height:400px; overflow-y:auto; padding:1rem; margin-bottom:1rem;">
+                  <div class="text-muted text-center">
+                    <p class="mb-1">Welcome to COSMIC - ESMO 2025 Conference Intelligence! 🧬</p>
+                    <p class="mb-0">Use the Quick Intelligence chips above or ask a question below.</p>
+                  </div>
+                </div>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="userInput" placeholder="Ask about ESMO sessions, competitive landscape, KOLs...">
+                  <button class="btn btn-primary" id="sendChatBtn" type="button">Send</button>
+                </div>
+              </div>
+            </div>
+
+          </div></div>
+        </div>
+
+      </div><!-- /tab-content -->
+    </div><!-- /container-fluid -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    <!-- Modal (kept handy) -->
+    <div class="modal fade" id="cellModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable"><div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title" id="cellModalTitle">Details</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="cellModalBody" style="white-space: pre-wrap;"></div>
+      </div></div>
+    </div>
+  </body>
+</html>

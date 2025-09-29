@@ -3778,27 +3778,68 @@ def parse_boolean_query(query: str, df: pd.DataFrame, search_columns: list) -> p
 
 def execute_simple_search(keyword: str, df: pd.DataFrame, search_columns: list) -> pd.Series:
     """
-    Execute simple search across specified columns
+    Execute comprehensive search across specified columns
     Returns a boolean mask for the dataframe
     """
     import re
 
     mask = pd.Series([False] * len(df))
 
-    # Check if keyword looks like an identifier
-    is_identifier_like = bool(re.match(r'^[A-Za-z0-9]+[A-Za-z]$|^[A-Za-z]+[0-9]+$|^LBA\d+$|^\d+[A-Za-z]+$', keyword))
+    # Check if keyword looks like an identifier (LBA, poster numbers, etc.)
+    is_identifier_like = bool(re.match(r'^LBA\d*$|^\d+[A-Za-z]+$|^[A-Za-z]+\d+$|^\d+[A-Za-z]$', keyword))
 
-    for col in search_columns:
-        if col in df.columns:
-            if is_identifier_like and col == 'Identifier':
-                # Exact matching for identifiers
-                col_mask = df[col].astype(str).str.upper().str.contains(keyword.upper(), case=False, na=False, regex=False)
+    # Use ALL available columns for comprehensive search, but prioritize main ones
+    primary_columns = ['Title', 'Speakers', 'Affiliation', 'Identifier', 'Session', 'Theme']
+    secondary_columns = ['Authors', 'Institutions', 'Speaker Location', 'Room', 'Date', 'Time']
+
+    # Combine and deduplicate columns
+    all_search_columns = primary_columns + secondary_columns
+    actual_columns = [col for col in all_search_columns if col in df.columns]
+
+    print(f"SEARCH DEBUG: Searching in {len(actual_columns)} columns: {actual_columns}")
+
+    for col in actual_columns:
+        try:
+            if is_identifier_like and col in ['Identifier', 'Abstract #', 'Poster #']:
+                # For identifiers, use word boundary matching to avoid partial matches
+                col_mask = df[col].astype(str).str.contains(rf'\b{re.escape(keyword)}\b', case=False, na=False, regex=True)
             else:
-                # Regular contains search for other fields
+                # For other fields, use contains search
                 col_mask = df[col].astype(str).str.contains(keyword, case=False, na=False, regex=False)
+
+            matches_in_col = col_mask.sum()
+            if matches_in_col > 0:
+                print(f"SEARCH DEBUG: {col} matches: {matches_in_col}")
             mask = mask | col_mask
+        except Exception as e:
+            print(f"SEARCH DEBUG: Error searching column {col}: {e}")
+            continue
 
     return mask
+
+def highlight_search_results(df: pd.DataFrame, keyword: str) -> pd.DataFrame:
+    """
+    Add HTML highlighting to search results
+    """
+    import re
+
+    # Create a copy to avoid modifying original data
+    highlighted_df = df.copy()
+
+    # Define columns to highlight
+    text_columns = ['Title', 'Speakers', 'Affiliation', 'Session', 'Theme', 'Authors', 'Institutions', 'Speaker Location']
+
+    # Create highlight pattern - case insensitive
+    pattern = re.compile(f'({re.escape(keyword)})', re.IGNORECASE)
+
+    for col in text_columns:
+        if col in highlighted_df.columns:
+            highlighted_df[col] = highlighted_df[col].astype(str).apply(
+                lambda x: pattern.sub(r'<mark style="background-color: yellow; padding: 1px 2px; border-radius: 2px;">\1</mark>', x)
+                if pd.notna(x) and keyword.lower() in x.lower() else x
+            )
+
+    return highlighted_df
 
 @app.route('/api/search')
 def search_data_api():
@@ -3845,6 +3886,11 @@ def search_data_api():
     display_columns = ["Title", "Speakers", "Speaker Location", "Affiliation", "Identifier", "Room", "Date", "Time", "Session", "Theme"]
     valid_columns = [col for col in display_columns if col in current_df.columns]
     search_results_df = current_df.loc[mask, valid_columns]
+
+    # Add highlighting for search terms (only for simple searches, not boolean)
+    if not any(op in keyword.upper() for op in ['AND', 'OR', 'NOT']):
+        search_results_df = highlight_search_results(search_results_df, keyword)
+
     result_count = len(search_results_df)
     print(f"SEARCH DEBUG: keyword='{keyword}', found {result_count} results")
     return jsonify(search_results_df.to_dict('records'))
