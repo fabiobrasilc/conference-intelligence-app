@@ -124,12 +124,12 @@ ESMO_DRUG_FILTERS = {
 }
 
 ESMO_THERAPEUTIC_AREAS = {
-    "All Therapeutic Areas": [],
-    "Bladder Cancer": ["Urothelial; Avelumab", "bladder"],
-    "Lung Cancer": ["NSCLC; Tepotinib", "NSCLC", "EGFR"],
-    "Colorectal Cancer": ["colorectal", "CRC"],
-    "Head and Neck Cancer": ["head and neck"],
-    "Other Cancers": []
+    "All Therapeutic Areas": {"keywords": []},
+    "Bladder Cancer": {"keywords": ["Urothelial; Avelumab", "bladder"]},
+    "Lung Cancer": {"keywords": ["NSCLC; Tepotinib", "NSCLC", "EGFR"]},
+    "Colorectal Cancer": {"keywords": ["colorectal", "CRC"]},
+    "Head and Neck Cancer": {"keywords": ["head and neck"]},
+    "Other Cancers": {"keywords": []}
 }
 
 ESMO_SESSION_TYPES = {
@@ -244,7 +244,7 @@ def get_conference_configs() -> Dict[str, ConferenceConfig]:
                 "room": "session_room",
                 "session_category": "session_category"
             },
-            ta_column="main_filters",
+            ta_column="Theme",
             ta_mapping={
                 "Urothelial; Avelumab": "Bladder Cancer",
                 "NSCLC; Tepotinib": "Lung Cancer",
