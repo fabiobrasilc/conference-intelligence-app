@@ -14,11 +14,13 @@ document.addEventListener('DOMContentLoaded', function() {
   // Explorer filters
   const drugFilterCheckboxes = document.querySelectorAll('.drug-filter-checkbox');
   const taFilterCheckboxes   = document.querySelectorAll('.ta-filter-checkbox');
+  const sessionFilterCheckboxes = document.querySelectorAll('.session-filter-checkbox');
 
   // AI filters (no search on AI tab)
   const aiFilterSummary = document.getElementById('aiFilterSummary');
   const aiDrugFilterCheckboxes = document.querySelectorAll('.ai-drug-filter-checkbox');
   const aiTaFilterCheckboxes   = document.querySelectorAll('.ai-ta-filter-checkbox');
+  const aiSessionFilterCheckboxes = document.querySelectorAll('.ai-session-filter-checkbox');
   const aiFilterContext        = document.getElementById('aiFilterContext');
 
   // Playbooks (chips)
@@ -30,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const sendChatBtn    = document.getElementById('sendChatBtn');
 
   // ===== State =====
-  let currentFilters = { drug_filters: [], ta_filters: [] };
+  let currentFilters = { drug_filters: [], ta_filters: [], session_filters: [] };
 
   // ===== Init =====
   loadData();
@@ -45,23 +47,27 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateCurrentFilters() {
     currentFilters.drug_filters = getSelectedCheckboxValues(drugFilterCheckboxes);
     currentFilters.ta_filters   = getSelectedCheckboxValues(taFilterCheckboxes);
+    currentFilters.session_filters = getSelectedCheckboxValues(sessionFilterCheckboxes);
   }
   function syncAIFilters() {
     setCheckboxValues(aiDrugFilterCheckboxes, currentFilters.drug_filters);
     setCheckboxValues(aiTaFilterCheckboxes,   currentFilters.ta_filters);
+    setCheckboxValues(aiSessionFilterCheckboxes, currentFilters.session_filters);
     updateFilterSummaries();
   }
   function syncExplorerFilters() {
     setCheckboxValues(drugFilterCheckboxes, currentFilters.drug_filters);
     setCheckboxValues(taFilterCheckboxes,   currentFilters.ta_filters);
+    setCheckboxValues(sessionFilterCheckboxes, currentFilters.session_filters);
     updateFilterSummaries();
   }
   function updateFilterSummaries() {
     const drugs = currentFilters.drug_filters.length ? currentFilters.drug_filters.join(', ') : 'All Drugs';
     const tas   = currentFilters.ta_filters.length   ? currentFilters.ta_filters.join(', ')   : 'All Therapeutic Areas';
-    if (filterSummary)   filterSummary.textContent   = `${drugs} + ${tas}`;
-    if (aiFilterSummary) aiFilterSummary.textContent = `${drugs} + ${tas}`;
-    if (aiFilterContext) aiFilterContext.textContent = `Analyzing: ${drugs} + ${tas}`;
+    const sessions = currentFilters.session_filters.length ? currentFilters.session_filters.join(', ') : 'All Session Types';
+    if (filterSummary)   filterSummary.textContent   = `${drugs} + ${tas} + ${sessions}`;
+    if (aiFilterSummary) aiFilterSummary.textContent = `${drugs} + ${tas} + ${sessions}`;
+    if (aiFilterContext) aiFilterContext.textContent = `Analyzing: ${drugs} + ${tas} + ${sessions}`;
   }
 
   // ===== Explorer filter events =====
@@ -71,16 +77,27 @@ document.addEventListener('DOMContentLoaded', function() {
   taFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
     updateCurrentFilters(); syncAIFilters(); loadData();
   }));
+  sessionFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
+    updateCurrentFilters(); syncAIFilters(); loadData();
+  }));
 
   // ===== AI filter events (sync back) =====
   aiDrugFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
     currentFilters.drug_filters = getSelectedCheckboxValues(aiDrugFilterCheckboxes);
     currentFilters.ta_filters   = getSelectedCheckboxValues(aiTaFilterCheckboxes);
+    currentFilters.session_filters = getSelectedCheckboxValues(aiSessionFilterCheckboxes);
     syncExplorerFilters(); loadData();
   }));
   aiTaFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
     currentFilters.drug_filters = getSelectedCheckboxValues(aiDrugFilterCheckboxes);
     currentFilters.ta_filters   = getSelectedCheckboxValues(aiTaFilterCheckboxes);
+    currentFilters.session_filters = getSelectedCheckboxValues(aiSessionFilterCheckboxes);
+    syncExplorerFilters(); loadData();
+  }));
+  aiSessionFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
+    currentFilters.drug_filters = getSelectedCheckboxValues(aiDrugFilterCheckboxes);
+    currentFilters.ta_filters   = getSelectedCheckboxValues(aiTaFilterCheckboxes);
+    currentFilters.session_filters = getSelectedCheckboxValues(aiSessionFilterCheckboxes);
     syncExplorerFilters(); loadData();
   }));
 
@@ -107,6 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
       params.append('keyword', query);
       currentFilters.drug_filters.forEach(f => params.append('drug_filters', f));
       currentFilters.ta_filters.forEach(f => params.append('ta_filters', f));
+      currentFilters.session_filters.forEach(f => params.append('session_filters', f));
 
       const res = await fetch(`/api/search?${params}`);
       const data = await res.json();
@@ -116,9 +134,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const drugs = currentFilters.drug_filters.length ? currentFilters.drug_filters.join(', ') : 'All Drugs';
       const tas   = currentFilters.ta_filters.length   ? currentFilters.ta_filters.join(', ')   : 'All Therapeutic Areas';
+      const sessions = currentFilters.session_filters.length ? currentFilters.session_filters.join(', ') : 'All Session Types';
+
+      // Search is always active here, so use purple color
       filterContext.innerHTML = `
-        Showing <strong>${data.length.toLocaleString()}</strong> •
-        Filters: ${drugs} + ${tas}`;
+        <span class="text-purple fw-bold">Showing ${data.length.toLocaleString()} of 4686</span> •
+        Filters: ${drugs} + ${tas} + ${sessions}`;
     } catch (err) {
       console.error(err);
       showError('Search failed. Please try again.');
@@ -132,6 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const params = new URLSearchParams();
       currentFilters.drug_filters.forEach(f => params.append('drug_filters', f));
       currentFilters.ta_filters.forEach(f => params.append('ta_filters', f));
+      currentFilters.session_filters.forEach(f => params.append('session_filters', f));
 
       const res = await fetch(`/api/data?${params}`);
       const payload = await res.json();
@@ -164,11 +186,17 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateFilterContext(context){
     if (!context) return;
     const { total_sessions, total_available, filter_summary } = context;
-    const pct = total_available > 0 ? Math.round((total_sessions / total_available) * 100) : 0;
+
+    // Check if any filters or search are active
+    const hasActiveFilters = currentFilters.drug_filters.length > 0 ||
+                            currentFilters.ta_filters.length > 0 ||
+                            currentFilters.session_filters.length > 0 ||
+                            (searchInput && searchInput.value.trim().length > 0);
+
+    const colorClass = hasActiveFilters ? 'text-purple fw-bold' : '';
+
     filterContext.innerHTML = `
-      Showing <strong>${total_sessions.toLocaleString()}</strong> of
-      <strong>${total_available.toLocaleString()}</strong> sessions
-      (${pct}%) • ${filter_summary}`;
+      <span class="${colorClass}">Showing ${total_sessions.toLocaleString()} of 4686</span> • ${filter_summary}`;
   }
 
   // ===== Table rendering (fixed layout + hover/tap expand) =====
@@ -239,6 +267,7 @@ document.addEventListener('DOMContentLoaded', function() {
         body: JSON.stringify({
           drug_filters: currentFilters.drug_filters,
           ta_filters: currentFilters.ta_filters,
+          session_filters: currentFilters.session_filters,
           format: 'csv'
         })
       });
@@ -249,7 +278,8 @@ document.addEventListener('DOMContentLoaded', function() {
       a.href = url;
       const drugFilename = currentFilters.drug_filters.join('_').replace(/ /g, '_') || 'all_drugs';
       const taFilename = currentFilters.ta_filters.join('_').replace(/ /g, '_') || 'all_ta';
-      a.download = `esmo2025_${drugFilename}_${taFilename}.csv`;
+      const sessionFilename = currentFilters.session_filters.join('_').replace(/ /g, '_') || 'all_sessions';
+      a.download = `esmo2025_${drugFilename}_${taFilename}_${sessionFilename}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
       exportBtn.innerHTML = original;
@@ -284,6 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const params = new URLSearchParams();
       currentFilters.drug_filters.forEach(f => params.append('drug_filters', f));
       currentFilters.ta_filters.forEach(f => params.append('ta_filters', f));
+      currentFilters.session_filters.forEach(f => params.append('session_filters', f));
 
       const response = await fetch(`/api/playbook/${playbookType}/stream?${params}`);
       if (!response.ok) throw new Error('Playbook request failed');
@@ -389,6 +420,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const contentDiv = document.getElementById(responseId);
       contentDiv.innerHTML = ''; // Clear loading message
 
+      // Remove the spinner that's in the same parent div
+      const spinnerEl = contentDiv.parentElement.querySelector('.spinner-border');
+      if (spinnerEl) {
+        spinnerEl.remove();
+      }
+
+      let currentEvent = null;
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -398,19 +437,27 @@ document.addEventListener('DOMContentLoaded', function() {
         buffer = lines.pop();
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
+          if (line.startsWith('event: ')) {
+            currentEvent = line.slice(7);
+          } else if (line.startsWith('data: ')) {
             const dataStr = line.slice(6);
             if (dataStr === '[DONE]') continue;
+
             try {
-              const parsed = JSON.parse(dataStr);
-              if (parsed.text) {
-                contentDiv.innerHTML += escapeHtml(parsed.text);
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-              } else if (parsed.event === 'table' && parsed.data) {
-                // Handle table events - add table before the text content
-                const tableHtml = generateTableHtml(parsed.data.title, parsed.data.rows);
+              if (currentEvent === 'table') {
+                // Handle table events
+                const tableData = JSON.parse(dataStr);
+                const tableHtml = generateTableHtml(tableData.title, tableData.rows);
                 contentDiv.insertAdjacentHTML('beforebegin', tableHtml);
                 chatContainer.scrollTop = chatContainer.scrollHeight;
+                currentEvent = null; // Reset event type
+              } else {
+                // Handle regular text events
+                const parsed = JSON.parse(dataStr);
+                if (parsed.text) {
+                  contentDiv.innerHTML += escapeHtml(parsed.text);
+                  chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
               }
             } catch (e) {
               // Skip malformed JSON
