@@ -713,7 +713,11 @@ def setup_vector_db(csv_hash: str):
         print("Warning: OpenAI client not initialized. Cannot set up vector DB.")
         return None
 
-    chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    # Disable telemetry to avoid errors and improve startup time
+    chroma_client = chromadb.PersistentClient(
+        path=CHROMA_DB_PATH,
+        settings=chromadb.Settings(anonymized_telemetry=False)
+    )
     openai_ef = embedding_functions.OpenAIEmbeddingFunction(
         api_key=OPENAI_API_KEY,
         model_name="text-embedding-3-small",
@@ -3532,22 +3536,16 @@ Generate a comprehensive narrative response that includes analysis, context, and
 # --- Global Initialization ---
 def initialize_app_globals():
     """
-    Initialize application globals for ESMO 2025 data
+    Initialize application globals for ESMO 2025 data (fast - just loads CSV)
     """
-    global df_global, csv_hash_global, collection
+    global df_global, csv_hash_global
 
     if df_global is None:
         print("Initializing ESMO 2025 application globals...")
         try:
-            # Load ESMO 2025 data
+            # Load ESMO 2025 data (fast - just CSV loading)
             df_global, csv_hash_global = load_and_prepare_esmo_data()
             print(f"ESMO data loaded successfully. Hash: {csv_hash_global[:8]}")
-
-            # Setup vector database
-            collection = setup_vector_db(csv_hash_global)
-            if collection is None:
-                print("Warning: Vector database could not be fully set up. AI features may be limited.")
-
             return True
         except FileNotFoundError as e:
             print(f"FATAL ERROR: ESMO data file not found: {e}")
@@ -3557,6 +3555,27 @@ def initialize_app_globals():
             return False
 
     return True
+
+def initialize_chromadb_lazy():
+    """
+    Initialize ChromaDB for semantic search (slow - only when needed for AI features)
+    """
+    global collection
+
+    if collection is None and df_global is not None:
+        print("Initializing ChromaDB for AI features (this may take 30-40 seconds)...")
+        try:
+            collection = setup_vector_db(csv_hash_global)
+            if collection is None:
+                print("Warning: Vector database could not be fully set up. AI features may be limited.")
+                return False
+            print("ChromaDB initialization complete - AI features ready!")
+            return True
+        except Exception as e:
+            print(f"Error setting up ChromaDB: {e}")
+            return False
+
+    return collection is not None
 
 # --- Flask Routes ---
 @app.route('/')
@@ -4157,6 +4176,10 @@ def stream_chat_api():
     if not initialize_app_globals():
         return "data: Error: Application data could not be loaded\n\n", 500, {'Content-Type': 'text/event-stream'}
 
+    # Initialize ChromaDB lazily for AI features
+    if not initialize_chromadb_lazy():
+        return "data: Error: AI features could not be initialized\n\n", 500, {'Content-Type': 'text/event-stream'}
+
     try:
         data = request.get_json()
         if not data:
@@ -4473,6 +4496,10 @@ Write a natural, conversational response that directly answers the user's questi
 def chat_api():
     if not initialize_app_globals():
         return jsonify({"error": "Application data could not be loaded. Check server logs for details."}), 500
+
+    # Initialize ChromaDB lazily for AI features
+    if not initialize_chromadb_lazy():
+        return jsonify({"error": "AI features could not be initialized. This may take 30-40 seconds on first use."}), 500
 
     data = request.get_json()
     user_message = data.get('message')
