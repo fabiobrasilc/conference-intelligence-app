@@ -15,12 +15,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const drugFilterCheckboxes = document.querySelectorAll('.drug-filter-checkbox');
   const taFilterCheckboxes   = document.querySelectorAll('.ta-filter-checkbox');
   const sessionFilterCheckboxes = document.querySelectorAll('.session-filter-checkbox');
+  const dateFilterCheckboxes = document.querySelectorAll('.date-filter-checkbox');
 
   // AI filters (no search on AI tab)
   const aiFilterSummary = document.getElementById('aiFilterSummary');
   const aiDrugFilterCheckboxes = document.querySelectorAll('.ai-drug-filter-checkbox');
   const aiTaFilterCheckboxes   = document.querySelectorAll('.ai-ta-filter-checkbox');
   const aiSessionFilterCheckboxes = document.querySelectorAll('.ai-session-filter-checkbox');
+  const aiDateFilterCheckboxes = document.querySelectorAll('.ai-date-filter-checkbox');
   const aiFilterContext        = document.getElementById('aiFilterContext');
 
   // Playbooks (chips)
@@ -32,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const sendChatBtn    = document.getElementById('sendChatBtn');
 
   // ===== State =====
-  let currentFilters = { drug_filters: [], ta_filters: [], session_filters: [] };
+  let currentFilters = { drug_filters: [], ta_filters: [], session_filters: [], date_filters: [] };
 
   // ===== Init =====
   loadData();
@@ -48,26 +50,30 @@ document.addEventListener('DOMContentLoaded', function() {
     currentFilters.drug_filters = getSelectedCheckboxValues(drugFilterCheckboxes);
     currentFilters.ta_filters   = getSelectedCheckboxValues(taFilterCheckboxes);
     currentFilters.session_filters = getSelectedCheckboxValues(sessionFilterCheckboxes);
+    currentFilters.date_filters = getSelectedCheckboxValues(dateFilterCheckboxes);
   }
   function syncAIFilters() {
     setCheckboxValues(aiDrugFilterCheckboxes, currentFilters.drug_filters);
     setCheckboxValues(aiTaFilterCheckboxes,   currentFilters.ta_filters);
     setCheckboxValues(aiSessionFilterCheckboxes, currentFilters.session_filters);
+    setCheckboxValues(aiDateFilterCheckboxes, currentFilters.date_filters);
     updateFilterSummaries();
   }
   function syncExplorerFilters() {
     setCheckboxValues(drugFilterCheckboxes, currentFilters.drug_filters);
     setCheckboxValues(taFilterCheckboxes,   currentFilters.ta_filters);
     setCheckboxValues(sessionFilterCheckboxes, currentFilters.session_filters);
+    setCheckboxValues(dateFilterCheckboxes, currentFilters.date_filters);
     updateFilterSummaries();
   }
   function updateFilterSummaries() {
     const drugs = currentFilters.drug_filters.length ? currentFilters.drug_filters.join(', ') : 'All Drugs';
     const tas   = currentFilters.ta_filters.length   ? currentFilters.ta_filters.join(', ')   : 'All Therapeutic Areas';
     const sessions = currentFilters.session_filters.length ? currentFilters.session_filters.join(', ') : 'All Session Types';
-    if (filterSummary)   filterSummary.textContent   = `${drugs} + ${tas} + ${sessions}`;
-    if (aiFilterSummary) aiFilterSummary.textContent = `${drugs} + ${tas} + ${sessions}`;
-    if (aiFilterContext) aiFilterContext.textContent = `Analyzing: ${drugs} + ${tas} + ${sessions}`;
+    const dates = currentFilters.date_filters.length ? currentFilters.date_filters.join(', ') : 'All Days';
+    if (filterSummary)   filterSummary.textContent   = `${drugs} + ${tas} + ${sessions} + ${dates}`;
+    if (aiFilterSummary) aiFilterSummary.textContent = `${drugs} + ${tas} + ${sessions} + ${dates}`;
+    if (aiFilterContext) aiFilterContext.textContent = `Analyzing: ${drugs} + ${tas} + ${sessions} + ${dates}`;
   }
 
   // ===== Explorer filter events =====
@@ -80,24 +86,37 @@ document.addEventListener('DOMContentLoaded', function() {
   sessionFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
     updateCurrentFilters(); syncAIFilters(); loadData();
   }));
+  dateFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
+    updateCurrentFilters(); syncAIFilters(); loadData();
+  }));
 
   // ===== AI filter events (sync back) =====
   aiDrugFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
     currentFilters.drug_filters = getSelectedCheckboxValues(aiDrugFilterCheckboxes);
     currentFilters.ta_filters   = getSelectedCheckboxValues(aiTaFilterCheckboxes);
     currentFilters.session_filters = getSelectedCheckboxValues(aiSessionFilterCheckboxes);
+    currentFilters.date_filters = getSelectedCheckboxValues(aiDateFilterCheckboxes);
     syncExplorerFilters(); loadData();
   }));
   aiTaFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
     currentFilters.drug_filters = getSelectedCheckboxValues(aiDrugFilterCheckboxes);
     currentFilters.ta_filters   = getSelectedCheckboxValues(aiTaFilterCheckboxes);
     currentFilters.session_filters = getSelectedCheckboxValues(aiSessionFilterCheckboxes);
+    currentFilters.date_filters = getSelectedCheckboxValues(aiDateFilterCheckboxes);
     syncExplorerFilters(); loadData();
   }));
   aiSessionFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
     currentFilters.drug_filters = getSelectedCheckboxValues(aiDrugFilterCheckboxes);
     currentFilters.ta_filters   = getSelectedCheckboxValues(aiTaFilterCheckboxes);
     currentFilters.session_filters = getSelectedCheckboxValues(aiSessionFilterCheckboxes);
+    currentFilters.date_filters = getSelectedCheckboxValues(aiDateFilterCheckboxes);
+    syncExplorerFilters(); loadData();
+  }));
+  aiDateFilterCheckboxes.forEach(cb => cb.addEventListener('change', () => {
+    currentFilters.drug_filters = getSelectedCheckboxValues(aiDrugFilterCheckboxes);
+    currentFilters.ta_filters   = getSelectedCheckboxValues(aiTaFilterCheckboxes);
+    currentFilters.session_filters = getSelectedCheckboxValues(aiSessionFilterCheckboxes);
+    currentFilters.date_filters = getSelectedCheckboxValues(aiDateFilterCheckboxes);
     syncExplorerFilters(); loadData();
   }));
 
@@ -125,6 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
       currentFilters.drug_filters.forEach(f => params.append('drug_filters', f));
       currentFilters.ta_filters.forEach(f => params.append('ta_filters', f));
       currentFilters.session_filters.forEach(f => params.append('session_filters', f));
+      currentFilters.date_filters.forEach(f => params.append('date_filters', f));
 
       const res = await fetch(`/api/search?${params}`);
       const data = await res.json();
@@ -154,6 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
       currentFilters.drug_filters.forEach(f => params.append('drug_filters', f));
       currentFilters.ta_filters.forEach(f => params.append('ta_filters', f));
       currentFilters.session_filters.forEach(f => params.append('session_filters', f));
+      currentFilters.date_filters.forEach(f => params.append('date_filters', f));
 
       const res = await fetch(`/api/data?${params}`);
       const payload = await res.json();
