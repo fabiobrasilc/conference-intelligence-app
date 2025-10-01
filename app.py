@@ -2322,18 +2322,18 @@ def stream_playbook(playbook_key):
                         filter_guidance += f"- **Key Competitors to Analyze**: '{competitor_list}'\n"
                         filter_guidance += f"- **Analysis Scope**: Prioritize these competitors in your analysis. Search the competitor abstracts table for mentions of these drugs and provide detailed competitive positioning insights."
                 elif ta_filters and "All Therapeutic Areas" not in ta_filters:
-                relevant_drugs = []
-                if any(ta in ["Bladder Cancer", "Renal Cancer"] for ta in ta_filters):
-                    relevant_drugs.append("avelumab (bladder/urothelial cancer)")
-                if "Lung Cancer" in ta_filters:
-                    relevant_drugs.append("tepotinib (NSCLC MET)")
-                if any(ta in ["Colorectal Cancer", "Head & Neck Cancer"] for ta in ta_filters):
-                    relevant_drugs.append("cetuximab (CRC/H&N)")
-                if "TGCT" in ta_filters:
-                    relevant_drugs.append("pimicotinib (TGCT)")
+                    relevant_drugs = []
+                    if any(ta in ["Bladder Cancer", "Renal Cancer"] for ta in ta_filters):
+                        relevant_drugs.append("avelumab (bladder/urothelial cancer)")
+                    if "Lung Cancer" in ta_filters:
+                        relevant_drugs.append("tepotinib (NSCLC MET)")
+                    if any(ta in ["Colorectal Cancer", "Head & Neck Cancer"] for ta in ta_filters):
+                        relevant_drugs.append("cetuximab (CRC/H&N)")
+                    if "TGCT" in ta_filters:
+                        relevant_drugs.append("pimicotinib (TGCT)")
 
-                if relevant_drugs:
-                    filter_guidance = f"\n\n**IMPORTANT**: This dataset is filtered to {', '.join(ta_filters)}. Focus your EMD Portfolio analysis on: {', '.join(relevant_drugs)}. You may briefly note that other EMD drugs are not relevant to this therapeutic area filter and skip their detailed analysis."
+                    if relevant_drugs:
+                        filter_guidance = f"\n\n**IMPORTANT**: This dataset is filtered to {', '.join(ta_filters)}. Focus your EMD Portfolio analysis on: {', '.join(relevant_drugs)}. You may briefly note that other EMD drugs are not relevant to this therapeutic area filter and skip their detailed analysis."
 
             full_prompt = f"""{prompt_template}
 
