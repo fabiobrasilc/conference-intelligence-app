@@ -100,7 +100,206 @@ document.addEventListener('DOMContentLoaded', function() {
   let conversationHistory = []; // Store last 10 messages (5 user + 5 AI)
 
   // ===== Init =====
-  loadData();
+  console.log('[INIT] Starting app initialization v2...');
+  console.log('[INIT] tableContainer:', tableContainer);
+  initTooltips(); // Create tooltip element immediately
+  console.log('[INIT] Calling loadData()...');
+  loadData(); // This will call initColumnToggles after table renders
+
+  // ===== Column Toggle System =====
+  let hiddenColumns = new Set(); // Track hidden columns
+  let columnTogglesInitialized = false; // Track if toggles have been set up
+
+  function initColumnToggles() {
+    if (columnTogglesInitialized) return; // Already initialized
+    columnTogglesInitialized = true;
+    // Load saved column preferences from localStorage
+    const saved = localStorage.getItem('hiddenColumns');
+    if (saved) {
+      hiddenColumns = new Set(JSON.parse(saved));
+    } else {
+      // Default hidden columns: Room, Date, Time, Theme
+      hiddenColumns = new Set(['Room', 'Date', 'Time', 'Theme']);
+    }
+
+    // Set initial button states
+    const toggleButtons = document.querySelectorAll('.column-toggle-btn');
+    toggleButtons.forEach(btn => {
+      const column = btn.dataset.column;
+      if (hiddenColumns.has(column)) {
+        btn.classList.remove('active');
+      } else {
+        btn.classList.add('active');
+      }
+
+      // Add click handler
+      btn.addEventListener('click', () => {
+        const column = btn.dataset.column;
+        if (hiddenColumns.has(column)) {
+          // Show column
+          hiddenColumns.delete(column);
+          btn.classList.add('active');
+        } else {
+          // Hide column
+          hiddenColumns.add(column);
+          btn.classList.remove('active');
+        }
+
+        // Save to localStorage
+        localStorage.setItem('hiddenColumns', JSON.stringify([...hiddenColumns]));
+
+        // Update table visibility
+        updateColumnVisibility();
+      });
+    });
+
+    // Apply initial visibility
+    updateColumnVisibility();
+  }
+
+  function updateColumnVisibility() {
+    const table = document.getElementById('dataTable');
+    if (!table) return;
+
+    const headers = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier', 'Room', 'Date', 'Time', 'Session', 'Theme'];
+
+    headers.forEach((header, index) => {
+      const columnIndex = index + 1; // CSS nth-child is 1-indexed
+      const isHidden = hiddenColumns.has(header);
+
+      // Hide/show header
+      const th = table.querySelector(`thead th:nth-child(${columnIndex})`);
+      if (th) {
+        th.style.display = isHidden ? 'none' : '';
+      }
+
+      // Hide/show all cells in this column
+      const cells = table.querySelectorAll(`tbody td:nth-child(${columnIndex})`);
+      cells.forEach(cell => {
+        cell.style.display = isHidden ? 'none' : '';
+      });
+
+      // Hide/show colgroup col
+      const col = table.querySelector(`colgroup col:nth-child(${columnIndex})`);
+      if (col) {
+        col.style.display = isHidden ? 'none' : '';
+      }
+    });
+  }
+
+  // ===== Rich Hover Tooltip System =====
+  let tooltipElement = null;
+  let currentTooltipRow = null;
+
+  function initTooltips() {
+    // Create tooltip element
+    tooltipElement = document.createElement('div');
+    tooltipElement.className = 'row-tooltip';
+    document.body.appendChild(tooltipElement);
+  }
+
+  function showTooltip(row, event) {
+    if (currentTooltipRow === row) return; // Already showing
+    currentTooltipRow = row;
+
+    const cells = row.querySelectorAll('td');
+    const headers = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier', 'Room', 'Date', 'Time', 'Session', 'Theme'];
+
+    // Build tooltip content with icons
+    const icons = {
+      'Title': '📄',
+      'Speakers': '👤',
+      'Speaker Location': '📍',
+      'Affiliation': '🏥',
+      'Identifier': '🔖',
+      'Room': '🏢',
+      'Date': '📅',
+      'Time': '🕐',
+      'Session': '📋',
+      'Theme': '🎯'
+    };
+
+    let html = '';
+    cells.forEach((cell, index) => {
+      if (index >= headers.length) return;
+
+      const header = headers[index];
+      const value = cell.textContent.trim();
+      const icon = icons[header] || '•';
+
+      if (value) { // Only show non-empty fields
+        html += `
+          <div class="tooltip-field">
+            <div class="tooltip-icon">${icon}</div>
+            <div class="tooltip-content">
+              <div class="tooltip-label">${header}</div>
+              <div class="tooltip-value ${header === 'Identifier' ? 'identifier' : ''}">${value}</div>
+            </div>
+          </div>
+        `;
+      }
+    });
+
+    tooltipElement.innerHTML = html;
+
+    // Position tooltip (smart positioning to avoid going off-screen)
+    positionTooltip(event);
+
+    // Show tooltip
+    tooltipElement.classList.add('visible');
+  }
+
+  function hideTooltip() {
+    tooltipElement.classList.remove('visible');
+    currentTooltipRow = null;
+  }
+
+  function positionTooltip(event) {
+    const tooltipRect = tooltipElement.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let left = event.pageX + 15;
+    let top = event.pageY + 15;
+
+    // Check if tooltip goes off right edge
+    if (left + tooltipRect.width > viewportWidth) {
+      left = event.pageX - tooltipRect.width - 15;
+    }
+
+    // Check if tooltip goes off bottom edge
+    if (top + tooltipRect.height > viewportHeight + window.scrollY) {
+      top = event.pageY - tooltipRect.height - 15;
+    }
+
+    // Ensure tooltip doesn't go off left or top edge
+    left = Math.max(10, left);
+    top = Math.max(10, top);
+
+    tooltipElement.style.left = left + 'px';
+    tooltipElement.style.top = top + 'px';
+  }
+
+  // Add tooltip event listeners to table rows (delegated)
+  document.addEventListener('mouseenter', (e) => {
+    const row = e.target.closest('#dataTable tbody tr');
+    if (row) {
+      showTooltip(row, e);
+    }
+  }, true);
+
+  document.addEventListener('mouseleave', (e) => {
+    const row = e.target.closest('#dataTable tbody tr');
+    if (row && currentTooltipRow === row) {
+      hideTooltip();
+    }
+  }, true);
+
+  document.addEventListener('mousemove', (e) => {
+    if (currentTooltipRow && tooltipElement.classList.contains('visible')) {
+      positionTooltip(e);
+    }
+  });
 
   // ===== Toggle Button Helpers =====
   function getSelectedButtonValues(nodeList) {
@@ -283,6 +482,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ===== Data load =====
   async function loadData() {
+    if (!tableContainer) {
+      console.log('[loadData] Skipping - tableContainer not found (likely on AI tab)');
+      return;
+    }
     try {
       showLoading();
       const params = new URLSearchParams();
@@ -427,14 +630,27 @@ document.addEventListener('DOMContentLoaded', function() {
     html += `</tbody></table></div>`;
     tableContainer.innerHTML = html;
 
+    // Initialize column toggles on first render
+    initColumnToggles();
+
     // Add event listeners for sorting and resizing
     addTableInteractivity();
 
-    // Mobile: tap toggles expansion
+    // Apply column visibility based on toggle state
+    updateColumnVisibility();
+
+    // Mobile: tap toggles expansion (removed old expand behavior)
     const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     if (!supportsHover){
+      // Mobile users can tap rows to see tooltip
       const rows = tableContainer.querySelectorAll('#tableViewport tbody tr');
-      rows.forEach(tr => tr.addEventListener('click', () => tr.classList.toggle('expanded')));
+      rows.forEach(tr => tr.addEventListener('click', (e) => {
+        if (currentTooltipRow === tr) {
+          hideTooltip();
+        } else {
+          showTooltip(tr, e);
+        }
+      }));
     }
   }
 

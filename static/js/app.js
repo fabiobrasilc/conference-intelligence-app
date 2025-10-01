@@ -358,6 +358,9 @@ document.addEventListener('DOMContentLoaded', function() {
       <span class="${hasActiveFilters ? 'text-purple fw-bold' : ''}">Showing ${displayCount.toLocaleString()} of ${totalCount.toLocaleString()}</span>${filterDisplay}`;
   }
 
+  // Store custom column widths (persists across re-renders)
+  let customColumnWidths = {};
+
   // ===== Table rendering (fixed layout + hover/tap expand) =====
   function renderTable(data, skipDataUpdate = false){
     if (!skipDataUpdate) {
@@ -375,19 +378,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const headers = ['Title','Speakers','Speaker Location','Affiliation','Identifier','Room','Date','Time','Session','Theme'];
 
-    // Default column widths (sync with CSS col:nth-child)
+    // Save current column widths before re-rendering (if table exists)
+    const existingTable = document.getElementById('dataTable');
+    if (existingTable) {
+      const colGroup = existingTable.querySelector('colgroup');
+      if (colGroup) {
+        Array.from(colGroup.children).forEach((col, index) => {
+          if (col.style.width) {
+            customColumnWidths[headers[index]] = col.style.width;
+          }
+        });
+      }
+    }
+
+    // Default column widths in PIXELS (not percentages) to avoid resize jumping
     const colWidths = {
-      'Title':'25%',
-      'Speakers':'15%',
-      'Speaker Location':'12%',
-      'Affiliation':'15%',
-      'Identifier':'8%',
-      'Room':'10%',
-      'Date':'8%',
-      'Time':'7%',
-      'Session':'12%',
-      'Theme':'15%'
+      'Title':'300px',
+      'Speakers':'180px',
+      'Speaker Location':'140px',
+      'Affiliation':'180px',
+      'Identifier':'100px',
+      'Room':'120px',
+      'Date':'100px',
+      'Time':'90px',
+      'Session':'140px',
+      'Theme':'180px'
     };
+
+    // Use custom widths if available, otherwise use defaults
+    headers.forEach(h => {
+      if (customColumnWidths[h]) {
+        colWidths[h] = customColumnWidths[h];
+      }
+    });
 
     // Sort data if needed
     let sortedData = [...currentTableData];
@@ -405,7 +428,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <th class="sortable-header" data-column="${h}" style="cursor: pointer; user-select: none; position: relative;">
                   <span class="header-text">${h}</span>
                   <span class="sort-indicator">${getSortIcon(h)}</span>
-                  <div class="resize-handle" style="position: absolute; right: 0; top: 0; bottom: 0; width: 5px; cursor: col-resize; background: transparent;"></div>
+                  <div class="resize-handle" style="position: absolute; right: 0; top: 0; bottom: 0; width: 8px; cursor: col-resize; background: transparent; border-right: 2px solid #8b5cf6;"></div>
                 </th>
               `).join('')}
             </tr>
@@ -429,6 +452,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add event listeners for sorting and resizing
     addTableInteractivity();
+
+    // Re-apply column visibility after table renders
+    if (window.reapplyColumnVisibility) {
+      window.reapplyColumnVisibility();
+    }
 
     // Mobile: tap toggles expansion
     const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -525,13 +553,21 @@ document.addEventListener('DOMContentLoaded', function() {
       let startX = 0;
       let startWidth = 0;
       let colIndex = Array.from(header.parentElement.children).indexOf(header);
+      let currentCol = null;
 
       resizeHandle.addEventListener('mousedown', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        isResizing = true;
+
+        // Get the col element and its current computed width
+        const table = tableContainer.querySelector('#dataTable');
+        const colGroup = table.querySelector('colgroup');
+        currentCol = colGroup.children[colIndex];
+
+        // Get the actual rendered pixel width
+        startWidth = header.getBoundingClientRect().width;
         startX = e.clientX;
-        startWidth = header.offsetWidth;
+        isResizing = true;
 
         // Add global event listeners
         document.addEventListener('mousemove', handleResize);
@@ -547,14 +583,11 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
 
         const diff = e.clientX - startX;
-        const newWidth = Math.max(50, startWidth + diff); // Min width 50px
+        const newWidth = Math.max(20, startWidth + diff); // Min width 20px
 
-        // Update the colgroup element
-        const table = tableContainer.querySelector('#dataTable');
-        const colGroup = table.querySelector('colgroup');
-        const col = colGroup.children[colIndex];
-        if (col) {
-          col.style.width = newWidth + 'px';
+        // Update col element only - let table-layout:fixed handle the rest
+        if (currentCol) {
+          currentCol.style.width = newWidth + 'px';
         }
       }
 
@@ -1472,5 +1505,69 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('[SIDEBAR DEBUG] Initial active tab:', target);
     handleTabSwitch(target);
   }
+
+  // ===== COLUMN TOGGLE - SIMPLE CLICK-ONLY APPROACH =====
+  const columnHeaders = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier', 'Room', 'Date', 'Time', 'Session', 'Theme'];
+
+  // Simple function to hide/show a single column
+  window.toggleColumn = function(columnName, shouldHide) {
+    const table = document.getElementById('dataTable');
+    if (!table) return;
+
+    const colIndex = columnHeaders.indexOf(columnName) + 1; // nth-child is 1-indexed
+    if (colIndex === 0) return; // Not found
+
+    const displayValue = shouldHide ? 'none' : '';
+
+    // Hide/show header
+    const th = table.querySelector(`thead th:nth-child(${colIndex})`);
+    if (th) th.style.display = displayValue;
+
+    // Hide/show all body cells
+    const cells = table.querySelectorAll(`tbody td:nth-child(${colIndex})`);
+    cells.forEach(cell => cell.style.display = displayValue);
+
+    // Hide/show colgroup col
+    const col = table.querySelector(`colgroup col:nth-child(${colIndex})`);
+    if (col) col.style.display = displayValue;
+  };
+
+  // Re-apply all hidden columns (called after table re-renders)
+  window.reapplyColumnVisibility = function() {
+    document.querySelectorAll('.column-toggle-btn').forEach(btn => {
+      if (!btn.classList.contains('active')) {
+        const columnName = btn.dataset.column;
+        window.toggleColumn(columnName, true);
+      }
+    });
+  };
+
+  // Setup button click handlers - NO observers, NO automatic detection
+  document.querySelectorAll('.column-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const columnName = this.dataset.column;
+      const isActive = this.classList.contains('active');
+
+      if (isActive) {
+        // Currently showing, now hide
+        this.classList.remove('active');
+        window.toggleColumn(columnName, true);
+      } else {
+        // Currently hidden, now show
+        this.classList.add('active');
+        window.toggleColumn(columnName, false);
+      }
+    });
+  });
+
+  // Hide default-off columns on initial load (Room, Date, Time, Theme)
+  setTimeout(() => {
+    document.querySelectorAll('.column-toggle-btn').forEach(btn => {
+      if (!btn.classList.contains('active')) {
+        const columnName = btn.dataset.column;
+        window.toggleColumn(columnName, true);
+      }
+    });
+  }, 300);
 
 });

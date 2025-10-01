@@ -1,5 +1,66 @@
-// ESMO 2025 – Filters, Table, AI (fixed layout + AI Action Bar)
+// ESMO 2025 – Filters, Table, AI (Sidebar layout)
 document.addEventListener('DOMContentLoaded', function() {
+
+  // ===== Sidebar Toggle with Hover =====
+  const filterSidebar = document.getElementById('filterSidebar');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+  const sidebarHeader = filterSidebar?.querySelector('.sidebar-header');
+  let isPinned = false; // Track if sidebar is pinned open
+
+  function expandSidebar() {
+    filterSidebar?.classList.remove('collapsed');
+  }
+
+  function collapseSidebar() {
+    if (!isPinned) {
+      filterSidebar?.classList.add('collapsed');
+    }
+  }
+
+  function togglePin() {
+    isPinned = !isPinned;
+    if (isPinned) {
+      expandSidebar();
+    } else {
+      collapseSidebar();
+    }
+  }
+
+  // Hover to expand, leave to collapse
+  if (filterSidebar) {
+    filterSidebar.addEventListener('mouseenter', expandSidebar);
+    filterSidebar.addEventListener('mouseleave', collapseSidebar);
+  }
+
+  // Click header to pin/unpin
+  if (sidebarHeader) {
+    sidebarHeader.addEventListener('click', (e) => {
+      // Don't toggle if clicking Clear All button
+      if (!e.target.closest('#clearAllFilters')) {
+        togglePin();
+      }
+    });
+  }
+
+  // ===== Filter Section Collapse/Expand =====
+  document.querySelectorAll('.filter-section-header').forEach(header => {
+    header.addEventListener('click', (e) => {
+      e.stopPropagation(); // Don't trigger sidebar toggle
+      const section = header.closest('.filter-section');
+      section.classList.toggle('collapsed');
+    });
+  });
+
+  // ===== Quick Intelligence Sidebar - Click to toggle =====
+  const quickIntelSidebar = document.getElementById('quickIntelSidebar');
+  const quickIntelHeader = quickIntelSidebar?.querySelector('.quick-intel-header');
+
+  if (quickIntelHeader) {
+    quickIntelHeader.addEventListener('click', () => {
+      quickIntelSidebar.classList.toggle('collapsed');
+    });
+  }
 
   // ===== Shared refs =====
   const tableContainer = document.getElementById('tableContainer');
@@ -27,15 +88,16 @@ document.addEventListener('DOMContentLoaded', function() {
   // Playbooks (chips)
   const playbookTriggers = document.querySelectorAll('.playbook-trigger');
 
-  // Chat
+  // Chat (using chatInput for new Claude-style interface)
   const chatContainer  = document.getElementById('chatContainer');
-  const userInput      = document.getElementById('userInput');
-  const sendChatBtn    = document.getElementById('sendChatBtn');
+  const userInput      = document.getElementById('chatInput'); // Changed from 'userInput' to 'chatInput'
+  const sendChatBtn    = document.getElementById('chatSendBtn');
 
   // ===== State =====
   let currentFilters = { drug_filters: [], ta_filters: [], session_filters: [], date_filters: [] };
   let currentTableData = [];
   let sortState = { column: null, direction: 'asc' };
+  let conversationHistory = []; // Store last 10 messages (5 user + 5 AI)
 
   // ===== Init =====
   loadData();
@@ -76,27 +138,76 @@ document.addEventListener('DOMContentLoaded', function() {
     const tas   = currentFilters.ta_filters.length   ? currentFilters.ta_filters.join(', ')   : 'All Therapeutic Areas';
     const sessions = currentFilters.session_filters.length ? currentFilters.session_filters.join(', ') : 'All Session Types';
     const dates = currentFilters.date_filters.length ? currentFilters.date_filters.join(', ') : 'All Days';
-    if (filterSummary)   filterSummary.textContent   = `${drugs} + ${tas} + ${sessions} + ${dates}`;
+
+    // Don't show filter summary in Data Explorer tab (redundant with filter context)
+    if (filterSummary)   filterSummary.textContent   = '';
+
+    // Keep AI tab summaries
     if (aiFilterSummary) aiFilterSummary.textContent = `${drugs} + ${tas} + ${sessions} + ${dates}`;
     if (aiFilterContext) aiFilterContext.textContent = `Analyzing: ${drugs} + ${tas} + ${sessions} + ${dates}`;
+
+    // Update filter count badge
+    updateFilterCountBadge();
+  }
+
+  function updateFilterCountBadge() {
+    const totalFilters = currentFilters.drug_filters.length +
+                        currentFilters.ta_filters.length +
+                        currentFilters.session_filters.length +
+                        currentFilters.date_filters.length;
+    const badge = document.getElementById('filterCountBadge');
+    if (badge) {
+      badge.textContent = totalFilters === 0 ? '0 active' : `${totalFilters} active`;
+    }
+  }
+
+  // Clear All Filters functionality
+  const clearAllFiltersBtn = document.getElementById('clearAllFilters');
+  if (clearAllFiltersBtn) {
+    clearAllFiltersBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent sidebar toggle
+
+      // Clear all filter arrays
+      currentFilters.drug_filters = [];
+      currentFilters.ta_filters = [];
+      currentFilters.session_filters = [];
+      currentFilters.date_filters = [];
+
+      // Remove active class from all buttons
+      document.querySelectorAll('.filter-toggle-btn').forEach(btn => btn.classList.remove('active'));
+
+      // Update UI and reload data
+      syncAIFilters();
+      smartLoad();
+    });
+  }
+
+  // Smart load: maintains search when filters change
+  function smartLoad() {
+    const query = (searchInput?.value || '').trim();
+    if (query) {
+      handleSearch(); // Maintain search with new filters
+    } else {
+      loadData();     // Just load filtered data
+    }
   }
 
   // ===== Explorer filter button events =====
   drugFilterButtons.forEach(btn => btn.addEventListener('click', () => {
     btn.classList.toggle('active');
-    updateCurrentFilters(); syncAIFilters(); loadData();
+    updateCurrentFilters(); syncAIFilters(); smartLoad();
   }));
   taFilterButtons.forEach(btn => btn.addEventListener('click', () => {
     btn.classList.toggle('active');
-    updateCurrentFilters(); syncAIFilters(); loadData();
+    updateCurrentFilters(); syncAIFilters(); smartLoad();
   }));
   sessionFilterButtons.forEach(btn => btn.addEventListener('click', () => {
     btn.classList.toggle('active');
-    updateCurrentFilters(); syncAIFilters(); loadData();
+    updateCurrentFilters(); syncAIFilters(); smartLoad();
   }));
   dateFilterButtons.forEach(btn => btn.addEventListener('click', () => {
     btn.classList.toggle('active');
-    updateCurrentFilters(); syncAIFilters(); loadData();
+    updateCurrentFilters(); syncAIFilters(); smartLoad();
   }));
 
   // ===== AI filter button events (sync back) =====
@@ -104,13 +215,13 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.classList.toggle('active');
     currentFilters.drug_filters = getSelectedButtonValues(aiDrugFilterButtons);
     currentFilters.ta_filters   = getSelectedButtonValues(aiTaFilterButtons);
-    syncExplorerFilters(); loadData();
+    syncExplorerFilters(); smartLoad();
   }));
   aiTaFilterButtons.forEach(btn => btn.addEventListener('click', () => {
     btn.classList.toggle('active');
     currentFilters.drug_filters = getSelectedButtonValues(aiDrugFilterButtons);
     currentFilters.ta_filters   = getSelectedButtonValues(aiTaFilterButtons);
-    syncExplorerFilters(); loadData();
+    syncExplorerFilters(); smartLoad();
   }));
 
   // ===== Search (Explorer only) =====
@@ -142,20 +253,12 @@ document.addEventListener('DOMContentLoaded', function() {
       currentFilters.date_filters.forEach(f => params.append('date_filters', f));
 
       const res = await fetch(`/api/search?${params}`);
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      const payload = await res.json();
+      if (payload.error) throw new Error(payload.error);
 
-      renderTable(data);
-
-      const drugs = currentFilters.drug_filters.length ? currentFilters.drug_filters.join(', ') : 'All Drugs';
-      const tas   = currentFilters.ta_filters.length   ? currentFilters.ta_filters.join(', ')   : 'All Therapeutic Areas';
-      const sessions = currentFilters.session_filters.length ? currentFilters.session_filters.join(', ') : 'All Session Types';
-      const dates = currentFilters.date_filters.length ? currentFilters.date_filters.join(', ') : 'All Days';
-
-      // Search is always active here, so use purple color
-      filterContext.innerHTML = `
-        <span class="text-purple fw-bold">Showing ${data.length.toLocaleString()} of 4,686</span> •
-        Filters: ${drugs} + ${tas} + ${sessions} + ${dates}`;
+      renderTable(payload.data);
+      updateFilterContext(payload.filter_context, payload.showing, payload.total);
+      updateFilterSummaries();
     } catch (err) {
       console.error(err);
       showError('Search failed. Please try again.');
@@ -231,10 +334,28 @@ document.addEventListener('DOMContentLoaded', function() {
                             currentFilters.date_filters.length > 0 ||
                             (searchInput && searchInput.value.trim().length > 0);
 
-    const colorClass = hasActiveFilters ? 'text-purple fw-bold' : '';
+    // Build active filters string (only show non-"All" values)
+    const activeFilters = [];
+    if (currentFilters.drug_filters.length > 0) {
+      activeFilters.push(currentFilters.drug_filters.join(', '));
+    }
+    if (currentFilters.ta_filters.length > 0) {
+      activeFilters.push(currentFilters.ta_filters.join(', '));
+    }
+    if (currentFilters.session_filters.length > 0) {
+      activeFilters.push(currentFilters.session_filters.join(', '));
+    }
+    if (currentFilters.date_filters.length > 0) {
+      activeFilters.push(currentFilters.date_filters.join(', '));
+    }
+
+    // Only show filter summary if filters are active
+    const filterDisplay = hasActiveFilters
+      ? ` • <span class="text-purple fw-bold">${activeFilters.join(' + ')}</span>`
+      : '';
 
     filterContext.innerHTML = `
-      <span class="${colorClass}">Showing ${displayCount.toLocaleString()} of ${totalCount.toLocaleString()}</span> • ${filter_summary}`;
+      <span class="${hasActiveFilters ? 'text-purple fw-bold' : ''}">Showing ${displayCount.toLocaleString()} of ${totalCount.toLocaleString()}</span>${filterDisplay}`;
   }
 
   // ===== Table rendering (fixed layout + hover/tap expand) =====
@@ -308,6 +429,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add event listeners for sorting and resizing
     addTableInteractivity();
+
+    // Re-apply column visibility after table renders
+    if (window.reapplyColumnVisibility) {
+      window.reapplyColumnVisibility();
+    }
 
     // Mobile: tap toggles expansion
     const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -506,73 +632,232 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ===== Playbooks via Action Bar =====
-  playbookTriggers.forEach(el => {
-    el.addEventListener('click', () => handlePlaybook(el.getAttribute('data-playbook')));
-  });
+  // REMOVED: Old direct playbook handler (now using modal-based flow at line ~1256)
 
-  async function handlePlaybook(playbookType) {
-    try {
-      // ensure AI tab is visible (defensive)
-      const aiTabBtn = document.getElementById('ai-assistant-tab');
-      if (window.bootstrap && aiTabBtn) new bootstrap.Tab(aiTabBtn).show();
+  function createTableHTML(title, subtitle, columns, rows, tableId = 'playbookTable') {
+    // Create table matching Data Explorer with sorting, resizing, and hover expansion
 
-      appendToChat(`
-        <div class="d-flex justify-content-start mb-2">
-          <div class="bg-primary text-white rounded p-2" style="max-width:80%;">
-            <strong>🤖 Running ${getPlaybookTitle(playbookType)}...</strong>
-            <span class="spinner-border spinner-border-sm ms-2" role="status"></span>
-          </div>
-        </div>`);
+    // Define column widths based on common columns
+    const getColWidth = (col) => {
+      const widthMap = {
+        'Drug': '10%', 'Company': '15%',
+        'Title': '25%', 'Speakers': '15%', 'Speaker': '20%', 'Speaker Location': '12%',
+        'Affiliation': '20%', 'Identifier': '8%', 'Room': '10%',
+        'Date': '8%', 'Time': '7%', 'Session': '12%', 'Theme': '15%',
+        'Threat Type': '12%', 'Location': '15%',
+        '# Studies': '8%', 'Institution': '25%', '# Abstracts': '8%'
+      };
+      return widthMap[col] || 'auto';
+    };
 
-      const params = new URLSearchParams();
-      currentFilters.drug_filters.forEach(f => params.append('drug_filters', f));
-      currentFilters.ta_filters.forEach(f => params.append('ta_filters', f));
-      currentFilters.session_filters.forEach(f => params.append('session_filters', f));
+    let html = `<div class="playbook-table-container mb-3">`;
+    if (title) html += `<h5 class="mb-2">${escapeHtml(title)}</h5>`;
+    if (subtitle) html += `<p class="text-muted small mb-2">${escapeHtml(subtitle)}</p>`;
 
-      const response = await fetch(`/api/playbook/${playbookType}/stream?${params}`);
-      if (!response.ok) throw new Error('Playbook request failed');
+    // Wrap in viewport div with fixed height and scroll
+    html += `<div class="playbook-table-viewport" style="max-height: 50vh; overflow: auto; border-radius: 12px; border: 1px solid var(--stroke); background: var(--card);">`;
+    html += `<table class="table table-hover table-striped align-middle table-fixed" id="${tableId}">`;
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
+    // Column widths
+    html += `<colgroup>${columns.map(c => `<col style="width:${getColWidth(c)}">`).join('')}</colgroup>`;
 
-      appendToChat(`
-        <div class="d-flex justify-content-start mb-2">
-          <div class="bg-light border rounded p-3" style="max-width:90%;">
-            <div id="playbook-content"></div>
-          </div>
-        </div>`);
+    // Headers with sort indicators and resize handles
+    html += `<thead><tr>`;
+    columns.forEach(col => {
+      html += `<th class="sortable-header" data-column="${escapeHtml(col)}" data-table="${tableId}" style="cursor: pointer; user-select: none; position: relative;">`;
+      html += `<span class="header-text">${escapeHtml(col)}</span>`;
+      html += `<span class="sort-indicator"><i class="bi bi-arrow-down-up" style="opacity: 0.3; margin-left: 5px;"></i></span>`;
+      html += `<div class="resize-handle" style="position: absolute; right: 0; top: 0; bottom: 0; width: 5px; cursor: col-resize; background: transparent;"></div>`;
+      html += `</th>`;
+    });
+    html += `</tr></thead><tbody>`;
 
-      const contentDiv = document.getElementById('playbook-content');
+    // Rows
+    rows.forEach(row => {
+      html += `<tr>`;
+      columns.forEach(col => {
+        const value = row[col] || '';
+        const displayVal = escapeHtml(String(value));
+        html += `<td title="${displayVal}">${displayVal}</td>`;
+      });
+      html += `</tr>`;
+    });
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop();
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const dataStr = line.slice(6);
-            if (dataStr === '[DONE]') continue;
-            try {
-              const parsed = JSON.parse(dataStr);
-              if (parsed.text) {
-                contentDiv.innerHTML += escapeHtml(parsed.text);
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-              }
-            } catch (e) {}
+    html += `</tbody></table></div></div>`;
+    return html;
+  }
+
+  // Add sorting, resizing, and tap-to-expand interactivity to playbook tables
+  function addPlaybookTableInteractivity(columns, rows) {
+    const table = document.querySelector('#playbookTable');
+    if (!table) return;
+
+    const viewport = table.closest('.playbook-table-viewport');
+    let sortState = { column: null, direction: 'asc' };
+    let tableData = rows;
+
+    // Add sorting
+    const headers = table.querySelectorAll('.sortable-header');
+    headers.forEach((header, colIndex) => {
+      const headerText = header.querySelector('.header-text');
+      const resizeHandle = header.querySelector('.resize-handle');
+      const column = header.dataset.column;
+
+      // Sorting - click on header (but not resize handle)
+      header.addEventListener('click', (e) => {
+        if (e.target.closest('.resize-handle')) return;
+        e.stopPropagation();
+
+        // Toggle sort direction
+        if (sortState.column === column) {
+          sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortState.column = column;
+          sortState.direction = 'asc';
+        }
+
+        // Sort data
+        tableData = sortPlaybookData(tableData, column, sortState.direction);
+
+        // Update table body
+        const tbody = table.querySelector('tbody');
+        tbody.innerHTML = '';
+        tableData.forEach(row => {
+          let tr = document.createElement('tr');
+          columns.forEach(col => {
+            let td = document.createElement('td');
+            const value = row[col] || '';
+            td.textContent = String(value);
+            td.title = String(value);
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+
+        // Update sort indicators
+        headers.forEach(h => {
+          const indicator = h.querySelector('.sort-indicator');
+          if (h.dataset.column === column) {
+            const icon = sortState.direction === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down';
+            indicator.innerHTML = `<i class="bi ${icon}" style="margin-left: 5px; color: var(--brand);"></i>`;
+          } else {
+            indicator.innerHTML = '<i class="bi bi-arrow-down-up" style="opacity: 0.3; margin-left: 5px;"></i>';
           }
+        });
+
+        // Re-add mobile tap handlers
+        addMobileTapHandlers();
+      });
+
+      // Column resizing
+      let isResizing = false;
+      let startX = 0;
+      let startWidth = 0;
+
+      resizeHandle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = header.offsetWidth;
+
+        document.addEventListener('mousemove', handleResize);
+        document.addEventListener('mouseup', stopResize);
+
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'col-resize';
+      });
+
+      function handleResize(e) {
+        if (!isResizing) return;
+        e.preventDefault();
+
+        const diff = e.clientX - startX;
+        const newWidth = Math.max(50, startWidth + diff);
+
+        const colGroup = table.querySelector('colgroup');
+        const col = colGroup.children[colIndex];
+        if (col) col.style.width = newWidth + 'px';
+      }
+
+      function stopResize() {
+        isResizing = false;
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+        document.removeEventListener('mousemove', handleResize);
+        document.removeEventListener('mouseup', stopResize);
+      }
+    });
+
+    // Mobile: tap toggles expansion
+    function addMobileTapHandlers() {
+      const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+      if (!supportsHover) {
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(tr => {
+          tr.addEventListener('click', () => tr.classList.toggle('expanded'));
+        });
+      }
+    }
+    addMobileTapHandlers();
+  }
+
+  // Sort playbook table data
+  function sortPlaybookData(data, column, direction) {
+    return [...data].sort((a, b) => {
+      let aVal = a[column] ?? '';
+      let bVal = b[column] ?? '';
+
+      // Handle Date column
+      if (column === 'Date') {
+        aVal = new Date(aVal);
+        bVal = new Date(bVal);
+      }
+      // Handle Time column
+      else if (column === 'Time') {
+        aVal = parseTime(aVal);
+        bVal = parseTime(bVal);
+      }
+      // Handle Identifier column (numeric)
+      else if (column === 'Identifier') {
+        const aNum = extractNumber(aVal);
+        const bNum = extractNumber(bVal);
+        if (aNum !== null && bNum !== null) {
+          aVal = aNum;
+          bVal = bNum;
+        } else {
+          aVal = aVal.toString().toLowerCase();
+          bVal = bVal.toString().toLowerCase();
         }
       }
-    } catch (error) {
-      console.error('Playbook error:', error);
-      appendToChat(`
-        <div class="d-flex justify-content-start mb-2">
-          <div class="bg-danger text-white rounded p-2">Error: ${error.message}</div>
-        </div>`);
+      // Default: string comparison
+      else {
+        aVal = aVal.toString().toLowerCase();
+        bVal = bVal.toString().toLowerCase();
+      }
+
+      let result;
+      if (aVal < bVal) result = -1;
+      else if (aVal > bVal) result = 1;
+      else result = 0;
+
+      return direction === 'desc' ? -result : result;
+    });
+  }
+
+  // Helper function to check if user is near bottom of scroll
+  function isNearBottom(container, threshold = 150) {
+    return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+  }
+
+  // Smart auto-scroll: only scroll if user is near bottom
+  function smartScroll(container) {
+    if (isNearBottom(container)) {
+      container.scrollTop = container.scrollHeight;
     }
   }
+
+  // REMOVED: Old handlePlaybook() function (replaced by handlePlaybookWithFilters() at line ~1328)
 
   function getPlaybookTitle(type) {
     const titles = {
@@ -586,19 +871,42 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ===== Chat (placeholder) =====
-  sendChatBtn.addEventListener('click', handleChat);
-  userInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter') handleChat(); });
+  if (sendChatBtn) sendChatBtn.addEventListener('click', handleChat);
+  if (userInput) {
+    // Handle Enter key for textarea: Enter sends, Shift+Enter adds newline
+    userInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleChat();
+      }
+    });
+
+    // Auto-resize textarea as user types
+    userInput.addEventListener('input', () => {
+      userInput.style.height = 'auto';
+      userInput.style.height = userInput.scrollHeight + 'px';
+    });
+  }
 
   async function handleChat(){
     const message = userInput.value.trim();
     if (!message) return;
     userInput.value = '';
 
+    // Hide greeting on first message
+    const aiGreeting = document.getElementById('aiGreeting');
+    if (aiGreeting) {
+      aiGreeting.style.display = 'none';
+    }
+
     // Add user message to chat
     appendToChat(`
       <div class="d-flex justify-content-end mb-2">
         <div class="bg-primary text-white rounded p-2" style="max-width:80%;">${escapeHtml(message)}</div>
       </div>`);
+
+    // Store user message temporarily (will be paired with AI response)
+    const userMessage = message;
 
     try {
       // Generate unique ID for this response
@@ -609,18 +917,25 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="d-flex justify-content-start mb-2">
           <div class="bg-light border rounded p-3" style="max-width:90%;">
             <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-            <div id="${responseId}">Thinking...</div>
+            <div id="${responseId}" class="chat-stream">Thinking...</div>
           </div>
         </div>`);
 
-      // Call streaming chat API
+      // Build filters from chat scope selector
+      const drugFilters = activeChatScope.type === 'drug' ? [activeChatScope.value] : [];
+      const taFilters = activeChatScope.type === 'ta' ? [activeChatScope.value] : [];
+
+      // Call streaming chat API with conversation history
       const response = await fetch('/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: message,
-          ta_filter: 'All', // For now, use All - will implement proper filtering later
-          conversation_history: []
+          drug_filters: drugFilters,
+          ta_filters: taFilters,
+          session_filters: [],
+          date_filters: [],
+          conversation_history: conversationHistory
         })
       });
 
@@ -629,9 +944,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
+      let out = '';            // accumulated assistant text
 
       const contentDiv = document.getElementById(responseId);
-      contentDiv.innerHTML = ''; // Clear loading message
+      contentDiv.textContent = '';  // clear "Thinking..." safely
 
       // Remove the spinner that's in the same parent div
       const spinnerEl = contentDiv.parentElement.querySelector('.spinner-border');
@@ -657,27 +973,48 @@ document.addEventListener('DOMContentLoaded', function() {
             if (dataStr === '[DONE]') continue;
 
             try {
-              if (currentEvent === 'table') {
-                // Handle table events
-                const tableData = JSON.parse(dataStr);
-                const tableHtml = generateTableHtml(tableData.title, tableData.rows);
-                contentDiv.insertAdjacentHTML('beforebegin', tableHtml);
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-                currentEvent = null; // Reset event type
-              } else {
-                // Handle regular text events
-                const parsed = JSON.parse(dataStr);
-                if (parsed.text) {
-                  contentDiv.innerHTML += escapeHtml(parsed.text);
-                  chatContainer.scrollTop = chatContainer.scrollHeight;
+              const parsed = JSON.parse(dataStr);
+
+              if (parsed.table) {
+                // Handle entity table (HTML already formatted) - insert INSIDE message bubble
+                contentDiv.insertAdjacentHTML('beforeend', parsed.table);
+
+                // Create a text div for the AI response AFTER the table
+                if (!document.getElementById(responseId + '-text')) {
+                  contentDiv.insertAdjacentHTML('beforeend', '<div id="' + responseId + '-text" class="mt-3"></div>');
                 }
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+              } else if (parsed.text) {
+                // Handle regular text events
+                out += parsed.text;
+
+                // Check if we have a text div (created after table)
+                const textDiv = document.getElementById(responseId + '-text');
+                if (textDiv) {
+                  // Text goes in dedicated div (after table)
+                  textDiv.innerHTML = formatAIText(out);
+                } else {
+                  // No table, text goes directly in contentDiv
+                  contentDiv.innerHTML = formatAIText(out);
+                }
+                chatContainer.scrollTop = chatContainer.scrollHeight;
               }
             } catch (e) {
               // Skip malformed JSON
+              console.error('JSON parse error:', e);
             }
           }
         }
       }
+
+      // Add conversation pair to history (backend expects {user: ..., assistant: ...} format)
+      conversationHistory.push({ user: userMessage, assistant: out });
+
+      // Limit conversation history to last 5 exchanges (10 messages total: 5 user + 5 AI)
+      if (conversationHistory.length > 5) {
+        conversationHistory = conversationHistory.slice(-5);
+      }
+
     } catch (error) {
       console.error('Chat error:', error);
       appendToChat(`
@@ -692,9 +1029,72 @@ document.addEventListener('DOMContentLoaded', function() {
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
 
+  // ===== Download Conversation =====
+  const downloadChatBtn = document.getElementById('downloadChatBtn');
+  if (downloadChatBtn) {
+    downloadChatBtn.addEventListener('click', downloadConversation);
+  }
+
+  function downloadConversation() {
+    // Extract conversation from chat container
+    const chatMessages = chatContainer.querySelectorAll('.d-flex');
+    if (chatMessages.length === 0) {
+      alert('No conversation to download yet.');
+      return;
+    }
+
+    let conversation = 'ESMO 2025 Conference Intelligence - Conversation Export\n';
+    conversation += '=' .repeat(60) + '\n';
+    conversation += `Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}\n`;
+    conversation += '=' .repeat(60) + '\n\n';
+
+    chatMessages.forEach((msg, index) => {
+      const isUser = msg.classList.contains('justify-content-end');
+      const msgDiv = msg.querySelector('div:not(.spinner-border)');
+      if (!msgDiv) return;
+
+      const text = msgDiv.innerText || msgDiv.textContent;
+      if (!text.trim()) return;
+
+      if (isUser) {
+        conversation += `USER:\n${text}\n\n`;
+      } else {
+        conversation += `AI ASSISTANT:\n${text}\n\n`;
+      }
+      conversation += '-'.repeat(60) + '\n\n';
+    });
+
+    // Create blob and download
+    const blob = new Blob([conversation], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ESMO2025_Conversation_${new Date().toISOString().slice(0,10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   // ===== Utilities =====
   function escapeHtml(text){ const div = document.createElement('div'); div.textContent = text ?? ''; return div.innerHTML; }
   function debounce(fn, wait){ let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn.apply(this,args), wait); }; }
+
+  // Format AI text with line breaks and basic formatting
+  function formatAIText(text) {
+    if (!text) return '';
+    // Escape HTML first
+    let formatted = escapeHtml(text);
+    // Convert double line breaks to paragraphs
+    formatted = formatted.replace(/\n\n/g, '<br><br>');
+    // Convert single line breaks to br
+    formatted = formatted.replace(/\n/g, '<br>');
+    // Bold text (**text** → <strong>text</strong>)
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Italic text (*text* → <em>text</em>)
+    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    return formatted;
+  }
 
   function renderCellContent(val) {
     // Check if content contains search highlighting
@@ -769,5 +1169,377 @@ document.addEventListener('DOMContentLoaded', function() {
       aiChevron.textContent = '▼';
     });
   }
+
+  // ===== Quick Intelligence Modal & Chat Scope Selector =====
+
+  const quickIntelModal = document.getElementById('quickIntelModal');
+  const modalIcon = document.getElementById('modalIcon');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalInstructions = document.getElementById('modalInstructions');
+  const modalDrugSection = document.getElementById('modalDrugSection');
+  const modalTASection = document.getElementById('modalTASection');
+  const modalSelectedFilter = document.getElementById('modalSelectedFilter');
+  const modalSelectedFilterText = document.getElementById('modalSelectedFilterText');
+  const chatScopeDropdown = document.getElementById('chatScopeDropdown');
+
+  let pendingPlaybookType = null;
+  let selectedFilterType = null; // 'drug' or 'ta'
+  let selectedFilterValue = null;
+
+  // Button configurations: which filters to show for each playbook
+  const playbookConfig = {
+    competitor: {
+      icon: '🏆',
+      title: 'Competitor Intelligence',
+      filters: ['drug'], // Drug only
+      instruction: 'Select a drug to analyze:'
+    },
+    kol: {
+      icon: '👥',
+      title: 'KOL Analysis',
+      filters: ['drug', 'ta'], // Drug OR TA (pick one)
+      instruction: 'Select a drug or therapeutic area:'
+    },
+    institution: {
+      icon: '🏥',
+      title: 'Institution Analysis',
+      filters: ['ta'], // TA only
+      instruction: 'Select a therapeutic area:'
+    },
+    insights: {
+      icon: '📈',
+      title: 'Strategic Insights',
+      filters: ['drug', 'ta'], // Drug OR TA (pick one)
+      instruction: 'Select a drug or therapeutic area:'
+    },
+    strategy: {
+      icon: '📋',
+      title: 'Strategic Recommendations',
+      filters: ['drug'], // Drug only
+      instruction: 'Select a drug to analyze:'
+    }
+  };
+
+  // Show modal when playbook button is clicked
+  playbookTriggers.forEach(el => {
+    el.addEventListener('click', () => {
+      const playbookType = el.getAttribute('data-playbook');
+      pendingPlaybookType = playbookType;
+      selectedFilterType = null;
+      selectedFilterValue = null;
+
+      const config = playbookConfig[playbookType];
+
+      // Update modal title/icon
+      modalIcon.textContent = config.icon;
+      modalTitle.textContent = config.title;
+      modalInstructions.textContent = config.instruction;
+
+      // Show/hide filter sections based on config
+      modalDrugSection.style.display = config.filters.includes('drug') ? 'block' : 'none';
+      modalTASection.style.display = config.filters.includes('ta') ? 'block' : 'none';
+      modalSelectedFilter.style.display = 'none';
+
+      // Reset active states
+      document.querySelectorAll('.modal-filter-btn').forEach(btn => btn.classList.remove('active'));
+
+      // Show modal
+      const modal = new bootstrap.Modal(quickIntelModal);
+      modal.show();
+    });
+  });
+
+  // Handle filter button clicks (auto-run on selection)
+  document.querySelectorAll('.modal-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const filterType = btn.dataset.type;
+      const filterValue = btn.dataset.value;
+
+      // Mark as selected
+      document.querySelectorAll('.modal-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      selectedFilterType = filterType;
+      selectedFilterValue = filterValue;
+
+      // Show selected filter
+      modalSelectedFilter.style.display = 'block';
+      modalSelectedFilterText.textContent = btn.textContent;
+
+      // Auto-run analysis after brief delay (allows user to see selection)
+      setTimeout(() => {
+        runPlaybookAnalysis();
+      }, 300);
+    });
+  });
+
+  function runPlaybookAnalysis() {
+    if (!pendingPlaybookType || !selectedFilterValue) return;
+
+    // Build filter arrays
+    const drugFilters = selectedFilterType === 'drug' ? [selectedFilterValue] : [];
+    const taFilters = selectedFilterType === 'ta' ? [selectedFilterValue] : [];
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(quickIntelModal);
+    modal.hide();
+
+    // Run playbook with filters
+    handlePlaybookWithFilters(pendingPlaybookType, drugFilters, taFilters, []);
+
+    // Reset state
+    pendingPlaybookType = null;
+    selectedFilterType = null;
+    selectedFilterValue = null;
+  }
+
+  async function handlePlaybookWithFilters(playbookType, drugFilters, taFilters, dateFilters) {
+    try {
+      // Hide greeting on first playbook click
+      const aiGreeting = document.getElementById('aiGreeting');
+      if (aiGreeting) {
+        aiGreeting.style.display = 'none';
+      }
+
+      // Ensure AI tab is visible
+      const aiTabBtn = document.getElementById('ai-assistant-tab');
+      if (window.bootstrap && aiTabBtn) new bootstrap.Tab(aiTabBtn).show();
+
+      // Show filter context in user message
+      const filterLabels = [];
+      if (drugFilters.length > 0) filterLabels.push(`💊 ${drugFilters.join(', ')}`);
+      if (taFilters.length > 0) filterLabels.push(`🎯 ${taFilters.join(', ')}`);
+      if (dateFilters.length > 0) filterLabels.push(`📅 ${dateFilters.join(', ')}`);
+      const filterText = filterLabels.length > 0 ? ` (${filterLabels.join(' • ')})` : '';
+
+      appendToChat(`
+        <div class="d-flex justify-content-start mb-2">
+          <div class="bg-primary text-white rounded p-2" style="max-width:80%;">
+            <strong>🤖 Running ${getPlaybookTitle(playbookType)}${filterText}...</strong>
+            <span class="spinner-border spinner-border-sm ms-2" role="status"></span>
+          </div>
+        </div>`);
+
+      // Scroll to bottom immediately when button clicked (with slight delay for DOM update)
+      setTimeout(() => {
+        if (chatContainer) {
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+      }, 100);
+
+      const params = new URLSearchParams();
+      drugFilters.forEach(f => params.append('drug_filters', f));
+      taFilters.forEach(f => params.append('ta_filters', f));
+      dateFilters.forEach(f => params.append('date_filters', f));
+
+      const response = await fetch(`/api/playbook/${playbookType}/stream?${params}`);
+      if (!response.ok) throw new Error('Playbook request failed');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let out = '';
+
+      // Generate unique IDs for this playbook response to avoid conflicts
+      const playbookId = 'playbook-content-' + Date.now();
+      const playbookTextId = 'playbook-text-' + Date.now();
+
+      appendToChat(`
+        <div class="d-flex justify-content-start mb-2">
+          <div class="bg-light border rounded p-3" style="max-width:90%;">
+            <div id="${playbookId}" class="chat-stream"></div>
+          </div>
+        </div>`);
+
+      const contentDiv = document.getElementById(playbookId);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith('event: ')) continue;
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6);
+            if (dataStr === '[DONE]') continue;
+            try {
+              const parsed = JSON.parse(dataStr);
+
+              // Handle table event (backend sends {title, columns, rows})
+              if (parsed.title && parsed.columns && parsed.rows) {
+                const tableHtml = createTableHTML(parsed.title, parsed.subtitle || '', parsed.columns, parsed.rows);
+
+                // Check if text div already exists (from previous table)
+                let textDiv = document.getElementById(playbookTextId);
+                if (!textDiv) {
+                  // First table - append table using insertAdjacentHTML to preserve content
+                  contentDiv.insertAdjacentHTML('beforeend', tableHtml);
+                  // Create text div for AI response
+                  contentDiv.insertAdjacentHTML('beforeend', '<div class="mt-3" id="' + playbookTextId + '"></div>');
+                } else {
+                  // Subsequent tables - insert BEFORE the text div
+                  textDiv.insertAdjacentHTML('beforebegin', tableHtml);
+                }
+
+                // Add interactivity to the last table added
+                addPlaybookTableInteractivity(parsed.columns, parsed.rows);
+
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+              }
+              // Handle text event
+              else if (parsed.text) {
+                // Check if we have a separate text div (after table)
+                let textDiv = document.getElementById(playbookTextId);
+                if (textDiv) {
+                  out += parsed.text;
+                  textDiv.innerHTML = formatAIText(out) + '<span class="cursor-blink">▊</span>';
+                } else {
+                  // No table yet, create text div first then populate
+                  if (!document.getElementById(playbookTextId)) {
+                    contentDiv.insertAdjacentHTML('beforeend', '<div id="' + playbookTextId + '"></div>');
+                  }
+                  textDiv = document.getElementById(playbookTextId);
+                  out += parsed.text;
+                  textDiv.innerHTML = formatAIText(out) + '<span class="cursor-blink">▊</span>';
+                }
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+              }
+
+            } catch (err) {
+              console.warn('Parse error:', err);
+            }
+          }
+        }
+      }
+
+      // Finalize - remove blinking cursor
+      const textDiv = document.getElementById(playbookTextId);
+      if (textDiv) {
+        textDiv.innerHTML = formatAIText(out);
+      } else {
+        contentDiv.innerHTML = formatAIText(out);
+      }
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    } catch (error) {
+      console.error('Playbook error:', error);
+      appendToChat('<div class="alert alert-danger">Error running analysis. Please try again.</div>');
+    }
+  }
+
+  // Chat Scope Selector - Apply to chat requests
+  let activeChatScope = { type: 'all', value: null };
+
+  chatScopeDropdown.addEventListener('change', () => {
+    const selected = chatScopeDropdown.value;
+    if (selected === 'all') {
+      activeChatScope = { type: 'all', value: null };
+    } else if (selected.startsWith('drug:')) {
+      activeChatScope = { type: 'drug', value: selected.replace('drug:', '') };
+    } else if (selected.startsWith('ta:')) {
+      activeChatScope = { type: 'ta', value: selected.replace('ta:', '') };
+    }
+  });
+
+  // Hide filter sidebar when on AI Assistant tab (use class toggle instead of style changes)
+  // Listen to ALL tab buttons (both appbar tabs and hidden nav-tabs)
+  const allTabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
+
+  console.log('[SIDEBAR DEBUG] Found tab buttons:', allTabButtons.length);
+
+  function handleTabSwitch(target) {
+    if (target === '#data-explorer') {
+      console.log('[SIDEBAR DEBUG] 📊 Data Explorer tab shown - showing filter sidebar');
+      document.body.classList.remove('ai-tab-active');
+      document.body.classList.add('data-tab-active');
+    } else if (target === '#ai-assistant') {
+      console.log('[SIDEBAR DEBUG] 🤖 AI Assistant tab shown - hiding filter sidebar');
+      document.body.classList.remove('data-tab-active');
+      document.body.classList.add('ai-tab-active');
+    }
+    console.log('[SIDEBAR DEBUG] Body classes:', document.body.className);
+  }
+
+  // Listen to all tab buttons
+  allTabButtons.forEach(button => {
+    button.addEventListener('shown.bs.tab', (event) => {
+      const target = event.target.getAttribute('data-bs-target');
+      handleTabSwitch(target);
+    });
+  });
+
+  // Set initial class on page load
+  const activeTab = document.querySelector('.appbar-tab.active');
+  if (activeTab) {
+    const target = activeTab.getAttribute('data-bs-target');
+    console.log('[SIDEBAR DEBUG] Initial active tab:', target);
+    handleTabSwitch(target);
+  }
+
+  // ===== COLUMN TOGGLE - SIMPLE CLICK-ONLY APPROACH =====
+  const columnHeaders = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier', 'Room', 'Date', 'Time', 'Session', 'Theme'];
+
+  // Simple function to hide/show a single column
+  window.toggleColumn = function(columnName, shouldHide) {
+    const table = document.getElementById('dataTable');
+    if (!table) return;
+
+    const colIndex = columnHeaders.indexOf(columnName) + 1; // nth-child is 1-indexed
+    if (colIndex === 0) return; // Not found
+
+    const displayValue = shouldHide ? 'none' : '';
+
+    // Hide/show header
+    const th = table.querySelector(`thead th:nth-child(${colIndex})`);
+    if (th) th.style.display = displayValue;
+
+    // Hide/show all body cells
+    const cells = table.querySelectorAll(`tbody td:nth-child(${colIndex})`);
+    cells.forEach(cell => cell.style.display = displayValue);
+
+    // Hide/show colgroup col
+    const col = table.querySelector(`colgroup col:nth-child(${colIndex})`);
+    if (col) col.style.display = displayValue;
+  };
+
+  // Re-apply all hidden columns (called after table re-renders)
+  window.reapplyColumnVisibility = function() {
+    document.querySelectorAll('.column-toggle-btn').forEach(btn => {
+      if (!btn.classList.contains('active')) {
+        const columnName = btn.dataset.column;
+        window.toggleColumn(columnName, true);
+      }
+    });
+  };
+
+  // Setup button click handlers - NO observers, NO automatic detection
+  document.querySelectorAll('.column-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const columnName = this.dataset.column;
+      const isActive = this.classList.contains('active');
+
+      if (isActive) {
+        // Currently showing, now hide
+        this.classList.remove('active');
+        window.toggleColumn(columnName, true);
+      } else {
+        // Currently hidden, now show
+        this.classList.add('active');
+        window.toggleColumn(columnName, false);
+      }
+    });
+  });
+
+  // Hide default-off columns on initial load (Room, Date, Time, Theme)
+  setTimeout(() => {
+    document.querySelectorAll('.column-toggle-btn').forEach(btn => {
+      if (!btn.classList.contains('active')) {
+        const columnName = btn.dataset.column;
+        window.toggleColumn(columnName, true);
+      }
+    });
+  }, 300);
 
 });

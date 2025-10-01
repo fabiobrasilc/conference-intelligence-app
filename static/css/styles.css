@@ -454,6 +454,56 @@ body.ai-tab-active .quick-intel-sidebar:not(.collapsed) ~ .main-content {
   border-radius: 0 12px 12px 0 !important;
 }
 
+/* Column Toggle Controls */
+.column-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--stroke);
+}
+
+.toggle-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-right: 6px;
+}
+
+.column-toggle-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1.5px solid var(--stroke);
+  border-radius: 6px;
+  background: white;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.column-toggle-btn:hover {
+  background: var(--bg);
+  border-color: var(--brand);
+  transform: translateY(-1px);
+}
+
+.column-toggle-btn.active {
+  background: var(--brand);
+  color: white;
+  border-color: var(--brand);
+  font-weight: 600;
+}
+
+.column-toggle-btn.active:hover {
+  background: #7c3aed;
+  border-color: #7c3aed;
+}
+
 /* Cards */
 .card {
   border: 1px solid var(--stroke);
@@ -508,17 +558,7 @@ table {
   overflow: hidden;
 }
 
-/* Fixed column widths */
-table col:nth-child(1) { width: 25%; } /* Title */
-table col:nth-child(2) { width: 15%; } /* Speakers */
-table col:nth-child(3) { width: 12%; } /* Speaker Location */
-table col:nth-child(4) { width: 15%; } /* Affiliation */
-table col:nth-child(5) { width: 8%; }  /* Identifier */
-table col:nth-child(6) { width: 10%; } /* Room */
-table col:nth-child(7) { width: 8%; }  /* Date */
-table col:nth-child(8) { width: 7%; }  /* Time */
-table col:nth-child(9) { width: 12%; } /* Session */
-table col:nth-child(10) { width: 15%; } /* Theme */
+/* Column widths are set via colgroup in JavaScript */
 
 thead {
   position: sticky;
@@ -688,10 +728,32 @@ mark {
   pointer-events: none;
 }
 
+/* Instructional text above QI buttons */
+.qi-instructions {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 8px 0;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--stroke);
+  text-align: center;
+}
+
 .quick-intel-sidebar .action-chip {
   width: 100%;
   padding: 12px;
   margin-bottom: 0;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Enhanced hover effect for tooltips */
+.quick-intel-sidebar .action-chip:hover {
+  background: var(--hover);
+  transform: translateX(2px);
+  transition: all 0.2s ease;
 }
 
 .ai-chat-main {

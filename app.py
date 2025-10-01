@@ -1296,16 +1296,26 @@ def highlight_search_results(df: pd.DataFrame, keyword: str) -> pd.DataFrame:
 # SMART QUERY CLASSIFICATION (GPT-5-MINI)
 # ============================================================================
 
-def classify_user_query(user_message: str) -> dict:
+def classify_user_query(user_message: str, conversation_history: list = None) -> dict:
     """
     Use GPT-5-mini to classify user query and extract search parameters.
     Returns structured JSON for dataset querying and table generation.
     """
+    # Build conversation context if available
+    history_context = ""
+    if conversation_history and len(conversation_history) > 0:
+        recent = conversation_history[-2:]  # Last 2 exchanges
+        history_lines = []
+        for exchange in recent:
+            history_lines.append(f"User: {exchange.get('user', '')}")
+            history_lines.append(f"Assistant: {exchange.get('assistant', '')[:200]}...")  # Truncate AI response
+        history_context = "\n\n**CONVERSATION CONTEXT** (use to resolve pronouns like 'him', 'it', 'that'):\n" + "\n".join(history_lines)
+
     classification_prompt = f"""You are a query classifier for ESMO 2025 conference intelligence. Think like a medical affairs professional attending the conference.
 
-**USER QUERY**: "{user_message}"
+**USER QUERY**: "{user_message}"{history_context}
 
-**YOUR TASK**: Classify the query intent and return JSON for intelligent table generation.
+**YOUR TASK**: Classify the query intent and return JSON for intelligent table generation. Use conversation context to resolve pronouns.
 
 **AVAILABLE DATA**: Title, Speakers, Speaker Location, Affiliation, Identifier, Room, Date, Time, Session, Theme
 
@@ -2648,8 +2658,8 @@ def stream_chat_api():
 
     def generate():
         try:
-            # 1. Classify user query to detect entity types and table needs
-            classification = classify_user_query(user_query)
+            # 1. Classify user query to detect entity types and table needs (with conversation context)
+            classification = classify_user_query(user_query, conversation_history)
             print(f"[QUERY CLASSIFICATION] {classification}")
 
             # 1.5. Handle clarification requests (vague queries)
