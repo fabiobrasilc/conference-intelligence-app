@@ -1382,6 +1382,8 @@ def classify_user_query(user_message: str, conversation_history: list = None) ->
 - If query asks about drug classes/MOAs → drug_class_ranking table
 - If too vague → set clarification_needed with helpful question
 - Recognize drug aliases: EV=enfortumab vedotin, pembro=pembrolizumab, nivo=nivolumab, atezo=atezolizumab
+- **CRITICAL**: Avoid generic acronyms like "ADC", "ICI", "BDC", "MOA" as search terms - use full drug names only
+- **CRITICAL**: For drug searches, prioritize FULL drug names over abbreviations to avoid false matches
 
 **DRUGS**: avelumab (Bavencio), tepotinib, cetuximab (Erbitux), enfortumab vedotin (EV, Padcev), pembrolizumab (Keytruda), nivolumab (Opdivo), durvalumab (Imfinzi), atezolizumab (Tecentriq), disitamab vedotin (DV)
 
@@ -1561,7 +1563,21 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
 
         mask = pd.Series([False] * len(filtered_df))
         for term in search_terms:
-            term_mask = filtered_df['Title'].str.contains(term, case=False, na=False)
+            # Use word boundaries for short acronyms (3 chars or less) to avoid false matches
+            # Example: "BDC" should not match "BDC-4182"
+            if len(term) <= 3 and term.isupper():
+                # For short uppercase acronyms, use word boundaries
+                # Also handle plural forms (e.g., "ADC" matches both "ADC" and "ADCs")
+                pattern = r'\b' + re.escape(term) + r's?\b'
+                term_mask = filtered_df['Title'].str.contains(pattern, case=True, na=False, regex=True)
+            elif len(term) == 4 and term.endswith('s') and term[:3].isupper():
+                # Handle plural acronyms like "ADCs" -> search for "ADC" or "ADCs"
+                singular = term[:-1]  # Remove 's'
+                pattern = r'\b' + re.escape(singular) + r's?\b'
+                term_mask = filtered_df['Title'].str.contains(pattern, case=True, na=False, regex=True)
+            else:
+                # For longer terms or mixed case, use regular case-insensitive search
+                term_mask = filtered_df['Title'].str.contains(term, case=False, na=False)
             matches = term_mask.sum()
             print(f"[DRUG SEARCH] Term '{term}' found {matches} matches")
             mask |= term_mask
