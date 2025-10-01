@@ -169,7 +169,7 @@
             <div class="search-bar-container mb-3">
               <div class="input-group">
                 <button class="btn btn-outline-secondary" id="clearSearchBtn" title="Clear search" style="display: none;">✕</button>
-                <input type="text" class="form-control form-control-lg" id="searchInput" placeholder="Search titles, authors, institutions... (Boolean: AND, OR, NOT | Exact match: &quot;ATM&quot;)" />
+                <input type="text" class="form-control form-control-lg" id="searchInput" placeholder="Search titles, authors, institutions...; Avoid short acronyms like EV, mUC; Boolean search works: AND, OR, NOT; Exact match? Use quotes: &quot;ATM&quot;)" />
                 <button class="btn btn-primary" id="searchBtn">🔍 Search</button>
               </div>
             </div>
@@ -179,7 +179,7 @@
               <span class="toggle-label">📋 Toggle Columns On/Off:</span>
               <button class="column-toggle-btn active" data-column="Title">Title</button>
               <button class="column-toggle-btn active" data-column="Speakers">Speakers</button>
-              <button class="column-toggle-btn active" data-column="Speaker Location">Location</button>
+              <button class="column-toggle-btn active" data-column="Speaker Location">Speaker Location</button>
               <button class="column-toggle-btn active" data-column="Affiliation">Affiliation</button>
               <button class="column-toggle-btn active" data-column="Identifier">Identifier</button>
               <button class="column-toggle-btn active" data-column="Session">Session</button>
@@ -370,5 +370,6 @@
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   </body>
 </html>
+
 
 
