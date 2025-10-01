@@ -1098,7 +1098,7 @@ mark {
 }
 
 .chat-message-content {
-  max-width: 80%;
+  max-width: 90%;
   padding: 12px 16px;
   border-radius: var(--radius);
   font-size: 14px;
