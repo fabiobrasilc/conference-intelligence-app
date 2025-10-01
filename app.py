@@ -2158,8 +2158,12 @@ def get_data():
     # Apply multi-filters
     filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
 
-    # Limit display to first 50 rows for performance (but show full count)
-    display_df = filtered_df.head(50)
+    # Only limit display to 50 rows when NO filters are active (performance optimization)
+    filters_active = bool(drug_filters or ta_filters or session_filters or date_filters)
+    if not filters_active:
+        display_df = filtered_df.head(50)
+    else:
+        display_df = filtered_df  # Show all filtered results
 
     # Convert to records for JSON serialization
     data_records = display_df[['Title', 'Speakers', 'Affiliation', 'Speaker Location', 'Identifier', 'Room',
@@ -2216,8 +2220,12 @@ def search_data():
         # Highlight search results
         filtered_df = highlight_search_results(filtered_df, keyword)
 
-    # Limit display to first 50 rows for performance (but show full count)
-    display_df = filtered_df.head(50)
+    # Only limit display to 50 rows when NO filters AND NO keyword (performance optimization)
+    filters_active = bool(drug_filters or ta_filters or session_filters or date_filters or keyword)
+    if not filters_active:
+        display_df = filtered_df.head(50)
+    else:
+        display_df = filtered_df  # Show all filtered/search results
 
     # Convert to records
     data_records = display_df[['Title', 'Speakers', 'Affiliation', 'Speaker Location', 'Identifier', 'Room',
