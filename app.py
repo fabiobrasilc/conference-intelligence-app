@@ -1856,7 +1856,7 @@ def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini"):
             input=[{"role": "user", "content": prompt}],
             reasoning={"effort": "low"},
             text={"verbosity": "low"},
-            max_output_tokens=4000,  # Comprehensive analysis for intelligence buttons
+            max_output_tokens=6000,  # Increased for comprehensive KOL analysis
             stream=True
         )
 
@@ -1865,6 +1865,10 @@ def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini"):
             if event.type == "response.output_text.delta":
                 token_count += 1
                 yield "data: " + json.dumps({"text": event.delta}) + "\n\n"
+            elif event.type == "response.done":
+                # Check finish reason
+                if hasattr(event, 'response') and hasattr(event.response, 'finish_reason'):
+                    print(f"[OPENAI] Finish reason: {event.response.finish_reason}")
 
         print(f"[OPENAI] Streaming complete. Tokens sent: {token_count}")
         yield "data: [DONE]\n\n"
