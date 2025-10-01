@@ -1347,9 +1347,18 @@ document.addEventListener('DOMContentLoaded', function() {
               // Handle table event (backend sends {title, columns, rows})
               if (parsed.title && parsed.columns && parsed.rows) {
                 const tableHtml = createTableHTML(parsed.title, parsed.subtitle || '', parsed.columns, parsed.rows);
-                contentDiv.innerHTML = tableHtml + '<div class="mt-3" id="playbook-text"></div>';
 
-                // Add interactivity to table
+                // Check if text div already exists (from previous table)
+                let textDiv = document.getElementById('playbook-text');
+                if (!textDiv) {
+                  // First table - replace content and create text div
+                  contentDiv.innerHTML = tableHtml + '<div class="mt-3" id="playbook-text"></div>';
+                } else {
+                  // Subsequent tables - insert BEFORE the text div
+                  textDiv.insertAdjacentHTML('beforebegin', tableHtml);
+                }
+
+                // Add interactivity to the last table added
                 addPlaybookTableInteractivity(parsed.columns, parsed.rows);
 
                 chatContainer.scrollTop = chatContainer.scrollHeight;
