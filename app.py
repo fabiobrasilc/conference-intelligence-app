@@ -1561,26 +1561,38 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
 
 def generate_top_authors_table(df: pd.DataFrame, n: int = 15) -> pd.DataFrame:
     """Generate top N authors by unique abstracts."""
-    if df.empty:
+    try:
+        print(f"[TABLE] generate_top_authors_table called with {len(df)} rows")
+        if df.empty:
+            print(f"[TABLE] Input dataframe is empty")
+            return pd.DataFrame()
+
+        # Filter out rows with empty/null speaker names before grouping
+        df_with_speakers = df[df['Speakers'].notna() & (df['Speakers'].str.strip() != '')]
+        print(f"[TABLE] Found {len(df_with_speakers)} rows with speakers")
+
+        if df_with_speakers.empty:
+            print(f"[TABLE] No speakers found after filtering")
+            return pd.DataFrame()
+
+        # Count unique studies per speaker
+        author_counts = df_with_speakers.groupby('Speakers').agg({
+            'Identifier': 'count',
+            'Affiliation': 'first',
+            'Speaker Location': 'first'
+        }).reset_index()
+
+        author_counts.columns = ['Speaker', '# Studies', 'Affiliation', 'Location']
+        author_counts = author_counts.sort_values('# Studies', ascending=False).head(n)
+
+        print(f"[TABLE] Generated authors table with {len(author_counts)} rows")
+        return author_counts
+
+    except Exception as e:
+        print(f"[TABLE] ERROR in generate_top_authors_table: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return pd.DataFrame()
-
-    # Filter out rows with empty/null speaker names before grouping
-    df_with_speakers = df[df['Speakers'].notna() & (df['Speakers'].str.strip() != '')]
-
-    if df_with_speakers.empty:
-        return pd.DataFrame()
-
-    # Count unique studies per speaker
-    author_counts = df_with_speakers.groupby('Speakers').agg({
-        'Identifier': 'count',
-        'Affiliation': 'first',
-        'Speaker Location': 'first'
-    }).reset_index()
-
-    author_counts.columns = ['Speaker', '# Studies', 'Affiliation', 'Location']
-    author_counts = author_counts.sort_values('# Studies', ascending=False).head(n)
-
-    return author_counts
 
 def generate_top_institutions_table(df: pd.DataFrame, n: int = 15) -> pd.DataFrame:
     """Generate top N institutions by unique abstracts."""
