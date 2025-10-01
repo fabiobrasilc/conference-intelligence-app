@@ -1831,10 +1831,12 @@ def stream_openai_response(prompt: str, model: str = "gpt-5-mini") -> str:
 def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini"):
     """Stream tokens from OpenAI for SSE."""
     if not client:
+        print("[OPENAI] ERROR: Client not initialized")
         yield "data: " + json.dumps({"text": "OpenAI API key not configured."}) + "\n\n"
         return
 
     try:
+        print(f"[OPENAI] Creating streaming response with model: {model}")
         stream = client.responses.create(
             model=model,
             input=[{"role": "user", "content": prompt}],
@@ -1844,13 +1846,19 @@ def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini"):
             stream=True
         )
 
+        token_count = 0
         for event in stream:
             if event.type == "response.output_text.delta":
+                token_count += 1
                 yield "data: " + json.dumps({"text": event.delta}) + "\n\n"
 
+        print(f"[OPENAI] Streaming complete. Tokens sent: {token_count}")
         yield "data: [DONE]\n\n"
 
     except Exception as e:
+        print(f"[OPENAI] ERROR: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         yield "data: " + json.dumps({"error": str(e)}) + "\n\n"
 
 # ============================================================================
@@ -2031,30 +2039,40 @@ def stream_playbook(playbook_key):
 
     def generate():
         try:
+            print(f"[PLAYBOOK] Starting {playbook_key} with filters: drugs={drug_filters}, tas={ta_filters}")
+
             # 1. Apply filters - for intelligence buttons, use full dataset when no filters (not 50-limit)
             if not drug_filters and not ta_filters and not session_filters and not date_filters:
                 filtered_df = df_global.copy()
             else:
                 filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
 
+            print(f"[PLAYBOOK] Filtered dataset: {len(filtered_df)} studies")
+
             if filtered_df.empty:
+                print(f"[PLAYBOOK] ERROR: No data after filtering")
                 yield "data: " + json.dumps({"error": "No data matches the selected filters."}) + "\n\n"
                 return
 
             # 2. Generate table(s) based on playbook requirements
             tables_data = {}
+            print(f"[PLAYBOOK] Required tables: {playbook.get('required_tables', [])}")
 
             if "top_authors" in playbook.get("required_tables", []):
+                print(f"[PLAYBOOK] Generating top authors table...")
                 authors_table = generate_top_authors_table(filtered_df, n=15)
                 tables_data["top_authors"] = authors_table.to_markdown(index=False) if not authors_table.empty else "No author data available"
 
                 # Send table as SSE event (frontend expects: title, columns, rows as objects)
                 if not authors_table.empty:
+                    print(f"[PLAYBOOK] Sending authors table with {len(authors_table)} rows")
                     yield "data: " + json.dumps({
                         "title": "Top 15 Authors",
                         "columns": list(authors_table.columns),
                         "rows": sanitize_data_structure(authors_table.to_dict('records'))
                     }) + "\n\n"
+                else:
+                    print(f"[PLAYBOOK] WARNING: Authors table is empty")
 
                 # For KOL analysis, provide ALL abstracts from each top author (not samples)
                 if playbook_key == "kol" and not authors_table.empty:
