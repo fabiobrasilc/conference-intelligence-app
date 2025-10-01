@@ -758,8 +758,19 @@ def load_and_process_data():
     """Load ESMO CSV and prepare for analysis."""
     global df_global, csv_hash_global, chroma_client, collection
 
+    print(f"[STARTUP] Looking for CSV at: {CSV_FILE}")
+    print(f"[STARTUP] CSV absolute path: {CSV_FILE.absolute()}")
+    print(f"[STARTUP] Current working directory: {Path.cwd()}")
+    print(f"[STARTUP] __file__ location: {Path(__file__).parent}")
+
     if not CSV_FILE.exists():
-        print(f"ERROR: CSV file not found at {CSV_FILE}")
+        print(f"[ERROR] CSV file not found at {CSV_FILE}")
+        print(f"[ERROR] Listing files in {Path(__file__).parent}:")
+        try:
+            for f in Path(__file__).parent.iterdir():
+                print(f"  - {f.name}")
+        except Exception as e:
+            print(f"[ERROR] Could not list directory: {e}")
         return None
 
     current_hash = file_md5(CSV_FILE)
@@ -772,6 +783,9 @@ def load_and_process_data():
     print(f"[DATA] Loading {CSV_FILE.name}...")
     df = pd.read_csv(CSV_FILE, encoding='utf-8')
 
+    print(f"[DATA] CSV loaded with {len(df)} rows and {len(df.columns)} columns")
+    print(f"[DATA] Actual columns found: {list(df.columns)}")
+
     # Sanitize Unicode for Windows compatibility
     for col in df.columns:
         if df[col].dtype == 'object':
@@ -779,6 +793,11 @@ def load_and_process_data():
 
     # Keep original column names from CSV for frontend compatibility
     # Expected columns: Title, Speakers, Speaker Location, Affiliation, Identifier, Room, Date, Time, Session, Theme
+    expected_columns = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier', 'Room', 'Date', 'Time', 'Session', 'Theme']
+    missing_columns = set(expected_columns) - set(df.columns)
+    if missing_columns:
+        print(f"[WARNING] Missing expected columns: {missing_columns}")
+        print(f"[WARNING] This may cause errors in the application!")
 
     # Fill NaN values
     for col in df.columns:
@@ -2306,30 +2325,36 @@ Please answer the user's question based on the conference data provided."""
 # APPLICATION STARTUP
 # ============================================================================
 
-if __name__ == '__main__':
-    print("\n" + "="*80)
-    print("ESMO 2025 Conference Intelligence App - Simplified Architecture")
-    print("Medical Affairs Platform for EMD Serono")
-    print("="*80 + "\n")
+# Load data at module level (works for both development and production servers like Gunicorn)
+print("\n" + "="*80)
+print("ESMO 2025 Conference Intelligence App - Initializing")
+print("="*80 + "\n")
 
-    # Load data on startup
-    df_global = load_and_process_data()
+df_global = load_and_process_data()
 
-    if df_global is None:
-        print("\n[ERROR] Failed to load conference data. Please check CSV file.")
-        exit(1)
-
+if df_global is None:
+    print("\n[ERROR] Failed to load conference data. Application cannot start.")
+    print("[ERROR] Make sure ESMO_2025_FINAL_20250929.csv is in the application directory.")
+    print("[ERROR] Current directory:", Path.cwd())
+    print("[ERROR] Expected location:", CSV_FILE.absolute())
+else:
     print(f"\n[SUCCESS] Application ready with {len(df_global)} conference studies")
     print(f"[INFO] ChromaDB: {'Initialized' if collection else 'Not available'}")
     print(f"[INFO] OpenAI API: {'Configured' if client else 'Not configured'}")
-    print("\n" + "="*80)
-    print("Starting Flask server...")
+    print("="*80 + "\n")
+
+if __name__ == '__main__':
+    if df_global is None:
+        print("[ERROR] Cannot start server - no data loaded.")
+        exit(1)
+
+    print("Starting Flask development server...")
     print("="*80 + "\n")
 
     # Run Flask app
     app.run(
         host='0.0.0.0',
         port=5000,
-        debug=True,
+        debug=False,  # Changed to False for production readiness
         threaded=True
     )
