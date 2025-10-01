@@ -231,8 +231,6 @@
                     <div class="greeting-section">
                       <p>What I can do</p>
                       <ul>
-                        <li><strong>WARNING - DO NOT SHARE ANY CONFIDENTIAL/INTERNAL INFORMATION IN THE AI PROMPT. NO INTERNAL DATA WAS UTILIZED TO TRAIN THE AI MODEL.</strong></li>
-                        <li><strong>WARNING - ALL CONTENT BEING REFERENCE BY THE APP WAS SOURCED FROM ESMO AND PUBMED, ALL PUBLICLY AVAILABLE.</strong></li>
                         <li>Analyze all 4,686 ESMO 2025 sessions/studies with natural language AI conversations</li>
                         <li>Use the Quick Inteligence buttons to generate comprehensive insights on HCPs/KOLs, 
                           institutions, competitive intelligence, general scientific insights and trends, and Medical affairs strategy insights</li>
@@ -242,9 +240,11 @@
                     </div>
 
                     <div class="greeting-section">
-                      <p>Important limitations</p>
+                      <p>Important Considerations</p>
                       <ul>
-                        <li><strong>Affiliations:</strong> Not provided by ESMO. Affiliations harvested from PubMed API by matching author + location + cancer theme + recency
+                        <li><strong>WARNING - DO NOT SHARE ANY CONFIDENTIAL/INTERNAL INFORMATION IN THE AI PROMPT. NO INTERNAL DATA WAS UTILIZED TO TRAIN THE AI MODEL.</strong></li>
+                        <li><strong>WARNING - ALL CONTENT BEING REFERENCE BY THE APP WAS SOURCED FROM ESMO AND PUBMED, ALL PUBLICLY AVAILABLE.</strong></li>
+                        <li><strong>Affiliations:</strong> Not provided by ESMO. Affiliations were harvested from PubMed API by matching author + location + cancer theme + recency
                         <li>80%+ of authors have a perfect confidence match; 7% of authors do not have PubMed indexed publications (likely early-career)</li>
                         <li><strong>Data scope:</strong> All conference data except abstracts. Full abstracts will be available on Oct 13th!
                         <li><strong>AI responses:</strong> Powered by chatGPT. Always verify critical information!</li>
@@ -370,4 +370,5 @@
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   </body>
 </html>
+
 
