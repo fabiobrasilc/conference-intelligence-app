@@ -2158,8 +2158,11 @@ def get_data():
     # Apply multi-filters
     filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
 
+    # Limit display to first 50 rows for performance (but show full count)
+    display_df = filtered_df.head(50)
+
     # Convert to records for JSON serialization
-    data_records = filtered_df[['Title', 'Speakers', 'Affiliation', 'Speaker Location', 'Identifier', 'Room',
+    data_records = display_df[['Title', 'Speakers', 'Affiliation', 'Speaker Location', 'Identifier', 'Room',
                                  'Session', 'Date', 'Time', 'Theme']].to_dict('records')
 
     # Sanitize Unicode
@@ -2174,7 +2177,7 @@ def get_data():
     return jsonify({
         "data": data_records,
         "count": len(filtered_df),
-        "showing": len(filtered_df),
+        "showing": len(display_df),
         "total": len(df_global) if df_global is not None else 4686,
         "filter_context": {
             "total_sessions": len(filtered_df),
@@ -2213,8 +2216,11 @@ def search_data():
         # Highlight search results
         filtered_df = highlight_search_results(filtered_df, keyword)
 
+    # Limit display to first 50 rows for performance (but show full count)
+    display_df = filtered_df.head(50)
+
     # Convert to records
-    data_records = filtered_df[['Title', 'Speakers', 'Affiliation', 'Speaker Location', 'Identifier', 'Room',
+    data_records = display_df[['Title', 'Speakers', 'Affiliation', 'Speaker Location', 'Identifier', 'Room',
                                  'Session', 'Date', 'Time', 'Theme']].to_dict('records')
 
     # Sanitize Unicode
@@ -2230,7 +2236,7 @@ def search_data():
         "data": data_records,
         "count": len(filtered_df),
         "keyword": keyword,
-        "showing": len(filtered_df),
+        "showing": len(display_df),
         "total": len(df_global) if df_global is not None else 4686,
         "filter_context": {
             "total_sessions": len(filtered_df),
