@@ -1,445 +1,445 @@
-﻿drug_commercial,drug_generic,company
-Keytruda ,pembrolizumab , Merck (MSD)
-Opdivo ,nivolumab ," Ono Pharma, BMS"
-Avastin ,bevacizumab , Roche
-Tecentriq ,atezolizumab , Roche
-Tevimbra ,tislelizumab-jsgr , BeOne Medicines
-Yervoy ,ipilimumab , BMS
-Imfinzi ,durvalumab , AstraZeneca
-Tagrisso ,osimertinib , AstraZeneca
-Enhertu ,fam-trastuzumab deruxtecan-nxki ," Daiichi Sankyo, AstraZeneca"
-Lenvima ,lenvatinib ," Eisai, Merck (MSD)"
-Tyvyt ,sintilimab ," Innovent Biologics, Eli Lilly"
-Erbitux ,cetuximab , Eli Lilly
-Padcev ,enfortumab vedotin-ejfv ," Astellas, Pfizer"
-Pluvicto ,lutetium Lu 177 vipivotide tetraxetan , Novartis
-Loqtorzi ,toripalimab-tpzi ," Shanghai Junshi Biosci, Coherus Oncology"
-AiRuiKa ,camrelizumab , HLB Bio Group
-Herceptin ,trastuzumab , Roche
-Lynparza ,olaparib ," Merck (MSD), AstraZeneca"
-AiRuiLi ,adebrelimab , Jiangsu Hengrui Pharma
-Kisqali ,ribociclib , Novartis
-Kaitanni ,cadonilimab , Akesobio
-Perjeta ,pertuzumab , Roche
-Cabometyx ,cabozantinib tablet , Exelixis
-Xtandi ,enzalutamide ," Pfizer, Astellas"
-Libtayo ,cemiplimab-rwlc , Regeneron
-Braftovi ,encorafenib , Pfizer
-Focus V ,anlotinib ," Advenchen, Sino Biopharm"
-Ibrance ,palbociclib , Pfizer
-Stivarga ,regorafenib , Bayer
-Jiataile ,sacituzumab tirumotecan , Merck (MSD)
-Rituxan ,rituximab , Roche
-Aidixi ,disitamab vedotin , Pfizer
-AiTan ,rivoceranib , HLB Bio Group
-Bavencio ,avelumab , EMD Serono
-Trodelvy ,sacituzumab govitecan-hziy , Gilead
-Fruzaqla ,fruquintinib , Takeda
-Rybrevant ,amivantamab-vmjw , J&J
-Qibeian ,iparomlimab/tuvonralimab ," Sound Biologics, Qilu Pharma"
-Enweida ,envafolimab ," 3DMed, Ascletis"
-iparomlimab ,QL1604 , Qilu Pharma
-Cyramza ,ramucirumab , Eli Lilly
-Xofigo ,radium Ra-223 dichloride , Bayer
-Nubeqa ,darolutamide ," Bayer, Orion Corp"
-relatlimab ,BMS-986016 , BMS
-Epidaza ,chidamide , Chipscreen
-Zejula ,niraparib ," GSK, J&J"
-Mektovi ,binimetinib , Pfizer
-Vitrakvi ,larotrectinib , Bayer
-Hetronifly ,serplulimab , Fosun Pharma
-Alecensa ,alectinib , Roche
-Talzenna ,talazoparib , Pfizer
-Ivesa ,firmonertinib ," Allist, ArriVent"
-Sulanda ,surufatinib , Hutchmed
-Lutathera ,lutetium Lu 177 dotatate , Novartis
-Mekinist ,trametinib ," Novartis, BeOne Medicines"
-Lonsurf ,trifluridine/tipiracil , Otsuka
-Welireg ,belzutifan , Merck (MSD)
-Yondelis ,trabectedin ," PharmaMar, J&J"
-Vectibix ,panitumumab , Amgen
-rilvegostomig ,AZD2936 , AstraZeneca
-micvotabart pelidotin ,PYX-201 , Pyxis Oncology
-balstilimab ,AGEN2034 , Agenus
-telisotuzumab adizutecan ,ABBV-400 , AbbVie
-Irene ,pyrotinib , Jiangsu Hengrui Pharma
-Truqap ,capivasertib , AstraZeneca
-Teysuno ,gimeracil/oteracil/tegafur ," Nordic Group, Otsuka"
-Lumakras ,sotorasib , Amgen
-izalontamab brengitecan ,BL-B01D1 ," Biokin Pharma, BMS"
-Cosela ,trilaciclib , Pharmacosmos
-TheraCIM ,nimotuzumab ," Daiichi Sankyo, Oncoscience, Biocon"
-Halaven ,eribulin mesylate , Eisai
-AiRuiKang ,dalpiciclib , Jiangsu Hengrui Pharma
-Tafinlar ,dabrafenib , Novartis
-Verzenio ,abemaciclib , Eli Lilly
-tiragolumab ,RG6058 , Roche
-atirmociclib ,PF-07220060 , Pfizer
-Inokai ,orelabrutinib ," InnoCare, Biogen"
-domvanalimab ,AB154 ," Arcus Biosci, Gilead"
-Venclexta ,venetoclax ," Roche, AbbVie"
-Rina-S ,rinatabart sesutecan , Genmab
-Datroway ,datopotamab deruxtecan-dlnk ," Daiichi Sankyo, AstraZeneca"
-Imjudo ,tremelimumab-actl , AstraZeneca
-Xuan Yue Ning ,bireociclib , Sihuan Pharmaceutical
-trastuzumab rezetecan ,SHR-A1811 , Jiangsu Hengrui Pharma
-ifinatamab deruxtecan ,DS-7300 ," Daiichi Sankyo, Merck (MSD)"
-Yutuo ,zimberelimab ," Arcus Biosci, Gilead"
-Jemperli ,dostarlimab-gxly , GSK
-anbenitamab repodatecan ,JSKN003 , Alphamab
-ImmuFact ,eftilagimod alpha , Immutep
-Zepzelca ,lurbinectedin ," PharmaMar, Jazz"
-Emrelis ,telisotuzumab vedotin-tllv , AbbVie
-caxmotabart entudotin ,IKS014 , Iksuda Therap
-evorpacept ,ALX148 , ALX Oncology
-famitinib ,SHR 1020 , Jiangsu Hengrui Pharma
-Kadcyla ,ado-trastuzumab emtansine , Roche
-Tepmetko ,tepotinib , EMD Serono
-obrixtamig ,BI 764532 , Boehringer Ingelheim
-trastuzumab,, EirGenix
-Hernexeos ,zongertinib , Boehringer Ingelheim
-ABBV-706 ,, AbbVie
-becotatug vedotin ,MRG003 , Lepu Med
-Ziihera ,zanidatamab-hrii , Jazz
-patritumab deruxtecan ,U3-1402 ," Daiichi Sankyo, Merck (MSD)"
-ceralasertib ,AZD6738 , AstraZeneca
-pumitamig ,BNT327 ," BioNTech, BMS"
-Onivyde ,nanoliposomal irinotecan , Ipsen
-BL-M07D1 ,, Biokin Pharma
-Tedopi ,OSE 2101 , OSE Immunotherapeutics
-Imdelltra ,tarlatamab-dlle , Amgen
-ODM-212 ,, Orion Biotech
-Andewei ,benmelstobart ," Apollomics, Sino Biopharm"
-Lazcluze ,lazertinib , J&J
-alveltamig ,ZG006 , Suzhou Zelgen
-gocatamig ,MK-6070 ," Merck (MSD), Daiichi Sankyo"
-KO-2806 ,, Kura Oncology
-Krazati ,adagrasib , BMS
-vepdegestrant ,ARV-471 ," Arvinas, Pfizer"
-ginisortamab ,UCB6114 , UCB
-Prolia ,denosumab , Amgen
-intismeran autogene ,mRNA-4157 ," Merck (MSD), Moderna"
-Recentin ,cediranib , AstraZeneca
-Kimmtrak ,tebentafusp-tebn , Immunocore
-ASP2138 ,, Astellas
-becotarug ,JMT101 , CSPC Pharma
-ezabenlimab ,BI 754091 , Boehringer Ingelheim
-Ogsiveo ,nirogacestat , EMD Serono
-raludotatug deruxtecan ,DS-6000 ," Daiichi Sankyo, Merck (MSD)"
-Alunbrig ,brigatinib , Takeda
-CVL-006 ,, Convalife
-AlphaMedix ,ORM-2110 ," RadioMedix, Orano, Sanofi"
-Tudriqev ,vusolimogene oderparepvec-wtpg , Replimune
-Inlyta ,axitinib , Pfizer
-BNT325 ,, BioNTech
-Ezharmia ,valemetostat , Daiichi Sankyo
-Fyarro ,nanoparticle albumin-bound rapamycin , Kaken Pharma
-Rubraca ,rucaparib , Pharma& Schweiz
-Augtyro ,repotrectinib , BMS
-ateganosine ,THIO , MAIA Biotech
-Oncorine ,recombinant human adenovirus type 5 , Mergen Ltd.
-zipalertinib ,CLN-081 ," Cullinan Therap, Otsuka"
-Dupert ,fulzerasib , GenFleet Therap
-IMA203 ,, Immatics
-camizestrant ,AZD9833 , AstraZeneca
-Bria-IMT ,SV-BR-1-GM , BriaCell
-AiRuiYi ,fluzoparib , Jiangsu Hengrui Pharma
-AiRuiEn ,rezvilutamide , Jiangsu Hengrui Pharma
-Tivdak ,tisotumab vedotin-tftv ," Genmab, Pfizer"
-INCB123667 ,, Incyte
-Yidafan ,ivonescimab ," Akesobio, Summit Therapeutics"
-Piqray ,alpelisib , Novartis
-ACR246 ,, Adcoris
-LY4170156 ,, Eli Lilly
-simmitinib ,SYHA1817 , CSPC Pharma
-Puyouheng ,pucotenlimab ," Taizhou Hanzhong Biopharma, Lepu Med"
-botensilimab ,AGEN1181 , Agenus
-HRS-4642 ,, Jiangsu Hengrui Pharma
-Actemra IV ,tocilizumab ," Roche, JW Pharma"
-Lorbrena ,lorlatinib , Pfizer
-Orpathys ,savolitinib ," AstraZeneca, Hutchmed"
-Tibsovo ,ivosidenib , Servier
-giredestrant ,GDC-9545 , Roche
-Itovebi ,inavolisib , Roche
-RGT-61159 ,, Rgenta Therap
-MTL-CEBPA ,, MiNA Therap
-pasritamig ,JNJ-8343 , J&J
-precemtabart tocentecan ,M9140 , EMD Serono
-ATTR-01 ,, Accession Therap
-AAA817 ,, Novartis
-GSK5733584 ,, GSK
-ulixertinib ,BVD-523 , BioMed Valley Discoveries
-SKB315 ,, Sichuan Kelun Pharma
-Duoenda ,mitoxantrone liposomal , CSPC Pharma
-NOUS-209 ,, Nouscom
-BI 1703880 ,, Boehringer Ingelheim
-sevabertinib ,BAY 2927088 , Bayer
-PF-08046054 ,, Pfizer
-relacorilant ,CORT125134 , Corcept Therap
-BMS‐986504 ,, BMS
-TQ-B3234 ,, Sino Biopharm
-GSK5764227 ,, GSK
-igrelimogene litadenorepvec ,TILT-123 , Tilt Biotherap
-olomorasib ,LY3537982 , Eli Lilly
-CTS3497 ,, CytosinLab
-Besremi ,ropeginterferon alfa-2b-njft , PharmaEssentia
-mRNA-4359 ,, Moderna
-Rozlytrek ,entrectinib , Roche
-FIT-001 ,, Guangzhou FineImmune Biotech
-HFB200603 ,, HiFiBiO
-GBC-11004 ,, Gradiant Bioconvergence
-IAG933 ,, Novartis
-IBR854 ,, Imbioray Bio
-ubidecarenone IV ,BPM31510 IV , BPGbio
-DS-3939 ,, Daiichi Sankyo
-lirafugratinib ,RLY-4008 , HLB Bio Group
-limertinib ,ASK120067 , Aosaikang Pharma
-QLH12016 ,, Qilu Pharma
-Ryzneuta ,efbemalenograstim alpha , Yifan Pharma
-BGB-26808 ,, BeOne Medicines
-tizetatug rezetecan ,SHR-A1921 , Jiangsu Hengrui Pharma
-ficerafusp alfa ,BCA101 , Biocon
-HFB200301 ,, HiFiBiO
-Ac-225 rosopatamab tetraxetan ,CONV01-α , Dominari Holdings
-GI-102 ,, GI Innovation
-taselisib ,GDC-0032 , Roche
-anvatabart opadotin ,JNJ-0683 , J&J
-EVT801 ,, Kazia
-TT125-802 ,, TOLREMO Therap
-Abecma ,idecabtagene vicleucel , BMS
-OMTX705 ,, Oncomatryx
-torvutatug samrotecan ,AZD5335 , AstraZeneca
-MK-1084 ,, Merck (MSD)
-GenSci140 ,, GeneScience
-IMC-001 ,, Immuneoncia Therap
-TY-302 ,, TYK Medicines
-fexagratinib ,ABSK091 , Abbisko
-Erivedge ,vismodegib , Roche
-quisinostat ,JNJ 26481585 ," ChemRar, Viriom"
-onvapegleukin alfa ,TransCon IL-2 b/y, Ascendis
-UCB4594 ,," UCB, Cancer Research UK"
-ERY974 ,, Roche
-AMT-116 ADC ,, Multitude Therap
-Inluriyo ,imlunestrant , Eli Lilly
-retlirafusp alfa ,SHR-1701 , Jiangsu Hengrui Pharma
-Anktiva ,nogapendekin alfa inbakicept-pmln , ImmunityBio
-SON-1010 ,, Sonnet BioTherap
-AB-001 ,, Aubrak Therapeutics
-ubamatamab ,REGN4018 , Regeneron
-HS-IT101 ,, Sino-Cell Biomed
-certepetide ,LSTA1 , Lisata Therap
-porustobart ,HBM4003 , Harbour BioMed
-nanoencapsulated paclitaxel ,FID-007 ," ANP Technologies, Fulgent Genetics"
-solnerstotug ,SNS-101 , Sensei Biotherap
-JS105 ,," Shanghai Junshi Biosci, Risen (Suzhou) Biosci"
-SYS6010 ,, CSPC Pharma
-THE001 ,, Thermosome
-JNJ-0631 ,, J&J
-BI 770371 ,, Boehringer Ingelheim
-WSD0922 ,, Wayshine Biopharm
-domatinostat ,4SC-202 , 4SC
-Byvasda ,bevacizumab biosimilar ," Innovent Biologics, Etana"
-RMC-8839 ,, Revolution Medicines
-Romvimza ,vimseltinib , Ono Pharma
-CAN1012 ,, Canwell Biotech
-ciforadenant ,CPI-444 , Corvus Pharma
-PRT7732 ,, Prelude Therap
-vevoctadekin ,ST-067 , Simcha Therap
-BNT111 ,, BioNTech
-KH617 ,, Chengdu Kanghong Pharma
-Modufolin ,arfolitixorin ," Isofol Medical, Solasia"
-Darzalex ,daratumumab , J&J
-darovasertib ,IDE196 , Ideaya Biosci
-imifoplatin ,PT-112 , Promontory Therap
-ASKB589 ,, Aosaikang Pharma
-daraxonrasib ,RMC-6236 , Revolution Medicines
-JNJ-4916 ,, J&J
-prifetrastat ,PF-07248144 , Pfizer
-Orserdu ,elacestrant , Menarini
-CLSP-1025 ,, Clasp Therapeutics
-andamertinib ,PLB1004 , Avistone Biotech
-abiraterone decanoate ,ASP5541 , Astellas
-IAM1363 ,, Iambic Therap
-icaritin ,SNG-162 , Shenogen Pharma
-marlotamig ,REGN7075 , Regeneron
-GenSci139 ,, GeneScience
-Darzalex Faspro ,daratumumab and hyaluronidase-fihj , J&J
-UCPVax ,, Invectys
-Zynyz ,retifanlimab-dlwr , Incyte
-gunagratinib ,ICP-192 , InnoCare
-ulevostinag ,MK-1454 , Merck (MSD)
-TQB2102 ,, Sino Biopharm
-TY-2699a ,, TYK Medicines
-E7386 ,," Eisai, PRISM Pharma"
-Solucin ,177Lu-edotreotide , ITM Isotopen Technologien Munchen
-IPN01195 ,, Ipsen
-TY-0540 ,, TYK Medicines
-sasanlimab ,PF-06801591 , Pfizer
-CRB-701 ,, Corbus Pharma
-ADCE-D01 ,, Adcendo
-chlorogenic acid ,, Jiuzhang Biotech
-falbikitug ,AZD0171 , AstraZeneca
-BNT324 ,, BioNTech
-WGc-0201 ,, WestGene Biopharma
-saruparib ,AZD5305 , AstraZeneca
-FHND5071 ,, Sino Biopharm
-HTMC0435 ,, Shanghai Huilun
-JK06 ,, Shenzhen Salubris
-MDX2001 ,, OPKO Health
-bemarituzumab ,AMG 552 , Amgen
-Elahere ,mirvetuximab soravtansine-gynx , AbbVie
-ADU-1604 ,, Sairopa
-PF-08634404 ,, Pfizer
-SY-5007 ,, Shouyao Holdings
-BT-001 ,," BioInvent, Transgene"
-THEO-260 ,, Theolytics
-SVV-001 ,, Seneca Therap
-zabilugene almadenorepvec ,VCN-01 , Theriva Bio
-GNTbm-38 ,, GNT Biotech
-BI 765049 ,, Boehringer Ingelheim
-Yescarta ,axicabtagene ciloleucel , Gilead
-NI-1801 ,, Light Chain Biosci
-Ibtrozi ,taletrectinib , Nuvation Bio
-evexomostat ,SDX-7320 , SynDevRx
-NXE0039732 ,, Nxera Pharma
-JYB1907 ,, Jemincare
-STX-478 ,, Eli Lilly
-KH815 ,, Chengdu Kanghong Pharma
-INCB161734 ,, Incyte
-Zolinza ,vorinostat , Merck (MSD)
-tamnorzatinib ,ONO-7475 , Ono Pharma
-gedatolisib ,PF-05212384 , Celcuity
-HWH340 ,," WuXi AppTec, Humanwell Healthcare"
-KLS-3021 ,, Kolon Life Sci
-BGB-15025 ,, BeOne Medicines
-nelmastobart ,STT-003 , STCube Pharma
-TTX-MC138 ,, TransCode
-UCART123 ,, Cellectis
-Portrazza ,necitumumab , Eli Lilly
-Aliqopa ,copanlisib , Bayer
-IMC002 ,, Immuneoncia Therap
-pimicotinib ,ABSK021 , EMD Serono
-Cipterbin ,inetetamab , 3SBio
-SGR-4174 ,, Schrodinger
-COM701 ,, Compugen
-cambritaxestat ,IOA-289 , iOnctura
-Neulasta ,pegfilgrastim , Roche
-NDI-219216 ,, Nimbus Therap
-CS2009 ,, CStone Pharma
-HRO761 ,, Novartis
-Balversa ,erdafitinib , J&J
-neladalkib ,NVL-655 , Nuvalent
-iSCIB1+ ,, Scancell
-Xalkori ,crizotinib , Pfizer
-IPN01194 ,, Ipsen
-IPM001 ,, Immupeutics Medicine
-BL0020 ,, Shanghai Best-Link Biosci
-AVA6000 ,, Avacta
-BDC-4182 ,, Bolt Biotherap
-177Lu-rosopatamab tetraxetan ,TLX591 , Telix
-CD19/CD22-bispecific CAR-T ,, Beijing Tongren Hospital
-Amtagvi ,lifileucel , Iovance Biotherap
-Zadaxin ,thymalfasin , SciClone
-tolododekin alfa ,ANK-101 , Ankyra Therap
-Ilumya ,tildrakizumab-asmn ," Sun Pharma, Almirall"
-7MW3711 ,, Mabwell (Shanghai) Biosci
-CS5001 ,, CStone Pharma
-BA3182 ,, BioAtla
-Telomelysin ,suratadenoturev ," Oncolys BioPharma, Medigen Biotech"
-AFNT-211 ,, Affini-T Therap
-Zantrene ,bisantrene , Race Oncology
-Zarnestra ,tipifarnib , Kura Oncology
-EVX-01 ,, Evaxion
-Anniko ,penpulimab ," Akesobio, Sino Biopharm"
-TSN222 ,, Tyligand
-bulumtatug fuvedotin ,9MW2821 , Mabwell (Shanghai) Biosci
-VT3989 ,, Vivace Therap
-OPM-101 ,, Oncodesign
-trastuzumab pamirtecan ,BNT323 , BioNTech
-IVX037 ,, ImmVirx
-OPB-111077 ,, Otsuka
-Nerlynx ,neratinib , Puma
-ASKC202 ,, Aosaikang Pharma
-mevrometostat ,PF-06821497 , Pfizer
-KD-496 ,, KAEDI
-Sylvant ,siltuximab , Jazz
-cetrelimab ,JNJ-63723283 , J&J
-vepugratinib ,LY3866288 , Eli Lilly
-TYRA-430 ,, Tyra Biosci
-AMT-253 ,, Suzhou Maximum Bio-tech
-JIN-A02 ,, J Ints Bio
-Cylembio ,"imsapepimut and etimupepimut, adjuvanted ", IO Biotech
-SMP-656 ,, Chengdu Kelingyuan Pharma
-AT108 ,, Asgard Therapeutics
-HRS-5041 ,, Jiangsu Hengrui Pharma
-Carvykti ,ciltacabtagene autoleucel , J&J
-divarasib ,RG6330 , Roche
-Sarclisa ,isatuximab-irfc , Sanofi
-ANV600 ,, Anaveon
-FOG-001 ,, Parabilis Medicines
-volrustomig ,MEDI5752 , AstraZeneca
-Clevegen ,bexmarilimab , Faron Pharma
-mosperafenib ,RG6344 , Roche
-AZD-0022 ,, AstraZeneca
-NUC-7738 ,, NuCana
-SNV1521 ,, Synnovation Therap
-palazestrant ,OP-1250 , Olema Pharma
-ATG-022 ,, Antengene
-AL2846 ,," Advenchen, Sino Biopharm"
-NP137 ,, NETRIS Pharma
-PTT-4256 ,, Pathios Therap
-zanzalintinib ,XL092 , Exelixis
-OBX-115 ,," Obsidian, UT MD Anderson Cancer Center"
-satricabtagene autoleucel ,CT041 , CARsgen
-LY-4066434 ,, Eli Lilly
-INCA33890 ,, Incyte
-FHND9041 ,, Sino Biopharm
-SKY02 ,, Seekyo
-NCE 401 ,," Tium Bio, Chiesi"
-STK-012 ,, Synthekine
-Pembroria ,pembrolizumab biosimilar , Biocad
-IMM-101 ,, Immodulon
-utidelone IV ,UTD1 , Beijing Biostar Technologies
-autogene cevumeran ,RG6180 , Roche
-ixotatug vedotin ,TORL-1-23 , TORL Biotherap
-DSB2455 ,, Duke Street Bio
-Imbruvica ,ibrutinib ," AbbVie, J&J"
-AMB-05X ,, AmMax
-Monjuvi ,tafasitamab-cxix , Incyte
-resiquimod sulfate ,EIK1001 , Eikon Therap
-Partruvix ,pamiparib , BeOne Medicines
-Triapine ,3-AP ," Vion, Northwestern University"
-NX-1607 ,, Nurix Therap
-PBP1710 ,, Prestige BioPharma
-JMKX000197 ,, Jemincare
-tuvusertib ,M1774 , EMD Serono
-FWD1802 ,, Shenzhen Forward Pharma
-HRS-7058 ,, Jiangsu Hengrui Pharma
-nanvuranlat ,JPH203 ," J-Pharma, Ohara Pharma"
-luvometinib ,FCN-159 , Fosun Pharma
-CTS2190 ,, CytosinLab
-ulenistamab ,PBP1510 , Prestige BioPharma
-GRWD5769 ,, GreyWolf Therapeutics
-OQY-3258 ,, Oqory
-OKN4395 ,, Owkin
-PhOx430 ,, Phost'IN
-QL2109 ,daratumumab hyaluronidase biosimilar , Qilu Pharma
-MYTX-011 ,, Mythic Therap
-212 Pb-ADVC001 ,, AdvanCell Isotopes
-Lytgobi ,futibatinib , Otsuka
-Ameile ,aumolertinib , Jiangsu Hansoh Pharma
-EGL-001 ,, Egle Therap
-Conmana ,icotinib , Betta Pharma
-HM97662 ,, Hanmi
-SCG142 ,, SCG Cell Therapy
-tinengotinib ,TT-00420 , TransThera Biosci
-PEP07 ,, PharmaEngine
-IOS-1002 ,, ImmunOs Therap
-ART6043 ,, Artios Pharma
-GemRIS ,gemcitabine-releasing intravesical system , J&J
-MDX-124 ,, Medannex
-SCIB1 ,, Scancell
-cirtuvivint ,SM08502 , Biosplice Therap
-Paishuning ,senaparib , IMPACT Therap
-Odomzo ,sonidegib , Sun Pharma
-MRG004A ,, Lepu Med
+﻿drug_commercial,drug_generic,company,moa_class,moa_target
+Keytruda ,pembrolizumab , Merck (MSD),ICI,PD-1 inhibitor
+Opdivo ,nivolumab ," Ono Pharma, BMS",ICI,PD-1 inhibitor
+Avastin ,bevacizumab , Roche,Targeted Therapy,VEGF-A inhibitor (mAb)
+Tecentriq ,atezolizumab , Roche,ICI,PD-L1 inhibitor
+Tevimbra ,tislelizumab-jsgr , BeOne Medicines,ICI,PD-1 inhibitor
+Yervoy ,ipilimumab , BMS,ICI,CTLA-4 inhibitor
+Imfinzi ,durvalumab , AstraZeneca,ICI,PD-L1 inhibitor
+Tagrisso ,osimertinib , AstraZeneca,TKI,"EGFR TKI (3rd gen, T790M)"
+Enhertu ,fam-trastuzumab deruxtecan-nxki ," Daiichi Sankyo, AstraZeneca",ADC,HER2-targeted ADC (Topo I inhibitor payload)
+Lenvima ,lenvatinib ," Eisai, Merck (MSD)",TKI,"Multi-TKI (VEGFR, FGFR, PDGFR, RET, KIT)"
+Tyvyt ,sintilimab ," Innovent Biologics, Eli Lilly",ICI,PD-1 inhibitor
+Erbitux ,cetuximab , Eli Lilly,Targeted Therapy,EGFR inhibitor (mAb)
+Padcev ,enfortumab vedotin-ejfv ," Astellas, Pfizer",ADC,Nectin-4-targeted ADC (MMAE payload)
+Pluvicto ,lutetium Lu 177 vipivotide tetraxetan , Novartis,RLT,PSMA-targeted Radioligand Therapy (177Lu)
+Loqtorzi ,toripalimab-tpzi ," Shanghai Junshi Biosci, Coherus Oncology",ICI,PD-1 inhibitor
+AiRuiKa ,camrelizumab , HLB Bio Group,ICI,PD-1 inhibitor
+Herceptin ,trastuzumab , Roche,Targeted Therapy,HER2 inhibitor (mAb)
+Lynparza ,olaparib ," Merck (MSD), AstraZeneca",Targeted Therapy,PARP inhibitor
+AiRuiLi ,adebrelimab , Jiangsu Hengrui Pharma,ICI,PD-L1 inhibitor
+Kisqali ,ribociclib , Novartis,TKI,CDK4/6 inhibitor
+Kaitanni ,cadonilimab , Akesobio,Bispecific Antibody,PD-1 x CTLA-4 bispecific inhibitor
+Perjeta ,pertuzumab , Roche,Targeted Therapy,HER2 inhibitor (dimerization inhibitor mAb)
+Cabometyx ,cabozantinib tablet , Exelixis,TKI,"Multi-TKI (VEGFR, MET, RET)"
+Xtandi ,enzalutamide ," Pfizer, Astellas",Hormonal Therapy,Androgen Receptor (AR) antagonist
+Libtayo ,cemiplimab-rwlc , Regeneron,ICI,PD-1 inhibitor
+Braftovi ,encorafenib , Pfizer,TKI,BRAF inhibitor
+Focus V ,anlotinib ," Advenchen, Sino Biopharm",TKI,"Multi-TKI (VEGFR, MET)"
+Ibrance ,palbociclib , Pfizer,TKI,CDK4/6 inhibitor
+Stivarga ,regorafenib , Bayer,TKI,"Multi-TKI (VEGFR, KIT, TIE2)"
+Jiataile ,sacituzumab tirumotecan , Merck (MSD),ADC,TROP2-targeted ADC (Topo I inhibitor payload)
+Rituxan ,rituximab , Roche,Targeted Therapy,CD20 inhibitor (mAb)
+Aidixi ,disitamab vedotin , Pfizer,ADC,HER2-targeted ADC (MMAE payload)
+AiTan ,rivoceranib , HLB Bio Group,TKI,VEGFR2 TKI
+Bavencio ,avelumab , EMD Serono,ICI,PD-L1 inhibitor
+Trodelvy ,sacituzumab govitecan-hziy , Gilead,ADC,TROP2-targeted ADC (Topo I inhibitor payload)
+Fruzaqla ,fruquintinib , Takeda,TKI,VEGFR TKI
+Rybrevant ,amivantamab-vmjw , J&J,Bispecific Antibody,EGFR x MET bispecific inhibitor
+Qibeian ,iparomlimab/tuvonralimab ," Sound Biologics, Qilu Pharma",ICI,PD-1 and CTLA-4 inhibitor mixture
+Enweida ,envafolimab ," 3DMed, Ascletis",ICI,PD-L1 inhibitor (nanobody)
+iparomlimab ,QL1604 , Qilu Pharma,ICI,PD-1 inhibitor
+Cyramza ,ramucirumab , Eli Lilly,Targeted Therapy,VEGFR2 inhibitor (mAb)
+Xofigo ,radium Ra-223 dichloride , Bayer,RLT,Alpha-emitting radiopharmaceutical (calcium mimetic)
+Nubeqa ,darolutamide ," Bayer, Orion Corp",Hormonal Therapy,Androgen Receptor (AR) antagonist
+relatlimab ,BMS-986016 , BMS,ICI,LAG-3 inhibitor
+Epidaza ,chidamide , Chipscreen,Epigenetic Modulator,HDAC inhibitor
+Zejula ,niraparib ," GSK, J&J",Targeted Therapy,PARP inhibitor
+Mektovi ,binimetinib , Pfizer,TKI,MEK inhibitor
+Vitrakvi ,larotrectinib , Bayer,TKI,TRK inhibitor
+Hetronifly ,serplulimab , Fosun Pharma,ICI,PD-1 inhibitor
+Alecensa ,alectinib , Roche,TKI,ALK TKI (2nd gen)
+Talzenna ,talazoparib , Pfizer,Targeted Therapy,PARP inhibitor
+Ivesa ,firmonertinib ," Allist, ArriVent",TKI,EGFR TKI (4th gen)
+Sulanda ,surufatinib , Hutchmed,TKI,"Multi-TKI (VEGFR, FGFR, CSF1R)"
+Lutathera ,lutetium Lu 177 dotatate , Novartis,RLT,SSTR-targeted Radioligand Therapy (177Lu)
+Mekinist ,trametinib ," Novartis, BeOne Medicines",TKI,MEK inhibitor
+Lonsurf ,trifluridine/tipiracil , Otsuka,Chemotherapy,Antimetabolite (DNA synthesis inhibitor)
+Welireg ,belzutifan , Merck (MSD),Targeted Therapy,HIF-2α inhibitor
+Yondelis ,trabectedin ," PharmaMar, J&J",Chemotherapy,Alkylating agent (DNA minor groove binder)
+Vectibix ,panitumumab , Amgen,Targeted Therapy,EGFR inhibitor (mAb)
+rilvegostomig ,AZD2936 , AstraZeneca,Bispecific Antibody,PD-1 x TIGIT bispecific inhibitor
+micvotabart pelidotin ,PYX-201 , Pyxis Oncology,ADC,Undisclosed target ADC (immunogenic cell death)
+balstilimab ,AGEN2034 , Agenus,ICI,PD-1 inhibitor
+telisotuzumab adizutecan ,ABBV-400 , AbbVie,ADC,c-Met-targeted ADC (Topo I inhibitor payload)
+Irene ,pyrotinib , Jiangsu Hengrui Pharma,TKI,EGFR/HER2 TKI
+Truqap ,capivasertib , AstraZeneca,TKI,AKT inhibitor
+Teysuno ,gimeracil/oteracil/tegafur ," Nordic Group, Otsuka",Chemotherapy,Antimetabolite (5-FU prodrug combination)
+Lumakras ,sotorasib , Amgen,TKI,KRAS G12C inhibitor
+izalontamab brengitecan ,BL-B01D1 ," Biokin Pharma, BMS",ADC,EGFR/HER3-targeted ADC (Topo I inhibitor payload)
+Cosela ,trilaciclib , Pharmacosmos,TKI,CDK4/6 inhibitor (myeloprotective)
+TheraCIM ,nimotuzumab ," Daiichi Sankyo, Oncoscience, Biocon",Targeted Therapy,EGFR inhibitor (mAb)
+Halaven ,eribulin mesylate , Eisai,Chemotherapy,Microtubule inhibitor
+AiRuiKang ,dalpiciclib , Jiangsu Hengrui Pharma,TKI,CDK4/6 inhibitor
+Tafinlar ,dabrafenib , Novartis,TKI,BRAF inhibitor
+Verzenio ,abemaciclib , Eli Lilly,TKI,CDK4/6 inhibitor
+tiragolumab ,RG6058 , Roche,ICI,TIGIT inhibitor
+atirmociclib ,PF-07220060 , Pfizer,TKI,CDK4 inhibitor
+Inokai ,orelabrutinib ," InnoCare, Biogen",TKI,BTK inhibitor
+domvanalimab ,AB154 ," Arcus Biosci, Gilead",ICI,TIGIT inhibitor
+Venclexta ,venetoclax ," Roche, AbbVie",Targeted Therapy,BCL-2 inhibitor
+Rina-S ,rinatabart sesutecan , Genmab,ADC,FRα-targeted ADC (Topo I inhibitor payload)
+Datroway ,datopotamab deruxtecan-dlnk ," Daiichi Sankyo, AstraZeneca",ADC,TROP2-targeted ADC (Topo I inhibitor payload)
+Imjudo ,tremelimumab-actl , AstraZeneca,ICI,CTLA-4 inhibitor
+Xuan Yue Ning ,bireociclib , Sihuan Pharmaceutical,TKI,CDK4/6 inhibitor
+trastuzumab rezetecan ,SHR-A1811 , Jiangsu Hengrui Pharma,ADC,HER2-targeted ADC (Topo I inhibitor payload)
+ifinatamab deruxtecan ,DS-7300 ," Daiichi Sankyo, Merck (MSD)",ADC,B7-H3-targeted ADC (Topo I inhibitor payload)
+Yutuo ,zimberelimab ," Arcus Biosci, Gilead",ICI,PD-1 inhibitor
+Jemperli ,dostarlimab-gxly , GSK,ICI,PD-1 inhibitor
+anbenitamab repodatecan ,JSKN003 , Alphamab,ADC,Bispecific HER2-targeted ADC (Topo I inhibitor payload)
+ImmuFact ,eftilagimod alpha , Immutep,Immunomodulator,Soluble LAG-3 protein (APC activator)
+Zepzelca ,lurbinectedin ," PharmaMar, Jazz",Chemotherapy,Alkylating agent (transcription inhibitor)
+Emrelis ,telisotuzumab vedotin-tllv , AbbVie,ADC,c-Met-targeted ADC (MMAE payload)
+caxmotabart entudotin ,IKS014 , Iksuda Therap,ADC,HER2-targeted ADC (MMAF payload)
+evorpacept ,ALX148 , ALX Oncology,ICI,CD47 inhibitor (SIRPα fusion protein)
+famitinib ,SHR 1020 , Jiangsu Hengrui Pharma,TKI,"Multi-TKI (c-Kit, VEGFR, PDGFR, Flt)"
+Kadcyla ,ado-trastuzumab emtansine , Roche,ADC,HER2-targeted ADC (microtubule inhibitor payload)
+Tepmetko ,tepotinib , EMD Serono,TKI,MET TKI
+obrixtamig ,BI 764532 , Boehringer Ingelheim,Bispecific Antibody,DLL3 x CD3 T-cell engager
+trastuzumab,, EirGenix,Targeted Therapy,HER2 inhibitor (mAb)
+Hernexeos ,zongertinib , Boehringer Ingelheim,TKI,HER2 TKI (Exon20ins)
+ABBV-706 ,, AbbVie,ADC,SEZ6-targeted ADC
+becotatug vedotin ,MRG003 , Lepu Med,ADC,Undisclosed target ADC (MMAE payload)
+Ziihera ,zanidatamab-hrii , Jazz,Bispecific Antibody,Bispecific HER2-directed antibody
+patritumab deruxtecan ,U3-1402 ," Daiichi Sankyo, Merck (MSD)",ADC,HER3-targeted ADC (Topo I inhibitor payload)
+ceralasertib ,AZD6738 , AstraZeneca,Targeted Therapy,ATR inhibitor
+pumitamig ,BNT327 ," BioNTech, BMS",Bispecific Antibody,PD-L1 x VEGF-A bispecific inhibitor
+Onivyde ,nanoliposomal irinotecan , Ipsen,Chemotherapy,Topo I inhibitor (liposomal formulation)
+BL-M07D1 ,, Biokin Pharma,ADC,HER2-targeted ADC
+Tedopi ,OSE 2101 , OSE Immunotherapeutics,Cancer Vaccine,Peptide vaccine (neo-epitopes)
+Imdelltra ,tarlatamab-dlle , Amgen,Bispecific Antibody,DLL3 x CD3 T-cell engager (BiTE)
+ODM-212 ,, Orion Biotech,Targeted Therapy,TEAD inhibitor (Hippo pathway)
+Andewei ,benmelstobart ," Apollomics, Sino Biopharm",ICI,PD-L1 inhibitor
+Lazcluze ,lazertinib , J&J,TKI,EGFR TKI (3rd gen)
+alveltamig ,ZG006 , Suzhou Zelgen,Trispecific Antibody,DLL3 x DLL3 x CD3 T-cell engager
+gocatamig ,MK-6070 ," Merck (MSD), Daiichi Sankyo",Immunomodulator,T-cell activator
+KO-2806 ,, Kura Oncology,TKI,MAPK/mTOR inhibitor
+Krazati ,adagrasib , BMS,TKI,KRAS G12C inhibitor
+vepdegestrant ,ARV-471 ," Arvinas, Pfizer",Protein Degrader,ER degrader (PROTAC)
+ginisortamab ,UCB6114 , UCB,Targeted Therapy,Gremlin-1 inhibitor (BMP pathway)
+Prolia ,denosumab , Amgen,Targeted Therapy,RANKL inhibitor (mAb)
+intismeran autogene ,mRNA-4157 ," Merck (MSD), Moderna",Cancer Vaccine,Personalized mRNA vaccine (neoantigen)
+Recentin ,cediranib , AstraZeneca,TKI,VEGFR TKI
+Kimmtrak ,tebentafusp-tebn , Immunocore,Bispecific Antibody,gp100 x CD3 T-cell engager (BiTE)
+ASP2138 ,, Astellas,Bispecific Antibody,CLDN18.2 x CD3 T-cell engager
+becotarug ,JMT101 , CSPC Pharma,Targeted Therapy,EGFR inhibitor (mAb)
+ezabenlimab ,BI 754091 , Boehringer Ingelheim,ICI,PD-1 inhibitor
+Ogsiveo ,nirogacestat , EMD Serono,Targeted Therapy,Gamma secretase inhibitor (Notch pathway)
+raludotatug deruxtecan ,DS-6000 ," Daiichi Sankyo, Merck (MSD)",ADC,CDH6-targeted ADC (Topo I inhibitor payload)
+Alunbrig ,brigatinib , Takeda,TKI,ALK TKI (2nd gen)
+CVL-006 ,, Convalife,Bispecific Antibody,PD-L1 x VEGF bispecific inhibitor
+AlphaMedix ,ORM-2110 ," RadioMedix, Orano, Sanofi",RLT,SSTR-targeted Radioligand Therapy (alpha-emitter)
+Tudriqev ,vusolimogene oderparepvec-wtpg , Replimune,Oncolytic Virus,Engineered HSV-1 (oncolytic immunotherapy)
+Inlyta ,axitinib , Pfizer,TKI,VEGFR TKI
+BNT325 ,, BioNTech,ADC,TROP2-targeted ADC (Topo I inhibitor payload)
+Ezharmia ,valemetostat , Daiichi Sankyo,Epigenetic Modulator,EZH1/EZH2 inhibitor
+Fyarro ,nanoparticle albumin-bound rapamycin , Kaken Pharma,TKI,mTOR inhibitor (nab-sirolimus)
+Rubraca ,rucaparib , Pharma& Schweiz,Targeted Therapy,PARP inhibitor
+Augtyro ,repotrectinib , BMS,TKI,ROS1/TRK TKI
+ateganosine ,THIO , MAIA Biotech,Targeted Therapy,Telomere targeting agent
+Oncorine ,recombinant human adenovirus type 5 , Mergen Ltd.,Oncolytic Virus,Engineered adenovirus (p53 pathway)
+zipalertinib ,CLN-081 ," Cullinan Therap, Otsuka",TKI,EGFR TKI (Exon20ins)
+Dupert ,fulzerasib , GenFleet Therap,TKI,KRAS G12C inhibitor
+IMA203 ,, Immatics,Cell Therapy,Autologous PRAME-targeted TCR-T
+camizestrant ,AZD9833 , AstraZeneca,Hormonal Therapy,SERD
+Bria-IMT ,SV-BR-1-GM , BriaCell,Cell Therapy,Allogeneic breast cancer cell line vaccine (GM-CSF secreting)
+AiRuiYi ,fluzoparib , Jiangsu Hengrui Pharma,Targeted Therapy,PARP inhibitor
+AiRuiEn ,rezvilutamide , Jiangsu Hengrui Pharma,Hormonal Therapy,Androgen Receptor (AR) antagonist
+Tivdak ,tisotumab vedotin-tftv ," Genmab, Pfizer",ADC,Tissue Factor-targeted ADC (MMAE payload)
+INCB123667 ,, Incyte,TKI,CDK2 inhibitor
+Yidafan ,ivonescimab ," Akesobio, Summit Therapeutics",Bispecific Antibody,PD-1 x VEGF bispecific inhibitor
+Piqray ,alpelisib , Novartis,TKI,PI3Kα inhibitor
+ACR246 ,, Adcoris,ADC,5T4-targeted ADC (Topo I inhibitor payload)
+LY4170156 ,, Eli Lilly,ADC,FRα-targeted ADC (Topo I inhibitor payload)
+simmitinib ,SYHA1817 , CSPC Pharma,TKI,"Multi-TKI (FGFR, VEGFR2, CSF1R)"
+Puyouheng ,pucotenlimab ," Taizhou Hanzhong Biopharma, Lepu Med",ICI,PD-1 inhibitor
+botensilimab ,AGEN1181 , Agenus,ICI,CTLA-4 inhibitor (Fc-enhanced)
+HRS-4642 ,, Jiangsu Hengrui Pharma,TKI,KRAS G12D inhibitor
+Actemra IV ,tocilizumab ," Roche, JW Pharma",Immunomodulator,IL-6 receptor inhibitor
+Lorbrena ,lorlatinib , Pfizer,TKI,ALK/ROS1 TKI (3rd gen)
+Orpathys ,savolitinib ," AstraZeneca, Hutchmed",TKI,MET TKI
+Tibsovo ,ivosidenib , Servier,Targeted Therapy,IDH1 inhibitor
+giredestrant ,GDC-9545 , Roche,Hormonal Therapy,SERD
+Itovebi ,inavolisib , Roche,TKI,PI3Kα inhibitor
+RGT-61159 ,, Rgenta Therap,Targeted Therapy,c-Myb mRNA splicing modulator
+MTL-CEBPA ,, MiNA Therap,Gene Therapy,CEBPA-targeting saRNA
+pasritamig ,JNJ-8343 , J&J,Bispecific Antibody,KLK2 x CD3 T-cell engager
+precemtabart tocentecan ,M9140 , EMD Serono,ADC,CEACAM5-targeted ADC (Topo I inhibitor payload)
+ATTR-01 ,, Accession Therap,Oncolytic Virus,Engineered adenovirus (expressing anti-PD-L1)
+AAA817 ,, Novartis,RLT,PSMA-targeted Radioligand Therapy (225Ac)
+GSK5733584 ,, GSK,ADC,B7-H4-targeted ADC (Topo I inhibitor payload)
+ulixertinib ,BVD-523 , BioMed Valley Discoveries,TKI,ERK1/2 inhibitor
+SKB315 ,, Sichuan Kelun Pharma,ADC,CLDN18.2-targeted ADC (Topo I inhibitor payload)
+Duoenda ,mitoxantrone liposomal , CSPC Pharma,Chemotherapy,Topo II inhibitor (liposomal formulation)
+NOUS-209 ,, Nouscom,Cancer Vaccine,Viral vector vaccine (shared neoantigens)
+BI 1703880 ,, Boehringer Ingelheim,Immunomodulator,STING agonist
+sevabertinib ,BAY 2927088 , Bayer,TKI,EGFR/HER2 TKI (Exon20ins)
+PF-08046054 ,, Pfizer,ADC,PD-L1-targeted ADC (MMAE payload)
+relacorilant ,CORT125134 , Corcept Therap,Targeted Therapy,Glucocorticoid receptor (GR) antagonist
+BMSâ€986504 ,, BMS,Targeted Therapy,PRMT5-MTA complex inhibitor
+TQ-B3234 ,, Sino Biopharm,TKI,MEK inhibitor
+GSK5764227 ,, GSK,ADC,B7-H3-targeted ADC (Topo I inhibitor payload)
+igrelimogene litadenorepvec ,TILT-123 , Tilt Biotherap,Oncolytic Virus,Engineered adenovirus (oncolytic immunotherapy)
+olomorasib ,LY3537982 , Eli Lilly,TKI,KRAS G12C inhibitor
+CTS3497 ,, CytosinLab,Targeted Therapy,PRMT5-MTA complex inhibitor
+Besremi ,ropeginterferon alfa-2b-njft , PharmaEssentia,Immunomodulator,Interferon alfa-2b
+mRNA-4359 ,, Moderna,Cancer Vaccine,mRNA vaccine (IDO/PD-L1 targeted)
+Rozlytrek ,entrectinib , Roche,TKI,TRK/ROS1/ALK TKI
+FIT-001 ,, Guangzhou FineImmune Biotech,Targeted Therapy,Farnesyltransferase inhibitor (FTI)
+HFB200603 ,, HiFiBiO,ICI,BTLA inhibitor
+GBC-11004 ,, Gradiant Bioconvergence,TKI,FGFR inhibitor
+IAG933 ,, Novartis,Targeted Therapy,YAP-TEAD inhibitor (Hippo pathway)
+IBR854 ,, Imbioray Bio,Other,Macrophage-drug conjugate (MDC)
+ubidecarenone IV ,BPM31510 IV , BPGbio,Other,Coenzyme Q10 (apoptosis stimulant)
+DS-3939 ,, Daiichi Sankyo,ADC,TA-MUC1-targeted ADC
+lirafugratinib ,RLY-4008 , HLB Bio Group,TKI,FGFR inhibitor
+limertinib ,ASK120067 , Aosaikang Pharma,TKI,"EGFR TKI (3rd gen, T790M)"
+QLH12016 ,, Qilu Pharma,Protein Degrader,PROTAC (prostate cancer)
+Ryzneuta ,efbemalenograstim alpha , Yifan Pharma,Supportive Care,G-CSF (leukocyte growth factor)
+BGB-26808 ,, BeOne Medicines,TKI,HPK1 inhibitor
+tizetatug rezetecan ,SHR-A1921 , Jiangsu Hengrui Pharma,ADC,TROP2-targeted ADC (Topo I inhibitor payload)
+ficerafusp alfa ,BCA101 , Biocon,Bispecific Antibody,EGFR x TGF-β bispecific inhibitor
+HFB200301 ,, HiFiBiO,Unclassified,Mechanism under investigation
+Ac-225 rosopatamab tetraxetan ,CONV01-Î± , Dominari Holdings,RLT,PSMA-targeted Radioligand Therapy (225Ac)
+GI-102 ,, GI Innovation,Immunomodulator,CTLA-4 inhibitor / IL-2 fusion protein
+taselisib ,GDC-0032 , Roche,TKI,PI3K inhibitor (p110α)
+anvatabart opadotin ,JNJ-0683 , J&J,ADC,HER2-targeted ADC (MMAF payload)
+EVT801 ,, Kazia,TKI,VEGFR3 inhibitor
+TT125-802 ,, TOLREMO Therap,Epigenetic Modulator,CBP/p300 bromodomain inhibitor
+Abecma ,idecabtagene vicleucel , BMS,Cell Therapy,Autologous anti-BCMA CAR-T
+OMTX705 ,, Oncomatryx,ADC,FAP-targeted ADC
+torvutatug samrotecan ,AZD5335 , AstraZeneca,ADC,FRα-targeted ADC (Topo I inhibitor payload)
+MK-1084 ,, Merck (MSD),TKI,KRAS G12C inhibitor
+GenSci140 ,, GeneScience,Other,Folate receptor-targeted agent
+IMC-001 ,, Immuneoncia Therap,ICI,PD-L1 inhibitor
+TY-302 ,, TYK Medicines,TKI,CDK4/6 inhibitor
+fexagratinib ,ABSK091 , Abbisko,TKI,FGFR inhibitor
+Erivedge ,vismodegib , Roche,Targeted Therapy,Hedgehog pathway inhibitor (SMO inhibitor)
+quisinostat ,JNJ 26481585 ," ChemRar, Viriom",Epigenetic Modulator,HDAC inhibitor
+onvapegleukin alfa ,TransCon IL-2 b/y, Ascendis,Engineered IL-2 cytokine,
+UCB4594 ,," UCB, Cancer Research UK",ICI,HLA-G inhibitor
+ERY974 ,, Roche,Bispecific Antibody,GPC3 x CD3 T-cell engager
+AMT-116 ADC ,, Multitude Therap,ADC,CD44v9-targeted ADC (Topo I inhibitor payload)
+Inluriyo ,imlunestrant , Eli Lilly,Hormonal Therapy,SERD
+retlirafusp alfa ,SHR-1701 , Jiangsu Hengrui Pharma,Bispecific Antibody,PD-L1 x TGF-βRII bispecific inhibitor
+Anktiva ,nogapendekin alfa inbakicept-pmln , ImmunityBio,Immunomodulator,IL-15 superagonist complex
+SON-1010 ,, Sonnet BioTherap,Immunomodulator,Albumin-binding IL-12
+AB-001 ,, Aubrak Therapeutics,TKI,"Pan-KRAS inhibitor, PD-L1 degrader"
+ubamatamab ,REGN4018 , Regeneron,Bispecific Antibody,MUC16 x CD3 T-cell engager
+HS-IT101 ,, Sino-Cell Biomed,Cell Therapy,Autologous TIL therapy
+certepetide ,LSTA1 , Lisata Therap,Other,Tumor-penetrating peptide (αv integrin target)
+porustobart ,HBM4003 , Harbour BioMed,ICI,CTLA-4 inhibitor (heavy chain only)
+nanoencapsulated paclitaxel ,FID-007 ," ANP Technologies, Fulgent Genetics",Chemotherapy,Microtubule inhibitor (nanoparticle formulation)
+solnerstotug ,SNS-101 , Sensei Biotherap,Unclassified,LXR inverse agonist
+JS105 ,," Shanghai Junshi Biosci, Risen (Suzhou) Biosci",TKI,PI3Kα inhibitor
+SYS6010 ,, CSPC Pharma,ADC,EGFR-targeted ADC
+THE001 ,, Thermosome,Chemotherapy,Doxorubicin (thermosensitive liposome)
+JNJ-0631 ,, J&J,Immunomodulator,IL-23 inhibitor
+BI 770371 ,, Boehringer Ingelheim,ICI,SIRPα inhibitor
+WSD0922 ,, Wayshine Biopharm,TKI,EGFR TKI (BBB penetrant)
+domatinostat ,4SC-202 , 4SC,Epigenetic Modulator,HDAC inhibitor
+Byvasda ,bevacizumab biosimilar ," Innovent Biologics, Etana",Targeted Therapy,VEGF-A inhibitor (mAb biosimilar)
+RMC-8839 ,, Revolution Medicines,TKI,KRAS G13C inhibitor
+Romvimza ,vimseltinib , Ono Pharma,TKI,CSF1R TKI
+CAN1012 ,, Canwell Biotech,Immunomodulator,TLR7 agonist
+ciforadenant ,CPI-444 , Corvus Pharma,ICI,Adenosine A2A receptor antagonist
+PRT7732 ,, Prelude Therap,Protein Degrader,SMARCA2 degrader
+vevoctadekin ,ST-067 , Simcha Therap,Immunomodulator,Engineered IL-18 cytokine
+BNT111 ,, BioNTech,Cancer Vaccine,mRNA vaccine (shared melanoma antigens)
+KH617 ,, Chengdu Kanghong Pharma,Chemotherapy,Cytotoxic agent
+Modufolin ,arfolitixorin ," Isofol Medical, Solasia",Chemotherapy Adjuvant,Folate-based biomodulator (enhances 5-FU)
+Darzalex ,daratumumab , J&J,Targeted Therapy,CD38 inhibitor (mAb)
+darovasertib ,IDE196 , Ideaya Biosci,TKI,PKC inhibitor
+imifoplatin ,PT-112 , Promontory Therap,Chemotherapy,Platinum-based agent
+ASKB589 ,, Aosaikang Pharma,Targeted Therapy,CLDN18.2 inhibitor (mAb)
+daraxonrasib ,RMC-6236 , Revolution Medicines,TKI,Pan-RAS inhibitor
+JNJ-4916 ,, J&J,Oncolytic Virus,Engineered HSV-1
+prifetrastat ,PF-07248144 , Pfizer,Epigenetic Modulator,KAT6 inhibitor
+Orserdu ,elacestrant , Menarini,Hormonal Therapy,SERD
+CLSP-1025 ,, Clasp Therapeutics,Bispecific Antibody,p53 R175H x CD3 T-cell engager
+andamertinib ,PLB1004 , Avistone Biotech,TKI,EGFR TKI (Exon20ins)
+abiraterone decanoate ,ASP5541 , Astellas,Hormonal Therapy,CYP17 inhibitor (androgen synthesis)
+IAM1363 ,, Iambic Therap,TKI,HER2 TKI (BBB penetrant)
+icaritin ,SNG-162 , Shenogen Pharma,TKI,PI3K/Akt pathway activator
+marlotamig ,REGN7075 , Regeneron,Bispecific Antibody,EGFR x CD28 bispecific antibody
+GenSci139 ,, GeneScience,ADC,EGFR x HER2 bispecific ADC
+Darzalex Faspro ,daratumumab and hyaluronidase-fihj , J&J,Targeted Therapy,CD38 inhibitor (mAb) with hyaluronidase
+UCPVax ,, Invectys,Cancer Vaccine,Peptide vaccine (telomerase-derived)
+Zynyz ,retifanlimab-dlwr , Incyte,ICI,PD-1 inhibitor
+gunagratinib ,ICP-192 , InnoCare,TKI,pan-FGFR inhibitor
+ulevostinag ,MK-1454 , Merck (MSD),Immunomodulator,STING agonist
+TQB2102 ,, Sino Biopharm,ADC,HER2-targeted ADC (Topo I inhibitor payload)
+TY-2699a ,, TYK Medicines,TKI,CDK7 inhibitor
+E7386 ,," Eisai, PRISM Pharma",Targeted Therapy,CBP/beta-catenin inhibitor (Wnt pathway)
+Solucin ,177Lu-edotreotide , ITM Isotopen Technologien Munchen,RLT,SSTR-targeted Radioligand Therapy (177Lu)
+IPN01195 ,, Ipsen,TKI,RAF kinase inhibitor
+TY-0540 ,, TYK Medicines,TKI,CDK2/4/6 inhibitor
+sasanlimab ,PF-06801591 , Pfizer,ICI,PD-1 inhibitor
+CRB-701 ,, Corbus Pharma,ADC,Nectin-4-targeted ADC
+ADCE-D01 ,, Adcendo,ADC,uPARAP-targeted ADC (Topo I inhibitor payload)
+chlorogenic acid ,, Jiuzhang Biotech,Other,Antioxidant (Nrf2 pathway activator)
+falbikitug ,AZD0171 , AstraZeneca,Targeted Therapy,LIF inhibitor (mAb)
+BNT324 ,, BioNTech,ADC,B7-H3-targeted ADC (Topo I inhibitor payload)
+WGc-0201 ,, WestGene Biopharma,Cell Therapy,Allogeneic NK cell therapy
+saruparib ,AZD5305 , AstraZeneca,Targeted Therapy,PARP inhibitor
+FHND5071 ,, Sino Biopharm,TKI,RET TKI
+HTMC0435 ,, Shanghai Huilun,TKI,HSF1 inhibitor
+JK06 ,, Shenzhen Salubris,ADC,5T4-targeted ADC (tubulin inhibitor payload)
+MDX2001 ,, OPKO Health,Multispecific Antibody,CD3 x CD28 x c-MET x TROP2 antibody
+bemarituzumab ,AMG 552 , Amgen,Targeted Therapy,FGFR2b inhibitor (mAb)
+Elahere ,mirvetuximab soravtansine-gynx , AbbVie,ADC,FRα-targeted ADC (maytansinoid payload)
+ADU-1604 ,, Sairopa,ICI,CTLA-4 inhibitor
+PF-08634404 ,, Pfizer,Bispecific Antibody,VEGF x PD-1 bispecific inhibitor
+SY-5007 ,, Shouyao Holdings,TKI,RET TKI
+BT-001 ,," BioInvent, Transgene",Oncolytic Virus,"Engineered vaccinia virus (expressing anti-CTLA-4, GM-CSF)"
+THEO-260 ,, Theolytics,Oncolytic Virus,Engineered adenovirus
+SVV-001 ,, Seneca Therap,Oncolytic Virus,Seneca Valley Virus
+zabilugene almadenorepvec ,VCN-01 , Theriva Bio,Oncolytic Virus,Engineered adenovirus (expressing hyaluronidase)
+GNTbm-38 ,, GNT Biotech,Epigenetic Modulator,HDAC inhibitor
+BI 765049 ,, Boehringer Ingelheim,Bispecific Antibody,B7-H6 x CD3 T-cell engager
+Yescarta ,axicabtagene ciloleucel , Gilead,Cell Therapy,Autologous anti-CD19 CAR-T
+NI-1801 ,, Light Chain Biosci,Bispecific Antibody,MSLN x CD47 bispecific antibody
+Ibtrozi ,taletrectinib , Nuvation Bio,TKI,ROS1/NTRK TKI
+evexomostat ,SDX-7320 , SynDevRx,Other,Multi-pathway inhibitor (anti-angiogenic/metabolic)
+NXE0039732 ,, Nxera Pharma,Immunomodulator,EP4 antagonist
+JYB1907 ,, Jemincare,Targeted Therapy,GARP/TGF-β inhibitor
+STX-478 ,, Eli Lilly,TKI,"PI3Kα inhibitor (allosteric, mutant-selective)"
+KH815 ,, Chengdu Kanghong Pharma,ADC,TROP2-targeted ADC (dual payload: Topo I/RNA Pol II inh.)
+INCB161734 ,, Incyte,TKI,KRAS G12D inhibitor
+Zolinza ,vorinostat , Merck (MSD),Epigenetic Modulator,HDAC inhibitor
+tamnorzatinib ,ONO-7475 , Ono Pharma,TKI,AXL/MER TKI
+gedatolisib ,PF-05212384 , Celcuity,TKI,PI3K/mTOR inhibitor
+HWH340 ,," WuXi AppTec, Humanwell Healthcare",Targeted Therapy,PARP inhibitor
+KLS-3021 ,, Kolon Life Sci,Oncolytic Virus,Oncolytic viral therapy
+BGB-15025 ,, BeOne Medicines,TKI,HPK1 inhibitor
+nelmastobart ,STT-003 , STCube Pharma,ICI,BTN1A1 inhibitor
+TTX-MC138 ,, TransCode,Gene Therapy,miRNA inhibitor (anti-miR-10b)
+UCART123 ,, Cellectis,Cell Therapy,Allogeneic anti-CD123 CAR-T
+Portrazza ,necitumumab , Eli Lilly,Targeted Therapy,EGFR inhibitor (mAb)
+Aliqopa ,copanlisib , Bayer,TKI,PI3K inhibitor (α/δ isoforms)
+IMC002 ,, Immuneoncia Therap,Cell Therapy,Autologous anti-CLDN18.2 CAR-T
+pimicotinib ,ABSK021 , EMD Serono,TKI,CSF1R TKI
+Cipterbin ,inetetamab , 3SBio,Targeted Therapy,HER2 inhibitor (mAb)
+SGR-4174 ,, Schrodinger,TKI,SOS1 inhibitor (KRAS pathway)
+COM701 ,, Compugen,ICI,PVRIG inhibitor
+cambritaxestat ,IOA-289 , iOnctura,Targeted Therapy,Autotaxin (ATX) inhibitor
+Neulasta ,pegfilgrastim , Roche,Supportive Care,G-CSF (leukocyte growth factor)
+NDI-219216 ,, Nimbus Therap,Targeted Therapy,WRN helicase inhibitor
+CS2009 ,, CStone Pharma,Trispecific Antibody,PD-1 x CTLA-4 x VEGF trispecific inhibitor
+HRO761 ,, Novartis,Targeted Therapy,WRN helicase inhibitor
+Balversa ,erdafitinib , J&J,TKI,FGFR TKI
+neladalkib ,NVL-655 , Nuvalent,TKI,ALK TKI
+iSCIB1+ ,, Scancell,Cancer Vaccine,DNA vaccine (melanoma antigens)
+Xalkori ,crizotinib , Pfizer,TKI,ALK/ROS1/MET TKI
+IPN01194 ,, Ipsen,TKI,ERK1/2 inhibitor
+IPM001 ,, Immupeutics Medicine,ICI,CTLA-4 inhibitor
+BL0020 ,, Shanghai Best-Link Biosci,TKI,EGFR TKI
+AVA6000 ,, Avacta,Chemotherapy,Doxorubicin prodrug (FAP-activated)
+BDC-4182 ,, Bolt Biotherap,ADC,CLDN18.2-targeted ISAC (TLR7/8 agonist payload)
+177Lu-rosopatamab tetraxetan ,TLX591 , Telix,RLT,PSMA-targeted Radioligand Therapy (177Lu)
+CD19/CD22-bispecific CAR-T ,, Beijing Tongren Hospital,Cell Therapy,Autologous bispecific anti-CD19/CD22 CAR-T
+Amtagvi ,lifileucel , Iovance Biotherap,Cell Therapy,Autologous TIL therapy
+Zadaxin ,thymalfasin , SciClone,Immunomodulator,Thymosin alpha-1 (T-cell enhancer)
+tolododekin alfa ,ANK-101 , Ankyra Therap,Immunomodulator,Anchored IL-12
+Ilumya ,tildrakizumab-asmn ," Sun Pharma, Almirall",Immunomodulator,IL-23 p19 inhibitor
+7MW3711 ,, Mabwell (Shanghai) Biosci,ADC,B7-H3-targeted ADC (Topo I inhibitor payload)
+CS5001 ,, CStone Pharma,ADC,ROR1-targeted ADC (PBD payload)
+BA3182 ,, BioAtla,Bispecific Antibody,EpCAM x CD3 T-cell engager (conditionally active)
+Telomelysin ,suratadenoturev ," Oncolys BioPharma, Medigen Biotech",Oncolytic Virus,Engineered adenovirus (telomerase-specific)
+AFNT-211 ,, Affini-T Therap,Cell Therapy,Autologous KRAS G12V-targeted TCR-T
+Zantrene ,bisantrene , Race Oncology,Chemotherapy,Topo II inhibitor / FTO inhibitor
+Zarnestra ,tipifarnib , Kura Oncology,Targeted Therapy,Farnesyltransferase inhibitor (FTI)
+EVX-01 ,, Evaxion,Cancer Vaccine,Personalized peptide vaccine (neoantigen)
+Anniko ,penpulimab ," Akesobio, Sino Biopharm",ICI,PD-1 inhibitor
+TSN222 ,, Tyligand,Immunomodulator,IL-2 receptor blocker (CD25 mAb)
+bulumtatug fuvedotin ,9MW2821 , Mabwell (Shanghai) Biosci,ADC,Nectin-4-targeted ADC (MMAE payload)
+VT3989 ,, Vivace Therap,Targeted Therapy,TEAD inhibitor (Hippo pathway)
+OPM-101 ,, Oncodesign,TKI,RIPK2 inhibitor
+trastuzumab pamirtecan ,BNT323 , BioNTech,ADC,HER2-targeted ADC (Topo I inhibitor payload)
+IVX037 ,, ImmVirx,Oncolytic Virus,Oncolytic RNA virus
+OPB-111077 ,, Otsuka,TKI,STAT inhibitor
+Nerlynx ,neratinib , Puma,TKI,pan-HER TKI
+ASKC202 ,, Aosaikang Pharma,TKI,MET TKI
+mevrometostat ,PF-06821497 , Pfizer,Epigenetic Modulator,EZH2 inhibitor
+KD-496 ,, KAEDI,Cell Therapy,Autologous bispecific anti-NKG2DL/CLDN18.2 CAR-T
+Sylvant ,siltuximab , Jazz,Immunomodulator,IL-6 inhibitor (mAb)
+cetrelimab ,JNJ-63723283 , J&J,ICI,PD-1 inhibitor
+vepugratinib ,LY3866288 , Eli Lilly,TKI,FGFR3 TKI
+TYRA-430 ,, Tyra Biosci,TKI,FGFR4/FGFR3 TKI
+AMT-253 ,, Suzhou Maximum Bio-tech,ADC,MUC18-targeted ADC (Topo I inhibitor payload)
+JIN-A02 ,, J Ints Bio,TKI,"EGFR TKI (4th gen, C797S)"
+Cylembio ,"imsapepimut and etimupepimut, adjuvanted ", IO Biotech,Cancer Vaccine,Peptide vaccine (IDO1/PD-L1 targeted)
+SMP-656 ,, Chengdu Kelingyuan Pharma,Other,Leucyl-tRNA synthetase inhibitor
+AT108 ,, Asgard Therapeutics,Hormonal Therapy,SERM/SERD
+HRS-5041 ,, Jiangsu Hengrui Pharma,Protein Degrader,Androgen Receptor (AR) degrader (PROTAC)
+Carvykti ,ciltacabtagene autoleucel , J&J,Cell Therapy,Autologous anti-BCMA CAR-T
+divarasib ,RG6330 , Roche,TKI,KRAS G12C inhibitor
+Sarclisa ,isatuximab-irfc , Sanofi,Targeted Therapy,CD38 inhibitor (mAb)
+ANV600 ,, Anaveon,Immunomodulator,PD-1 targeted IL-2Rβγ agonist
+FOG-001 ,, Parabilis Medicines,Targeted Therapy,Beta-catenin inhibitor (Wnt pathway)
+volrustomig ,MEDI5752 , AstraZeneca,Bispecific Antibody,PD-1 x CTLA-4 bispecific inhibitor
+Clevegen ,bexmarilimab , Faron Pharma,Immunomodulator,Clever-1 inhibitor (macrophage reprogramming)
+mosperafenib ,RG6344 , Roche,TKI,BRAF inhibitor
+AZD-0022 ,, AstraZeneca,TKI,KRAS inhibitor
+NUC-7738 ,, NuCana,Other,RNA polyadenylation disruptor
+SNV1521 ,, Synnovation Therap,Targeted Therapy,PARP1 inhibitor
+palazestrant ,OP-1250 , Olema Pharma,Hormonal Therapy,CERAN/SERD
+ATG-022 ,, Antengene,ADC,CLDN18.2-targeted ADC (MMAE payload)
+AL2846 ,," Advenchen, Sino Biopharm",TKI,MET TKI
+NP137 ,, NETRIS Pharma,Targeted Therapy,Netrin-1 inhibitor (mAb)
+PTT-4256 ,, Pathios Therap,Immunomodulator,GPR65 inhibitor
+zanzalintinib ,XL092 , Exelixis,TKI,"Multi-TKI (MET, VEGFR2, AXL, MER)"
+OBX-115 ,," Obsidian, UT MD Anderson Cancer Center",Cell Therapy,Autologous TIL therapy (engineered with mbIL15)
+satricabtagene autoleucel ,CT041 , CARsgen,Cell Therapy,Autologous anti-CLDN18.2 CAR-T
+LY-4066434 ,, Eli Lilly,TKI,pan-KRAS inhibitor
+INCA33890 ,, Incyte,Bispecific Antibody,PD-1 x TGF-βRII bispecific inhibitor
+FHND9041 ,, Sino Biopharm,TKI,"EGFR TKI (3rd gen, T790M)"
+SKY02 ,, Seekyo,Unclassified,Mechanism under investigation
+NCE 401 ,," Tium Bio, Chiesi",TKI,MET TKI
+STK-012 ,, Synthekine,Immunomodulator,α/β biased IL-2
+Pembroria ,pembrolizumab biosimilar , Biocad,ICI,PD-1 inhibitor (biosimilar)
+IMM-101 ,, Immodulon,Immunomodulator,Immunostimulant (heat-killed Mycobacterium)
+utidelone IV ,UTD1 , Beijing Biostar Technologies,Chemotherapy,Microtubule inhibitor (epothilone analog)
+autogene cevumeran ,RG6180 , Roche,Cancer Vaccine,Personalized mRNA vaccine (neoantigen)
+ixotatug vedotin ,TORL-1-23 , TORL Biotherap,ADC,CLDN6-targeted ADC (MMAE payload)
+DSB2455 ,, Duke Street Bio,Targeted Therapy,PARP inhibitor
+Imbruvica ,ibrutinib ," AbbVie, J&J",TKI,BTK inhibitor
+AMB-05X ,, AmMax,Immunomodulator,CSF1R inhibitor (mAb)
+Monjuvi ,tafasitamab-cxix , Incyte,Targeted Therapy,CD19 inhibitor (mAb)
+resiquimod sulfate ,EIK1001 , Eikon Therap,Immunomodulator,TLR7/8 agonist
+Partruvix ,pamiparib , BeOne Medicines,Targeted Therapy,PARP inhibitor
+Triapine ,3-AP ," Vion, Northwestern University",Chemotherapy,Ribonucleotide reductase (RNR) inhibitor
+NX-1607 ,, Nurix Therap,TKI,Cbl-b inhibitor
+PBP1710 ,, Prestige BioPharma,Targeted Therapy,CTHRC1 inhibitor (mAb)
+JMKX000197 ,, Jemincare,Epigenetic Modulator,EZH1/EZH2 inhibitor
+tuvusertib ,M1774 , EMD Serono,Targeted Therapy,ATR inhibitor
+FWD1802 ,, Shenzhen Forward Pharma,Hormonal Therapy,SERD
+HRS-7058 ,, Jiangsu Hengrui Pharma,TKI,KRAS G12C inhibitor
+nanvuranlat ,JPH203 ," J-Pharma, Ohara Pharma",Targeted Therapy,LAT1 inhibitor
+luvometinib ,FCN-159 , Fosun Pharma,TKI,MEK inhibitor
+CTS2190 ,, CytosinLab,Epigenetic Modulator,PRMT1 inhibitor
+ulenistamab ,PBP1510 , Prestige BioPharma,Targeted Therapy,PAUF inhibitor (mAb)
+GRWD5769 ,, GreyWolf Therapeutics,Immunomodulator,ERAP1 inhibitor
+OQY-3258 ,, Oqory,ADC,Mechanism under investigation
+OKN4395 ,, Owkin,Immunomodulator,EP2/EP4/DP1 inhibitor
+PhOx430 ,, Phost'IN,Targeted Therapy,GnT-V inhibitor
+QL2109 ,daratumumab hyaluronidase biosimilar , Qilu Pharma,Targeted Therapy,CD38 inhibitor (mAb biosimilar) with hyaluronidase
+MYTX-011 ,, Mythic Therap,ADC,c-Met-targeted ADC (MMAE payload)
+212 Pb-ADVC001 ,, AdvanCell Isotopes,RLT,"PSMA-targeted Radioligand Therapy (212Pb, alpha-emitter)"
+Lytgobi ,futibatinib , Otsuka,TKI,FGFR inhibitor
+Ameile ,aumolertinib , Jiangsu Hansoh Pharma,TKI,"EGFR TKI (3rd gen, T790M)"
+EGL-001 ,, Egle Therap,Immunomodulator,CTLA-4 inhibitor / Treg depleter
+Conmana ,icotinib , Betta Pharma,TKI,EGFR TKI (1st gen)
+HM97662 ,, Hanmi,Epigenetic Modulator,EZH1/EZH2 inhibitor
+SCG142 ,, SCG Cell Therapy,Cell Therapy,Autologous HPV E7-targeted TCR-T
+tinengotinib ,TT-00420 , TransThera Biosci,TKI,"Multi-TKI (Aurora A/B, VEGFR, JAK)"
+PEP07 ,, PharmaEngine,TKI,Chk1 inhibitor
+IOS-1002 ,, ImmunOs Therap,ICI,LILRB1/LILRB2/KIR3DL1 inhibitor
+ART6043 ,, Artios Pharma,Targeted Therapy,DNA polymerase theta inhibitor
+GemRIS ,gemcitabine-releasing intravesical system , J&J,Chemotherapy,Gemcitabine (intravesical system)
+MDX-124 ,, Medannex,Targeted Therapy,ANXA1 inhibitor (mAb)
+SCIB1 ,, Scancell,Cancer Vaccine,DNA vaccine (melanoma antigens)
+cirtuvivint ,SM08502 , Biosplice Therap,TKI,CLK/DYRK inhibitor (Wnt pathway)
+Paishuning ,senaparib , IMPACT Therap,Targeted Therapy,PARP inhibitor
+Odomzo ,sonidegib , Sun Pharma,Targeted Therapy,Hedgehog pathway inhibitor (SMO inhibitor)
+MRG004A ,, Lepu Med,ADC,Tissue Factor-targeted ADC (MMAE payload)

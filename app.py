@@ -202,6 +202,10 @@ ESMO_THERAPEUTIC_AREAS = {
     },
     "TGCT": {
         "keywords": ["TGCT", "PVNS", "tenosynovial giant cell tumor", "pigmented villonodular synovitis"]
+    },
+    "DNA Damage Response (DDRi)": {
+        "keywords": [r"\bATR\b", r"\bATRi\b", r"\bATM\b", r"\bATMi\b", r"\bPARP\b", r"\bPARPi\b", "DNA Damage Response"],
+        "regex": True  # Special flag for word boundary matching
     }
 }
 
@@ -240,114 +244,34 @@ ESMO_DATES = {
 PLAYBOOKS = {
     "competitor": {
         "button_label": "Competitive Intelligence",
-        "ai_prompt": """You are EMD Serono's senior competitive intelligence analyst for medical affairs. Conduct a comprehensive competitive landscape analysis of ESMO 2025 to identify strategic threats, opportunities, and positioning insights for the EMD oncology portfolio (avelumab, tepotinib, cetuximab, pimicotinib).
+        "ai_prompt": """You are EMD Serono's senior competitive intelligence analyst for medical affairs. Analyze the competitive landscape at ESMO 2025 to identify strategic threats, opportunities, and positioning insights.
+
+**CRITICAL INSTRUCTION**: You have been provided with filtered competitor data based on the selected EMD drug focus. ONLY analyze the indication and competitors shown in the "COMPETITIVE ANALYSIS FOCUS" section below. DO NOT discuss EMD drugs or indications outside this scope.
 
 **EXECUTIVE SUMMARY** (2-3 paragraphs):
-Provide a strategic overview of the competitive landscape:
-- Overall competitive intensity: How many abstracts feature competitor drugs? Which therapeutic areas show highest competitive activity?
-- Dominant competitive threats: Which competitor assets have the strongest presence at this conference?
-- EMD portfolio visibility: How does avelumab/tepotinib/cetuximab presence compare to competitors in their respective indications?
-- Strategic implications: What are the 2-3 most significant competitive developments that require immediate medical affairs attention?
-
-**EMD PORTFOLIO COMPETITIVE POSITIONING**:
-
-*Avelumab (Bavencio) - METASTATIC Bladder Cancer & Maintenance Therapy*:
-- Conference presence: Search all abstracts for "avelumab" or "Bavencio". If found, provide Abstract #, presenter, institution, and study focus.
-- If absent: Analyze the competitive void - what are competitors presenting in METASTATIC bladder/urothelial cancer maintenance space?
-- Competitive context: How many abstracts feature enfortumab vedotin, pembrolizumab, nivolumab, or other IO agents in metastatic bladder cancer?
-
-*Tepotinib - NSCLC MET Alterations*:
-- Conference presence: Search for "tepotinib" mentions. If found, cite Abstract # and context.
-- MET landscape: How many abstracts discuss MET alterations, MET inhibitors, or MET-targeted therapy in NSCLC?
-- Competitive MET inhibitors: Any capmatinib, crizotinib, or other MET-targeting agents? Cite Abstract #.
-- NSCLC targeted therapy context: Broader landscape of targeted therapy in lung cancer (EGFR, ALK, ROS1, KRAS, etc.)
-
-*Cetuximab - Colorectal & Head & Neck Cancer*:
-- Conference presence: Search for "cetuximab" or "Erbitux". Document findings with Abstract #.
-- Anti-EGFR landscape: How many abstracts feature EGFR-targeted therapy in CRC or H&N cancer?
-- Competitive anti-EGFR agents: Panitumumab presence? Other EGFR inhibitors?
-- Therapeutic area context: Overall activity in colorectal and head & neck oncology
-
-*Pimicotinib - TGCT/CSF1R*:
-- Search for pimicotinib, TGCT, tenosynovial giant cell tumor, or CSF1R mentions
-- Document any findings with Abstract # (likely low volume given rare indication)
+Provide a strategic overview of the competitive landscape FOR THE SELECTED INDICATION ONLY:
+- Overall competitive intensity: How many competitor abstracts are shown in the data tables? Which drugs dominate?
+- Dominant competitive threats: Which competitor assets have the strongest presence?
+- Key trends: What MOA classes are most represented? (ICI, ADC, TKI, Bispecific, etc.)
+- Strategic implications: What are the 2-3 most significant competitive developments requiring medical affairs attention?
 
 **MAJOR COMPETITOR DEEP-DIVE ANALYSIS**:
 
-For each major competitor drug or regimen, provide a dedicated paragraph analyzing its conference presence and strategic threat. Structure each paragraph as:
-1. Quantify presence (e.g., "Enfortumab vedotin appears in X abstracts across Y settings")
-2. Clinical settings and indications (metastatic, perioperative, adjuvant, maintenance, etc.)
-3. Notable study types (pivotal phase 3, real-world evidence, combination trials, biomarker studies)
-4. Strategic implications for EMD portfolio
-5. Always cite Abstract # for key studies
+For each major competitor drug shown in the data tables, provide a dedicated paragraph analyzing its conference presence and strategic threat. Structure each paragraph as:
+1. **Drug Name & Company**: State the competitor drug name and company from the table
+2. **Quantify Presence**: "Drug X appears in Y abstracts" (use # Studies from table)
+3. **MOA Context**: Mention the MOA Class and Target from the table (e.g., "This is an ADC targeting Nectin-4")
+4. **Clinical Settings**: Describe the treatment settings shown in abstract titles (1L, 2L+, maintenance, perioperative, etc.)
+5. **Study Types**: Note if you see phase 3 trials, real-world evidence, combination studies, biomarker work
+6. **Strategic Threat Level**: Assess competitive threat to the EMD asset (HIGH/MEDIUM/LOW with justification)
+7. **Always Cite Abstract #**: Reference specific abstracts by their Identifier
 
-*Critical Competitors to Analyze* (dedicate one paragraph each):
-
-**Enfortumab Vedotin (EV) & EV+Pembrolizumab (EV+P)**:
-This is the #1 competitive threat in bladder cancer. Provide comprehensive analysis:
-- Total abstract count featuring EV or EV+P
-- Breakdown by setting: 1L metastatic, 2L+ metastatic, perioperative, maintenance
-- Monotherapy vs. combination (especially EV+P as new standard of care in mUC)
-- Real-world evidence presentations (utilization, outcomes, safety)
-- Expansion beyond bladder (if any)
-- Cite all relevant Abstract #s
-
-**Pembrolizumab (Keytruda)**:
-- Total abstract volume (one of the most studied checkpoint inhibitors)
-- Indications covered (bladder, lung, CRC, H&N, other)
-- Treatment settings (1L, maintenance, adjuvant, neoadjuvant, perioperative)
-- Combination strategies (pembro + chemo, pembro + ADC, pembro + targeted)
-- Notable phase 3 trials or practice-changing data
-- Cite key Abstract #s
-
-**Nivolumab (Opdivo)**:
-- Conference presence (abstract count)
-- Primary indications and settings
-- Combination approaches (nivo + ipi, nivo + chemo, others)
-- Long-term follow-up or survival data
-- Cite Abstract #s
-
-**Durvalumab (Imfinzi)**:
-- Abstract volume
-- Primary focus areas (NMIBC? MIBC? Metastatic? Perioperative?)
-- Combination strategies
-- Notable studies
-- Cite Abstract #s
-
-**Atezolizumab (Tecentriq)**:
-- Conference activity level
-- Indications and settings
-- Key studies and strategic positioning
-- Cite Abstract #s
-
-**Sacituzumab Govitecan (SG)**:
-- Presence at conference (abstract count)
-- Indications (breast, bladder, other)
-- Monotherapy vs. combination
-- Strategic threat level
-- Cite Abstract #s
-
-**Other ADCs** (Disitamab vedotin, Trastuzumab deruxtecan, Datopotamab deruxtecan, others):
-- Identify which ADCs appear in abstracts
-- For each: indication, setting, abstract count
-- Emerging ADC class trends
-- Cite Abstract #s
-
-**FGFR Inhibitors** (Erdafitinib, pemigatinib, futibatinib, others):
-- Which FGFR inhibitors appear?
-- Volume, indications, biomarker selection
-- Strategic positioning vs. avelumab in bladder cancer
-- Cite Abstract #s
-
-**Other Targeted Therapies** (KRAS inhibitors, HER2-targeted, ALK/ROS1, etc.):
-- Identify which agents appear
-- Volume and strategic relevance to EMD portfolio
-- Cite Abstract #s
-
-**Emerging/Novel Agents**:
-- Any new mechanisms or investigational agents with notable presence
-- Strategic watch items
-- Cite Abstract #s
+**ANALYZE THESE COMPETITORS IN ORDER OF STUDY COUNT** (highest to lowest from the table):
+- Start with the competitor with the most studies
+- Dedicate one full paragraph to each of the top 10 competitors
+- For competitors with 5+ studies, provide comprehensive analysis
+- For competitors with 2-4 studies, provide brief 2-3 sentence summary
+- Focus on the "Key Competitors to Analyze" list provided in the COMPETITIVE ANALYSIS FOCUS section
 
 **COMPETITIVE STRATEGY PATTERNS**:
 
@@ -1062,6 +986,37 @@ def apply_tgct_filter(df: pd.DataFrame) -> pd.Series:
 
     return mask
 
+def apply_ddri_filter(df: pd.DataFrame) -> pd.Series:
+    """Apply DNA Damage Response Inhibitor filter with strict word boundaries."""
+    # Strict patterns with word boundaries to avoid false matches
+    patterns = [
+        r'\bATR\b',      # ATR (not "atrocious")
+        r'\bATRi\b',     # ATR inhibitor
+        r'\bATM\b',      # ATM (not "atmosphere")
+        r'\bATMi\b',     # ATM inhibitor
+        r'\bPARP\b',     # PARP
+        r'\bPARPi\b'     # PARP inhibitor
+    ]
+
+    # Long-form phrase (must match full phrase)
+    phrases = ["DNA Damage Response", "DNA damage response"]
+
+    mask = pd.Series([False] * len(df), index=df.index)
+
+    # Search patterns with word boundaries (case-sensitive for acronyms)
+    for pattern in patterns:
+        title_mask = df["Title"].str.contains(pattern, case=True, na=False, regex=True)
+        theme_mask = df["Theme"].str.contains(pattern, case=True, na=False, regex=True)
+        mask = mask | title_mask | theme_mask
+
+    # Search phrases (case-insensitive)
+    for phrase in phrases:
+        title_mask = df["Title"].str.contains(phrase, case=False, na=False, regex=False)
+        theme_mask = df["Theme"].str.contains(phrase, case=False, na=False, regex=False)
+        mask = mask | title_mask | theme_mask
+
+    return mask
+
 def apply_therapeutic_area_filter(df: pd.DataFrame, ta_filter: str) -> pd.Series:
     """Apply therapeutic area filter by name."""
     if ta_filter == "All Therapeutic Areas":
@@ -1078,6 +1033,8 @@ def apply_therapeutic_area_filter(df: pd.DataFrame, ta_filter: str) -> pd.Series
         return apply_head_neck_cancer_filter(df)
     elif ta_filter == "TGCT":
         return apply_tgct_filter(df)
+    elif ta_filter == "DNA Damage Response (DDRi)":
+        return apply_ddri_filter(df)
     else:
         return pd.Series([True] * len(df), index=df.index)
 
@@ -1097,9 +1054,9 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
     # Start with empty mask (all False)
     combined_mask = pd.Series([False] * len(df_global), index=df_global.index)
 
-    # If no filters selected, return first 50 results to avoid overwhelming
+    # If no filters selected, return all data (chat will use semantic search to find relevant subset)
     if not drug_filters and not ta_filters and not session_filters and not date_filters:
-        return df_global.head(50)
+        return df_global
 
     # Handle "Competitive Landscape" drug filter (show all)
     if "Competitive Landscape" in drug_filters:
@@ -1251,39 +1208,54 @@ def parse_boolean_query(query: str, df: pd.DataFrame, search_columns: list) -> p
     return result_mask
 
 def execute_simple_search(keyword: str, df: pd.DataFrame, search_columns: list) -> pd.Series:
-    """Execute smart search: partial matching for single words, exact phrase for multi-word queries."""
+    """Execute smart search with quote support for exact matching."""
     # Initialize mask with same index as df to avoid index misalignment
     mask = pd.Series([False] * len(df), index=df.index)
 
-    # Strip quotes if present (for explicit phrase search)
-    keyword = keyword.strip('"').strip("'")
+    # Check if query is quoted (for exact match)
+    is_quoted = (keyword.startswith('"') and keyword.endswith('"')) or (keyword.startswith("'") and keyword.endswith("'"))
 
     # ESMO columns (using original CSV names)
     esmo_columns = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier', 'Room', 'Date', 'Time', 'Session', 'Theme']
     actual_columns = [col for col in esmo_columns if col in df.columns]
 
-    # Check if multi-word query (contains space)
-    is_multi_word = ' ' in keyword
-
-    if is_multi_word:
-        # Multi-word query: Use exact phrase matching with word boundaries
-        # This prevents "mini oral" from matching "medical oral nutrition"
+    if is_quoted:
+        # Strip quotes and use exact matching with word boundaries
+        keyword = keyword.strip('"').strip("'")
+        # Use word boundaries for exact match (prevents "ATM" from matching "treatment")
         search_pattern = r'\b' + re.escape(keyword) + r'\b'
+
         for col in actual_columns:
             try:
-                col_mask = df[col].astype(str).str.contains(search_pattern, case=False, na=False, regex=True)
+                # Case-sensitive for quoted searches to match acronyms exactly
+                col_mask = df[col].astype(str).str.contains(search_pattern, case=True, na=False, regex=True)
                 mask = mask | col_mask
             except Exception as e:
                 continue
     else:
-        # Single word query: Use partial substring matching
-        # This allows "avel" to match "avelumab"
-        for col in actual_columns:
-            try:
-                col_mask = df[col].astype(str).str.contains(keyword, case=False, na=False, regex=False)
-                mask = mask | col_mask
-            except Exception as e:
-                continue
+        # No quotes - use standard smart search
+        # Check if multi-word query (contains space)
+        is_multi_word = ' ' in keyword
+
+        if is_multi_word:
+            # Multi-word query: Use exact phrase matching with word boundaries
+            # This prevents "mini oral" from matching "medical oral nutrition"
+            search_pattern = r'\b' + re.escape(keyword) + r'\b'
+            for col in actual_columns:
+                try:
+                    col_mask = df[col].astype(str).str.contains(search_pattern, case=False, na=False, regex=True)
+                    mask = mask | col_mask
+                except Exception as e:
+                    continue
+        else:
+            # Single word query: Use partial substring matching
+            # This allows "avel" to match "avelumab"
+            for col in actual_columns:
+                try:
+                    col_mask = df[col].astype(str).str.contains(keyword, case=False, na=False, regex=False)
+                    mask = mask | col_mask
+                except Exception as e:
+                    continue
 
     return mask
 
@@ -1319,19 +1291,21 @@ def classify_user_query(user_message: str) -> dict:
     Use GPT-5-mini to classify user query and extract search parameters.
     Returns structured JSON for dataset querying and table generation.
     """
-    classification_prompt = f"""You are a query classifier for ESMO 2025 conference data.
+    classification_prompt = f"""You are a query classifier for ESMO 2025 conference intelligence. Think like a medical affairs professional attending the conference.
 
-Available data columns: Title, Speakers, Speaker Location, Affiliation, Identifier, Room, Date, Time, Session, Theme
+**USER QUERY**: "{user_message}"
 
-Classify this user query and extract search intent:
-"{user_message}"
+**YOUR TASK**: Classify the query intent and return JSON for intelligent table generation.
 
-Return ONLY valid JSON with this exact structure:
+**AVAILABLE DATA**: Title, Speakers, Speaker Location, Affiliation, Identifier, Room, Date, Time, Session, Theme
+
+**RETURN FORMAT** (JSON only, no explanation):
 {{
-  "entity_type": "drug" | "hcp" | "institution" | "session_type" | "date" | "therapeutic_area" | "general",
+  "entity_type": "drug" | "hcp" | "institution" | "session_type" | "date" | "therapeutic_area" | "drug_class" | "general" | "clarification_needed",
   "search_terms": ["term1", "term2"],
   "generate_table": true | false,
-  "table_type": "author_publications" | "drug_studies" | "institution_ranking" | "session_list" | null,
+  "table_type": "author_publications" | "author_ranking" | "drug_studies" | "drug_class_ranking" | "institution_ranking" | "session_list" | null,
+  "clarification_question": "Ask user for specifics if query is too vague" or null,
   "filter_context": {{
     "drug": "drug name if mentioned" or null,
     "ta": "therapeutic area if mentioned" or null,
@@ -1341,25 +1315,57 @@ Return ONLY valid JSON with this exact structure:
   "top_n": 10
 }}
 
-Classification examples:
+**CLASSIFICATION PATTERNS** (95%+ coverage):
 
-"Tell me about Andrea Necchi" or "Dr. Necchi publications"
+**1. SPECIFIC PERSON QUERIES** (author_publications table)
+"Who is Andrea Necchi?" | "Tell me about Dr. Necchi" | "Necchi publications" | "What is Andrea Necchi presenting?"
 → {{"entity_type": "hcp", "search_terms": ["Andrea Necchi", "Necchi"], "generate_table": true, "table_type": "author_publications", "filter_context": {{}}, "top_n": 20}}
 
-"What is enfortumab vedotin?" or "Tell me about EV"
+**2. TOP AUTHORS/SPEAKERS QUERIES** (author_ranking table)
+"Who are the most active speakers?" | "Top 10 authors" | "Most prolific researchers" | "Leading KOLs" | "Who's presenting the most?"
+→ {{"entity_type": "hcp", "search_terms": [], "generate_table": true, "table_type": "author_ranking", "filter_context": {{}}, "top_n": 10}}
+
+**3. SPECIFIC DRUG QUERIES** (drug_studies table)
+"What is enfortumab vedotin?" | "Tell me about EV" | "Avelumab data" | "Studies on pembrolizumab" | "Keytruda results"
 → {{"entity_type": "drug", "search_terms": ["enfortumab vedotin", "EV", "enfortumab"], "generate_table": true, "table_type": "drug_studies", "filter_context": {{"drug": "enfortumab vedotin"}}, "top_n": 20}}
 
-"Most active institutions in bladder cancer"
-→ {{"entity_type": "institution", "search_terms": [], "generate_table": true, "table_type": "institution_ranking", "filter_context": {{"ta": "bladder cancer"}}, "top_n": 10}}
+**4. DRUG CLASS/MOA QUERIES** (drug_class_ranking table)
+"What is the most common drug class?" | "Show me drug classes" | "ADC vs ICI representation" | "Top MOA classes" | "What mechanisms are being studied?"
+→ {{"entity_type": "drug_class", "search_terms": [], "generate_table": true, "table_type": "drug_class_ranking", "filter_context": {{}}, "top_n": 15}}
 
-"What are all the posters on day 3 in bladder cancer?"
-→ {{"entity_type": "session_type", "search_terms": ["poster"], "generate_table": true, "table_type": "session_list", "filter_context": {{"date": "Day 3", "ta": "bladder cancer"}}, "top_n": 50}}
+**5. INSTITUTION QUERIES** (institution_ranking table)
+"Most active institutions" | "Top 15 hospitals" | "Leading research centers" | "Where is the research coming from?" | "Academic centers in bladder cancer"
+→ {{"entity_type": "institution", "search_terms": [], "generate_table": true, "table_type": "institution_ranking", "filter_context": {{}}, "top_n": 15}}
 
-"What are the latest trends in immunotherapy?"
-→ {{"entity_type": "general", "search_terms": ["immunotherapy", "immune checkpoint"], "generate_table": false, "table_type": null, "filter_context": {{}}, "top_n": 15}}
+**6. SESSION/SCHEDULE QUERIES** (session_list table)
+"What posters are on day 3?" | "All presentations on Friday" | "Proffered papers in lung cancer" | "When are the oral sessions?" | "Show me symposia"
+→ {{"entity_type": "session_type", "search_terms": ["poster"], "generate_table": true, "table_type": "session_list", "filter_context": {{"date": "Day 3"}}, "top_n": 50}}
 
-Important drugs to recognize: avelumab, tepotinib, cetuximab (erbitux), enfortumab vedotin (EV), pembrolizumab (keytruda), nivolumab (opdivo), durvalumab (imfinzi)
-Important TAs: bladder cancer, urothelial, NSCLC, lung cancer, colorectal (CRC), head & neck (H&N, HNSCC), renal (RCC)"""
+**7. TREND/ANALYSIS QUERIES** (no table, just AI analysis)
+"What are the latest trends?" | "Summarize immunotherapy data" | "Key takeaways" | "Emerging biomarkers" | "What's new in checkpoint inhibitors?"
+→ {{"entity_type": "general", "search_terms": ["immunotherapy", "checkpoint"], "generate_table": false, "table_type": null, "filter_context": {{}}, "top_n": 15}}
+
+**8. COMPARATIVE QUERIES** (generate_table: false, AI will analyze)
+"Compare avelumab vs pembrolizumab" | "EV+pembro vs EV alone" | "ADCs vs ICIs" | "Phase 3 vs Phase 2 data"
+→ {{"entity_type": "general", "search_terms": ["avelumab", "pembrolizumab", "comparison"], "generate_table": false, "table_type": null, "filter_context": {{}}, "top_n": 20}}
+
+**9. VAGUE/UNCLEAR QUERIES** (ask for clarification)
+"Tell me more" | "What else?" | "Interesting" | "Update me"
+→ {{"entity_type": "clarification_needed", "clarification_question": "What specific topic, drug, researcher, or therapeutic area would you like to explore?", "generate_table": false, "table_type": null, "filter_context": {{}}, "top_n": 10}}
+
+**KEY RULES**:
+- Extract NUMBER from query ("top 15" → top_n: 15)
+- Default top_n: 10 for rankings, 20 for entity searches, 50 for session lists
+- If query mentions specific person name → author_publications (not ranking)
+- If query asks "who are the most/top" → author_ranking (not specific author)
+- If query mentions specific drug → drug_studies table
+- If query asks about drug classes/MOAs → drug_class_ranking table
+- If too vague → set clarification_needed with helpful question
+- Recognize drug aliases: EV=enfortumab vedotin, pembro=pembrolizumab, nivo=nivolumab, atezo=atezolizumab
+
+**DRUGS**: avelumab (Bavencio), tepotinib, cetuximab (Erbitux), enfortumab vedotin (EV, Padcev), pembrolizumab (Keytruda), nivolumab (Opdivo), durvalumab (Imfinzi), atezolizumab (Tecentriq), disitamab vedotin (DV)
+
+**THERAPEUTIC AREAS**: bladder/urothelial cancer, NSCLC, lung cancer, colorectal (CRC), head & neck (H&N, HNSCC), renal (RCC), gastric, breast, melanoma"""
 
     try:
         response = client.responses.create(
@@ -1455,10 +1461,10 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
     # This ensures we find "disitamab vedotin" even if filter_context has TA filters
 
     if table_type in ["drug_studies", "author_publications"]:
-        # Use full dataset for entity search
+        # Use full dataset for entity search (find specific drug/author regardless of filters)
         filtered_df = df.copy()
     else:
-        # Apply filter context for ranking/aggregation tables
+        # Apply filter context for ranking/aggregation tables (author_ranking, institution_ranking, etc.)
         filtered_df = apply_filters_from_context(df, filter_ctx)
 
     if table_type == "author_publications":
@@ -1475,7 +1481,7 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
             print(f"[AUTHOR SEARCH] Term '{term}' found {matches} matches")
             mask |= term_mask
 
-        results = filtered_df[mask][['Identifier', 'Title', 'Speakers', 'Affiliation', 'Session', 'Date']].head(top_n)
+        results = filtered_df[mask][['Identifier', 'Title', 'Speakers', 'Affiliation', 'Session', 'Room', 'Date']].head(top_n)
 
         print(f"[AUTHOR SEARCH] Total results: {len(results)}")
 
@@ -1492,12 +1498,46 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
 </div>"""
         return table_html, results
 
+    elif table_type == "author_ranking":
+        # Generate top authors ranking (like KOL button)
+        print(f"[AUTHOR RANKING] Generating top {top_n} authors from {len(filtered_df)} records")
+
+        # Use existing generate_top_authors_table function
+        ranking_df = generate_top_authors_table(filtered_df, n=top_n)
+
+        if ranking_df.empty:
+            no_results_html = f"""<div class='entity-table-container'>
+<h6 class='entity-table-title'>📊 Top {top_n} Most Active Speakers</h6>
+<p class='text-muted' style='margin: 0;'>No speaker data available in the current dataset.</p>
+</div>"""
+            return no_results_html, ranking_df
+
+        context_str = ""
+        if filter_ctx.get('ta'):
+            context_str = f" in {filter_ctx.get('ta')}"
+        elif filter_ctx.get('drug'):
+            context_str = f" for {filter_ctx.get('drug')}"
+
+        table_html = f"""<div class='entity-table-container'>
+<h6 class='entity-table-title'>📊 Top {top_n} Most Active Speakers{context_str}</h6>
+{ranking_df.to_html(index=False, classes='table table-sm table-striped', escape=False)}
+</div>"""
+        return table_html, ranking_df
+
     elif table_type == "drug_studies":
         # Search for drug in Title column
         if not search_terms:
             return "", pd.DataFrame()
 
         print(f"[DRUG SEARCH] Searching for: {search_terms} in {len(filtered_df)} records")
+
+        # Load drug database to get MOA info
+        try:
+            drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
+            drug_db = pd.read_csv(drug_db_path, encoding='utf-8-sig')
+        except Exception as e:
+            print(f"[DRUG SEARCH] Could not load Drug_Company_names.csv: {e}")
+            drug_db = None
 
         mask = pd.Series([False] * len(filtered_df))
         for term in search_terms:
@@ -1506,9 +1546,26 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
             print(f"[DRUG SEARCH] Term '{term}' found {matches} matches")
             mask |= term_mask
 
-        results = filtered_df[mask][['Identifier', 'Title', 'Speakers', 'Affiliation', 'Session']].head(top_n)
+        results = filtered_df[mask][['Identifier', 'Title', 'Speakers', 'Affiliation', 'Session', 'Room', 'Date']].head(top_n)
 
-        print(f"[DRUG SEARCH] Total results: {len(results)}")
+        # Try to find MOA info for the searched drug
+        moa_class = "Unknown"
+        moa_target = "Unknown"
+        if drug_db is not None and search_terms:
+            search_term = search_terms[0].lower()
+            for _, drug_row in drug_db.iterrows():
+                commercial = str(drug_row['drug_commercial']).lower() if pd.notna(drug_row['drug_commercial']) else ""
+                generic = str(drug_row['drug_generic']).lower() if pd.notna(drug_row['drug_generic']) else ""
+                if search_term in commercial or search_term in generic or commercial in search_term or generic in search_term:
+                    moa_class = str(drug_row['moa_class']) if pd.notna(drug_row['moa_class']) else "Unknown"
+                    moa_target = str(drug_row['moa_target']) if pd.notna(drug_row['moa_target']) else "Unknown"
+                    break
+
+        # Add MOA columns to results
+        results['MOA Class'] = moa_class
+        results['MOA Target'] = moa_target
+
+        print(f"[DRUG SEARCH] Total results: {len(results)}, MOA: {moa_class} ({moa_target})")
 
         if results.empty:
             no_results_html = f"""<div class='entity-table-container'>
@@ -1519,6 +1576,7 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
 
         table_html = f"""<div class='entity-table-container'>
 <h6 class='entity-table-title'>💊 Studies mentioning {search_terms[0]} ({len(results)} found)</h6>
+<p class='text-muted small' style='margin: 0 0 8px 0;'>MOA: {moa_class} | Target: {moa_target}</p>
 {results.to_html(index=False, classes='table table-sm table-striped', escape=False)}
 </div>"""
         return table_html, results
@@ -1535,6 +1593,57 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
         context_str = f" in {filter_ctx.get('ta', 'all areas')}" if filter_ctx.get('ta') else ""
         table_html = f"""<div class='entity-table-container'>
 <h6 class='entity-table-title'>🏥 Top {top_n} Most Active Institutions{context_str}</h6>
+{ranking_df.to_html(index=False, classes='table table-sm table-striped', escape=False)}
+</div>"""
+        return table_html, ranking_df
+
+    elif table_type == "drug_class_ranking":
+        # Generate MOA class ranking from drug database
+        print(f"[DRUG CLASS RANKING] Analyzing {len(filtered_df)} studies")
+
+        try:
+            drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
+            drug_db = pd.read_csv(drug_db_path, encoding='utf-8-sig')
+        except Exception as e:
+            print(f"[DRUG CLASS RANKING] Could not load Drug_Company_names.csv: {e}")
+            return "", pd.DataFrame()
+
+        # Count MOA classes by matching drugs in titles
+        moa_counts = {}
+        for idx, row in filtered_df.iterrows():
+            title = str(row['Title']).lower()
+            # Check each drug in database
+            for _, drug_row in drug_db.iterrows():
+                commercial = str(drug_row['drug_commercial']).lower() if pd.notna(drug_row['drug_commercial']) else ""
+                generic = str(drug_row['drug_generic']).lower() if pd.notna(drug_row['drug_generic']) else ""
+                moa_class = str(drug_row['moa_class']) if pd.notna(drug_row['moa_class']) else "Unknown"
+
+                if moa_class == "Unknown":
+                    continue
+
+                # Check if drug is in title
+                if (commercial and commercial in title) or (generic and generic in title):
+                    moa_counts[moa_class] = moa_counts.get(moa_class, 0) + 1
+
+        if not moa_counts:
+            no_results_html = f"""<div class='entity-table-container'>
+<h6 class='entity-table-title'>💊 Drug Class Distribution</h6>
+<p class='text-muted' style='margin: 0;'>No drug MOA classes detected in the current dataset.</p>
+</div>"""
+            return no_results_html, pd.DataFrame()
+
+        # Create ranking dataframe
+        ranking_df = pd.DataFrame(list(moa_counts.items()), columns=['MOA Class', '# Studies'])
+        ranking_df = ranking_df.sort_values('# Studies', ascending=False).head(top_n)
+        ranking_df['Rank'] = range(1, len(ranking_df) + 1)
+        ranking_df = ranking_df[['Rank', 'MOA Class', '# Studies']]
+
+        context_str = ""
+        if filter_ctx.get('ta'):
+            context_str = f" in {filter_ctx.get('ta')}"
+
+        table_html = f"""<div class='entity-table-container'>
+<h6 class='entity-table-title'>💊 Top {top_n} Drug Classes by Study Count{context_str}</h6>
 {ranking_df.to_html(index=False, classes='table table-sm table-striped', escape=False)}
 </div>"""
         return table_html, ranking_df
@@ -1761,99 +1870,169 @@ def generate_biomarker_moa_table(df: pd.DataFrame) -> pd.DataFrame:
 
     return result_df
 
-def generate_competitor_table(df: pd.DataFrame, n: int = 50) -> pd.DataFrame:
-    """Generate competitor drugs table with Drug and Company columns from drug database."""
+def generate_competitor_table(df: pd.DataFrame, indication_keywords: list = None, focus_moa_classes: list = None, n: int = 200) -> pd.DataFrame:
+    """
+    Generate competitor drugs table using CSV with MOA/target data.
+
+    Args:
+        df: Dataframe to search
+        indication_keywords: Keywords to filter by indication (e.g., ["bladder", "urothelial"])
+        focus_moa_classes: MOA classes to focus on (e.g., ["ICI", "ADC", "Targeted Therapy"])
+        n: Max results
+    """
     if df.empty:
         return pd.DataFrame()
 
-    # Load drug-company mapping from CSV
+    # Load drug database with MOA data
     try:
         drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
-        drug_db = pd.read_csv(drug_db_path)
+        drug_db = pd.read_csv(drug_db_path, encoding='utf-8-sig')
+        print(f"[COMPETITOR] Loaded drug database with {len(drug_db)} drugs")
     except Exception as e:
-        print(f"Warning: Could not load Drug_Company_names.csv: {e}")
+        print(f"[COMPETITOR] ERROR: Could not load Drug_Company_names.csv: {e}")
         return pd.DataFrame()
 
-    # Find abstracts mentioning each drug (search both commercial and generic names)
+    # EMD portfolio drugs to exclude from competitor list
+    emd_drugs = ['avelumab', 'bavencio', 'tepotinib', 'cetuximab', 'erbitux', 'pimicotinib']
+
     results = []
     for _, drug_row in drug_db.iterrows():
         commercial = str(drug_row['drug_commercial']).strip() if pd.notna(drug_row['drug_commercial']) else ""
         generic = str(drug_row['drug_generic']).strip() if pd.notna(drug_row['drug_generic']) else ""
         company = str(drug_row['company']).strip() if pd.notna(drug_row['company']) else ""
+        moa_class = str(drug_row['moa_class']).strip() if pd.notna(drug_row['moa_class']) else ""
+        moa_target = str(drug_row['moa_target']).strip() if pd.notna(drug_row['moa_target']) else ""
 
         # Skip if no valid drug names
         if not commercial and not generic:
             continue
 
-        # Build search mask for this drug (search both names)
+        # Skip EMD portfolio drugs
+        if generic.lower() in emd_drugs or commercial.lower() in emd_drugs:
+            continue
+
+        # Filter by MOA class if specified
+        if focus_moa_classes and moa_class and moa_class not in focus_moa_classes:
+            continue
+
+        # Build search mask for this drug
         mask = pd.Series([False] * len(df), index=df.index)
 
         if commercial:
-            commercial_mask = df['Title'].str.contains(commercial, case=False, na=False, regex=False)
-            mask = mask | commercial_mask
-
+            mask = mask | df['Title'].str.contains(commercial, case=False, na=False, regex=False)
         if generic:
-            generic_mask = df['Title'].str.contains(generic, case=False, na=False, regex=False)
-            mask = mask | generic_mask
+            # For generic names, also search for base name (e.g., "enfortumab vedotin" from "enfortumab vedotin-ejfv")
+            mask = mask | df['Title'].str.contains(generic, case=False, na=False, regex=False)
+
+            # Also try base name without suffix (split on hyphen and take first part if multi-word)
+            base_generic = generic.split('-')[0].strip() if '-' in generic else generic
+            if base_generic != generic and len(base_generic.split()) > 1:  # Only if it's a multi-word drug name
+                mask = mask | df['Title'].str.contains(base_generic, case=False, na=False, regex=False)
+
+        # Filter by indication keywords if specified
+        if indication_keywords and mask.any():
+            indication_mask = pd.Series([False] * len(df), index=df.index)
+            for keyword in indication_keywords:
+                indication_mask = indication_mask | df['Title'].str.contains(keyword, case=False, na=False, regex=False)
+            mask = mask & indication_mask
 
         matching_abstracts = df[mask]
 
-        # Add each matching abstract as a row
-        # Use generic name preferentially, fall back to commercial
+        if len(matching_abstracts) == 0:
+            continue
+
         drug_display_name = generic if generic else commercial
 
         for _, row in matching_abstracts.iterrows():
             results.append({
                 'Drug': drug_display_name,
                 'Company': company,
+                'MOA Class': moa_class,
+                'MOA Target': moa_target,
                 'Identifier': row['Identifier'],
-                'Title': row['Title'],
-                'Speakers': row['Speakers'],
-                'Affiliation': row['Affiliation']
+                'Title': row['Title'][:80] + '...' if len(row['Title']) > 80 else row['Title']
             })
+
+    if not results:
+        print(f"[COMPETITOR] No competitor drugs found")
+        return pd.DataFrame()
 
     result_df = pd.DataFrame(results)
 
-    # Remove duplicates (same abstract might match multiple drug name variants)
-    if not result_df.empty:
-        result_df = result_df.drop_duplicates(subset=['Drug', 'Identifier'])
-        result_df = result_df.sort_values(['Drug', 'Identifier'])
-        result_df = result_df.head(n)  # Limit to n results
+    # Add study count per drug for sorting (internal use)
+    study_counts = result_df.groupby('Drug').size().to_dict()
+    result_df['_study_count'] = result_df['Drug'].map(study_counts)
 
+    # Drop duplicates and sort by study count
+    result_df = result_df.drop_duplicates(subset=['Drug', 'Identifier'])
+    result_df = result_df.sort_values(['_study_count', 'Drug'], ascending=[False, True])
+    result_df = result_df.head(n)
+
+    # Drop the internal sorting column before returning
+    result_df = result_df.drop(columns=['_study_count'])
+
+    print(f"[COMPETITOR] Found {len(result_df)} abstracts from {result_df['Drug'].nunique()} unique drugs")
     return result_df
 
-def filter_competitors_by_indication(competitor_df: pd.DataFrame, indication_keywords: list) -> pd.DataFrame:
-    """Filter competitor table to only show drugs relevant to specific indication."""
-    if competitor_df.empty or not indication_keywords:
-        return competitor_df
+def generate_drug_moa_ranking(competitor_df: pd.DataFrame, n: int = 20) -> pd.DataFrame:
+    """
+    Generate summary ranking table showing # of studies per drug and MOA class.
 
-    # Search Title column for indication keywords
-    mask = pd.Series([False] * len(competitor_df), index=competitor_df.index)
-    for keyword in indication_keywords:
-        mask = mask | competitor_df['Title'].str.contains(keyword, case=False, na=False, regex=False)
+    Args:
+        competitor_df: Output from generate_competitor_table()
+        n: Max drugs to show in ranking
+    """
+    if competitor_df.empty:
+        return pd.DataFrame()
 
-    return competitor_df[mask]
+    # Group by drug and aggregate
+    ranking = competitor_df.groupby(['Drug', 'Company', 'MOA Class']).agg({
+        'Identifier': 'count'
+    }).reset_index()
+
+    ranking.columns = ['Drug', 'Company', 'MOA Class', '# Studies']
+    ranking = ranking.sort_values('# Studies', ascending=False).head(n)
+
+    print(f"[DRUG RANKING] Generated ranking with {len(ranking)} drugs")
+    return ranking
 
 def generate_emerging_threats_table(df: pd.DataFrame, indication_keywords: list, n: int = 20) -> pd.DataFrame:
-    """Identify emerging threats: drugs with <5 abstracts but showing novel MOAs or combinations."""
+    """
+    Identify emerging threats: drugs with 3-5 abstracts showing novel MOAs or combinations.
+
+    Args:
+        df: Dataframe to search
+        indication_keywords: Keywords to filter by indication (e.g., ["bladder", "urothelial"])
+        n: Max results to return
+    """
     if df.empty:
         return pd.DataFrame()
 
     try:
         drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
-        drug_db = pd.read_csv(drug_db_path)
+        drug_db = pd.read_csv(drug_db_path, encoding='utf-8-sig')
+        print(f"[EMERGING] Loaded drug database with {len(drug_db)} drugs")
     except Exception as e:
-        print(f"Warning: Could not load Drug_Company_names.csv: {e}")
+        print(f"[EMERGING] ERROR: Could not load Drug_Company_names.csv: {e}")
         return pd.DataFrame()
 
-    # Find drugs with 2-5 mentions (emerging, not established)
+    # EMD portfolio to exclude
+    emd_drugs = ['avelumab', 'bavencio', 'tepotinib', 'cetuximab', 'erbitux', 'pimicotinib']
+
+    # Find drugs with 3-5 mentions (emerging, not established)
     emerging = []
     for _, drug_row in drug_db.iterrows():
         commercial = str(drug_row['drug_commercial']).strip() if pd.notna(drug_row['drug_commercial']) else ""
         generic = str(drug_row['drug_generic']).strip() if pd.notna(drug_row['drug_generic']) else ""
         company = str(drug_row['company']).strip() if pd.notna(drug_row['company']) else ""
+        moa_class = str(drug_row['moa_class']).strip() if pd.notna(drug_row['moa_class']) else "Unknown"
+        moa_target = str(drug_row['moa_target']).strip() if pd.notna(drug_row['moa_target']) else "Unknown"
 
         if not commercial and not generic:
+            continue
+
+        # Skip EMD portfolio drugs
+        if generic.lower() in emd_drugs or commercial.lower() in emd_drugs:
             continue
 
         # Build search mask
@@ -1862,6 +2041,11 @@ def generate_emerging_threats_table(df: pd.DataFrame, indication_keywords: list,
             mask = mask | df['Title'].str.contains(commercial, case=False, na=False, regex=False)
         if generic:
             mask = mask | df['Title'].str.contains(generic, case=False, na=False, regex=False)
+
+            # Also try base name without suffix (e.g., "enfortumab vedotin" from "enfortumab vedotin-ejfv")
+            base_generic = generic.split('-')[0].strip() if '-' in generic else generic
+            if base_generic != generic and len(base_generic.split()) > 1:
+                mask = mask | df['Title'].str.contains(base_generic, case=False, na=False, regex=False)
 
         # Filter by indication keywords
         if indication_keywords:
@@ -1873,20 +2057,23 @@ def generate_emerging_threats_table(df: pd.DataFrame, indication_keywords: list,
         matching = df[mask]
         count = len(matching)
 
-        # Emerging: 2-5 mentions
-        if 2 <= count <= 5:
+        # Emerging: 3-5 mentions (clear signal, not established)
+        if 3 <= count <= 5:
             drug_name = generic if generic else commercial
             sample_title = matching.iloc[0]['Title'] if not matching.empty else ""
             emerging.append({
                 'Drug': drug_name,
                 'Company': company,
+                'MOA Class': moa_class,
+                'MOA Target': moa_target,
                 '# Studies': count,
-                'Sample Title': sample_title[:100] + '...' if len(sample_title) > 100 else sample_title
+                'Sample Title': sample_title[:80] + '...' if len(sample_title) > 80 else sample_title
             })
 
     result_df = pd.DataFrame(emerging)
     if not result_df.empty:
         result_df = result_df.sort_values('# Studies', ascending=False).head(n)
+        print(f"[EMERGING] Found {len(result_df)} emerging threats")
 
     return result_df
 
@@ -2215,38 +2402,62 @@ def stream_playbook(playbook_key):
                     }) + "\n\n"
 
             if "all_data" in playbook.get("required_tables", []):
-                # For competitor button, use dedicated competitor table with Drug and Company columns
+                # For competitor button, use CSV-driven MOA-aware competitor detection
                 if playbook_key == "competitor":
                     # IMPORTANT: For competitor intelligence, search FULL dataset (not filtered)
-                    print(f"[PLAYBOOK] Generating competitor table from FULL dataset ({len(df_global)} studies)")
-                    competitor_table_full = generate_competitor_table(df_global, n=len(df_global))
+                    print(f"[PLAYBOOK] Generating CSV-driven competitor table from FULL dataset ({len(df_global)} studies)")
 
-                    # Filter competitors by indication if drug focus is selected
+                    # Define indication keywords and MOA classes based on drug focus
                     indication_keywords = []
+                    focus_moa_classes = None
+
                     if drug_filters and drug_filters[0] == "Avelumab Focus":
                         indication_keywords = ["bladder", "urothelial", "uroepithelial"]
+                        focus_moa_classes = ["ICI", "ADC", "Targeted Therapy", "Bispecific Antibody"]
                     elif drug_filters and drug_filters[0] == "Tepotinib Focus":
                         indication_keywords = ["lung", "NSCLC", "MET"]
-                    elif drug_filters and drug_filters[0] == "Cetuximab Focus":
-                        indication_keywords = ["colorectal", "CRC", "head and neck", "HNSCC"]
+                        focus_moa_classes = ["TKI", "ADC", "ICI", "Targeted Therapy"]
+                    elif drug_filters and drug_filters[0] == "Cetuximab CRC":
+                        indication_keywords = ["colorectal", "CRC", "colon", "rectal"]
+                        focus_moa_classes = ["Targeted Therapy", "ICI", "ADC", "Bispecific Antibody"]
+                    elif drug_filters and drug_filters[0] == "Cetuximab H&N":
+                        indication_keywords = ["head and neck", "head & neck", "H&N", "HNSCC", "SCCHN", "oral", "pharyngeal", "laryngeal"]
+                        focus_moa_classes = ["Targeted Therapy", "ICI", "ADC", "Bispecific Antibody"]
 
-                    if indication_keywords:
-                        competitor_table = filter_competitors_by_indication(competitor_table_full, indication_keywords)
-                        print(f"[PLAYBOOK] Filtered to {len(competitor_table)} competitors in relevant indication")
-                    else:
-                        competitor_table = competitor_table_full
+                    # Generate competitor table with MOA filtering
+                    competitor_table = generate_competitor_table(
+                        df_global,
+                        indication_keywords=indication_keywords,
+                        focus_moa_classes=focus_moa_classes,
+                        n=200
+                    )
 
+                    print(f"[PLAYBOOK] CSV approach found {len(competitor_table)} competitor studies")
                     tables_data["competitor_abstracts"] = competitor_table.to_markdown(index=False) if not competitor_table.empty else "No competitor drugs found"
 
                     if not competitor_table.empty:
-                        print(f"[PLAYBOOK] Sending main competitor table with {len(competitor_table)} studies")
+                        # Table 1: Drug/MOA Ranking Summary
+                        ranking_table = generate_drug_moa_ranking(competitor_table, n=15)
+                        if not ranking_table.empty:
+                            print(f"[PLAYBOOK] Sending drug ranking table with {len(ranking_table)} drugs")
+                            yield "data: " + json.dumps({
+                                "title": f"Competitor Drug Ranking ({len(ranking_table)} drugs)",
+                                "subtitle": "Summary of # studies per drug and MOA class",
+                                "columns": list(ranking_table.columns),
+                                "rows": sanitize_data_structure(ranking_table.to_dict('records'))
+                            }) + "\n\n"
+                            tables_data["drug_ranking"] = ranking_table.to_markdown(index=False)
+
+                        # Table 2: Full competitor studies list
+                        print(f"[PLAYBOOK] Sending competitor table with {len(competitor_table)} studies")
                         yield "data: " + json.dumps({
-                            "title": f"Competitor Drugs ({len(competitor_table)} studies)",
+                            "title": f"Competitor Studies ({len(competitor_table)} abstracts)",
+                            "subtitle": "Filtered by indication keywords and MOA classes from Drug_Company_names.csv",
                             "columns": list(competitor_table.columns),
                             "rows": sanitize_data_structure(competitor_table.to_dict('records'))
                         }) + "\n\n"
 
-                    # Generate emerging threats table
+                    # Table 3: Generate emerging threats table (drugs with 3-5 studies)
                     if indication_keywords:
                         print(f"[PLAYBOOK] Generating emerging threats table...")
                         emerging_table = generate_emerging_threats_table(df_global, indication_keywords, n=15)
@@ -2254,7 +2465,8 @@ def stream_playbook(playbook_key):
                             print(f"[PLAYBOOK] Found {len(emerging_table)} emerging threats")
                             tables_data["emerging_threats"] = emerging_table.to_markdown(index=False)
                             yield "data: " + json.dumps({
-                                "title": f"Emerging Threats (2-5 studies each)",
+                                "title": f"Emerging Threats ({len(emerging_table)} drugs with 3-5 studies each)",
+                                "subtitle": "Novel or early-stage drugs showing limited but emerging presence",
                                 "columns": list(emerging_table.columns),
                                 "rows": sanitize_data_structure(emerging_table.to_dict('records'))
                             }) + "\n\n"
@@ -2305,10 +2517,15 @@ def stream_playbook(playbook_key):
                             "key_competitors": ["capmatinib", "crizotinib", "osimertinib", "alectinib", "selpercatinib", "pralsetinib", "pembrolizumab"],
                             "therapeutic_area": "Non-Small Cell Lung Cancer (NSCLC) - MET alterations"
                         },
-                        "Cetuximab Focus": {
-                            "indication": "Colorectal Cancer & Head & Neck Cancer (EGFR+)",
-                            "key_competitors": ["panitumumab", "bevacizumab", "pembrolizumab", "nivolumab", "regorafenib", "trifluridine/tipiracil"],
-                            "therapeutic_area": "Colorectal Cancer and Head & Neck Squamous Cell Carcinoma"
+                        "Cetuximab CRC": {
+                            "indication": "Metastatic Colorectal Cancer (EGFR+, RAS wild-type)",
+                            "key_competitors": ["panitumumab", "bevacizumab", "pembrolizumab", "nivolumab", "regorafenib", "trifluridine/tipiracil", "fruquintinib", "encorafenib+cetuximab"],
+                            "therapeutic_area": "Metastatic Colorectal Cancer"
+                        },
+                        "Cetuximab H&N": {
+                            "indication": "Locally Advanced or Metastatic Head & Neck Cancer (EGFR+)",
+                            "key_competitors": ["pembrolizumab", "nivolumab", "durvalumab", "panitumumab", "toripalimab"],
+                            "therapeutic_area": "Head & Neck Squamous Cell Carcinoma"
                         }
                     }
 
@@ -2384,6 +2601,19 @@ def stream_chat_api():
             # 1. Classify user query to detect entity types and table needs
             classification = classify_user_query(user_query)
             print(f"[QUERY CLASSIFICATION] {classification}")
+
+            # 1.5. Handle clarification requests (vague queries)
+            if classification.get('entity_type') == 'clarification_needed':
+                clarification_text = classification.get('clarification_question',
+                    "Could you please be more specific? For example, you could ask about:\n\n" +
+                    "• Specific researchers (e.g., 'Who is Andrea Necchi?')\n" +
+                    "• Drugs or therapies (e.g., 'Tell me about enfortumab vedotin')\n" +
+                    "• Top rankings (e.g., 'Most active institutions')\n" +
+                    "• Trends or analyses (e.g., 'Latest immunotherapy trends')")
+
+                yield "data: " + json.dumps({"text": clarification_text}) + "\n\n"
+                yield "data: [DONE]\n\n"
+                return
 
             # 2. Apply filters to get relevant dataset
             filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
@@ -2484,7 +2714,13 @@ def stream_chat_api():
                 else:
                     table_context = f"\n\n**NOTE**: The user asked about a specific entity that was not found in the ESMO 2025 dataset. A 'no results' message has been displayed. Explain why this might be the case and suggest alternative searches or related topics."
 
-            prompt = f"""You are an expert medical affairs analyst for EMD Serono analyzing ESMO 2025 conference data.
+            prompt = f"""You are an AI assistant for COSMIC, the Conference Intelligence App for EMD Serono medical affairs. You help analyze ESMO 2025 conference abstracts.
+
+**YOUR ROLE**:
+- Respond naturally and conversationally to user queries
+- For greetings like "Hi" or "Hello", be friendly and briefly introduce your capabilities
+- For data questions, provide insights based on the conference abstracts
+- You have access to {len(filtered_df)} conference studies in the current scope
 
 **USER QUESTION**: {user_query}
 
@@ -2493,19 +2729,18 @@ def stream_chat_api():
 **DATA SOURCE**: {data_source}
 {history_context}{table_context}
 
-**RELEVANT CONFERENCE DATA**:
+**SAMPLE CONFERENCE DATA** (showing {len(relevant_data)} most relevant of {len(filtered_df)} total studies):
 {data_context}
 
 **INSTRUCTIONS**:
-- **IMPORTANT**: Start your response by mentioning the active scope (e.g., "Based on {len(filtered_df)} studies in [scope]...")
-- Always cite Abstract # (identifier) when referencing specific studies
-- If a table was generated, reference it and provide analysis beyond what's in the table
-- If the data doesn't contain information to answer the question, acknowledge this clearly
-- Focus on actionable insights for medical affairs professionals
-- Consider EMD Serono's portfolio: avelumab (bladder cancer), tepotinib (NSCLC MET+), cetuximab (CRC/H&N), pimicotinib (TGCT, pre-launch)
-- Be concise but comprehensive
+- Respond naturally to the user's question (whether greeting, casual query, or data request)
+- When analyzing conference data, mention the scope size: "Looking at {len(filtered_df)} studies in [scope]..."
+- Always cite Abstract # (Identifier) when referencing specific studies
+- If data doesn't answer the question, acknowledge this and suggest alternatives
+- Consider EMD Serono's portfolio context: avelumab (bladder), tepotinib (NSCLC MET+), cetuximab (CRC/H&N), pimicotinib (TGCT)
+- Be conversational, helpful, and concise
 
-Please answer the user's question based on the conference data provided."""
+Please respond naturally to the user."""
 
             # 7. Stream AI response
             for token_event in stream_openai_tokens(prompt):

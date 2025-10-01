@@ -434,8 +434,7 @@ body.ai-tab-active .quick-intel-sidebar:not(.collapsed) ~ .main-content {
 
 /* Search Bar */
 .search-bar-container {
-  width: 100%;
-  max-width: 100%;
+  max-width: 800px;
 }
 
 .search-bar-container .form-control-lg {
