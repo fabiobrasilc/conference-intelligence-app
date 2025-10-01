@@ -624,7 +624,9 @@ Highlight the most scientifically significant or paradigm-shifting presentations
 - Natural narrative prose - flowing paragraphs, not bullet lists (use bullets only for section structure)
 - Always cite Abstract # when referencing specific studies or trends
 - Integrate quantitative data from biomarker/MOA table (e.g., "PD-L1 appeared in 45 abstracts, representing 30% of all IO studies...")
-- Use only information from provided biomarker table and abstracts - if unavailable, state "not found in current dataset"
+- **CRITICAL**: Only discuss biomarkers/topics that appear in the provided table. Skip/omit topics with no data entirely - DO NOT mention "not found", "not available", "not present", or "not in dataset"
+- Focus your analysis on what IS present, not what's absent
+- If a section has no relevant data, skip that section completely
 - Maintain scientific rigor and precision
 - Descriptive analysis - avoid prescriptive clinical recommendations
 - Professional vocabulary for Medical Director/VP Medical Affairs audience
@@ -1870,13 +1872,33 @@ def generate_biomarker_moa_table(df: pd.DataFrame) -> pd.DataFrame:
         if len(keyword) <= 6 and keyword.isupper():
             # Case-sensitive search with word boundaries for acronyms
             pattern = r'\b' + re.escape(keyword) + r'\b'
-            count = df['Title'].str.contains(pattern, case=True, na=False, regex=True).sum()
+            mask = df['Title'].str.contains(pattern, case=True, na=False, regex=True)
         else:
             # Case-insensitive for longer terms
-            count = df['Title'].str.contains(keyword, case=False, na=False).sum()
+            mask = df['Title'].str.contains(keyword, case=False, na=False)
 
-        if count > 0:
-            results.append({'Biomarker/MOA': keyword, '# Studies': count})
+        if mask.sum() > 0:
+            # Get matching studies
+            matching_studies = df[mask]
+
+            # Collect identifiers (handle NaN/empty values)
+            identifiers = matching_studies['Identifier'].fillna('n/a').tolist()
+            identifier_str = ', '.join([str(x) if x != 'n/a' else 'n/a' for x in identifiers[:10]])  # Limit to first 10
+            if len(identifiers) > 10:
+                identifier_str += f', +{len(identifiers) - 10} more'
+
+            # Collect unique sessions
+            sessions = matching_studies['Session'].fillna('n/a').unique().tolist()
+            session_str = ', '.join([str(s)[:20] for s in sessions[:3]])  # First 3 sessions, truncated
+            if len(sessions) > 3:
+                session_str += f', +{len(sessions) - 3} more'
+
+            results.append({
+                'Biomarker/MOA': keyword,
+                '# Studies': mask.sum(),
+                'Identifiers': identifier_str,
+                'Sessions': session_str
+            })
 
     result_df = pd.DataFrame(results)
     if not result_df.empty:
