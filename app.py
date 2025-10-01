@@ -48,13 +48,15 @@ def sanitize_unicode_for_windows(text):
     return text
 
 def sanitize_data_structure(data):
-    """Recursively sanitize Unicode in dicts, lists, strings."""
+    """Recursively sanitize Unicode in dicts, lists, strings. Handle NaN/NaT values."""
     if isinstance(data, dict):
         return {key: sanitize_data_structure(value) for key, value in data.items()}
     elif isinstance(data, list):
         return [sanitize_data_structure(item) for item in data]
     elif isinstance(data, str):
         return sanitize_unicode_for_windows(data)
+    elif pd.isna(data):  # Handle NaN, NaT, None
+        return None
     else:
         return data
 
@@ -2078,11 +2080,19 @@ def stream_playbook(playbook_key):
                 # Send table as SSE event (frontend expects: title, columns, rows as objects)
                 if not authors_table.empty:
                     print(f"[PLAYBOOK] Sending authors table with {len(authors_table)} rows")
-                    yield "data: " + json.dumps({
-                        "title": "Top 15 Authors",
-                        "columns": list(authors_table.columns),
-                        "rows": sanitize_data_structure(authors_table.to_dict('records'))
-                    }) + "\n\n"
+                    try:
+                        table_data = {
+                            "title": "Top 15 Authors",
+                            "columns": list(authors_table.columns),
+                            "rows": sanitize_data_structure(authors_table.to_dict('records'))
+                        }
+                        print(f"[PLAYBOOK] Table data prepared, attempting to send...")
+                        yield "data: " + json.dumps(table_data) + "\n\n"
+                        print(f"[PLAYBOOK] Table sent successfully")
+                    except Exception as e:
+                        print(f"[PLAYBOOK] ERROR sending table: {type(e).__name__}: {str(e)}")
+                        import traceback
+                        traceback.print_exc()
                 else:
                     print(f"[PLAYBOOK] WARNING: Authors table is empty")
 
