@@ -1,8 +1,17 @@
-# app.py (Consolidated, Advanced, and Corrected Version)
+"""
+ESMO 2025 Conference Intelligence App - Simplified Architecture
+Medical Affairs Platform for EMD Serono
+
+Radical simplification following the vision:
+Button → Generate Table → Inject Prompt → Stream Response
+
+No overengineered routing, no QueryPlan abstractions, no keyword matching.
+Clean, maintainable, ~2000 lines.
+"""
 
 from flask import Flask, render_template, request, jsonify, Response
 import pandas as pd
-import chromadb  # Vector DB
+import chromadb
 from chromadb.utils import embedding_functions
 from openai import OpenAI
 from pathlib import Path
@@ -11,84 +20,120 @@ import json
 from typing import List, Tuple, Dict, Any, Optional
 from collections import Counter
 from datetime import datetime
-from dataclasses import dataclass
 import os
 import time
 from dotenv import load_dotenv
-import hashlib  # <-- Added (used by file_md5 / df_sig)
+import hashlib
+import io
 
-# --- Heartbeat wrapper for SSE streaming ---
+# ============================================================================
+# UNICODE SANITIZATION (Windows compatibility)
+# ============================================================================
+
+def sanitize_unicode_for_windows(text):
+    """Replace Unicode characters incompatible with Windows cp1252 codec."""
+    if not text:
+        return text
+
+    replacements = {
+        '\u2011': '-', '\u2013': '-', '\u2014': '-',
+        '\u2018': "'", '\u2019': "'",
+        '\u201c': '"', '\u201d': '"',
+        '\u2026': '...', '\u00a0': ' ',
+    }
+
+    for unicode_char, replacement in replacements.items():
+        text = text.replace(unicode_char, replacement)
+
+    return text
+
+def sanitize_data_structure(data):
+    """Recursively sanitize Unicode in dicts, lists, strings."""
+    if isinstance(data, dict):
+        return {key: sanitize_data_structure(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [sanitize_data_structure(item) for item in data]
+    elif isinstance(data, str):
+        return sanitize_unicode_for_windows(data)
+    else:
+        return data
+
+# ============================================================================
+# SSE STREAMING UTILITIES
+# ============================================================================
+
 def stream_with_heartbeat(inner_gen, interval=10):
-    """
-    Wrap an iterator (SSE token generator) and ensure we emit a ping
-    at least every `interval` seconds so the connection never goes idle.
-    """
+    """Wrap SSE stream with periodic pings to keep connection alive."""
     last = time.monotonic()
 
     for chunk in inner_gen:
         yield chunk
         last = time.monotonic()
 
-        # Non-blocking: while there are long gaps before the next chunk, drip pings
         now = time.monotonic()
         if now - last >= interval:
             yield f": ping {int(now)}\n\n"
             last = now
 
-    # one last ping for good measure
     yield f": ping {int(time.monotonic())}\n\n"
 
 SSE_HEADERS = {
     "Cache-Control": "no-cache, no-transform",
     "Connection": "keep-alive",
-    "X-Accel-Buffering": "no",       # ignored if not applicable, safe to send
+    "X-Accel-Buffering": "no",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Cache-Control",
 }
 
-# --- Initialization ---
-load_dotenv()  # Load environment variables from .env file
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "a_strong_fallback_secret_key_change_me")
 
-from pathlib import Path
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+
 CSV_FILE = Path(__file__).parent / "ESMO_2025_FINAL_20250929.csv"
-
 CHROMA_DB_PATH = "./chroma_conference_db"
-
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
-# Configure OpenAI client with controlled connection pooling for Railway deployment
+# OpenAI client with controlled connection pooling for Railway deployment
 if OPENAI_API_KEY:
     import httpx
 
-    # Create custom httpx client with controlled connection pooling
     custom_http_client = httpx.Client(
-        timeout=httpx.Timeout(300.0, connect=30.0),  # 5-minute timeout, 30s connect
-        limits=httpx.Limits(
-            max_connections=3,          # Reduced from default 100
-            max_keepalive_connections=1  # Reduced from default 20
-        ),
+        timeout=httpx.Timeout(300.0, connect=30.0),
+        limits=httpx.Limits(max_connections=3, max_keepalive_connections=1),
         transport=httpx.HTTPTransport(retries=2)
     )
 
     client = OpenAI(
         api_key=OPENAI_API_KEY,
-        timeout=60.0,   # More realistic timeout per request
+        timeout=60.0,
         max_retries=2,
         http_client=custom_http_client
     )
 else:
     client = None
 
-# --- Global variables ---
+# ============================================================================
+# GLOBAL VARIABLES
+# ============================================================================
+
 chroma_client = None
 collection = None
 csv_hash_global = None
 df_global = None
 
-# ESMO 2025 Drug-Centric + Therapeutic Area Configuration
+# ============================================================================
+# FILTER CONFIGURATIONS
+# ============================================================================
+
 ESMO_DRUG_FILTERS = {
     "Competitive Landscape": {
         "keywords": [],
@@ -116,10 +161,17 @@ ESMO_DRUG_FILTERS = {
         "main_filters": [],
         "description": "Cetuximab/Erbitux in colorectal and head & neck"
     },
-    "Competitive Landscape": {
-        "keywords": [],
+    "Cetuximab H&N": {
+        "keywords": ["cetuximab", "erbitux"],
+        "ta_filter": "Head and Neck Cancer",
         "main_filters": [],
-        "description": "All sessions for competitive analysis"
+        "description": "Cetuximab/Erbitux in head & neck cancer"
+    },
+    "Cetuximab CRC": {
+        "keywords": ["cetuximab", "erbitux"],
+        "ta_filter": "Colorectal Cancer",
+        "main_filters": [],
+        "description": "Cetuximab/Erbitux in colorectal cancer"
     }
 }
 
@@ -127,19 +179,21 @@ ESMO_THERAPEUTIC_AREAS = {
     "All Therapeutic Areas": {"keywords": []},
     "Bladder Cancer": {
         "keywords": ["bladder", "urothelial", "uroepithelial", "transitional cell", "GU", "genitourinary"],
-        "exclusions": ["prostate"]  # Exclude prostate cancer
+        "exclusions": ["prostate"]
     },
     "Renal Cancer": {
         "keywords": ["renal", "renal cell", "RCC"]
     },
     "Lung Cancer": {
-        "keywords": ["NSCLC", "non-small cell lung cancer", "non-small-cell lung cancer", "MET", "ALK", "EGFR", "KRAS"]
+        "keywords": ["lung", "non-small cell lung cancer", "non-small-cell lung cancer", "NSCLC", "MET", "ALK", "EGFR", "KRAS"]
     },
     "Colorectal Cancer": {
-        "keywords": ["colorectal", "CRC", "colon", "rectal", "GI", "gastrointestinal", "bowel", "KRAS", "MSI", "microsatellite"]
+        "keywords": ["colorectal", "CRC", "colon", "rectal", "bowel"],
+        "exclusions": ["gastric", "esophageal", "pancreatic", "hepatocellular", "HCC"]
     },
     "Head and Neck Cancer": {
-        "keywords": ["head and neck", "head & neck", "H&N", "HNSCC", "SCCHN", "squamous cell carcinoma of the head", "oral", "pharyngeal", "laryngeal"]
+        "keywords": ["head and neck", "head & neck", "H&N", "HNSCC", "SCCHN",
+                     "squamous cell carcinoma of the head", "oral", "pharyngeal", "laryngeal"]
     },
     "TGCT": {
         "keywords": ["TGCT", "PVNS", "tenosynovial giant cell tumor", "pigmented villonodular synovitis"]
@@ -148,4920 +202,2134 @@ ESMO_THERAPEUTIC_AREAS = {
 
 ESMO_SESSION_TYPES = {
     "All Session Types": [],
-    "Educational Session": ["Educational Session"],
+    "Poster": ["Poster"],
+    "ePoster": ["ePoster"],
     "Proffered Paper": ["Proffered Paper"],
     "Mini Oral Session": ["Mini Oral Session"],
-    "Symposium": ["Symposium"],  # Will be filtered to exclude Industry-Sponsored
-    "Special Session": ["Special Session"],
-    "Multidisciplinary Session": ["Multidisciplinary Session"],
-    "Young Oncologists Session": ["Young Oncologists Session"],
-    "Patient Advocacy Session": ["Patient Advocacy Session"],
+    "Educational Session": ["Educational Session"],
+    "Symposia": ["Symposium"],  # All symposiums EXCEPT Industry-Sponsored
     "Industry-Sponsored Symposium": ["Industry-Sponsored Symposium"],
+    "Multidisciplinary Session": ["Multidisciplinary Session"],
+    "Special Session": ["Special Session"],
+    "Young Oncologists Session": ["Young Oncologists Session"],
     "Challenge Your Expert": ["Challenge Your Expert"],
-    "Keynote Lecture": ["Keynote Lecture"],
+    "Patient Advocacy Session": ["Patient Advocacy Session"],
+    "EONS Session": ["Eons Session"],
     "Highlights": ["Highlights"],
-    "Eons Session": ["Eons Session"],
-    "ePoster": ["ePoster"],
-    "Poster": ["Poster"]
+    "Keynote Lecture": ["Keynote Lecture"]
 }
 
-ESMO_DATE_FILTERS = {
-    "All Days": [],
-    "Day 1 (10/17/2025)": ["10/17/2025"],
-    "Day 2 (10/18/2025)": ["10/18/2025"],
-    "Day 3 (10/19/2025)": ["10/19/2025"],
-    "Day 4 (10/20/2025)": ["10/20/2025"],
-    "Day 5 (10/21/2025)": ["10/21/2025"]
+ESMO_DATES = {
+    "All Dates": [],
+    "Day 1": ["10/17/2025"],
+    "Day 2": ["10/18/2025"],
+    "Day 3": ["10/19/2025"],
+    "Day 4": ["10/20/2025"],
+    "Day 5": ["10/21/2025"]
 }
 
-# =========================
-# Conference Data Model
-# =========================
-
-@dataclass
-class ConferenceConfig:
-    """
-    Configuration for each supported conference with schema mapping and metadata
-    """
-    id: str                          # Unique identifier (e.g., "ASCO_GU_2025", "ESMO_2025")
-    name: str                        # Display name
-    csv_file: str                    # Path to CSV data file
-    encoding: str = "utf-8"          # File encoding
-
-    # Column mappings from source CSV to unified schema
-    column_mapping: dict = None      # Maps source columns to standard names
-
-    # Therapeutic area handling
-    ta_column: str = "ta"            # Column containing therapeutic area classification
-    ta_mapping: dict = None          # Maps values to standardized TA names
-
-    # Conference-specific metadata
-    has_multi_authors: bool = True   # Whether conference supports multiple authors per session
-    has_geographic_data: bool = False # Whether location data is available
-    has_session_metadata: bool = False # Whether dates/times/rooms are available
-
-    # Data quality flags
-    affiliation_quality: str = "high"    # "high", "medium", "low" - affects user warnings
-    affiliation_source: str = "scraped"  # "scraped", "api_derived", "manual"
-
-    def __post_init__(self):
-        if self.column_mapping is None:
-            self.column_mapping = {}
-        if self.ta_mapping is None:
-            self.ta_mapping = {}
-
-def get_conference_configs() -> Dict[str, ConferenceConfig]:
-    """
-    Define all supported conference configurations
-    """
-    return {
-        "ASCO_GU_2025": ConferenceConfig(
-            id="ASCO_GU_2025",
-            name="ASCO GU 2025",
-            csv_file="ASCO GU 2025 Poster Author Affiliations info.csv",
-            encoding="utf-8",
-            column_mapping={
-                "Abstract #": "abstract_id",
-                "Poster #": "session_id",
-                "Title": "title",
-                "Authors": "authors",
-                "Institutions": "institutions",
-                "ta": "therapeutic_area"
-            },
-            ta_column="ta",
-            ta_mapping={
-                "bladder": "Bladder Cancer",
-                "renal": "Renal Cell Carcinoma"
-            },
-            has_multi_authors=True,
-            has_geographic_data=False,
-            has_session_metadata=False,
-            affiliation_quality="high",
-            affiliation_source="scraped"
-        ),
-
-        "ESMO_2025": ConferenceConfig(
-            id="ESMO_2025",
-            name="ESMO 2025",
-            csv_file="esmo2025_all.csv",
-            encoding="latin-1",
-            column_mapping={
-                "identifier": "abstract_id",
-                "session_type": "session_id",
-                "study_title": "title",
-                "speaker": "authors",
-                "affiliation": "institutions",
-                "main_filters": "therapeutic_area",
-                "location": "speaker_location",
-                "date": "session_date",
-                "time": "session_time",
-                "room": "session_room",
-                "session_category": "session_category"
-            },
-            ta_column="Theme",
-            ta_mapping={
-                "Urothelial; Avelumab": "Bladder Cancer",
-                "NSCLC; Tepotinib": "Lung Cancer",
-                "NSCLC": "Lung Cancer",
-                "colorectal": "Colorectal Cancer",
-                "CRC": "Colorectal Cancer",
-                "head and neck": "Head and Neck Cancer",
-                "EGFR": "Lung Cancer",
-                "bladder": "Bladder Cancer"
-            },
-            has_multi_authors=False,
-            has_geographic_data=True,
-            has_session_metadata=True,
-            affiliation_quality="medium",
-            affiliation_source="api_derived"
-        )
-    }
-
-# =========================
-# Global Helpers
-# =========================
-def file_md5(path: Path) -> str:
-    with open(path, "rb") as f:
-        return hashlib.md5(f.read()).hexdigest()
-
-def df_sig(df: pd.DataFrame) -> str:
-    return hashlib.md5(pd.util.hash_pandas_object(df, index=False).values.tobytes()).hexdigest()[:8]
-
-def table_for_prompt(df: pd.DataFrame, max_rows: int = 30, cols: Optional[List[str]] = None) -> str:
-    """Return a compact CSV string (<= max_rows) for inclusion in prompts."""
-    if df is None or len(df) == 0:
-        return "No rows."
-    slim = df
-    if cols:
-        keep = [c for c in cols if c in slim.columns]
-        if keep:
-            slim = slim.loc[:, keep]
-    return slim.head(max_rows).to_csv(index=False)
-
-def safe_contains(series: pd.Series, pattern: str, regex: bool = True) -> pd.Series:
-    return series.fillna("").str.contains(pattern, case=False, na=False, regex=regex)
-
-def clean_filename(s: str) -> str:
-    return s.lower().replace(' ', '_').replace('/', '_').replace('\\', '_')
-
-def normalize_institution_name(institution_text: str) -> str:
-    """
-    Normalize institution names using heuristic rules to extract the main institution.
-    Handles comma-separated affiliations like "Department, Division, University".
-    """
-    if not institution_text or pd.isna(institution_text):
-        return ""
-
-    # Clean up the text
-    institution_text = str(institution_text).strip()
-
-    # Split by commas to get all parts
-    parts = [part.strip() for part in institution_text.split(",")]
-
-    # Priority keywords that indicate main institutions
-    university_keywords = ["university", "college", "school of medicine"]
-    hospital_keywords = ["hospital", "medical center", "health system", "clinic"]
-    cancer_center_keywords = ["cancer center", "cancer centre", "oncology center"]
-
-    # Skip keywords that indicate sub-units
-    skip_keywords = ["department", "division", "section", "unit"]
-
-    # Find the best match using priority order
-    best_match = ""
-
-    # First priority: Look for universities/colleges
-    for part in parts:
-        part_lower = part.lower()
-        if any(keyword in part_lower for keyword in university_keywords):
-            if not any(skip in part_lower for skip in skip_keywords):
-                return part
-
-    # Second priority: Look for hospitals/medical centers
-    for part in parts:
-        part_lower = part.lower()
-        if any(keyword in part_lower for keyword in hospital_keywords):
-            if not any(skip in part_lower for skip in skip_keywords):
-                return part
-
-    # Third priority: Look for cancer centers (but only if no university/hospital found)
-    for part in parts:
-        part_lower = part.lower()
-        if any(keyword in part_lower for keyword in cancer_center_keywords):
-            if not any(skip in part_lower for skip in skip_keywords):
-                return part
-
-    # If no priority matches found, filter out standalone departments
-    if len(parts) == 1 and any(skip in parts[0].lower() for skip in skip_keywords):
-        return ""  # Filter out standalone departments/divisions
-
-    # Fallback: return the last part (often the main institution)
-    return parts[-1] if parts else ""
-
-def get_filtered_dataframe(drug_filter: str = "All EMD Portfolio", ta_filter: str = "All Therapeutic Areas") -> pd.DataFrame:
-    """
-    Filter ESMO 2025 dataframe by drug focus AND therapeutic area.
-    Two-stage filtering approach for comprehensive coverage.
-
-    Args:
-        drug_filter: Drug focus filter ("Avelumab Focus", "All EMD Portfolio", etc.)
-        ta_filter: Therapeutic area filter ("Bladder Cancer", "All Therapeutic Areas", etc.)
-
-    Returns:
-        Filtered dataframe copy with filter context
-    """
-    if df_global is None:
-        return pd.DataFrame()
-
-    df = df_global.copy()
-
-    # Stage 1: Drug Focus Filtering - SIMPLIFIED: search keywords in study_title only
-    if drug_filter in ESMO_DRUG_FILTERS:
-        drug_config = ESMO_DRUG_FILTERS[drug_filter]
-
-        # Use simple keyword search in Title column
-        if drug_config["keywords"]:
-            keyword_pattern = "|".join(drug_config["keywords"])
-            mask = df["Title"].str.contains(keyword_pattern, case=False, na=False)
-            df = df[mask]
-
-    # Stage 2: Therapeutic Area Filtering - Search across Title and Theme columns
-    if ta_filter != "All Therapeutic Areas" and ta_filter in ESMO_THERAPEUTIC_AREAS:
-        ta_config = ESMO_THERAPEUTIC_AREAS[ta_filter]
-
-        if ta_config.get("keywords"):
-            # Create masks for each keyword to handle phrase matching properly
-            ta_mask = pd.Series([False] * len(df))
-
-            for keyword in ta_config["keywords"]:
-                # For multi-word phrases like "non-small cell lung cancer", use word boundaries
-                if len(keyword.split()) > 1:
-                    # Use word boundary matching for phrases to ensure complete phrase detection
-                    import re
-                    pattern = r'\b' + re.escape(keyword) + r'\b'
-                    title_matches = df["Title"].str.contains(pattern, case=False, na=False, regex=True)
-                    theme_matches = df["Theme"].str.contains(pattern, case=False, na=False, regex=True)
-                else:
-                    # For single words, use simple case-insensitive matching
-                    title_matches = df["Title"].str.contains(keyword, case=False, na=False, regex=False)
-                    theme_matches = df["Theme"].str.contains(keyword, case=False, na=False, regex=False)
-
-                ta_mask = ta_mask | title_matches | theme_matches
-
-            # Apply keyword filtering
-            df = df[ta_mask]
-
-            # Apply exclusions if specified (e.g., exclude prostate from bladder cancer results)
-            if ta_config.get("exclusions"):
-                for exclusion in ta_config["exclusions"]:
-                    # Remove rows that contain exclusion terms
-                    exclusion_mask = (
-                        df["Title"].str.contains(exclusion, case=False, na=False, regex=False) |
-                        df["Theme"].str.contains(exclusion, case=False, na=False, regex=False)
-                    )
-                    df = df[~exclusion_mask]  # ~ means NOT, so keep rows that don't match exclusion
-
-    return df
-
-def get_filter_context(drug_filter: str, ta_filter: str) -> Dict[str, Any]:
-    """
-    Get context information about current filter selection for UI display
-    """
-    df_filtered = get_filtered_dataframe(drug_filter, ta_filter)
-
-    return {
-        "drug_filter": drug_filter,
-        "ta_filter": ta_filter,
-        "total_sessions": len(df_filtered),
-        "total_available": len(df_global) if df_global is not None else 0,
-        "drug_description": ESMO_DRUG_FILTERS.get(drug_filter, {}).get("description", ""),
-        "filter_summary": f"{drug_filter} + {ta_filter}"
-    }
-
-def get_available_drug_filters() -> List[str]:
-    """Get list of available drug focus filters"""
-    return list(ESMO_DRUG_FILTERS.keys())
-
-def get_available_therapeutic_areas() -> List[str]:
-    """Get list of available therapeutic areas"""
-    return list(ESMO_THERAPEUTIC_AREAS.keys())
-
-def get_available_session_types() -> List[str]:
-    """Get list of available session types"""
-    return list(ESMO_SESSION_TYPES.keys())
-
-def get_available_date_filters() -> List[str]:
-    """Get list of available date filters"""
-    return list(ESMO_DATE_FILTERS.keys())
-
-def apply_session_filter(df: pd.DataFrame, session_filters: List[str]) -> pd.DataFrame:
-    """Apply session type filters to dataframe"""
-    print(f"SESSION DEBUG: Input filters: {session_filters}, DataFrame size: {len(df)}")
-
-    if not session_filters or "All Session Types" in session_filters:
-        print(f"SESSION DEBUG: No filtering needed, returning {len(df)} rows")
-        return df
-
-    # Collect all session keywords from selected filters
-    session_keywords = []
-    for session_filter in session_filters:
-        if session_filter in ESMO_SESSION_TYPES:
-            keywords = ESMO_SESSION_TYPES[session_filter]
-            session_keywords.extend(keywords)
-            print(f"SESSION DEBUG: '{session_filter}' -> keywords: {keywords}")
-
-    print(f"SESSION DEBUG: All session keywords: {session_keywords}")
-
-    if not session_keywords:
-        print(f"SESSION DEBUG: No keywords found, returning {len(df)} rows")
-        return df
-
-    # Filter by session type using contains (case-insensitive) for better matching
-    session_mask = pd.Series([False] * len(df))
-
-    # Handle special case for "Symposium" filter - should exclude "Industry-Sponsored Symposium"
-    if "Symposium" in session_keywords:
-        # Remove "Symposium" from keywords and handle it separately
-        session_keywords = [k for k in session_keywords if k != "Symposium"]
-
-        # Add "Symposium" sessions but exclude "Industry-Sponsored Symposium"
-        symposium_mask = df['Session'].astype(str).str.contains('Symposium', case=False, na=False, regex=False)
-        industry_symposium_mask = df['Session'].astype(str).str.contains('Industry-Sponsored Symposium', case=False, na=False, regex=False)
-        symposium_only_mask = symposium_mask & ~industry_symposium_mask
-        session_mask = session_mask | symposium_only_mask
-
-    # Handle other session types normally
-    for keyword in session_keywords:
-        keyword_mask = df['Session'].astype(str).str.contains(keyword, case=False, na=False, regex=False)
-        matches = keyword_mask.sum()
-        print(f"SESSION DEBUG: '{keyword}' found {matches} matches")
-        session_mask = session_mask | keyword_mask
-
-    result_df = df[session_mask]
-    print(f"SESSION DEBUG: Final result: {len(result_df)} rows")
-    return result_df
-
-def apply_date_filter(df: pd.DataFrame, date_filters: List[str]) -> pd.DataFrame:
-    """Apply date filters to dataframe"""
-    if not date_filters or "All Days" in date_filters:
-        return df
-
-    # Collect all date keywords from selected filters
-    date_keywords = []
-    for date_filter in date_filters:
-        if date_filter in ESMO_DATE_FILTERS:
-            date_keywords.extend(ESMO_DATE_FILTERS[date_filter])
-
-    if not date_keywords:
-        return df
-
-    # Filter by date using exact matching
-    date_mask = pd.Series([False] * len(df))
-    for keyword in date_keywords:
-        keyword_mask = df['Date'].astype(str).str.contains(keyword, case=False, na=False, regex=False)
-        date_mask = date_mask | keyword_mask
-
-    return df[date_mask]
-
-def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str], session_filters: List[str] = None, date_filters: List[str] = None) -> pd.DataFrame:
-    """
-    Filter ESMO 2025 dataframe by multiple drug focus, therapeutic area, and session type filters.
-    Combines results from multiple filters with OR logic.
-    If no filters provided, returns all data.
-    """
-    print(f"MULTI-FILTER DEBUG: drug_filters={drug_filters}, ta_filters={ta_filters}, session_filters={session_filters}, date_filters={date_filters}")
-    if df_global is None or df_global.empty:
-        return pd.DataFrame()
-
-    # If no filters selected, return all data
-    if not drug_filters and not ta_filters and not session_filters and not date_filters:
-        return df_global.copy()
-
-    all_results = []
-
-    # Handle different filter scenarios
-    if drug_filters and ta_filters:
-        # Both drug and TA filters selected - combine them
-        for drug_filter in drug_filters:
-            for ta_filter in ta_filters:
-                filtered_df = get_filtered_dataframe(drug_filter, ta_filter)
-                if not filtered_df.empty:
-                    all_results.append(filtered_df)
-    elif drug_filters and not ta_filters:
-        # Only drug filters selected - use "All Therapeutic Areas" as default
-        for drug_filter in drug_filters:
-            filtered_df = get_filtered_dataframe(drug_filter, "All Therapeutic Areas")
-            if not filtered_df.empty:
-                all_results.append(filtered_df)
-    elif ta_filters and not drug_filters:
-        # Only TA filters selected - use "All EMD Portfolio" as default drug
-        for ta_filter in ta_filters:
-            filtered_df = get_filtered_dataframe("All EMD Portfolio", ta_filter)
-            if not filtered_df.empty:
-                all_results.append(filtered_df)
-
-    # If we have session filters, apply them
-    if session_filters and session_filters != ["All Session Types"]:
-        if all_results:
-            # Apply session filtering to existing results
-            session_filtered_results = []
-            for result_df in all_results:
-                session_filtered = apply_session_filter(result_df, session_filters)
-                if not session_filtered.empty:
-                    session_filtered_results.append(session_filtered)
-            all_results = session_filtered_results
-        else:
-            # Only session filters applied, filter entire dataset
-            session_filtered = apply_session_filter(df_global, session_filters)
-            if not session_filtered.empty:
-                all_results.append(session_filtered)
-
-    # If no results yet but we have only session filters
-    if not all_results and session_filters and session_filters != ["All Session Types"]:
-        session_filtered = apply_session_filter(df_global, session_filters)
-        if not session_filtered.empty:
-            all_results.append(session_filtered)
-
-    # If no results yet but we have only date filters
-    if not all_results and date_filters and date_filters != ["All Days"]:
-        date_filtered = apply_date_filter(df_global, date_filters)
-        if not date_filtered.empty:
-            all_results.append(date_filtered)
-
-    # If no results, return empty dataframe
-    if not all_results:
-        return pd.DataFrame()
-
-    # Combine all results and remove duplicates
-    combined_df = pd.concat(all_results, ignore_index=True)
-    combined_df = combined_df.drop_duplicates(subset=["Identifier"], keep='first')
-
-    # Session and date filters were already applied above in the primary filtering logic
-    # No need to re-apply them here as that would cause double-filtering
-    # This section was causing the bug where session filters returned incorrect counts
-
-    return combined_df
-
-def get_filter_context_multi(drug_filters: List[str], ta_filters: List[str], session_filters: List[str] = None, date_filters: List[str] = None) -> Dict[str, Any]:
-    """Generate filter context information for multiple filters"""
-    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
-    total_sessions = len(filtered_df)
-    total_available = len(df_global) if df_global is not None else 0
-
-    # Handle empty filters case
-    if not drug_filters and not ta_filters:
-        drug_summary = "All Drugs"
-        ta_summary = "All Therapeutic Areas"
-    else:
-        drug_summary = ", ".join(drug_filters) if drug_filters else "All Drugs"
-        ta_summary = ", ".join(ta_filters) if ta_filters else "All Therapeutic Areas"
-
-    return {
-        "total_sessions": total_sessions,
-        "total_available": total_available,
-        "filter_summary": f"{drug_summary} + {ta_summary}"
-    }
-
-def extract_number_default(q: str, default_n: int = 20) -> int:
-    nums = re.findall(r"\b(\d{1,3})\b", q)
-    if not nums:
-        return default_n
-    try:
-        n = int(nums[0])
-        return max(1, min(200, n))
-    except Exception:
-        return default_n
-
-def normalize_txt(s: str) -> str:
-    return re.sub(r"[^a-z0-9]+", " ", str(s).lower()).strip()
-
-# =========================
-# Load / Prepare Data
-# =========================
-def load_and_prepare_esmo_data():
-    """
-    Load and prepare ESMO 2025 data with proper schema handling
-    """
-    data_path = Path(CSV_FILE)
-    if not data_path.exists():
-        raise FileNotFoundError(f"ESMO data file not found: {CSV_FILE}")
-
-    # Load with latin-1 encoding for ESMO data
-    try:
-        df = pd.read_csv(data_path, encoding="latin-1").fillna("")
-    except UnicodeDecodeError:
-        # Fallback encoding
-        df = pd.read_csv(data_path, encoding="utf-8-sig").fillna("")
-
-    # New dataset columns: Title,Speakers,Speaker Location,Affiliation,Identifier,Room,Date,Time,Session,Theme
-    print(f"Loaded ESMO data: {len(df)} sessions")
-    print(f"Columns: {list(df.columns)}")
-
-    # Fix typo in column name if present
-    if "Sesstion" in df.columns:
-        df = df.rename(columns={"Sesstion": "Session"})
-
-    # Create column mapping from new dataset to expected schema
-    column_mapping = {
-        "Title": "study_title",
-        "Speakers": "speaker",
-        "Speaker Location": "location",
-        "Affiliation": "affiliation",
-        "Identifier": "identifier",
-        "Room": "room",
-        "Date": "date",
-        "Time": "time",
-        "Session": "session_type",
-        "Theme": "session_category"
-    }
-
-    # Apply the mapping to create expected columns
-    for old_col, new_col in column_mapping.items():
-        if old_col in df.columns:
-            df[new_col] = df[old_col]
-
-    # Create legacy columns for backward compatibility using actual ESMO column names
-    df["Abstract #"] = df["Identifier"]  # ESMO has "Identifier" not "identifier"
-    df["Poster #"] = df["Session"]       # Use Session as the session type
-    df["Title"] = df["Title"]           # Already matches
-    df["Authors"] = df["Speakers"]      # ESMO has "Speakers" not "speaker"
-    df["Institutions"] = df["Affiliation"]  # ESMO has "Affiliation" not "affiliation"
-
-    # Generate main_filters column for drug/TA filtering based on session themes and titles
-    def generate_main_filters(row):
-        title = str(row.get("Title", "")).lower()         # Use actual ESMO column name
-        theme = str(row.get("Theme", "")).lower()         # Use actual ESMO column name
-
-        filters = []
-
-        # Drug detection
-        if any(term in title for term in ["avelumab", "bavencio"]):
-            filters.append("Avelumab Focus")
-        if any(term in title for term in ["tepotinib"]):
-            filters.append("Tepotinib Focus")
-        if any(term in title for term in ["cetuximab", "erbitux"]):
-            filters.append("Cetuximab Focus")
-
-        # Therapeutic area detection
-        if any(term in title + " " + theme for term in ["bladder", "urothelial"]):
-            filters.append("Bladder Cancer")
-        if any(term in title + " " + theme for term in ["lung", "nsclc", "sclc"]):
-            filters.append("Lung Cancer")
-        if any(term in title + " " + theme for term in ["colorectal", "crc", "colon"]):
-            filters.append("Colorectal Cancer")
-        if any(term in title + " " + theme for term in ["head", "neck", "hnc"]):
-            filters.append("Head and Neck Cancer")
-        if any(term in title + " " + theme for term in ["gynecologic", "ovarian", "cervical", "endometrial"]):
-            filters.append("Gynecologic Cancer")
-
-        return "|".join(filters) if filters else "General Oncology"
-
-    df["main_filters"] = df.apply(generate_main_filters, axis=1)
-
-    # Ensure required columns exist
-    if "Abstract #" not in df.columns:
-        df["Abstract #"] = df.index.astype(str)
-    if "Poster #" not in df.columns:
-        df["Poster #"] = df.get("session_type", "")
-
-    # Create combined text for embeddings (adapted for ESMO schema)
-    df["combined_text"] = (
-        "Title: " + df["Title"].astype(str)
-        + " | Speaker: " + df["Authors"].astype(str)
-        + " | Institution: " + df["Institutions"].astype(str)
-        + " | Session: " + df["Poster #"].astype(str)
-        + " | ID: " + df["Abstract #"].astype(str)
-    )
-
-    # Add geographic data if available
-    if "location" in df.columns:
-        df["combined_text"] += " | Location: " + df["location"].astype(str)
-
-    # Add session metadata if available
-    for col in ["date", "time", "room", "session_category"]:
-        if col in df.columns:
-            df["combined_text"] += f" | {col.title()}: " + df[col].astype(str)
-
-    # Normalize affiliations (single author per session in ESMO)
-    if "Institutions" in df.columns:
-        df["Institutions"] = df["Institutions"].astype(str)
-
-    return df, file_md5(data_path)
-
-# =========================
-# Vector DB
-# =========================
-def setup_vector_db(csv_hash: str):
-    global collection
-    if client is None:
-        print("Warning: OpenAI client not initialized. Cannot set up vector DB.")
-        return None
-
-    # Disable telemetry to avoid errors and improve startup time
-    chroma_client = chromadb.PersistentClient(
-        path=CHROMA_DB_PATH,
-        settings=chromadb.Settings(anonymized_telemetry=False)
-    )
-    openai_ef = embedding_functions.OpenAIEmbeddingFunction(
-        api_key=OPENAI_API_KEY,
-        model_name="text-embedding-3-small",
-    )
-    collection_name = f"conference_abstracts_{csv_hash[:8]}"
-
-    try:
-        collection = chroma_client.get_collection(name=collection_name, embedding_function=openai_ef)
-        print(f"Chroma collection '{collection_name}' loaded.")
-        return collection
-    except Exception:
-        print(f"Collection '{collection_name}' not found, creating and populating...")
-        # Garbage-collect older collections quietly
-        try:
-            for old_collection in chroma_client.list_collections():
-                if old_collection.name.startswith("conference_abstracts_"):
-                    print(f"Deleting old collection: {old_collection.name}")
-                    chroma_client.delete_collection(name=old_collection.name)
-        except Exception as e:
-            print(f"Error cleaning old collections: {e}")
-
-        collection = chroma_client.create_collection(name=collection_name, embedding_function=openai_ef)
-        df, _ = load_and_prepare_esmo_data()
-        texts = df["combined_text"].tolist()
-
-        ids, seen = [], set()
-        for i, identifier in enumerate(df["Identifier"].astype(str)):
-            base = identifier.strip() if pd.notna(identifier) and identifier.strip() else f"session_{i}"
-            if base in seen:
-                base = f"{base}_row_{i}"  # Fallback for duplicate identifiers
-            ids.append(f"session_{base}")
-            seen.add(base)
-
-        metadatas = df[["Identifier", "Title", "Speakers", "Affiliation", "Session", "Theme"]].to_dict("records")
-
-        batch_size = 300
-        print(f"Adding {len(texts)} documents to ChromaDB...")
-        for i in range(0, len(texts), batch_size):
-            collection.add(
-                documents=texts[i:i + batch_size],
-                ids=ids[i:i + batch_size],
-                metadatas=metadatas[i:i + batch_size],
-            )
-        print("ChromaDB population complete.")
-        return collection
-
-def semantic_search(query: str, ta_filter: str, n_results: int = 10):
-    """Uses the global `collection`."""
-    if collection is None:
-        print("Error: Vector database not initialized for semantic search.")
-        return {"error": "Vector database not initialized."}
-
-    where = {}
-    if ta_filter == "Bladder Cancer":
-        where = {"ta": "bladder"}
-    elif ta_filter == "Renal Cell Carcinoma":
-        where = {"ta": "renal"}
-
-    try:
-        results = collection.query(
-            query_texts=[query],
-            n_results=n_results,
-            where=where if where else None,
-            include=["documents", "metadatas", "distances"],
-        )
-        return results
-    except Exception as e:
-        print(f"Error during semantic search: {e}")
-        return {"error": f"Search failed: {str(e)}"}
-
-def format_search_results(results) -> pd.DataFrame:
-    if not results or "metadatas" not in results or not results["metadatas"] or not results["metadatas"][0]:
-        return pd.DataFrame()
-    rows = []
-    for i, md in enumerate(results["metadatas"][0]):
-        rows.append({
-            "Abstract #": md.get("Abstract #", ""),
-            "Poster #": md.get("Poster #", ""),
-            "Title": md.get("Title", ""),
-            "Authors": md.get("Authors", ""),
-            "Institutions": md.get("Institutions", ""),
-            "Relevance Score": f"{1 - results['distances'][0][i]:.3f}",
-        })
-    return pd.DataFrame(rows)
-
-# =========================
-# Playbooks Spec
-# =========================
-PLAYBOOKS: Dict[str, Dict[str, Any]] = {
+# ============================================================================
+# PLAYBOOK PROMPTS (Simplified - One Prompt Per Button)
+# ============================================================================
+
+PLAYBOOKS = {
     "competitor": {
-        "button_label": "Competitor Intelligence",
-        "subtitle": "Conference Landscape",
-        "sections": [
-            "Executive Summary",
-            "Current Landscape & Standard of Care (TA Scoped)",
-            "Avelumab Presence at This Conference",
-            "Conference Activity by Competitor",
-            "Notable Signals & Examples (by Line/Setting)"
-        ],
-        "required_tables": ["competitor_abstracts", "emerging_threats"],
-        "buckets": {
-            "competitors": [
-                "enfortumab vedotin", "disitamab vedotin", "zelenectide pevedotin",
-                "pembrolizumab", "nivolumab", "atezolizumab", "durvalumab",
-                "sacituzumab govitecan", "erdafitinib", r"ev.*pembrolizumab",
-                r"keytruda.*padcev", r"EV\+P", "padcev", "trodelvy"
-            ],
-            "lines": ["maintenance", "neoadjuvant", "adjuvant", "1L", "2L"],
-            "avelumab_terms": ["avelumab", "bavencio"]
-        },
-        "must_cover": [
-            "Explicitly state whether Avelumab/Bavencio appears in this conference CSV and cite Abstract # if present.",
-            "Describe volume and thematic focus by named competitors; cite Abstract # examples.",
-            "Use Abstract # when referencing items; do not invent counts—use counts only if present in the compact slices or context.",
-            "If a competitor/theme is not present in the CSV, state that explicitly."
-        ],
-        "allow_soc": True,
-        "allow_strategic_implications": False,
-        "ai_prompt": """You are EMD Serono's competitive intelligence analyst focused on our multi-therapeutic area oncology portfolio at ESMO 2025.
+        "button_label": "Competitive Intelligence",
+        "ai_prompt": """You are EMD Serono's senior competitive intelligence analyst for medical affairs. Conduct a comprehensive competitive landscape analysis of ESMO 2025 to identify strategic threats, opportunities, and positioning insights for the EMD oncology portfolio (avelumab, tepotinib, cetuximab, pimicotinib).
 
-KEY CONTEXT: Analyze competitive landscape across EMD Serono's focus areas - Avelumab (bladder cancer maintenance), Tepotinib (NSCLC MET exon 14), and Cetuximab (colorectal/head & neck). ESMO represents broader oncology landscape beyond our traditional GU focus.
+**EXECUTIVE SUMMARY** (2-3 paragraphs):
+Provide a strategic overview of the competitive landscape:
+- Overall competitive intensity: How many abstracts feature competitor drugs? Which therapeutic areas show highest competitive activity?
+- Dominant competitive threats: Which competitor assets have the strongest presence at this conference?
+- EMD portfolio visibility: How does avelumab/tepotinib/cetuximab presence compare to competitors in their respective indications?
+- Strategic implications: What are the 2-3 most significant competitive developments that require immediate medical affairs attention?
 
-STRATEGIC ANALYSIS FRAMEWORK:
+**EMD PORTFOLIO COMPETITIVE POSITIONING**:
 
-**Executive Summary**: Assess competitive landscape intensity and dominant themes at this conference.
+*Avelumab (Bavencio) - METASTATIC Bladder Cancer & Maintenance Therapy*:
+- Conference presence: Search all abstracts for "avelumab" or "Bavencio". If found, provide Abstract #, presenter, institution, and study focus.
+- If absent: Analyze the competitive void - what are competitors presenting in METASTATIC bladder/urothelial cancer maintenance space?
+- Competitive context: How many abstracts feature enfortumab vedotin, pembrolizumab, nivolumab, or other IO agents in metastatic bladder cancer?
 
-**Avelumab Positioning**: Search for avelumab/Bavencio presence (cite Abstract # if found). If absent, analyze competitive visibility gaps and strategic implications.
+*Tepotinib - NSCLC MET Alterations*:
+- Conference presence: Search for "tepotinib" mentions. If found, cite Abstract # and context.
+- MET landscape: How many abstracts discuss MET alterations, MET inhibitors, or MET-targeted therapy in NSCLC?
+- Competitive MET inhibitors: Any capmatinib, crizotinib, or other MET-targeting agents? Cite Abstract #.
+- NSCLC targeted therapy context: Broader landscape of targeted therapy in lung cancer (EGFR, ALK, ROS1, KRAS, etc.)
 
-**Competitor Deep Dive**: Analyze major competitors' conference activity:
-- EV+P ecosystem (volume, expansion studies, combinations)
-- Other ADCs (Sacituzumab govitecan, Disitamab vedotin)
-- Checkpoint inhibitors (Pembrolizumab, Nivolumab, Atezolizumab, Durvalumab)
-- Identify most aggressive expansion strategies
+*Cetuximab - Colorectal & Head & Neck Cancer*:
+- Conference presence: Search for "cetuximab" or "Erbitux". Document findings with Abstract #.
+- Anti-EGFR landscape: How many abstracts feature EGFR-targeted therapy in CRC or H&N cancer?
+- Competitive anti-EGFR agents: Panitumumab presence? Other EGFR inhibitors?
+- Therapeutic area context: Overall activity in colorectal and head & neck oncology
 
-**Institutional Intelligence**: Leading cancer centers driving competitor research. Key partnerships to monitor or potentially disrupt.
+*Pimicotinib - TGCT/CSF1R*:
+- Search for pimicotinib, TGCT, tenosynovial giant cell tumor, or CSF1R mentions
+- Document any findings with Abstract # (likely low volume given rare indication)
 
-**Strategic Threats & Opportunities**: New competitive moves, treatment setting gaps, white space expansion opportunities for avelumab.
+**MAJOR COMPETITOR DEEP-DIVE ANALYSIS**:
 
-**Medical Affairs Priorities**: Immediate competitive threats, partnership opportunities, KOL engagement priorities, monitoring recommendations.
+For each major competitor drug or regimen, provide a dedicated paragraph analyzing its conference presence and strategic threat. Structure each paragraph as:
+1. Quantify presence (e.g., "Enfortumab vedotin appears in X abstracts across Y settings")
+2. Clinical settings and indications (metastatic, perioperative, adjuvant, maintenance, etc.)
+3. Notable study types (pivotal phase 3, real-world evidence, combination trials, biomarker studies)
+4. Strategic implications for EMD portfolio
+5. Always cite Abstract # for key studies
 
-REQUIREMENTS:
-- Natural narrative flow, cite Abstract # for all claims
-- Use only provided data - acknowledge absences explicitly
-- Focus on actionable medical affairs strategy insights
-- Strategic perspective for executive leadership decisions
+*Critical Competitors to Analyze* (dedicate one paragraph each):
 
-Deliver concise intelligence brief with clear competitive response direction."""
+**Enfortumab Vedotin (EV) & EV+Pembrolizumab (EV+P)**:
+This is the #1 competitive threat in bladder cancer. Provide comprehensive analysis:
+- Total abstract count featuring EV or EV+P
+- Breakdown by setting: 1L metastatic, 2L+ metastatic, perioperative, maintenance
+- Monotherapy vs. combination (especially EV+P as new standard of care in mUC)
+- Real-world evidence presentations (utilization, outcomes, safety)
+- Expansion beyond bladder (if any)
+- Cite all relevant Abstract #s
+
+**Pembrolizumab (Keytruda)**:
+- Total abstract volume (one of the most studied checkpoint inhibitors)
+- Indications covered (bladder, lung, CRC, H&N, other)
+- Treatment settings (1L, maintenance, adjuvant, neoadjuvant, perioperative)
+- Combination strategies (pembro + chemo, pembro + ADC, pembro + targeted)
+- Notable phase 3 trials or practice-changing data
+- Cite key Abstract #s
+
+**Nivolumab (Opdivo)**:
+- Conference presence (abstract count)
+- Primary indications and settings
+- Combination approaches (nivo + ipi, nivo + chemo, others)
+- Long-term follow-up or survival data
+- Cite Abstract #s
+
+**Durvalumab (Imfinzi)**:
+- Abstract volume
+- Primary focus areas (NMIBC? MIBC? Metastatic? Perioperative?)
+- Combination strategies
+- Notable studies
+- Cite Abstract #s
+
+**Atezolizumab (Tecentriq)**:
+- Conference activity level
+- Indications and settings
+- Key studies and strategic positioning
+- Cite Abstract #s
+
+**Sacituzumab Govitecan (SG)**:
+- Presence at conference (abstract count)
+- Indications (breast, bladder, other)
+- Monotherapy vs. combination
+- Strategic threat level
+- Cite Abstract #s
+
+**Other ADCs** (Disitamab vedotin, Trastuzumab deruxtecan, Datopotamab deruxtecan, others):
+- Identify which ADCs appear in abstracts
+- For each: indication, setting, abstract count
+- Emerging ADC class trends
+- Cite Abstract #s
+
+**FGFR Inhibitors** (Erdafitinib, pemigatinib, futibatinib, others):
+- Which FGFR inhibitors appear?
+- Volume, indications, biomarker selection
+- Strategic positioning vs. avelumab in bladder cancer
+- Cite Abstract #s
+
+**Other Targeted Therapies** (KRAS inhibitors, HER2-targeted, ALK/ROS1, etc.):
+- Identify which agents appear
+- Volume and strategic relevance to EMD portfolio
+- Cite Abstract #s
+
+**Emerging/Novel Agents**:
+- Any new mechanisms or investigational agents with notable presence
+- Strategic watch items
+- Cite Abstract #s
+
+**COMPETITIVE STRATEGY PATTERNS**:
+
+*Indication Expansion Strategies*:
+- Which competitors are aggressively expanding into new tumor types?
+- Basket trial evidence or pan-tumor biomarker strategies?
+- Movement into earlier disease stages (adjuvant/neoadjuvant from metastatic)?
+
+*Combination Regimen Development*:
+- Most common combination backbones being tested?
+- Novel doublet or triplet regimens showing momentum?
+- Which combinations pose threats to EMD monotherapy or current combinations?
+
+*Biomarker-Driven Positioning*:
+- Competitors using biomarkers to carve out specific patient populations?
+- Companion diagnostic strategies evident from abstracts?
+- Precision medicine approaches that could fragment EMD's addressable populations?
+
+**INSTITUTIONAL & KOL COMPETITIVE INTELLIGENCE**:
+
+*Leading Institutions Driving Competitor Research*:
+- Top 5-10 cancer centers with high competitor drug abstract volume
+- Institutional specialization (e.g., "MD Anderson: heavy EV+P and pembrolizumab activity in GU")
+- Geographic hubs of competitive activity
+
+*Key Opinion Leaders in Competitive Space*:
+- Identify 5-8 high-profile KOLs presenting multiple competitor abstracts
+- For each: Name, institution, which competitor drugs they're studying, therapeutic focus
+- Strategic consideration: Are these KOLs accessible for EMD engagement despite competitor ties?
+
+**COMPETITIVE THREATS & STRATEGIC OPPORTUNITIES**:
+
+*Immediate Competitive Threats*:
+- New data that could shift treatment paradigms in EMD-relevant indications
+- Aggressive competitor expansion into EMD core markets
+- Emerging mechanisms or modalities that could displace current standards
+
+*White Space Opportunities*:
+- Therapeutic areas with high unmet need but low competitor activity
+- Biomarker populations underserved by current competitive landscape
+- Treatment settings where competitors are not yet advancing (e.g., maintenance therapy gaps)
+
+
+**WRITING REQUIREMENTS**:
+- Natural narrative prose - flowing paragraphs, not bullet lists in the analysis (use bullets only for section structure)
+- Always cite Abstract # when referencing competitor studies
+- Integrate quantitative data (e.g., "Pembrolizumab appeared in 87 abstracts (43% of all IO studies)...")
+- Use only information from provided abstracts - if data unavailable, state "not found in current dataset"
+- Objective competitive intelligence tone - fact-based, not defensive or dismissive of competitors
+- Focus on actionable intelligence for medical affairs leadership
+- Professional medical vocabulary appropriate for Vice President/Medical Director audience
+
+**OUTPUT STRUCTURE**:
+Clear section headers with analytical paragraphs. This should read as a comprehensive competitive intelligence briefing for medical affairs executive leadership preparing for strategic planning.""",
+        "required_tables": ["all_data"]
     },
     "kol": {
         "button_label": "KOL Analysis",
-        "subtitle": "People & Themes",
-        "sections": [
-            "Executive Summary",
-            "Ranked Authors (Conference Presence)",
-            "Thematic Focus by KOL",
-            "Collaboration Footprint",
-            "Representative Abstract Mentions"
-        ],
-        "required_tables": ["top_authors"],
-        "buckets": {
-            "topics": ["ADC", "Nectin", "HER2", "TROP-2", "FGFR", "checkpoint", "ctDNA", "utDNA", "PD-L1", "FGFR3", "TMB"]
-        },
-        "must_cover": [
-            "Describe top authors by unique abstracts (counts supported by the attached table).",
-            "No engagement advice; descriptive only.",
-            "Use Abstract # to ground claims.",
-            "If an author/theme is not present in data, indicate that explicitly."
-        ],
-        "allow_soc": False,
-        "allow_strategic_implications": False,
-        "ai_prompt": """You are EMD Serono's medical affairs KOL analyst. Analyze key researchers and thought leaders from ASCO GU 2025 for potential collaboration opportunities and research partnerships.
+        "ai_prompt": """You are EMD Serono's medical affairs KOL intelligence analyst. Analyze the most active and influential researchers presenting at ESMO 2025 based on presentation volume and research focus.
 
-ANALYSIS FRAMEWORK:
+**EXECUTIVE SUMMARY** (2-3 paragraphs):
+Provide a strategic overview of the KOL landscape:
+- How many unique researchers are in the top tier? What is the distribution of productivity (e.g., 3 researchers with 10+ abstracts vs. many with 2-3)?
+- What therapeutic areas dominate among top KOLs? Which tumor types have the most active thought leadership?
+- Geographic distribution: Which countries/regions have the most prolific researchers at this conference?
+- EMD portfolio relevance: How many top KOLs work in GU cancers (bladder/urothelial), lung cancer (NSCLC), GI cancers (CRC), or head & neck?
 
-**Executive Summary**: Most influential researchers and key themes at this conference.
+**INDIVIDUAL KOL PROFILES** (Deep-dive on each top researcher):
+For each of the top 10-15 most active researchers by abstract count, provide a comprehensive profile:
 
-**Leading Researchers**: Most active authors by unique abstracts, highlighting research volume and focus areas.
+*Identity & Affiliation*:
+- Full name, primary institutional affiliation, and geographic location (city/country)
+- Total number of presentations at this conference
 
-**Research Themes & Expertise**: What top researchers are advancing - biomarkers (PD-L1, FGFR3, TMB), mechanisms of action, therapeutic approaches (ADCs, checkpoint inhibitors).
+*Research Specialization*:
+- Primary tumor type focus: Which cancer(s) dominate their abstracts? (e.g., "predominantly urothelial cancer with some broader GU oncology work")
+- Treatment modality expertise: Are they focused on immunotherapy? Targeted therapy? Chemotherapy? ADCs? Combination regimens?
+- Clinical setting: Do they primarily work in metastatic disease? Adjuvant/neoadjuvant? Maintenance therapy? Biomarker-selected populations?
+- Phase of development: Early-phase trials? Pivotal studies? Real-world evidence? Translational/correlative research?
 
-**Institutional Networks**: Where researchers are based, collaboration patterns across institutions, key research center partnerships.
+*Scientific Themes in Their Work*:
+Based on their abstract titles, identify:
+- Key biomarkers mentioned in their research (PD-L1, FGFR, HER2, MET, TMB, ctDNA, MSI, etc.)
+- Mechanisms of action: Checkpoint inhibitors (PD-1/PD-L1)? Tyrosine kinase inhibitors? ADCs? Novel targets?
+- Treatment approaches: Monotherapy vs. combinations? Specific regimen types (IO+chemo, IO+IO, doublets/triplets)?
+- Any recurring themes across their abstracts (e.g., focus on resistance mechanisms, sequencing strategies, predictive biomarkers)
 
-**Representative Research Examples**: Notable research from key authors with specific Abstract # citations.
+*Portfolio Relevance*:
+- Does this KOL present any work on avelumab (bladder/urothelial, maintenance)? Cite Abstract #
+- Any tepotinib-relevant research (NSCLC, MET alterations)? Cite Abstract #
+- Cetuximab-related work (colorectal, head & neck, EGFR)? Cite Abstract #
+- Pimicotinib or TGCT research? Cite Abstract #
+- If no direct EMD drug work: Note adjacent competitive space or therapeutic area overlap
 
-REQUIREMENTS:
-- Natural narrative flow, always cite Abstract # for claims
-- Use only provided data - acknowledge absences explicitly
-- Descriptive analysis only - no engagement recommendations
-- Professional analytical tone focused on research intelligence
+*Cross-Indication Reach*:
+- Does this researcher work across multiple tumor types? (Important for platform drug strategy)
+- Breadth of expertise: Single disease-focused vs. multi-indication researcher
 
-Write strategic research intelligence for medical affairs collaboration planning."""
+**COLLECTIVE RESEARCH PATTERNS**:
+Across the top 10-15 KOLs, what patterns emerge?
+
+*Therapeutic Area Concentration*:
+- Which cancer types have the deepest KOL bench? (e.g., "8 of 15 top KOLs focus primarily on lung cancer")
+- Are certain therapeutic areas underrepresented among top KOLs despite high abstract volume?
+
+*Treatment Modality Trends*:
+- What percentage of top KOLs work extensively with immunotherapy? Targeted therapy? ADCs?
+- Which specific drug classes or mechanisms appear most frequently in top KOL abstracts?
+
+*Geographic & Institutional Patterns*:
+- Where are top KOLs geographically concentrated? (US, specific European countries, Asia-Pacific)
+- Do multiple top KOLs come from the same institution (potential institutional hub)?
+
+**NOTABLE RESEARCH EXAMPLES** (6-10 highlights):
+Select the most important or representative presentations from top KOLs:
+- For each: Abstract #, KOL name, institution, brief description of research focus based on title
+- Prioritize: (1) EMD portfolio relevance, (2) high-impact KOLs in strategic TAs, (3) novel research directions
+- Always cite Abstract # (Identifier) when referencing specific studies
+
+**KOL INTELLIGENCE SUMMARY**:
+Synthesize key observations for medical affairs planning:
+- Which therapeutic areas have the strongest thought leadership at this conference?
+- Are there "platform KOLs" who work across multiple indications relevant to EMD's portfolio?
+- Geographic or institutional clusters of top KOL activity in EMD-relevant therapeutic areas
+- Any top KOLs who are currently presenting competitor data but work in EMD therapeutic areas (engagement opportunity)
+
+**WRITING REQUIREMENTS**:
+- Write in natural narrative prose - use flowing paragraphs, not bullet lists in the analysis itself (bullets only for section structure)
+- Always cite Abstract # when referencing specific studies (e.g., "Dr. Jones presents work on FGFR3-altered urothelial cancer (Abstract #2847)...")
+- Integrate quantitative data naturally (e.g., "Five of the top 15 KOLs (33%) focus primarily on genitourinary cancers...")
+- Use only information from the provided Top Authors table and their associated abstracts - if data is unavailable, state "not available in current dataset"
+- Maintain professional medical affairs analytical tone
+- Focus on describing KOL expertise and research focus - avoid tactical engagement recommendations
+- Professional medical vocabulary appropriate for Medical Director audience
+
+**OUTPUT STRUCTURE**:
+Clear section headers with each section written as analytical paragraphs. This should read as a KOL intelligence briefing for medical affairs leadership.""",
+        "required_tables": ["top_authors"]
     },
     "institution": {
-        "button_label": "🏥 Institution Analysis",
-        "subtitle": "Centers & Capabilities",
-        "sections": [
-            "Executive Summary",
-            "Ranked Institutions (Conference Presence)",
-            "Focus Areas by Institution",
-            "Representative Abstract Mentions"
-        ],
-        "required_tables": ["top_institutions"],
-        "buckets": {
-            "topics": ["ADC", "Nectin", "HER2", "TROP-2", "FGFR", "checkpoint", "ctDNA", "utDNA", "PD-L1"]
-        },
-        "must_cover": [
-            "Narrative guided by counts in attached table (unique abstracts).",
-            "Focus strictly on conference data; no extrapolation.",
-            "Use Abstract # to ground claims.",
-            "Trial names must come from titles in the CSV, if present; otherwise indicate not found."
-        ],
-        "allow_soc": False,
-        "allow_strategic_implications": False,
-        "ai_prompt": """You are a medical affairs institutional analysis specialist for EMD Serono. Write a comprehensive institution analysis based on the ASCO GU 2025 conference data.
+        "button_label": "Institution Analysis",
+        "ai_prompt": """You are EMD Serono's medical affairs institutional intelligence analyst. Conduct comprehensive analysis of leading research institutions at ESMO 2025 to identify strategic academic partnerships, regional research hubs, and institutional capabilities relevant to EMD's oncology portfolio.
 
-Context:
-- Medical affairs teams need to understand key research institutions and their capabilities
-- Focus on identifying institutional research strengths and partnership opportunities
-- Analyze research focus areas, collaborative patterns, and institutional leadership
-- This is descriptive analysis focused on research landscape intelligence
+**EXECUTIVE SUMMARY** (2-3 paragraphs):
+Provide strategic overview of the institutional landscape:
+- How many unique institutions are represented among top presenters? What is the concentration (e.g., top 5 institutions account for X% of abstracts)?
+- Which countries/regions dominate institutional research leadership at this conference?
+- What is the distribution between comprehensive cancer centers, academic medical centers, and community/regional hospitals?
+- Which institutions show strongest alignment with EMD therapeutic areas (GU cancers, lung, GI, H&N)?
 
-**Important Note**: Institution counts are normalized from complex affiliation strings (e.g., "Department of Oncology, University of Texas" → "University of Texas"). Some abstracts may be grouped under parent institutions rather than specific departments or cancer centers.
+**TOP INSTITUTION PROFILES** (Deep-dive on each leading center):
+For each of the top 10-15 institutions by abstract volume, provide comprehensive analysis:
 
-Based on the conference data and institutional activity tables provided, write a natural, flowing analysis that covers:
+*Identity & Classification*:
+- Full institutional name and geographic location (city, country)
+- Total number of presentations at this conference
+- Institution type: NCI-designated comprehensive cancer center? Academic medical center? Regional center?
 
-**Executive Summary**: Brief overview of the most active research institutions and their collective impact at this conference
+*Research Focus & Therapeutic Expertise*:
+- Primary tumor types: Which cancers dominate this institution's presentations?
+- Treatment modality expertise: Strengths in immunotherapy? Targeted therapy? ADCs?
+- Clinical trial leadership: High volume of phase 3 trials? Early-phase research?
 
-**Leading Research Centers & Conference Presence**: Analysis of the most active institutions based on unique abstracts presented, highlighting their research volume and areas of specialization
+*EMD Portfolio Relevance*:
+- Does this institution present any avelumab studies? (Cite Abstract #)
+- Any tepotinib-related research? (Cite Abstract #)
+- Cetuximab studies in CRC or H&N? (Cite Abstract #)
+- If no direct EMD studies: Therapeutic area overlap? Competitive drug research in EMD-relevant indications?
 
-**Institutional Research Focus Areas**: Examination of what top institutions are working on, including therapeutic approaches, biomarkers, and clinical development programs
+**INSTITUTIONAL RESEARCH CAPABILITIES**:
 
-**Collaborative Networks & Geographic Distribution**: Analysis of how institutions collaborate and their geographic distribution, identifying key research hubs and partnerships
+*Therapeutic Area Specialization*:
+- GU oncology (bladder, renal) leaders: Which institutions dominate? Abstract counts?
+- Lung cancer centers: Top institutions for NSCLC research?
+- GI oncology hubs: Leading colorectal and other GI cancer centers?
+- Head & neck cancer expertise: Which institutions show strength?
 
-**Representative Research Examples**: Specific examples of notable research from key institutions, citing Abstract # to ground the analysis
+*Research Modality Strengths*:
+- Immunotherapy hubs: Institutions with high IO research volume
+- ADC research centers: Leading institutions for antibody-drug conjugate studies
+- Targeted therapy expertise: Centers with precision oncology/biomarker programs
 
-CRITICAL REQUIREMENTS:
-- Write as a natural, flowing narrative - NOT bullet points or rigid sections
-- Always cite Abstract # when referencing specific studies
-- Only use institutional counts and data that are present in the provided tables
-- If specific institutions/themes are not present in the data, explicitly state that
-- Focus on descriptive analysis of research capabilities and focus areas
-- Maintain a professional, analytical tone focused on institutional intelligence
-- Include specific research themes like ADCs, checkpoint inhibitors, biomarkers (PD-L1, FGFR3, TMB), etc.
+**GEOGRAPHIC & COLLABORATIVE PATTERNS**:
 
-Write a comprehensive institutional intelligence report that reads naturally and provides strategic insights for medical affairs professionals."""
+*Regional Research Hubs*:
+- North America: Leading US institutions? Canadian centers?
+- Europe: Dominant countries (Germany, France, UK, Italy, Spain)? Top European centers?
+- Asia-Pacific: Active institutions in China, Japan, Korea, Australia?
+
+*Institutional Collaboration Networks*:
+- Multi-center trial collaborations: Which institutions frequently co-present?
+- Academic consortia: Evidence of cooperative group involvement?
+- International networks: Cross-border institutional partnerships?
+
+**INSTITUTIONAL RESEARCH EXAMPLES** (6-10 highlights):
+Select the most notable or representative institutional research:
+- For each: Institution name, Abstract #, study focus, why it demonstrates institutional capability
+- Prioritize: (1) EMD portfolio-relevant institutions, (2) High-impact research from top centers
+- Always cite Abstract # (Identifier)
+
+**WRITING REQUIREMENTS**:
+- Natural narrative prose - flowing paragraphs, not bullet lists in analysis (bullets only for section structure)
+- Always cite Abstract # when referencing institutional research
+- Integrate quantitative data naturally (e.g., "Memorial Sloan Kettering presented 23 abstracts, representing 8% of all GU oncology studies...")
+- Use only information from Top Institutions table and associated abstracts - if unavailable, state "not available in current dataset"
+- Maintain professional analytical tone focused on institutional capabilities
+- Professional vocabulary appropriate for Medical Director/VP Medical Affairs audience
+
+**OUTPUT STRUCTURE**:
+Clear section headers with analytical paragraphs. This should read as an institutional intelligence briefing for medical affairs leadership planning academic partnerships.""",
+        "required_tables": ["top_institutions"]
     },
     "insights": {
-        "button_label": "🧭 Insights & Scientific Trends",
-        "subtitle": "Comprehensive Evidence Synthesis",
-        "sections": [
-            "Executive Summary",
-            "Trend Map (MOA & Biomarkers)",
-            "Signal & Study Quality",
-            "Treatment Paradigm Shifts (Descriptive)",
-            "Endpoints & Evidence Patterns",
-            "Unmet Needs & Evidence Gaps",
-            "Potential Clinical Translation"
-        ],
-        "required_tables": ["biomarker_moa_hits"],
-        "buckets": {
-            "topics": [
-                "ADCs", "ICIs", "FGFR", "DNA damage response", "HER2", "TROP-2",
-                "ctDNA", "utDNA", "PD-L1", "FGFR3", "molecular subtypes", "TMB"
-            ],
-        },
-        "must_cover": [
-            "Cite representative Abstract #s for trend claims.",
-            "Stay descriptive; no prescriptive recommendations.",
-            "If signals are not found for a bucket, state that it does not appear in the CSV slice."
-        ],
-        "allow_soc": False,
-        "allow_strategic_implications": False,
-        "ai_prompt": """You are EMD Serono's medical affairs strategic intelligence analyst. Analyze emerging scientific trends and research patterns from ASCO GU 2025 for portfolio positioning and development insights.
+        "button_label": "Scientific Trends",
+        "ai_prompt": """You are EMD Serono's senior medical affairs scientific intelligence analyst. Conduct comprehensive trend analysis of ESMO 2025 to identify emerging scientific themes, biomarker developments, and evolving treatment paradigms that could impact EMD's oncology strategy.
 
-FOCUS: Identify patterns in research themes, biomarkers, mechanisms of action, and treatment approaches in genitourinary oncology.
+**EXECUTIVE SUMMARY** (2-3 paragraphs):
+Provide strategic overview of the scientific landscape:
+- What are the 3-5 dominant scientific themes at this conference? (e.g., ADC expansion, biomarker-driven precision medicine, IO combinations, resistance mechanisms)
+- Which biomarkers and mechanisms of action show the strongest momentum based on abstract volume?
+- Are there emerging treatment paradigms that could reshape standards of care in EMD-relevant therapeutic areas?
+- What scientific gaps or unmet needs are evident from the research presented?
 
-ANALYSIS FRAMEWORK:
+**BIOMARKER & MOLECULAR LANDSCAPE**:
 
-**Executive Summary**: Most significant scientific trends and research themes from this conference.
+Analyze the biomarker/MOA table provided and describe trends:
 
-**Research Theme Landscape**: Dominant areas including ADCs, checkpoint inhibitors, FGFR targeting, DNA damage response, emerging mechanisms.
+*Checkpoint Inhibitor Biomarkers*:
+- PD-L1 expression: How many studies focus on PD-L1? What contexts (patient selection, predictive biomarker, resistance)?
+- Tumor mutational burden (TMB): Volume of TMB-focused research? High vs. low TMB strategies?
+- Microsatellite instability (MSI/dMMR): Activity level? Which tumor types?
+- Novel IO biomarkers (LAG-3, TIM-3, TIGIT): Any emerging checkpoint targets beyond PD-1/PD-L1/CTLA-4?
 
-**Biomarker Strategy Evolution**: Research patterns in PD-L1, FGFR3, TMB, HER2, TROP-2, ctDNA/utDNA approaches.
+*Precision Oncology Biomarkers*:
+- FGFR alterations: Study volume for FGFR1/2/3/4? Which tumor types? Patient selection strategies?
+- HER2: How many HER2-focused studies? Beyond traditional HER2+ indications (breast/gastric) to HER2-low or other tumors?
+- MET alterations: Conference activity on MET exon 14 skipping, MET amplification, MET overexpression?
+- KRAS mutations: Study volume on KRAS G12C and other KRAS variants? Which tumor types?
+- Other actionable alterations: ALK, ROS1, BRAF, RET, NTRK, BRCA - which show significant research activity?
 
-**Treatment Paradigm Signals**: Emerging approaches, combination strategies, therapeutic focus shifts.
+*Emerging Biomarker Themes*:
+- Circulating tumor DNA (ctDNA): How many studies use ctDNA for MRD detection, treatment monitoring, or biomarker discovery?
+- Immune signatures beyond PD-L1: Any research on tumor immune microenvironment, immune gene signatures, or composite biomarkers?
+- Resistance biomarkers: Studies focused on mechanisms of resistance to IO, targeted therapy, or ADCs?
 
-**Clinical Development Patterns**: Endpoint strategies, patient population focus, evidence generation approaches.
+**MECHANISM OF ACTION TRENDS**:
 
-**Scientific Opportunities**: Under-explored areas, novel mechanisms, potential white space opportunities.
+*Antibody-Drug Conjugates (ADCs)*:
+- Overall ADC momentum: Based on biomarker table, how many ADC-focused studies?
+- ADC targets: Which ADC targets show research activity? (HER2, TROP-2, Nectin-4, CEACAM5, others)
+- Tumor type expansion: Are ADCs moving into new indications beyond breast/bladder?
+- Combination strategies: ADCs + IO, ADCs + chemo, ADC doublets?
 
-**Portfolio Planning Intelligence**: How trends impact future development strategies and competitive positioning.
+*Checkpoint Inhibitors & IO Combinations*:
+- IO monotherapy vs. combinations: What's the balance?
+- IO+IO combinations: Which checkpoint combinations are being studied?
+- IO+chemotherapy: Still a dominant paradigm or declining?
+- IO+targeted therapy: Novel combinations gaining traction?
+- IO+ADC: Emerging paradigm?
 
-REQUIREMENTS:
-- Natural narrative flow, cite Abstract # for all claims
-- Use only provided data and patterns - acknowledge absences explicitly
-- Strategic trend analysis grounded in actual conference data
-- Forward-looking perspective on scientific and clinical implications
-- DO NOT include a "References" section (the table already provides this information)
-- DO NOT include "Actionable next steps for Medical Affairs" (this is covered by the Strategic Recommendations button)
+*Targeted Therapy Evolution*:
+- Tyrosine kinase inhibitors (TKIs): Which pathways show activity? (EGFR, ALK, MET, FGFR, VEGFR, etc.)
+- Next-generation targeted agents: Evolution beyond first-gen inhibitors?
+- Multi-kinase vs. selective inhibitors: Which approach dominates?
+- Resistance-focused agents: Drugs designed for resistance settings?
 
-Deliver actionable scientific intelligence for medical affairs strategic planning."""
+*DNA Damage Response & Cell Cycle*:
+- PARP inhibitors: Research volume? Which tumor types beyond ovarian/breast?
+- Other DDR targets: ATR, ATM, CHK1/2, WEE1 activity?
+- CDK4/6 inhibitors: Beyond breast cancer?
+
+*Novel Mechanisms*:
+- Epigenetic targets: EZH2, IDH, other epigenetic modulators?
+- Immunomodulatory agents beyond checkpoint inhibitors?
+- Bispecific antibodies or other novel formats?
+- Cell therapy (CAR-T, TCR-T) presence?
+
+**TREATMENT PARADIGM EVOLUTION**:
+
+*Treatment Settings & Sequencing*:
+- Neoadjuvant/adjuvant momentum: How many studies in early-stage/perioperative settings vs. metastatic?
+- Maintenance therapy: Research activity in maintenance strategies? Which agents?
+- Treatment sequencing: Studies addressing optimal sequencing of therapies?
+- Consolidation approaches: Emerging paradigms?
+
+*Combination Regimen Complexity*:
+- Monotherapy vs. doublet vs. triplet: What's the distribution?
+- Which combination backbones are most studied? (IO+chemo, IO+targeted, etc.)
+- De-escalation strategies: Any research on reducing treatment intensity in responding patients?
+
+*Biomarker-Driven Treatment Selection*:
+- Precision medicine momentum: How many studies use biomarkers to select therapy?
+- Basket/umbrella trial evidence: Tumor-agnostic biomarker strategies?
+- Companion diagnostics: Studies validating predictive biomarkers?
+
+**CLINICAL ENDPOINTS & EVIDENCE QUALITY**:
+
+*Endpoint Selection*:
+- Overall survival (OS) vs. progression-free survival (PFS): Which dominates?
+- Pathologic complete response (pCR) in neoadjuvant studies?
+- Minimal residual disease (MRD) or ctDNA clearance as endpoints?
+- Quality of life (QoL) and patient-reported outcomes (PROs)?
+- Novel surrogate endpoints?
+
+*Study Design & Phase Distribution*:
+- Phase 1/2 vs. Phase 3 studies: What's the balance?
+- Real-world evidence (RWE) presentations?
+- Long-term follow-up data from landmark trials?
+- Retrospective vs. prospective designs?
+
+**UNMET NEEDS & RESEARCH GAPS**:
+
+Based on what IS and ISN'T being studied:
+- Underserved tumor types or patient populations?
+- Biomarker gaps: Important molecular alterations without targeted therapies?
+- Treatment settings lacking innovation (e.g., later-line therapies, elderly patients)?
+- Geographic or health equity gaps in research?
+
+**EMD PORTFOLIO SCIENTIFIC CONTEXT**:
+
+*Avelumab (PD-L1 checkpoint inhibitor)*:
+- How does overall PD-L1/IO research momentum position avelumab?
+- IO+chemotherapy vs. IO monotherapy trends: Implications for avelumab combinations?
+- Maintenance therapy research: Is this paradigm growing or stable?
+
+*Tepotinib (MET inhibitor)*:
+- MET biomarker research activity: Strong momentum or niche?
+- Competitive MET inhibitor landscape: How crowded is MET space?
+- Lung cancer targeted therapy trends: Where does MET fit in the evolving NSCLC landscape?
+
+*Cetuximab (anti-EGFR mAb)*:
+- EGFR biomarker research: Level of activity in CRC and H&N?
+- Anti-EGFR therapeutic momentum: Growing, stable, or declining?
+- Biomarker refinement: RAS testing, other EGFR resistance mechanisms?
+
+**NOTABLE SCIENTIFIC DEVELOPMENTS** (8-12 examples):
+Highlight the most scientifically significant or paradigm-shifting presentations:
+- For each: Abstract #, scientific theme, why it matters
+- Prioritize: (1) Novel biomarkers or MOAs, (2) Paradigm-shifting data, (3) EMD portfolio relevance
+- Always cite Abstract # (Identifier)
+
+**WRITING REQUIREMENTS**:
+- Natural narrative prose - flowing paragraphs, not bullet lists (use bullets only for section structure)
+- Always cite Abstract # when referencing specific studies or trends
+- Integrate quantitative data from biomarker/MOA table (e.g., "PD-L1 appeared in 45 abstracts, representing 30% of all IO studies...")
+- Use only information from provided biomarker table and abstracts - if unavailable, state "not found in current dataset"
+- Maintain scientific rigor and precision
+- Descriptive analysis - avoid prescriptive clinical recommendations
+- Professional vocabulary for Medical Director/VP Medical Affairs audience
+
+**OUTPUT STRUCTURE**:
+Clear section headers with analytical paragraphs. This should read as a comprehensive scientific intelligence briefing for strategic planning and portfolio positioning.""",
+        "required_tables": ["biomarker_moa_hits"]
     },
     "strategy": {
-        "button_label": "Medical Affairs Strategy",
-        "subtitle": "Portfolio Implications",
-        "sections": [
-            "Executive Summary",
-            "Strategic Implications for Avelumab & Portfolio"
-        ],
-        "required_tables": [],
-        "buckets": {},
-        "must_cover": [
-            "Organize Strategic Implications as: Positioning vs Standard of Care; Evidence Themes to Amplify; Differentiating Messages; Portfolio Adjacencies.",
-            "No action items/risks/12-month outlook.",
-            "If CSV lacks evidence to support a point, say so plainly."
-        ],
-        "allow_soc": False,
-        "allow_strategic_implications": True,
-        "ai_prompt": """You are EMD Serono's senior medical affairs strategist. Analyze ESMO 2025 data for strategic implications across our oncology portfolio - Avelumab (bladder), Tepotinib (lung), and Cetuximab (colorectal/H&N).
+        "button_label": "Strategic Recommendations",
+        "ai_prompt": """You are EMD Serono's medical affairs strategic intelligence analyst. Provide indication-specific strategic analysis for ESMO 2025.
 
-KEY CONTEXT: ESMO 2025 offers broader oncology landscape analysis beyond our traditional GU focus. Assess competitive positioning across multiple therapeutic areas where EMD Serono has established or emerging presence. Consider geographic market dynamics and European oncology trends.
+**INDICATION-SPECIFIC CONTEXT**:
+- **Avelumab**: Metastatic bladder cancer (urothelial carcinoma), first-line maintenance therapy post-platinum chemotherapy
+- **Tepotinib**: Metastatic NSCLC with MET exon 14 skipping mutations
+- **Cetuximab (H&N)**: Locally advanced or metastatic head & neck squamous cell carcinoma
+- **Cetuximab (CRC)**: Metastatic colorectal cancer (RAS wild-type)
 
-STRATEGIC ANALYSIS FRAMEWORK:
+**ANALYSIS FRAMEWORK**:
 
-**Executive Summary**: High-level strategic implications for EMD Serono's GU oncology market position.
+**Executive Summary**: Strategic imperatives for this specific indication
 
-**Portfolio Positioning Strategy**: How avelumab and future assets should be positioned given revealed competitive landscape.
+**Current Competitive Position**: Where this EMD drug sits in the treatment paradigm (line of therapy, biomarker selection, combination strategies)
 
-**Competitive Response Framework**: Strategic implications of competitor activity, recommended EMD Serono responses to maintain/expand position.
+**Competitive Threats & Opportunities**:
+- New competitors entering this indication
+- Emerging biomarker strategies that could expand/contract market
+- Combination therapy trends
 
-**Evidence Strategy**: Key evidence gaps, research priorities, and medical affairs focus areas from competitive intelligence.
+**Scientific & Clinical Momentum**:
+- What's gaining traction in this indication (new MOAs, ADCs, biomarkers)
+- Practice-changing data or consensus shifts
 
-**Market Access & Differentiation**: Positioning opportunities and differentiation strategies informed by conference trends.
+**White Space & Partnership Opportunities**:
+- Unmet needs in this indication
+- Research gaps where EMD could lead
 
-**Portfolio Development Recommendations**: Clinical development, partnership opportunities, and expansion strategies based on conference insights.
+**Medical Affairs Action Plan**:
+- Priority KOLs to engage
+- Key messages for medical communications
+- Clinical development considerations
 
 REQUIREMENTS:
-- Natural narrative flow, cite Abstract # for all claims
-- Ground recommendations in specific conference data only
-- Acknowledge data limitations explicitly
-- Focus on actionable medical affairs and portfolio strategy
-- Balance defensive positioning (current market protection) with offensive opportunities (expansion)
-
-Deliver strategic intelligence with clear direction for medical affairs strategy and portfolio positioning."""
+- **Focus on the specific indication** (e.g., metastatic bladder, locally advanced H&N, etc.)
+- **Line of therapy context** (1L, 2L, maintenance, etc.)
+- Strategic perspective for leadership decision-making
+- Cite Abstract # for all claims
+- Actionable, indication-specific insights
+- Use only provided data""",
+        "required_tables": ["all_data"]
     }
 }
 
-# =========================
-# Quantifications & Tables
-# =========================
-def count_top_authors(df: pd.DataFrame, n: int = 20) -> pd.DataFrame:
-    df_unique = df.drop_duplicates(subset=["Abstract #"]).copy()
-    authors_series = df_unique["Authors"].fillna("").str.split(";").explode().str.strip()
-    counts = (
-        authors_series[authors_series != ""]
-        .value_counts()
-        .head(n)
-        .rename_axis("Authors")
-        .reset_index(name="Unique Abstracts")
-    )
+# ============================================================================
+# DATA LOADING & PREPROCESSING
+# ============================================================================
 
-    # Common institutions per top author
-    common_insts = []
-    for _, row in counts.iterrows():
-        author = row["Authors"]
-        pat = r"\b" + re.escape(author) + r"\b"
-        sub_abs = df_unique[safe_contains(df_unique["Authors"], pat, regex=True)]
-        all_insts = []
-        for inst_str in sub_abs["Institutions"]:
-            for inst in str(inst_str).split(";"):
-                s = inst.strip()
-                if len(s) > 4:
-                    all_insts.append(s)
-        if all_insts:
-            top2 = Counter(all_insts).most_common(2)
-            common_insts.append("; ".join(inst for inst, _ in top2))
-        else:
-            common_insts.append("")
-    counts["Institutions"] = common_insts
-    counts = counts[["Unique Abstracts", "Authors", "Institutions"]]
-    return counts
+def file_md5(filepath):
+    """Compute MD5 hash of file for change detection."""
+    hash_md5 = hashlib.md5()
+    with open(filepath, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
 
-def count_top_institutions(df: pd.DataFrame, n: int = 20) -> pd.DataFrame:
-    df_unique = df.drop_duplicates(subset=["Abstract #"]).copy()
-    institutions_list = []
-    institution_keywords = [
-        "university","hospital","cancer","center","centre","institute",
-        "medical","clinic","college","health system","health service","foundation","consortium"
-    ]
-    for _, row in df_unique.iterrows():
-        inst_text = str(row.get("Institutions", ""))
-        parts = re.split(r"[;,\|]", inst_text)
-        for part in parts:
-            s = part.strip()
-            if len(s) > 6 and any(k in s.lower() for k in institution_keywords):
-                # Apply institution normalization to handle department prefixes
-                normalized_institution = normalize_institution_name(s)
-                if normalized_institution:  # Only add if normalization succeeded
-                    institutions_list.append({"Abstract #": row["Abstract #"], "Institution": normalized_institution, "Title": row["Title"]})
+def load_and_process_data():
+    """Load ESMO CSV and prepare for analysis."""
+    global df_global, csv_hash_global, chroma_client, collection
 
-    if not institutions_list:
-        return pd.DataFrame(columns=["#Unique Abstracts", "Institutions", "Main focus area"])
+    if not CSV_FILE.exists():
+        print(f"ERROR: CSV file not found at {CSV_FILE}")
+        return None
 
-    inst_df = pd.DataFrame(institutions_list)
-    counts = (
-        inst_df.drop_duplicates(subset=["Abstract #", "Institution"])
-        .groupby("Institution")["Abstract #"]
-        .nunique()
-        .reset_index(name="#Unique Abstracts")
-    )
+    current_hash = file_md5(CSV_FILE)
 
-    focus_keywords = {
-        "ADCs": ["adc", "enfortumab", "sacituzumab", "deruxtecan", "nectin"],
-        "ICIs": ["avelumab", "pembrolizumab", "nivolumab", "atezolizumab", "durvalumab", "checkpoint"],
-        "FGFR": ["fgfr", "erdafitinib"],
-        "HER2": ["her2"],
-        "TROP-2": ["trop-2", "trop2"],
-        "ctDNA/utDNA": ["ctdna", "utdna"],
-        "Perioperative": ["neoadjuvant", "adjuvant"],
-        "Maintenance": ["maintenance"],
-    }
-    inst_titles = (
-        inst_df.drop_duplicates(subset=["Abstract #", "Institution"])[["Institution", "Title"]]
-        .groupby("Institution")["Title"].apply(list).to_dict()
-    )
-    main_focus = []
-    for inst in counts["Institution"]:
-        titles = " ".join(inst_titles.get(inst, [])).lower()
-        score = {area: sum(titles.count(k) for k in keys) for area, keys in focus_keywords.items()}
-        best = max(score, key=score.get) if score else None
-        main_focus.append(best if best and score[best] > 0 else "")
-    counts["Main focus area"] = main_focus
-    counts = counts.sort_values("#Unique Abstracts", ascending=False).head(n)
-    counts = counts[["#Unique Abstracts", "Institution", "Main focus area"]].rename(columns={"Institution": "Institutions"})
-    return counts
+    # Return cached data if unchanged
+    if df_global is not None and csv_hash_global == current_hash:
+        print("[DATA] Using cached dataset")
+        return df_global
 
-def get_drug_company_mapping_ai(drug_names: List[str]) -> Dict[str, str]:
-    """Use AI to map drug names to pharmaceutical companies."""
-    if not client:
-        return {}
+    print(f"[DATA] Loading {CSV_FILE.name}...")
+    df = pd.read_csv(CSV_FILE, encoding='utf-8')
 
-    drugs_text = ", ".join(drug_names)
-    prompt = f"""You are a pharmaceutical industry expert. For each drug listed below, provide the primary pharmaceutical company that manufactures/markets it. Respond in this exact format:
+    # Sanitize Unicode for Windows compatibility
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            df[col] = df[col].apply(lambda x: sanitize_unicode_for_windows(str(x)) if pd.notna(x) else x)
 
-Drug Name: Company Name
+    # Keep original column names from CSV for frontend compatibility
+    # Expected columns: Title, Speakers, Speaker Location, Affiliation, Identifier, Room, Date, Time, Session, Theme
 
-Only include drugs you're confident about. For combination drugs, list both companies separated by '/'.
+    # Fill NaN values
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            df[col] = df[col].fillna('')
 
-Drugs to map: {drugs_text}"""
+    csv_hash_global = current_hash
+    df_global = df
+
+    print(f"[DATA] Loaded {len(df)} studies from ESMO 2025")
+
+    # Initialize ChromaDB for semantic search
+    initialize_chromadb(df)
+
+    return df
+
+def initialize_chromadb(df):
+    """Initialize ChromaDB with conference data for semantic search."""
+    global chroma_client, collection
 
     try:
-        response = client.responses.create(
-            model="gpt-5-mini",
-            input=[{"role": "user", "content": prompt}],
-            reasoning={"effort": "low"},
-            text={"verbosity": "low"},
-            max_output_tokens=500
-        )
+        chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
 
-        # Parse the response into a dictionary
-        drug_company_map = {}
-        for line in response.output_text.split('\n'):
-            if ':' in line:
-                parts = line.split(':', 1)
-                if len(parts) == 2:
-                    drug = parts[0].strip()
-                    company = parts[1].strip()
-                    drug_company_map[drug] = company
-
-        return drug_company_map
-    except Exception as e:
-        print(f"Error in AI drug-company mapping: {str(e)}")
-        return {}
-
-def create_competitor_abstracts_table(filtered_df: pd.DataFrame, competitors_to_check: List[Tuple[str, List[str]]]) -> pd.DataFrame:
-    competitor_abstracts = []
-
-    # Base company map with known mappings
-    base_company_map = {
-        "Avelumab": "EMD Serono",  # Our own drug!
-        "Enfortumab vedotin": "Astellas/Seagen",
-        "Pembrolizumab": "Merck",
-        "Nivolumab": "Bristol Myers Squibb",
-        "Atezolizumab": "Roche/Genentech",
-        "Durvalumab": "AstraZeneca",
-        "Sacituzumab govitecan": "Gilead",
-        "Erdafitinib": "Johnson & Johnson",
-        "EV + Pembrolizumab": "Astellas/Seagen + Merck",
-        "Disitamab vedotin": "RemeGen",
-        "Zelenectide pevedotin": "Mersana Therapeutics",
-    }
-
-    # Get list of drugs that aren't in base map for AI enhancement
-    all_drugs = [canonical for canonical, _ in competitors_to_check]
-    unmapped_drugs = [drug for drug in all_drugs if drug not in base_company_map]
-
-    # Use AI to map unmapped drugs
-    ai_company_map = {}
-    if unmapped_drugs:
-        ai_company_map = get_drug_company_mapping_ai(unmapped_drugs)
-
-    # Combine base map with AI enhancements
-    company_map = {**base_company_map, **ai_company_map}
-
-    def extract_company_from_institutions(institutions_text: str) -> str:
-        """Extract pharmaceutical company names from institution affiliations."""
-        if not institutions_text:
-            return ""
-
-        # Common pharmaceutical company patterns in institution names
-        pharma_patterns = [
-            r'Astellas', r'Seagen', r'Merck', r'Bristol.?Myers.?Squibb', r'BMS',
-            r'Roche', r'Genentech', r'AstraZeneca', r'Gilead', r'Johnson.?&.?Johnson',
-            r'J&J', r'EMD.?Serono', r'Pfizer', r'Novartis', r'GSK', r'GlaxoSmithKline',
-            r'Sanofi', r'Bayer', r'Amgen', r'Regeneron', r'Biogen', r'Moderna'
-        ]
-
-        institutions_lower = institutions_text.lower()
-        found_companies = []
-
-        for pattern in pharma_patterns:
-            matches = re.findall(pattern, institutions_text, re.IGNORECASE)
-            if matches:
-                found_companies.extend(matches)
-
-        # Return first found company or empty string
-        return found_companies[0] if found_companies else ""
-
-    dfu = filtered_df.drop_duplicates(subset=["Abstract #"]).copy()
-    for canonical, aliases in competitors_to_check:
-        for alias in aliases:
-            use_regex = bool(re.search(r'[.*+?^${}()|[\]\\]', alias))
-            mask = (
-                safe_contains(dfu["Title"], alias, regex=use_regex) |
-                safe_contains(dfu["Authors"], alias, regex=use_regex) |
-                safe_contains(dfu["Institutions"], alias, regex=use_regex)
+        # Use OpenAI embeddings if available, else default
+        if OPENAI_API_KEY:
+            ef = embedding_functions.OpenAIEmbeddingFunction(
+                api_key=OPENAI_API_KEY,
+                model_name="text-embedding-3-small"
             )
-            hits = dfu[mask]
-            if not hits.empty:
-                for _, row in hits.iterrows():
-                    # Intelligent company detection: try drug mapping first, then extract from institutions
-                    mapped_company = company_map.get(canonical, "")
-                    if not mapped_company:
-                        # Try to extract company from institution affiliations
-                        institution_company = extract_company_from_institutions(row["Institutions"])
-                        mapped_company = institution_company if institution_company else "Unknown"
+        else:
+            ef = embedding_functions.DefaultEmbeddingFunction()
 
-                    competitor_abstracts.append({
-                        "Competitor": canonical,
-                        "Company": mapped_company,
-                        "Abstract #": row["Abstract #"],
-                        "Poster #": row["Poster #"],
-                        "Title": row["Title"],
-                        "Authors": row["Authors"],
-                        "Institutions": row["Institutions"],
-                    })
-    if competitor_abstracts:
-        df_out = pd.DataFrame(competitor_abstracts).drop_duplicates(subset=["Abstract #", "Title"])
-        df_out = df_out[["Competitor", "Company", "Abstract #", "Poster #", "Title", "Authors", "Institutions"]]
-        return df_out.sort_values(["Competitor", "Abstract #"])
-    return pd.DataFrame(columns=["Competitor","Company","Abstract #","Poster #","Title","Authors","Institutions"])
+        collection_name = f"esmo_2025_{csv_hash_global[:8]}"
 
-def create_emerging_threats_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
-    emerging_keywords = [
-        "nectin-4","nectin 4","NECTIN4","HER2","HER2-low","trastuzumab deruxtecan","DS-8201",
-        "CAR-T","car t","bispecific","novel","investigational","phase i","phase 1","first-in-human","TROP-2","trop2"
-    ]
-    dfu = filtered_df.drop_duplicates(subset=["Abstract #"]).copy()
-    rows = []
-    for kw in emerging_keywords:
-        mask = safe_contains(dfu["Title"], kw) | safe_contains(dfu["Authors"], kw)
-        for _, r in dfu[mask].iterrows():
-            rows.append({
-                "Threat Type": kw.upper(),
-                "Abstract #": r["Abstract #"],
-                "Poster #": r["Poster #"],
-                "Authors": r["Authors"],
-                "Institutions": r["Institutions"],
-                "Title": r["Title"]
-            })
-    if rows:
-        return pd.DataFrame(rows).drop_duplicates(subset=["Abstract #", "Threat Type"])
-    return pd.DataFrame(columns=["Threat Type","Abstract #","Poster #","Authors","Institutions","Title"])
-
-def build_comprehensive_drug_map():
-    """
-    Build comprehensive drug-to-MOA mapping from Drug_Company_names.csv plus manual classifications
-    """
-    import os
-    import re
-
-    drug_moa_map = {}
-
-    # Load drug data from CSV if available
-    csv_path = os.path.join(os.path.dirname(__file__), "Drug_Company_names.csv")
-    if os.path.exists(csv_path):
+        # Check if collection already exists
         try:
-            with open(csv_path, 'r', encoding='utf-8-sig') as f:
-                lines = f.readlines()[1:]  # Skip header
+            collection = chroma_client.get_collection(name=collection_name, embedding_function=ef)
+            print(f"[CHROMA] Using existing collection: {collection_name}")
+        except:
+            # Create new collection
+            collection = chroma_client.create_collection(
+                name=collection_name,
+                embedding_function=ef,
+                metadata={"description": "ESMO 2025 Conference Abstracts"}
+            )
 
-            for line in lines:
-                line = line.strip()
-                if not line:
-                    continue
+            # Add documents to collection
+            documents = []
+            metadatas = []
+            ids = []
 
-                # Parse format: "Commercial Name (generic_name) / Company"
-                match = re.match(r'([^(]+)\s*\(([^)]+)\)\s*/\s*(.+)', line)
-                if match:
-                    commercial_name = match.group(1).strip().lower()
-                    generic_name = match.group(2).strip().lower()
-                    company = match.group(3).strip()
+            for idx, row in df.iterrows():
+                doc_text = f"{row['Title']} {row['Speakers']} {row['Affiliation']} {row['Theme']}"
+                documents.append(doc_text)
+                metadatas.append({
+                    "identifier": str(row['Identifier']),
+                    "speaker": str(row['Speakers']),
+                    "affiliation": str(row['Affiliation'])
+                })
+                ids.append(f"doc_{idx}")
 
-                    # Classify drugs based on known patterns
-                    moa_category = classify_drug_by_name(commercial_name, generic_name)
+            # Add in batches
+            batch_size = 500
+            for i in range(0, len(documents), batch_size):
+                batch_docs = documents[i:i+batch_size]
+                batch_meta = metadatas[i:i+batch_size]
+                batch_ids = ids[i:i+batch_size]
 
-                    if moa_category:
-                        # Add both commercial and generic names
-                        drug_moa_map[commercial_name] = moa_category
-                        drug_moa_map[generic_name] = moa_category
+                collection.add(
+                    documents=batch_docs,
+                    metadatas=batch_meta,
+                    ids=batch_ids
+                )
 
-                        # Handle complex generic names (remove suffixes)
-                        clean_generic = re.sub(r'[-\s](ejfv|rwlc|hziy|dlwr|tftv|hrii|dlle|vmjw|tebn|wtpg|jsgr|nxki|tpzi|actl|gxly|irfc|cxix)$', '', generic_name)
-                        if clean_generic != generic_name:
-                            drug_moa_map[clean_generic] = moa_category
+            print(f"[CHROMA] Created collection with {len(documents)} documents")
 
-        except Exception as e:
-            print(f"Warning: Could not load Drug_Company_names.csv: {e}")
+    except Exception as e:
+        print(f"[CHROMA] Error initializing: {e}")
+        chroma_client = None
+        collection = None
 
-    # Add manual high-priority classifications and combinations
-    manual_additions = {
-        # Combination shorthand
-        "ev+p": "ADC+ICI", "evp": "ADC+ICI", "ev + p": "ADC+ICI",
-        "ev-302": "ADC+ICI", "ev 302": "ADC+ICI", "ev+pembrolizumab": "ADC+ICI",
+# ============================================================================
+# FILTER LOGIC (Therapeutic Area Filters)
+# ============================================================================
 
-        # Common abbreviations
-        "anti-pd1": "ICI", "anti-pd-1": "ICI", "anti-pdl1": "ICI", "anti-pd-l1": "ICI",
-        "checkpoint inhibitor": "ICI", "immune checkpoint": "ICI",
+def apply_bladder_cancer_filter(df: pd.DataFrame) -> pd.Series:
+    """Apply bladder cancer filter with prostate exclusion."""
+    keywords = ["bladder", "urothelial", "uroepithelial", "transitional cell", "genitourinary"]
+    acronym = "GU"  # Case-sensitive, word boundary
+    exclusions = ["prostate"]
 
-        # ADC patterns
-        "antibody-drug conjugate": "ADC", "adc": "ADC", "conjugate": "ADC",
+    mask = pd.Series([False] * len(df), index=df.index)
 
-        # FGFR patterns
-        "fgfr inhibitor": "FGFR", "fibroblast growth factor": "FGFR"
-    }
+    # Regular keywords (case-insensitive)
+    for keyword in keywords:
+        title_mask = df["Title"].str.contains(keyword, case=False, na=False, regex=False)
+        theme_mask = df["Theme"].str.contains(keyword, case=False, na=False, regex=False)
+        mask = mask | title_mask | theme_mask
 
-    drug_moa_map.update(manual_additions)
-    return drug_moa_map
+    # Acronym with word boundary (case-sensitive to avoid "giant")
+    pattern = r'\b' + re.escape(acronym) + r'\b'
+    title_mask = df["Title"].str.contains(pattern, case=True, na=False, regex=True)
+    theme_mask = df["Theme"].str.contains(pattern, case=True, na=False, regex=True)
+    mask = mask | title_mask | theme_mask
 
-def classify_drug_by_name(commercial_name: str, generic_name: str) -> str:
+    # Build theme-has-prostate mask
+    theme_has_prostate = pd.Series([False] * len(df), index=df.index)
+    for exclusion in exclusions:
+        theme_has_prostate = theme_has_prostate | df["Theme"].str.contains(exclusion, case=False, na=False, regex=False)
+
+    # Build title-has-bladder mask for smart exclusion
+    title_has_bladder = pd.Series([False] * len(df), index=df.index)
+    for keyword in keywords:
+        title_has_bladder = title_has_bladder | df["Title"].str.contains(keyword, case=False, na=False, regex=False)
+    pattern_gu = r'\b' + re.escape(acronym) + r'\b'
+    title_has_bladder = title_has_bladder | df["Title"].str.contains(pattern_gu, case=True, na=False, regex=True)
+
+    # Logic: (title match) OR (theme match AND no prostate in theme) OR (theme has prostate BUT title has bladder)
+    mask = title_has_bladder | (mask & ~theme_has_prostate) | (theme_has_prostate & title_has_bladder)
+
+    return mask
+
+def apply_renal_cancer_filter(df: pd.DataFrame) -> pd.Series:
+    """Apply renal cancer filter."""
+    keywords = ["renal", "renal cell"]
+    acronyms = ["RCC"]
+    bladder_keywords = ["bladder", "urothelial", "uroepithelial"]
+
+    mask = pd.Series([False] * len(df), index=df.index)
+    title_has_renal = pd.Series([False] * len(df), index=df.index)
+
+    # Build title and theme masks
+    for keyword in keywords:
+        title_has_renal = title_has_renal | df["Title"].str.contains(keyword, case=False, na=False, regex=False)
+
+    for acronym in acronyms:
+        pattern = r'\b' + re.escape(acronym) + r'\b'
+        title_has_renal = title_has_renal | df["Title"].str.contains(pattern, case=False, na=False, regex=True)
+
+    theme_has_renal = pd.Series([False] * len(df), index=df.index)
+    for keyword in keywords:
+        theme_has_renal = theme_has_renal | df["Theme"].str.contains(keyword, case=False, na=False, regex=False)
+
+    for acronym in acronyms:
+        pattern = r'\b' + re.escape(acronym) + r'\b'
+        theme_has_renal = theme_has_renal | df["Theme"].str.contains(pattern, case=False, na=False, regex=True)
+
+    # Check if theme contains bladder keywords
+    theme_has_bladder = pd.Series([False] * len(df), index=df.index)
+    for bladder_kw in bladder_keywords:
+        theme_has_bladder = theme_has_bladder | df["Theme"].str.contains(bladder_kw, case=False, na=False, regex=False)
+
+    # Logic: title match OR (theme match AND no bladder in theme)
+    mask = title_has_renal | (theme_has_renal & ~theme_has_bladder)
+    return mask
+
+def apply_lung_cancer_filter(df: pd.DataFrame) -> pd.Series:
+    """Apply lung cancer filter."""
+    keywords = ["lung", "non-small cell lung cancer", "non-small-cell lung cancer"]
+    acronyms = ["NSCLC", "MET", "ALK", "EGFR", "KRAS"]  # All with word boundaries
+
+    mask = pd.Series([False] * len(df), index=df.index)
+
+    for keyword in keywords:
+        title_mask = df["Title"].str.contains(keyword, case=False, na=False, regex=False)
+        theme_mask = df["Theme"].str.contains(keyword, case=False, na=False, regex=False)
+        mask = mask | title_mask | theme_mask
+
+    for acronym in acronyms:
+        pattern = r'\b' + re.escape(acronym) + r'\b'
+        title_mask = df["Title"].str.contains(pattern, case=False, na=False, regex=True)
+        theme_mask = df["Theme"].str.contains(pattern, case=False, na=False, regex=True)
+        mask = mask | title_mask | theme_mask
+
+    return mask
+
+def apply_colorectal_cancer_filter(df: pd.DataFrame) -> pd.Series:
+    """Apply colorectal cancer filter."""
+    keywords = ["colorectal", "colon", "rectal", "bowel"]
+    acronyms = ["CRC"]
+    exclusions = ["gastric", "stomach", "esophageal", "esophagus", "pancreatic", "pancreas",
+                  "hepatocellular", "liver cancer", "biliary", "cholangiocarcinoma"]
+    exclusion_acronyms = ["HCC", "GEJ"]
+
+    mask = pd.Series([False] * len(df), index=df.index)
+
+    for keyword in keywords:
+        title_mask = df["Title"].str.contains(keyword, case=False, na=False, regex=False)
+        theme_mask = df["Theme"].str.contains(keyword, case=False, na=False, regex=False)
+        mask = mask | title_mask | theme_mask
+
+    for acronym in acronyms:
+        pattern = r'\b' + re.escape(acronym) + r'\b'
+        title_mask = df["Title"].str.contains(pattern, case=False, na=False, regex=True)
+        theme_mask = df["Theme"].str.contains(pattern, case=False, na=False, regex=True)
+        mask = mask | title_mask | theme_mask
+
+    # Build title-has-CRC mask for smart exclusion
+    title_has_crc = pd.Series([False] * len(df), index=df.index)
+    for keyword in keywords:
+        title_has_crc = title_has_crc | df["Title"].str.contains(keyword, case=False, na=False, regex=False)
+    for acronym in acronyms:
+        pattern = r'\b' + re.escape(acronym) + r'\b'
+        title_has_crc = title_has_crc | df["Title"].str.contains(pattern, case=False, na=False, regex=True)
+
+    # Exclude other GI cancers unless title has CRC terms
+    for exclusion in exclusions:
+        exclusion_mask = df["Title"].str.contains(exclusion, case=False, na=False, regex=False) | \
+                        df["Theme"].str.contains(exclusion, case=False, na=False, regex=False)
+        mask = mask & ~(exclusion_mask & ~title_has_crc)
+
+    for exclusion_acronym in exclusion_acronyms:
+        pattern = r'\b' + re.escape(exclusion_acronym) + r'\b'
+        exclusion_mask = df["Title"].str.contains(pattern, case=False, na=False, regex=True) | \
+                        df["Theme"].str.contains(pattern, case=False, na=False, regex=True)
+        mask = mask & ~(exclusion_mask & ~title_has_crc)
+
+    return mask
+
+def apply_head_neck_cancer_filter(df: pd.DataFrame) -> pd.Series:
+    """Apply head and neck cancer filter."""
+    keywords = ["head and neck", "head & neck", "squamous cell carcinoma of the head", "oral", "pharyngeal", "laryngeal"]
+    acronyms = ["H&N", "HNSCC", "SCCHN"]
+
+    mask = pd.Series([False] * len(df), index=df.index)
+
+    for keyword in keywords:
+        title_mask = df["Title"].str.contains(keyword, case=False, na=False, regex=False)
+        theme_mask = df["Theme"].str.contains(keyword, case=False, na=False, regex=False)
+        mask = mask | title_mask | theme_mask
+
+    for acronym in acronyms:
+        pattern = r'\b' + re.escape(acronym) + r'\b'
+        title_mask = df["Title"].str.contains(pattern, case=False, na=False, regex=True)
+        theme_mask = df["Theme"].str.contains(pattern, case=False, na=False, regex=True)
+        mask = mask | title_mask | theme_mask
+
+    return mask
+
+def apply_tgct_filter(df: pd.DataFrame) -> pd.Series:
+    """Apply TGCT filter."""
+    keywords = ["tenosynovial giant cell tumor", "pigmented villonodular synovitis"]
+    acronyms = ["TGCT", "PVNS"]
+
+    mask = pd.Series([False] * len(df), index=df.index)
+
+    for keyword in keywords:
+        title_mask = df["Title"].str.contains(keyword, case=False, na=False, regex=False)
+        theme_mask = df["Theme"].str.contains(keyword, case=False, na=False, regex=False)
+        mask = mask | title_mask | theme_mask
+
+    for acronym in acronyms:
+        pattern = r'\b' + re.escape(acronym) + r'\b'
+        title_mask = df["Title"].str.contains(pattern, case=False, na=False, regex=True)
+        theme_mask = df["Theme"].str.contains(pattern, case=False, na=False, regex=True)
+        mask = mask | title_mask | theme_mask
+
+    return mask
+
+def apply_therapeutic_area_filter(df: pd.DataFrame, ta_filter: str) -> pd.Series:
+    """Apply therapeutic area filter by name."""
+    if ta_filter == "All Therapeutic Areas":
+        return pd.Series([True] * len(df), index=df.index)
+    elif ta_filter == "Bladder Cancer":
+        return apply_bladder_cancer_filter(df)
+    elif ta_filter == "Renal Cancer":
+        return apply_renal_cancer_filter(df)
+    elif ta_filter == "Lung Cancer":
+        return apply_lung_cancer_filter(df)
+    elif ta_filter == "Colorectal Cancer":
+        return apply_colorectal_cancer_filter(df)
+    elif ta_filter == "Head and Neck Cancer":
+        return apply_head_neck_cancer_filter(df)
+    elif ta_filter == "TGCT":
+        return apply_tgct_filter(df)
+    else:
+        return pd.Series([True] * len(df), index=df.index)
+
+# ============================================================================
+# MULTI-FILTER LOGIC (Main Filtering Function)
+# ============================================================================
+
+def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
+                                  session_filters: List[str], date_filters: List[str]) -> pd.DataFrame:
     """
-    Classify drugs using curated GU oncology drug whitelist (safe, focused approach)
+    Apply multi-selection filters with OR logic.
+    Returns filtered DataFrame combining all selected filter combinations.
     """
-    name_lower = f"{commercial_name} {generic_name}".lower()
-
-    # CURATED GU ONCOLOGY DRUG WHITELIST (focused on bladder/renal cancer)
-    gu_drug_classifications = {
-        # ICIs (Checkpoint Inhibitors) - most common in GU
-        "avelumab": "ICI", "bavencio": "ICI",
-        "pembrolizumab": "ICI", "keytruda": "ICI",
-        "nivolumab": "ICI", "opdivo": "ICI",
-        "atezolizumab": "ICI", "tecentriq": "ICI",
-        "durvalumab": "ICI", "imfinzi": "ICI",
-        "cemiplimab": "ICI", "libtayo": "ICI",
-        "dostarlimab": "ICI", "jemperli": "ICI",
-        "ipilimumab": "ICI", "yervoy": "ICI",
-
-        # ADCs (Antibody-Drug Conjugates) - key in bladder cancer
-        "enfortumab vedotin": "ADC", "enfortumab": "ADC", "padcev": "ADC",
-        "sacituzumab govitecan": "ADC", "sacituzumab": "ADC", "trodelvy": "ADC", "rad-sg": "ADC",
-        "trastuzumab deruxtecan": "ADC", "deruxtecan": "ADC", "enhertu": "ADC",
-        "disitamab vedotin": "ADC", "disitamab": "ADC",
-
-        # FGFR Inhibitors - bladder cancer specific
-        "erdafitinib": "FGFR", "balversa": "FGFR",
-        "pemigatinib": "FGFR", "pemazyre": "FGFR",
-
-        # Targeted Therapies - renal cancer
-        "cabozantinib": "Targeted", "cabometyx": "Targeted",
-        "axitinib": "Targeted", "inlyta": "Targeted",
-        "sunitinib": "Targeted", "sutent": "Targeted",
-        "pazopanib": "Targeted", "votrient": "Targeted",
-        "sorafenib": "Targeted", "nexavar": "Targeted",
-        "lenvatinib": "Targeted", "lenvima": "Targeted",
-        "everolimus": "Targeted", "afinitor": "Targeted",
-        "temsirolimus": "Targeted", "torisel": "Targeted",
-
-        # Combination patterns
-        "ev+p": "ADC+ICI", "evp": "ADC+ICI", "ev + p": "ADC+ICI",
-        "ev-302": "ADC+ICI", "padcev pembrolizumab": "ADC+ICI"
-    }
-
-    # Check for exact matches first
-    for drug_name, moa in gu_drug_classifications.items():
-        if drug_name in name_lower:
-            return moa
-
-    # Fallback: basic suffix patterns for unlisted drugs (conservative)
-    if any(suffix in name_lower for suffix in ["vedotin", "govitecan", "deruxtecan"]):
-        return "ADC"
-    elif "erdafitinib" in name_lower or "fgfr" in name_lower:
-        return "FGFR"
-
-    return None  # Skip unknown drugs (safe approach)
-
-def extract_phase_and_setting(title_lower: str) -> str:
-    """
-    Extract study phase and therapy line setting from title
-    """
-    import re
-
-    phase_info = []
-
-    # Phase detection patterns (order matters - check combined phases first!)
-    phase_patterns = {
-        "Phase I/II": ["phase i/ii", "phase 1/2", "phase i-ii", "phase i / ii"],
-        "Phase II/III": ["phase ii/iii", "phase 2/3", "phase ii-iii", "phase ii / iii"],
-        "Phase III": ["phase iii", "phase 3", "phase three", "randomized controlled", "pivotal"],
-        "Phase II": ["phase ii", "phase 2", "phase two"],
-        "Phase I": ["phase i", "phase 1", "phase one", "first-in-human", "dose escalation", "dose finding"]
-    }
-
-    # Therapy line patterns
-    line_patterns = {
-        "1st line": ["first line", "first-line", "1st line", "1l ", "frontline", "front-line", "previously untreated", "treatment-naive", "treatment naive"],
-        "2nd line": ["second line", "second-line", "2nd line", "2l ", "previously treated"],
-        "3rd+ line": ["third line", "third-line", "3rd line", "heavily pretreated", "multiple prior"],
-        "Maintenance": ["maintenance", "switch maintenance", "continuation maintenance"],
-        "Neoadjuvant": ["neoadjuvant", "neo-adjuvant", "preoperative"],
-        "Adjuvant": ["adjuvant", "post-operative", "postoperative"],
-        "Metastatic": ["metastatic", "advanced", "locally advanced"]
-    }
-
-    # Check for phase
-    for phase_name, keywords in phase_patterns.items():
-        if any(keyword in title_lower for keyword in keywords):
-            phase_info.append(phase_name)
-            break  # Take first match to avoid duplicates
-
-    # Check for therapy line/setting
-    for line_name, keywords in line_patterns.items():
-        if any(keyword in title_lower for keyword in keywords):
-            phase_info.append(line_name)
-            break  # Take first match to avoid duplicates
-
-    # Return combined information or empty if none found
-    return ", ".join(phase_info) if phase_info else ""
-
-def build_biomarker_moa_hits_table(filtered_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Enhanced biomarker/MOA classification using comprehensive drug database + regex extraction
-    """
-    import re
-
-    dfu = filtered_df.drop_duplicates(subset=["Abstract #"]).copy()
-
-    # Use automatic pattern-based drug detection instead of hardcoded lists
-    drug_moa_map = {}  # Start fresh with pattern-based detection only
-
-    # Regex patterns to extract drug names from context AND conventional naming
-    drug_extraction_patterns = [
-        # Contextual extraction patterns
-        r"(?:trial of|study of)\s+([a-zA-Z0-9\s\-+]+?)(?:\s+(?:as|in|for|with)|$)",
-        r"(?:treatment with|therapy with)\s+([a-zA-Z0-9\s\-+]+?)(?:\s+(?:as|in|for|plus)|$)",
-        r"([a-zA-Z0-9\-+]+)\s+therapy",
-        r"([a-zA-Z0-9\-+]+)\s+treatment",
-        r"([a-zA-Z0-9\-+]+)\s+plus",
-        r"([a-zA-Z0-9\-+]+)-based",
-        r"([a-zA-Z0-9\-+]+)\s+\+\s+([a-zA-Z0-9\-+]+)",  # combination patterns
-        r"([a-zA-Z0-9\-+]+)\s+monotherapy",
-        r"([a-zA-Z0-9\-+]+)\s+maintenance",
-
-        # Conventional drug naming patterns (catch drugs by suffix even without context)
-        r"\b([a-z]+mab)\b",           # antibodies: pembrolizumab, avelumab, nivolumab
-        r"\b([a-z]+lizumab)\b",       # antibodies: atezolizumab, durvalumab
-        r"\b([a-z]+lumab)\b",         # antibodies: ipilimumab
-        r"\b([a-z]+limab)\b",         # antibodies: cemiplimab
-        r"\b([a-z]+tinib)\b",         # kinase inhibitors: erdafitinib, sunitinib
-        r"\b([a-z]+nib)\b",           # kinase inhibitors: imatinib, dasatinib
-        r"\b([a-z]+cyclib)\b",        # CDK inhibitors: palbociclib, ribociclib
-        r"\b([a-z]+vedotin)\b",       # ADCs: enfortumab vedotin
-        r"\b([a-z]+govitecan)\b",     # ADCs: sacituzumab govitecan
-        r"\b([a-z]+deruxtecan)\b"     # ADCs: trastuzumab deruxtecan
-    ]
-
-    # Biomarker patterns (non-drug)
-    biomarker_keywords = {
-        "PD-L1": ["pd-l1", "pdl1", "pd l1"],
-        "FGFR3": ["fgfr3"],
-        "HER2": ["her2", "her-2"],
-        "TMB": ["tmb", "tumor mutational burden"],
-        "ctDNA": ["ctdna", "circulating tumor dna"],
-        "utDNA": ["utdna", "urinary tumor dna"],
-        "DDR": ["dna damage response", "homologous recombination", "brca"]
-    }
-
-    rows = []
-
-    for _, r in dfu.iterrows():
-        title = str(r["Title"])
-        title_l = title.lower()
-
-        found_categories = set()
-
-        # Step 1: Pattern-based drug detection (automatic, scalable)
-        import re
-
-        # Define drug patterns and their MOA classifications
-        drug_patterns = {
-            # ICIs - Context-based classification (Option B)
-            # Only classify *mab drugs as ICIs if immune checkpoint context is present
-            "ICI": [
-                # Direct checkpoint inhibitor mentions (always ICI)
-                r"\bcheckpoint inhibitor\b",
-                r"\bimmune checkpoint\b",
-                r"\bpd-?1 inhibitor\b",
-                r"\bpd-?l1 inhibitor\b",
-                r"\bctla-?4 inhibitor\b",
-                # Known ICI drugs by name (high confidence)
-                r"\bpembrolizumab\b",
-                r"\bavelumab\b",
-                r"\bnivolumab\b",
-                r"\batezolizumab\b",
-                r"\bdurvalumab\b",
-                r"\bipilimumab\b",
-                r"\bcemiplimab\b",
-                r"\btislelizumab\b"
-            ],
-            # ADCs - Antibody-Drug Conjugates
-            "ADC": [
-                r"\b\w*vedotin\b",      # enfortumab vedotin, disitamab vedotin
-                r"\b\w*govitecan\b",    # sacituzumab govitecan
-                r"\b\w*deruxtecan\b",   # trastuzumab deruxtecan
-                r"\bsg\b",              # sacituzumab govitecan abbreviation
-                r"\brad-sg\b"           # RAD-SG study abbreviation
-            ],
-            # FGFR inhibitors
-            "FGFR": [
-                r"\berdafitinib\b",
-                r"\bpemigatinib\b",
-                r"\binfigratinib\b"
-            ],
-            # Targeted therapies (kinase inhibitors)
-            "Targeted": [
-                r"\b\w*tinib\b",        # erdafitinib, sunitinib, axitinib, cabozantinib
-                r"\b\w*nib\b"           # imatinib, dasatinib (broader pattern)
-            ]
-        }
-
-        # Apply pattern matching
-        for moa_category, patterns in drug_patterns.items():
-            for pattern in patterns:
-                if re.search(pattern, title_l, re.IGNORECASE):
-                    found_categories.add(moa_category)
-
-        # Step 1.5: Context-based ICI classification for *mab drugs
-        # Only classify antibodies (*mab) as ICIs if immune checkpoint markers are present
-        immune_checkpoint_markers = [
-            r"\bpd-?1\b", r"\bpd-?l1\b", r"\bctla-?4\b",
-            r"\bcheckpoint\b", r"\bimmunotherapy\b", r"\bimmune checkpoint\b"
-        ]
-
-        antibody_patterns = [
-            r"\b\w*mab\b",          # General antibodies: pembrolizumab, avelumab, nivolumab
-            r"\b\w*lizumab\b",      # Specific pattern: atezolizumab, durvalumab, tislelizumab
-            r"\b\w*lumab\b",        # Pattern: ipilimumab
-            r"\b\w*limab\b"         # Pattern: cemiplimab
-        ]
-
-        # Check if title contains both antibody pattern AND checkpoint context
-        has_antibody = any(re.search(pattern, title_l, re.IGNORECASE) for pattern in antibody_patterns)
-        has_checkpoint_context = any(re.search(marker, title_l, re.IGNORECASE) for marker in immune_checkpoint_markers)
-
-        if has_antibody and has_checkpoint_context:
-            found_categories.add("ICI")
-        elif has_antibody and not has_checkpoint_context:
-            # Antibody without checkpoint context - classify as general "Targeted" therapy
-            found_categories.add("Targeted")
-
-        # Step 2: Check for therapy combinations and additional MOAs
-        combination_keywords = {
-            "Chemotherapy": ["platinum", "cisplatin", "carboplatin", "gemcitabine", "paclitaxel", "docetaxel", "pemetrexed"],
-            "Targeted": ["targeted therapy", "tyrosine kinase", "kinase inhibitor", "small molecule"],
-            "Radiation": ["radiation", "radiotherapy", "radioimmunotherapy", "chemoradiation"],
-            "Hormonal": ["hormone therapy", "androgen deprivation", "adt", "enzalutamide", "abiraterone"]
-        }
-
-        # Only add generic "chemotherapy" if no specific drugs were found
-        if not found_categories and any(word in title_l for word in ["chemotherapy", "chemo"]):
-            found_categories.add("Chemotherapy")
-
-        # Add other therapy combinations
-        for therapy_type, keywords in combination_keywords.items():
-            if any(keyword in title_l for keyword in keywords):
-                found_categories.add(therapy_type)
-
-        # Step 3: Check for biomarkers (non-overlapping with drug classifications)
-        for biomarker, keywords in biomarker_keywords.items():
-            if any(keyword in title_l for keyword in keywords):
-                # Only add PD-L1 if we haven't already found ICIs (avoid overlap)
-                if biomarker == "PD-L1" and "ICI" in found_categories:
-                    continue  # Skip PD-L1 if already classified as ICI
-                found_categories.add(biomarker)
-
-        # Step 4: Fallback to broader keyword matching for missed cases (only if no categories found)
-        if not found_categories:
-            fallback_keywords = {
-                "ICI": ["checkpoint", "immunotherapy", "immune checkpoint"],
-                "ADC": ["antibody-drug conjugate", "conjugate"],
-                "FGFR": ["fgfr inhibitor", "fibroblast growth factor"]
-            }
-            for category, keywords in fallback_keywords.items():
-                if any(keyword in title_l for keyword in keywords):
-                    found_categories.add(category)
-
-        # Add single row with comma-separated categories (if any found)
-        if found_categories:
-            # Sort categories for consistent ordering, join with commas
-            sorted_categories = sorted(list(found_categories))
-            combined_moa = ", ".join(sorted_categories)
-
-            # Extract phase and therapy line information
-            phase_setting = extract_phase_and_setting(title_l)
-
-            rows.append({
-                "Biomarker / MOA": combined_moa,
-                "Phase/Setting": phase_setting,
-                "Abstract #": r["Abstract #"],
-                "Poster #": r["Poster #"],
-                "Authors": r["Authors"],
-                "Title": r["Title"]
-            })
-
-    if rows:
-        return pd.DataFrame(rows).drop_duplicates(subset=["Biomarker / MOA", "Abstract #"])
-    return pd.DataFrame(columns=["Biomarker / MOA", "Phase/Setting", "Abstract #", "Poster #", "Authors", "Title"])
-
-# Cached-like helpers
-def get_top_authors(filtered_sig: str, filtered_df: pd.DataFrame, n: int = 20):
-    return count_top_authors(filtered_df, n)
-
-def get_top_institutions(filtered_sig: str, filtered_df: pd.DataFrame, n: int = 20):
-    return count_top_institutions(filtered_df, n)
-
-def get_geographic_distribution(filtered_df: pd.DataFrame, n: int = 15) -> pd.DataFrame:
-    """
-    Analyze geographic distribution of ESMO speakers by location
-    New capability enabled by ESMO's location data
-    """
-    if "location" not in filtered_df.columns:
+    if df_global is None:
         return pd.DataFrame()
 
-    # Clean and parse location data
-    locations = filtered_df["location"].fillna("Unknown").str.strip()
+    # Start with empty mask (all False)
+    combined_mask = pd.Series([False] * len(df_global), index=df_global.index)
 
-    # Extract country (typically last part after comma)
-    countries = []
-    cities = []
-
-    for loc in locations:
-        if pd.isna(loc) or loc == "Unknown" or loc == "":
-            countries.append("Unknown")
-            cities.append("Unknown")
-        else:
-            parts = [part.strip() for part in str(loc).split(",")]
-            if len(parts) >= 2:
-                cities.append(parts[0])
-                countries.append(parts[-1])
-            else:
-                cities.append(str(loc))
-                countries.append("Unknown")
-
-    # Count by country
-    country_counts = pd.Series(countries).value_counts().head(n)
-
-    # Create geographic summary table
-    geo_data = []
-    for country, count in country_counts.items():
-        # Get cities for this country
-        country_mask = pd.Series(countries) == country
-        country_cities = pd.Series(cities)[country_mask].value_counts().head(3)
-        top_cities = "; ".join([f"{city} ({cnt})" for city, cnt in country_cities.items()])
-
-        geo_data.append({
-            "Country": country,
-            "Sessions": count,
-            "Top Cities": top_cities,
-            "Percentage": f"{count/len(filtered_df)*100:.1f}%"
-        })
-
-    return pd.DataFrame(geo_data)
-
-def build_competitor_tables(filtered_sig: str, filtered_df: pd.DataFrame, competitors_to_check: List[Tuple[str, List[str]]]):
-    comp = create_competitor_abstracts_table(filtered_df, competitors_to_check)
-    emerg = create_emerging_threats_table(filtered_df)
-    return comp, emerg
-
-def get_biomarker_moa_hits(filtered_sig: str, filtered_df: pd.DataFrame):
-    return build_biomarker_moa_hits_table(filtered_df)
-
-def get_unique_authors(filtered_sig: str, filtered_df: pd.DataFrame) -> List[str]:
-    dfu = filtered_df.drop_duplicates(subset=["Abstract #"]).copy()
-    authors = (
-        dfu["Authors"].fillna("").str.split(";").explode().str.strip()
-    )
-    authors = authors[authors != ""].drop_duplicates().tolist()
-    return sorted(authors)
-
-def extract_author_from_query(query: str, authors_list: List[str]) -> Optional[str]:
-    qn = normalize_txt(query)
-    best_match = None
-    best_len = 0
-    for a in authors_list:
-        an = normalize_txt(a)
-        if len(an) < 3:
-            continue
-        if an in qn:
-            if len(an) > best_len:
-                best_len = len(an)
-                best_match = a
-    if best_match:
-        return best_match
-    m = re.findall(r"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b", query)
-    for cand in m:
-        for a in authors_list:
-            if cand.lower().strip() == a.lower().strip():
-                return a
-    return None
-
-# =========================
-# RAG Snippet Builder
-# =========================
-def build_rag_snippets(filtered_df: pd.DataFrame, playbook_key: str, buckets: Dict[str, List[str]], limit: int = 10) -> List[str]:
-    dfu = filtered_df.drop_duplicates(subset=["Abstract #"]).copy()
-    snippets: List[str] = []
-    used = set()
-
-    def add_snip(row):
-        a = str(row["Abstract #"])
-        if a in used:
-            return
-        title = str(row["Title"])
-        authors = str(row["Authors"])
-        snippets.append(f"Abstract #{a}: {title} | Authors: {authors}")
-        used.add(a)
-
-    priority_terms: List[str] = []
-    if playbook_key == "competitor":
-        priority_terms += (buckets or {}).get("avelumab_terms", [])
-        priority_terms += (buckets or {}).get("competitors", [])
-        priority_terms += (buckets or {}).get("lines", [])
-    else:
-        for _, terms in (buckets or {}).items():
-            priority_terms += terms
-
-    if not priority_terms:
-        for _, r in dfu.head(limit).iterrows():
-            add_snip(r)
-            if len(snippets) >= limit:
-                break
-        return snippets
-
-    idx = 0
-    while len(snippets) < limit and idx < len(priority_terms) * 10:
-        term = priority_terms[idx % len(priority_terms)]
-        idx += 1
-        term_regex = True if re.search(r"[.*+?^${}()|[\]\\]", term) else False
-        mask = safe_contains(dfu["Title"], term, regex=term_regex) | safe_contains(dfu["Authors"], term, regex=term_regex)
-        for _, r in dfu[mask].iterrows():
-            if len(snippets) >= limit:
-                break
-            add_snip(r)
-
-    if len(snippets) < limit:
-        for _, r in dfu.iterrows():
-            if len(snippets) >= limit:
-                break
-            add_snip(r)
-
-    return snippets[:limit]
-
-# =========================
-# AI-First Query Analysis (New Architecture)
-# =========================
-
-@dataclass
-class QueryPlan:
-    """Data structure for AI query analysis plan - now flexible and context-aware"""
-    user_intent: str  # What the user actually wants
-    response_type: str  # data_table, specific_lookup, strategic_analysis, informational_narrative
-    primary_entities: Dict[str, List[str]]  # drugs, authors, institutions, topics
-    search_strategy: Dict[str, Any]  # How to gather the data
-    response_approach: str  # How to respond helpfully
-    confidence: float
-
-    # Legacy fields for compatibility
-    @property
-    def intent_type(self) -> str:
-        return self.response_type
-
-    @property
-    def mentioned_entities(self) -> Dict[str, List[str]]:
-        return self.primary_entities
-
-    @property
-    def requires_semantic_search(self) -> bool:
-        return self.search_strategy.get("use_semantic_search", True)
-
-    @property
-    def semantic_search_terms(self) -> List[str]:
-        return self.search_strategy.get("search_terms", [])
-
-    @property
-    def needs_competitor_analysis(self) -> bool:
-        return self.search_strategy.get("get_competitor_data", False)
-
-    @property
-    def needs_author_analysis(self) -> bool:
-        return self.search_strategy.get("get_author_data", False)
-
-    @property
-    def needs_institution_analysis(self) -> bool:
-        return self.search_strategy.get("get_institution_data", False)
-
-def analyze_user_query_ai(query: str, ta_filter: str, conversation_history: list = None) -> QueryPlan:
-    """
-    True AI-powered query understanding that determines what the user wants
-    without forcing rigid categories. Flexible and context-aware.
-    """
-    if client is None:
-        print("Error: OpenAI client not initialized for AI query analysis.")
-        return QueryPlan(
-            user_intent="Fallback - no AI available",
-            response_type="informational_narrative",
-            primary_entities={},
-            search_strategy={
-                "use_semantic_search": True,
-                "search_terms": [query],
-                "get_author_data": False,
-                "get_institution_data": False,
-                "get_competitor_data": False
-            },
-            response_approach="Provide basic information",
-            confidence=0.0
-        )
-
-    # Build conversation context if available
-    conversation_context = ""
-    if conversation_history:
-        conversation_context = "\n\nConversation History (for understanding pronouns and references):\n"
-        for msg in conversation_history:
-            role = msg.get('role', 'unknown')
-            content = msg.get('content', '')[:300] + ('...' if len(msg.get('content', '')) > 300 else '')
-            conversation_context += f"{role.title()}: {content}\n"
-        conversation_context += "\n"
-
-    system_prompt = """You are an intelligent assistant helping analyze user requests for medical conference data. Your job is to understand what the user actually wants and determine the best way to help them.
-""" + conversation_context + """
-Available conference data includes:
-- Abstract titles, authors, institutions, poster numbers
-- Semantic search across all text
-- Author activity summaries
-- Institution activity summaries
-- Drug/competitor mentions
-
-YOUR GOAL: Understand the user's real intent and determine the most helpful response approach.
-
-**CRITICAL: AUTHOR NAME DETECTION**
-When users mention specific people (e.g., "Petros Grivas", "John Smith", "Dr. Anderson"), this is almost always a lookup request wanting:
-- Their specific research activity
-- Collaboration patterns and institutional affiliations
-- Strategic analysis of their work
-→ Set response_type: "specific_lookup", get_author_data: true, and extract the name in "authors" field
-
-**IMPORTANT: PRONOUN RESOLUTION**
-If the user uses pronouns (he, she, they, him, her) or refers to "the author", "this person", look at the conversation history to identify who they're referring to. Extract the actual name from the previous context.
-
-EXAMPLES OF USER INTENT PATTERNS:
-
-**Author/Researcher Lookups** (MOST IMPORTANT):
-- "Does Petros Grivas have any pharmaceutical industry involvement?"
-- "Show me John Smith's work" / "what has researcher X published"
-- "Tell me about Dr. Anderson's research"
-→ These want SPECIFIC AUTHOR DATA with KOL analysis framework
-
-**Quantitative Requests** (want tables/lists):
-- "top 20 authors" / "most active scientists" / "leading researchers"
-- "list avelumab studies" / "show me all research on drug X"
-- "top institutions" / "most active centers"
-→ These want DATA TABLES with brief context, not strategic analysis
-
-**Institution Lookups**:
-- "abstracts from Memorial Sloan Kettering"
-- "what is Mayo Clinic working on"
-→ These want SPECIFIC INSTITUTION DATA with explanation
-
-**Analytical Requests** (want strategic insights):
-- "what risks does drug X pose to drug Y"
-- "competitive landscape analysis"
-- "treatment paradigm implications"
-→ These want STRATEGIC ANALYSIS with medical context
-
-**General Questions** (want informational answers):
-- "what are the main trends in bladder cancer"
-- "tell me about biomarker research"
-→ These want COMPREHENSIVE NARRATIVE with supporting data
-
-Return JSON determining the optimal response approach:
-{
-  "user_intent": "brief description of what user actually wants",
-  "response_type": "data_table|specific_lookup|strategic_analysis|informational_narrative",
-  "primary_entities": {
-    "drugs": ["mentioned drugs"],
-    "authors": ["mentioned authors"],
-    "institutions": ["mentioned institutions"],
-    "topics": ["key topics/concepts"]
-  },
-  "search_strategy": {
-    "use_semantic_search": true/false,
-    "search_terms": ["optimized terms"],
-    "get_author_data": true/false,
-    "get_institution_data": true/false,
-    "get_competitor_data": true/false
-  },
-  "response_approach": "concise description of how to respond helpfully",
-  "confidence": 0.0-1.0
-}"""
-
-    user_prompt = f"""
-Analyze this query for a medical affairs conference intelligence system:
-
-Query: "{query}"
-Therapeutic Area Filter: {ta_filter}
-
-Context: This system analyzes oncology conference abstracts (ASCO GU 2025) with focus on bladder cancer and renal cell carcinoma. The user is likely a medical affairs professional seeking competitive intelligence, clinical insights, or strategic analysis.
-
-Determine the optimal execution strategy and return ONLY valid JSON format matching the schema exactly. Do not include any explanatory text before or after the JSON.
-"""
-
-    try:
-        resp = client.responses.create(
-            model="gpt-5-mini",
-            input=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            reasoning={"effort": "low"},
-            text={"verbosity": "low"},
-            max_output_tokens=1200,
-        )
-
-        txt = resp.output_text.strip()
-        print(f"[DEBUG] RAW AI RESPONSE: {txt[:200]}...")  # Debug output
-
-        if txt.startswith("```"):
-            txt = re.sub(r"^```(json)?", "", txt).strip()
-            if txt.endswith("```"):
-                txt = txt[:-3].strip()
-
-        # Additional cleanup for GPT-5-mini
-        if not txt:
-            raise ValueError("Empty response from AI")
-
-        # Try to extract JSON if it's wrapped in text
-        import re
-        json_match = re.search(r'\{.*\}', txt, re.DOTALL)
-        if json_match:
-            txt = json_match.group()
-
-        # Additional JSON cleaning for common issues
-        txt = txt.replace('\n', ' ').replace('\r', ' ')  # Remove newlines
-        txt = re.sub(r'\s+', ' ', txt)  # Normalize whitespace
-
-        # Print more detailed debug info for JSON issues
-        print(f"[DEBUG] CLEANED JSON (first 500 chars): {txt[:500]}...")
-
-        try:
-            data = json.loads(txt)
-        except json.JSONDecodeError as json_err:
-            print(f"[ERROR] JSON PARSE ERROR: {json_err}")
-            print(f"[ERROR] FULL RAW RESPONSE: {txt}")
-            # Try to fix common JSON issues
-            txt_fixed = txt.replace("'", '"')  # Replace single quotes
-            txt_fixed = re.sub(r',\s*}', '}', txt_fixed)  # Remove trailing commas
-            txt_fixed = re.sub(r',\s*]', ']', txt_fixed)  # Remove trailing commas in arrays
-            try:
-                data = json.loads(txt_fixed)
-                print("[INFO] JSON fixed with basic corrections")
-            except:
-                print("[ERROR] JSON unfixable, using fallback")
-                raise json_err
-
-        return QueryPlan(
-            user_intent=data.get("user_intent", "General inquiry"),
-            response_type=data.get("response_type", "informational_narrative"),
-            primary_entities=data.get("primary_entities", {}),
-            search_strategy=data.get("search_strategy", {
-                "use_semantic_search": True,
-                "search_terms": [query],
-                "get_author_data": False,
-                "get_institution_data": False,
-                "get_competitor_data": False
-            }),
-            response_approach=data.get("response_approach", "Provide helpful information based on available data"),
-            confidence=data.get("confidence", 0.7)
-        )
-
-    except Exception as e:
-        print(f"Error in AI query analysis: {e}")
-        # Fallback to semantic search approach
-        return QueryPlan(
-            user_intent="General inquiry (fallback)",
-            response_type="informational_narrative",
-            primary_entities={},
-            search_strategy={
-                "use_semantic_search": True,
-                "search_terms": [query],
-                "get_author_data": False,
-                "get_institution_data": False,
-                "get_competitor_data": False
-            },
-            response_approach="Provide helpful information using semantic search",
-            confidence=0.5
-        )
-
-@dataclass
-class ContextPackage:
-    """Structured container for all gathered context"""
-    semantic_results: Optional[pd.DataFrame] = None
-    competitor_data: Optional[pd.DataFrame] = None
-    author_data: Optional[pd.DataFrame] = None
-    institution_data: Optional[pd.DataFrame] = None
-    medical_context: Optional[Dict[str, str]] = None
-    quantitative_summaries: Optional[Dict[str, pd.DataFrame]] = None
-
-def gather_intelligent_context(plan: QueryPlan, ta_filter: str, filtered_df: pd.DataFrame) -> ContextPackage:
-    """
-    Intelligently gather exactly the context needed based on AI's analysis plan
-    """
-    context = ContextPackage()
-
-    # Semantic search for complex queries
-    if plan.requires_semantic_search and plan.semantic_search_terms:
-        search_query = " ".join(plan.semantic_search_terms)
-        try:
-            semantic_results = semantic_search(search_query, ta_filter, n_results=15)
-            context.semantic_results = format_search_results(semantic_results)
-        except Exception as e:
-            print(f"Error in semantic search: {e}")
-            context.semantic_results = pd.DataFrame()
-
-    # Competitor analysis if needed
-    if plan.needs_competitor_analysis and plan.mentioned_entities.get("drugs"):
-        # Build competitor search terms
-        competitors_to_check = []
-        for drug in plan.mentioned_entities["drugs"]:
-            drug_lower = drug.lower()
-            if "enfortumab vedotin" in drug_lower or "enfortumab" in drug_lower:
-                competitors_to_check.append(("Enfortumab vedotin", ["enfortumab vedotin", "enfortumab", r"\bEV\b", "Padcev"]))
-            elif "disitamab vedotin" in drug_lower or "disitamab" in drug_lower:
-                competitors_to_check.append(("Disitamab vedotin", ["disitamab vedotin", "disitamab", "RC48"]))
-            elif "zelenectide pevedotin" in drug_lower or "zelenectide" in drug_lower:
-                competitors_to_check.append(("Zelenectide pevedotin", ["zelenectide pevedotin", "zelenectide"]))
-            elif "pembrolizumab" in drug_lower:
-                competitors_to_check.append(("Pembrolizumab", ["pembrolizumab", "keytruda"]))
-            elif "avelumab" in drug_lower:
-                competitors_to_check.append(("Avelumab", ["avelumab", "bavencio"]))
-            elif "sacituzumab govitecan" in drug_lower or ("sacituzumab" in drug_lower and "govitecan" in drug_lower):
-                competitors_to_check.append(("Sacituzumab govitecan", ["sacituzumab govitecan", "sacituzumab", "govitecan", "trodelvy"]))
-            # Add more as needed
-
-        if competitors_to_check:
-            comp_table, _ = build_competitor_tables(df_sig(filtered_df), filtered_df, competitors_to_check)
-            context.competitor_data = comp_table
-
-    # Author analysis if needed (enhanced to detect authors from query text)
-    if plan.needs_author_analysis:
-        author_results = []
-
-        # First try explicit authors mentioned by AI
-        if plan.mentioned_entities.get("authors"):
-            for author in plan.mentioned_entities["authors"]:
-                pat = r"\b" + re.escape(author) + r"\b"
-                mask = safe_contains(filtered_df["Authors"], pat, regex=True)
-                author_abstracts = filtered_df.loc[mask, ["Abstract #","Poster #","Title","Authors","Institutions"]].drop_duplicates(subset=["Abstract #"])
-                if not author_abstracts.empty:
-                    author_results.append(author_abstracts)
-
-        # Also try to extract author names from query using the existing function
-        if not author_results:
-            authors_list = get_unique_authors(df_sig(df_global), df_global)
-            # Use search terms from plan since query is not available in this scope
-            query_text = " ".join(plan.semantic_search_terms) if plan.semantic_search_terms else ""
-            detected_author = extract_author_from_query(query_text, authors_list)
-            if detected_author:
-                pat = r"\b" + re.escape(detected_author) + r"\b"
-                mask = safe_contains(filtered_df["Authors"], pat, regex=True)
-                author_abstracts = filtered_df.loc[mask, ["Abstract #","Poster #","Title","Authors","Institutions"]].drop_duplicates(subset=["Abstract #"])
-                if not author_abstracts.empty:
-                    author_results.append(author_abstracts)
-
-        if author_results:
-            context.author_data = pd.concat(author_results, ignore_index=True).drop_duplicates(subset=["Abstract #"])
-
-    # Add medical context based on mentioned drugs/entities
-    context.medical_context = get_enhanced_medical_context(plan.mentioned_entities, ta_filter)
-
-    return context
-
-def get_enhanced_medical_context(mentioned_entities: Dict[str, List[str]], ta_filter: str) -> Dict[str, str]:
-    """
-    Provide rich medical context based on entities mentioned in the query
-    """
-    context = {}
-
-    drugs = mentioned_entities.get("drugs", [])
-
-    if any("enfortumab" in drug.lower() for drug in drugs):
-        context["enfortumab_vedotin"] = """
-        Enfortumab vedotin (EV, Padcev) is an ADC targeting Nectin-4. EV+pembrolizumab (EV+P) is the new 1L standard of care for locally advanced/metastatic urothelial carcinoma per EV-302 trial results. This fundamentally changes the treatment landscape and competitive positioning for all other therapies.
-        """
-
-    if any("avelumab" in drug.lower() for drug in drugs):
-        context["avelumab"] = """
-        Avelumab (Bavencio) is established as standard 1L maintenance therapy post-platinum chemotherapy for non-progressive advanced urothelial carcinoma (JAVELIN Bladder 100). With EV+P becoming 1L SOC, avelumab's role is shifting and requires redefinition of optimal patient populations.
-        """
-
-    # Add therapeutic area context
-    if ta_filter == "Bladder Cancer":
-        context["ta_landscape"] = """
-        Bladder cancer landscape dominated by ADCs (EV, sacituzumab govitecan) and checkpoint inhibitors. EV+P is new 1L SOC. Key resistance mechanisms and post-EV+P sequencing are active areas of investigation.
-        """
-    elif ta_filter == "Renal Cell Carcinoma":
-        context["ta_landscape"] = """
-        RCC dominated by IO+TKI combinations in 1L (pembrolizumab+axitinib, nivolumab+cabozantinib). VEGF pathway central to treatment resistance. Non-clear cell histologies remain challenging.
-        """
-
-    return context
-
-# =========================
-# LLM Router (Legacy - Kept for Fallback)
-# =========================
-def llm_route_query(query: str) -> Tuple[str, float, Dict[str, Any]]:
-    """
-    Returns (intent, confidence, slots) from an LLM JSON response.
-    Falls back to lightweight rules if parsing fails.
-    """
-    if client is None:
-        print("Error: OpenAI client not initialized for LLM routing.")
-        return "out_of_scope", 0.0, {}
-
-    system = "You are a routing assistant. Return STRICT JSON with keys: intent, confidence (0-1), slots (object). No prose."
-    user = f"""
-Route the user query to one of these intents:
-- competitor_playbook, kol_playbook, institution_playbook, insights_playbook, strategy_playbook
-- top_authors, top_institutions, list_avelumab, search, author_abstracts, institution_abstracts
-- smalltalk, help, general_conference_question, out_of_scope
-
-Extract slots where relevant:
-- n (int)
-- term (string) for generic search
-- author (string) for author_abstracts
-- institution (string) for institution_abstracts
-
-User query: {query}
-Return only JSON.
-"""
-    try:
-        resp = client.responses.create(
-            model="gpt-5-mini",
-            input=[{"role": "system", "content": system},
-                   {"role": "user", "content": user}],
-            reasoning={"effort": "low"},
-            text={"verbosity": "low"},
-            max_output_tokens=180,
-        )
-        txt = resp.output_text.strip()
-        if txt.startswith("```"):
-            txt = re.sub(r"^```(json)?", "", txt).strip()
-            if txt.endswith("```"):
-                txt = txt[:-3].strip()
-        data = json.loads(txt)
-        intent = str(data.get("intent", "out_of_scope"))
-        conf = float(data.get("confidence", 0.0))
-        slots = data.get("slots", {}) or {}
-        return intent, conf, slots
-    except Exception as e:
-        print(f"Error in LLM routing: {e}. Falling back to rule-based intent detection.")
-        return detect_chat_intent_fallback(query)
-
-def detect_chat_intent_fallback(q: str) -> Tuple[str, float, Dict[str, Any]]:
-    ql = q.lower().strip()
-    if re.fullmatch(r"(hi|hello|hey|yo|good\s*(morning|afternoon|evening)|how are you\??)", ql):
-        return "smalltalk", 0.9, {}
-    if "help" in ql or "how to" in ql or "what can you do" in ql:
-        return "help", 0.8, {}
-    if any(p in ql for p in ["involvement from", "by author", "by ", "authored by", "from author"]):
-        return "author_abstracts", 0.6, {}
-    if "top" in ql and ("author" in ql or "kol" in ql):
-        return "top_authors", 0.7, {"n": extract_number_default(ql, 20)}
-    if "top" in ql and "institution" in ql:
-        return "top_institutions", 0.7, {"n": extract_number_default(ql, 20)}
-    if ("avelumab" in ql or "bavencio" in ql) and any(x in ql for x in ["table", "studies", "abstracts", "list", "show"]):
-        return "list_avelumab", 0.7, {}
-    if "find " in ql or "search " in ql:
-        m = re.search(r"['\"]([^'\"]+)['\"]", ql)
-        if m:
-            term = m.group(1).strip()
-        else:
-            m2 = re.search(r"(?:find|search)\s+([a-z0-9\-\+\.\s]{2,})", ql)
-            term = m2.group(1).strip() if m2 else ""
-        return ("search", 0.6, {"term": term}) if term else ("search", 0.5, {})
-    if "competitor" in ql or "landscape" in ql or "standard of care" in ql:
-        return "competitor_playbook", 0.6, {}
-    if "kol" in ql and ("analysis" in ql or "people" in ql or "authors" in ql):
-        return "kol_playbook", 0.6, {}
-    if "institution" in ql and ("analysis" in ql or "centers" in ql):
-        return "institution_playbook", 0.6, {}
-    if any(x in ql for x in ["trend", "insight", "biomarker", "paradigm"]):
-        return "insights_playbook", 0.6, {}
-    if "strategy" in ql or "implications" in ql:
-        return "strategy_playbook", 0.6, {}
-    return "general_conference_question", 0.4, {}
-
-# =========================
-# AI: Multi-Pass Analysis Engine
-# =========================
-def generate_kol_analysis(
-    filtered_df: pd.DataFrame,
-    top_authors_table: pd.DataFrame,
-    ta_filter: str = "All"
-) -> str:
-    """
-    Multi-pass comprehensive KOL analysis with surgical prompts.
-
-    Args:
-        filtered_df: The filtered conference data
-        top_authors_table: Pre-built top authors table
-        ta_filter: Therapeutic area filter
-
-    Returns:
-        Comprehensive KOL analysis narrative
-    """
-    print(f"[DEBUG] Starting multi-pass KOL analysis for {ta_filter}")
-
-    if client is None:
-        print("[ERROR] OpenAI client not initialized")
-        return "Error: OpenAI client not initialized. Please ensure OPENAI_API_KEY is set."
-
-    try:
-        # Prepare data summaries
-        total_abstracts = len(filtered_df)
-        top_15_authors = top_authors_table.head(15)['Authors'].tolist()
-
-        print(f"[PASS1] Extracting targeted data for {len(top_15_authors)} top KOLs...")
-
-        # Extract specific abstracts for each top KOL for targeted analysis
-        kol_specific_data = {}
-        for author in top_15_authors:
-            # Find all abstracts where this author appears
-            author_mask = filtered_df['Authors'].str.contains(re.escape(author), case=False, na=False)
-            author_abstracts = filtered_df[author_mask]
-            if not author_abstracts.empty:
-                kol_specific_data[author] = author_abstracts.to_csv(index=False)
-
-        # Pass 1: Systematic KOL Analysis with Framework
-        print("[PASS1] Systematic analysis of individual KOLs using targeted data...")
-
-        all_profiles = []
-
-        # Process KOLs in batches of 4 to reduce API calls from 15 to 3-4
-        batch_size = 4
-        authors_with_data = [author for author in top_15_authors if author in kol_specific_data]
-
-        for batch_start in range(0, len(authors_with_data), batch_size):
-            batch_end = min(batch_start + batch_size, len(authors_with_data))
-            batch_authors = authors_with_data[batch_start:batch_end]
-
-            print(f"[PASS1] Analyzing batch {batch_start//batch_size + 1} with {len(batch_authors)} KOLs: {', '.join(batch_authors)}")
-
-            # Prepare batch data for all KOLs in this batch
-            batch_data_sections = []
-            for author in batch_authors:
-                batch_data_sections.append(f"""
-=== KOL: {author} ===
-ALL ABSTRACTS FOR {author}:
-{kol_specific_data[author]}
-""")
-
-            batch_prompt = f"""Analyze these {len(batch_authors)} KOLs using the conference data and systematic framework. Provide separate analysis for each KOL.
-
-{('').join(batch_data_sections)}
-
-SYSTEMATIC ANALYSIS FRAMEWORK (apply to each KOL):
-a) WHO: Name, primary institution(s), geographic location (from Institutions column)
-b) RESEARCH INTERESTS: What therapeutic areas, drugs, mechanisms they focus on (from Title column + your knowledge)
-c) HCP COLLABORATIONS: Which other top authors they co-author with (from Authors column)
-d) PHARMA COLLABORATIONS: Which pharmaceutical/biotech companies appear in their Institutions column
-
-For each KOL, write ONE comprehensive paragraph that flows naturally covering all four framework elements. Use ONLY the actual data provided above. Cite specific Abstract # examples. Be systematic and thorough.
-
-Format your response as:
-**[KOL Name 1]**: [Analysis paragraph]
-
-**[KOL Name 2]**: [Analysis paragraph]
-
-etc."""
-
-            try:
-                batch_response = client.responses.create(
-                    model="gpt-5-mini",
-                    input=[{"role": "user", "content": batch_prompt}],
-                    reasoning={"effort": "low"},
-                    text={"verbosity": "low"},
-                    max_output_tokens=1600  # Increased for batch processing
-                )
-                batch_profiles = batch_response.output_text
-
-                # Split the batch response and add individual profiles
-                # The response should already be formatted correctly
-                all_profiles.append(batch_profiles)
-
-            except Exception as e:
-                print(f"Error analyzing batch {batch_start//batch_size + 1}: {e}")
-                # Add error messages for each author in the failed batch
-                for author in batch_authors:
-                    all_profiles.append(f"**{author}**: Analysis unavailable due to processing error.")
-
-        combined_profiles = "\n\n".join(all_profiles)
-
-        # Pass 2: Brief Strategic Summary
-        print("[PASS2] Brief strategic summary...")
-
-        summary_prompt = f"""Based on these KOL profiles, provide a brief strategic summary for EMD Serono in 2 short paragraphs:
-
-{combined_profiles}
-
-Paragraph 1: Top 5 priority KOLs for engagement and why (based on research alignment and influence).
-Paragraph 2: Key strategic opportunities and geographic considerations.
-
-Keep it concise and actionable."""
-
-        summary_response = client.responses.create(
-            model="gpt-5-mini",
-            input=[{"role": "user", "content": summary_prompt}],
-            reasoning={"effort": "low"},
-            text={"verbosity": "low"},
-            max_output_tokens=500
-        )
-        strategic_summary = summary_response.output_text
-
-        # Combine analyses
-        final_analysis = f"""# KOL Analysis — Data-Driven Intelligence Report
-
-## Strategic Summary
-{strategic_summary}
-
-## Individual KOL Profiles (Top 15 Most Prolific)
-{combined_profiles}
-"""
-
-        print(f"[DEBUG] Multi-pass KOL analysis complete, total length: {len(final_analysis)} chars")
-        return final_analysis
-
-    except Exception as e:
-        print(f"[ERROR] in generate_kol_analysis: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return f"Error generating KOL analysis: {str(e)}"
-
-def sse_event(event_name: str, payload: dict) -> str:
-    """Helper function to create structured SSE events"""
-    import json
-    return f"event: {event_name}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
-
-def extract_author_name_from_query(query: str) -> str:
-    """Extract author name from chat query"""
-    import re
-    # Look for patterns like "tell me about John Smith" or "who is Jane Doe"
-    patterns = [
-        r'\b(?:tell me about|more about|info about|who is|what about)\s+([a-z]+\s+[a-z]+)',
-        r'\b([A-Z][a-z]+\s+[A-Z][a-z]+)'
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, query, re.IGNORECASE)
-        if match:
-            return match.group(1).title()
-
-    return "Author"
-
-def yield_hybrid_stream(prompt: str, section: str):
-    """Helper function to yield hybrid streaming events"""
-    try:
-        from openai import Stream
-
-        stream: Stream[object] = client.responses.create(
-            model="gpt-5-mini",
-            input=[{"role": "user", "content": prompt}],
-            reasoning={"effort": "low"},
-            text={"verbosity": "low"},
-            max_output_tokens=2000,
-            stream=True,
-        )
-
-        current_content = ""
-        last_boundary_pos = 0
-
-        for event in stream:
-            if event.type == "response.output_text.delta":
-                token = event.delta
-                current_content += token
-
-                # Stream the token immediately
-                yield sse_event("token", {"text": token, "section": section})
-
-                # Check for NEW paragraph boundaries (double newlines)
-                boundary_pos = current_content.find('\n\n', last_boundary_pos)
-                if boundary_pos != -1:
-                    yield sse_event("paragraph_boundary", {"section": section})
-                    last_boundary_pos = boundary_pos + 2
-
-            elif event.type == "response.completed":
-                # Send completion signal
-                yield sse_event("done", {})
-
-    except Exception as e:
-        print(f"[ERROR] ERROR in yield_hybrid_stream: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        yield sse_event("error", {"message": f"Streaming error: {str(e)}"})
-
-def generate_kol_analysis_streaming(
-    filtered_df: pd.DataFrame,
-    top_authors_table: pd.DataFrame,
-    ta_filter: str = "All"
-):
-    """
-    Multi-pass streaming KOL analysis using the working backup approach.
-    Uses multiple small API calls instead of one massive call to stay under token limits.
-    """
-    if client is None:
-        yield "data: Error: OpenAI client not initialized\n\n"
-        return
-
-    try:
-        # Send immediate heartbeat to prevent proxy timeout
-        yield sse_event("status", {"message": "⏳ Starting KOL analysis..."})
-
-        # Prepare data summaries
-        top_15_authors = top_authors_table.head(15)['Authors'].tolist()
-        total_authors = len(top_15_authors)
-        ta_context = f" in {ta_filter}" if ta_filter != "All" else " across all therapeutic areas"
-        abstracts_count = len(filtered_df)
-
-        # Extract actual research themes from abstract titles
-        sample_titles = filtered_df['Title'].head(20).tolist()
-        top_institutions = filtered_df['Institutions'].str.split(';').explode().value_counts().head(10).index.tolist()
-
-        # Emit report title
-        yield sse_event("heading", {"level": 1, "text": "KOL Analysis — Data-Driven Intelligence Report"})
-
-        # Emit the top authors table FIRST (so users see data immediately)
-        authors_table_data = top_authors_table.head(15).to_dict('records')
-        yield sse_event("table", {
-            "title": "Top Authors by Abstract Count",
-            "rows": authors_table_data
-        })
-
-        # Emit executive summary heading
-        yield sse_event("heading", {"level": 2, "text": "Executive Summary"})
-
-        # Generate executive summary paragraphs
-        executive_summary_prompt = f"""Provide a comprehensive executive summary of KOL activity at this conference{ta_context}.
-
-Conference Data Overview:
-- {total_authors} top authors identified across {abstracts_count} abstracts
-- Leading authors: {', '.join(top_15_authors[:5])}
-- Top institutions: {', '.join(top_institutions[:5])}
-
-Sample Research Themes (from abstract titles):
-{chr(10).join([f"• {title}" for title in sample_titles[:10]])}
-
-Write ONE comprehensive paragraph (4-6 sentences) that covers:
-- Overall KOL activity level, research volume, and key therapeutic focus areas
-- Dominant research themes, biomarker patterns, and institutional leadership
-- Strategic engagement opportunities for EMD Serono medical affairs
-
-Make it flow naturally as a single, well-structured paragraph without internal breaks."""
-
-        # Stream executive summary tokens in real-time
-        summary_stream = client.responses.create(
-            model="gpt-5-mini",
-            input=[
-                {"role": "system", "content": "You are a medical affairs analyst. Provide comprehensive analysis immediately without delay. Start your response right away."},
-                {"role": "user", "content": executive_summary_prompt}
-            ],
-            reasoning={"effort": "low"},
-            text={"verbosity": "low"},
-            max_output_tokens=500,  # Increased for executive summary
-            stream=True
-        )
-
-        # Stream tokens and detect paragraph boundaries
-        current_content = ""
-        last_boundary_pos = 0
-        for event in summary_stream:
-            if event.type == "response.output_text.delta":
-                token = event.delta
-                current_content += token
-
-                # Stream the token immediately
-                yield sse_event("token", {"text": token, "section": "executive_summary"})
-
-                # Check for NEW paragraph boundaries (double newlines) after last detected position
-                boundary_pos = current_content.find('\n\n', last_boundary_pos)
-                if boundary_pos != -1:
-                    # Send paragraph boundary signal only once
-                    yield sse_event("paragraph_boundary", {"section": "executive_summary"})
-                    last_boundary_pos = boundary_pos + 2  # Move past the boundary
-
-        # Final boundary for executive summary completion
-        yield sse_event("section_boundary", {"section": "executive_summary"})
-
-        # Emit KOL profiles heading
-        yield sse_event("heading", {"level": 2, "text": "Individual KOL Profiles (Top 15 Most Prolific)"})
-
-        # Extract specific abstracts for each top KOL
-        kol_specific_data = {}
-        for author in top_15_authors:
-            author_mask = filtered_df['Authors'].str.contains(re.escape(author), case=False, na=False)
-            author_abstracts = filtered_df[author_mask]
-            if not author_abstracts.empty:
-                kol_specific_data[author] = author_abstracts.to_csv(index=False)
-
-        print(f"[INFO] Starting KOL analysis for {len(top_15_authors)} authors")
-        print(f"[INFO] KOL data available for: {len(kol_specific_data)} authors")
-
-        # Process each KOL
-        for i, author in enumerate(top_15_authors, 1):
-            if author in kol_specific_data:
-                individual_prompt = f"""Analyze this specific KOL using the conference data and systematic framework.
-
-KOL NAME: {author}
-
-ALL ABSTRACTS FOR THIS KOL:
-{kol_specific_data[author]}
-
-SYSTEMATIC ANALYSIS FRAMEWORK:
-a) WHO: Name, primary institution(s), geographic location (from Institutions column)
-b) RESEARCH INTERESTS: What therapeutic areas, drugs, mechanisms they focus on (from Title column + your knowledge)
-c) HCP COLLABORATIONS: Which other top authors they co-author with (from Authors column)
-d) PHARMA COLLABORATIONS: Which pharmaceutical/biotech companies appear in their Institutions column
-
-Write ONE comprehensive paragraph that flows naturally covering all four framework elements. Use ONLY the actual data provided above. Cite specific Abstract # examples. Be systematic and thorough."""
-
-                try:
-                    print(f"[INFO] Starting streaming for KOL {i}/{len(top_15_authors)}: {author}")
-
-                    # Send progress update to keep connection alive
-                    yield sse_event("progress", {
-                        "message": f"Processing KOL {i}/{len(top_15_authors)}: {author}",
-                        "current": i,
-                        "total": len(top_15_authors)
-                    })
-
-                    # Signal start of new KOL profile
-                    yield sse_event("kol_start", {"author": author})
-
-                    # Stream the analysis token by token
-                    print(f"[INFO] Prompt length: {len(individual_prompt)} chars")
-                    stream = client.responses.create(
-                        model="gpt-5-mini",
-                        input=[
-                            {"role": "system", "content": "You are a medical affairs analyst. Provide comprehensive analysis immediately without delay. Start your response right away."},
-                            {"role": "user", "content": individual_prompt}
-                        ],
-                        reasoning={"effort": "low"},
-                        text={"verbosity": "low"},
-                        max_output_tokens=600,  # Increased for more complete responses
-                        stream=True
-                    )
-
-                    profile_content = ""
-                    token_count = 0
-                    last_token_time = time.time()
-
-                    for event in stream:
-                        if event.type == "response.output_text.delta":
-                            token = event.delta
-                            profile_content += token
-                            token_count += 1
-                            last_token_time = time.time()
-
-                            # Stream each token with author context
-                            yield sse_event("token", {
-                                "text": token,
-                                "section": "kol_profile",
-                                "author": author
-                            })
-
-                        # Send keep-alive ping every 5 seconds during streaming
-                        elif time.time() - last_token_time > 5:
-                            yield sse_event("ping", {"timestamp": int(time.time())})
-                            last_token_time = time.time()
-
-                    print(f"[INFO] Completed streaming for {author}: {token_count} tokens, {len(profile_content)} chars")
-
-                    # Signal end of this KOL profile
-                    yield sse_event("kol_end", {"author": author})
-
-                except Exception as e:
-                    print(f"[ERROR] ERROR analyzing {author}: {str(e)}")
-                    import traceback
-                    traceback.print_exc()
-                    error_msg = f"Analysis unavailable: {str(e)[:100]}..."
-
-                    # Signal start and stream error message
-                    yield sse_event("kol_start", {"author": author})
-                    yield sse_event("token", {
-                        "text": error_msg,
-                        "section": "kol_profile",
-                        "author": author
-                    })
-                    yield sse_event("kol_end", {"author": author})
-            else:
-                # Handle authors with no abstract data
-                print(f"WARNING: No abstract data found for {author}")
-                no_data_msg = f"No abstracts found for this author in the filtered dataset."
-
-                # Signal start and stream no data message
-                yield sse_event("kol_start", {"author": author})
-                yield sse_event("token", {
-                    "text": no_data_msg,
-                    "section": "kol_profile",
-                    "author": author
-                })
-                yield sse_event("kol_end", {"author": author})
-
-        # Send completion signal
-        yield sse_event("done", {})
-
-    except Exception as e:
-        yield sse_event("error", {"message": f"Error generating KOL analysis: {str(e)}"})
-
-def generate_competitor_analysis_streaming(
-    filtered_df: pd.DataFrame,
-    comp_table: pd.DataFrame,
-    emerg_table: pd.DataFrame,
-    ta_filter: str = "All"
-):
-    """
-    Token-by-token streaming competitor analysis using AI-first approach.
-    """
-    if client is None:
-        yield "data: Error: OpenAI client not initialized\n\n"
-        return
-
-    try:
-        # Prepare context data
-        ta_context = f" in {ta_filter}" if ta_filter != "All" else " across all therapeutic areas"
-        abstracts_count = len(filtered_df)
-
-        # Emit report title
-        yield sse_event("heading", {"level": 1, "text": "Competitor Intelligence — Strategic Analysis Report"})
-
-        # Emit tables FIRST (so users see data immediately)
-        if not comp_table.empty:
-            comp_table_data = comp_table.to_dict('records')
-            yield sse_event("table", {
-                "title": "Competitor Abstracts",
-                "rows": comp_table_data
-            })
-
-        if not emerg_table.empty:
-            emerg_table_data = emerg_table.to_dict('records')
-            yield sse_event("table", {
-                "title": "Emerging Threats",
-                "rows": emerg_table_data
-            })
-
-        # Build context for AI analysis
-        tables_context = ""
-        if not comp_table.empty:
-            tables_context += f"\n\n=== Competitor Abstracts ===\n{comp_table.to_csv(index=False)}"
-        if not emerg_table.empty:
-            tables_context += f"\n\n=== Emerging Threats ===\n{emerg_table.to_csv(index=False)}"
-
-        # Use the AI prompt from PLAYBOOKS
-        competitor_prompt = f"""{PLAYBOOKS["competitor"]["ai_prompt"]}
-
-CONFERENCE DATA TABLES:{tables_context}
-
-Therapeutic Area Filter: {ta_filter}
-
-Write a comprehensive, natural intelligence report based on this data."""
-
-        # Stream the analysis in real-time using new Responses API
-        from openai import Stream
-
-        stream: Stream[object] = client.responses.create(
-            model="gpt-5-mini",
-            input=[{"role": "user", "content": competitor_prompt}],
-            reasoning={"effort": "low"},
-            text={"verbosity": "low"},
-            max_output_tokens=3000,
-            stream=True,
-        )
-
-        for event in stream:
-            if event.type == "response.output_text.delta":
-                token = event.delta
-
-                # Stream each token
-                yield sse_event("token", {
-                    "text": token,
-                    "section": "competitor_analysis"
-                })
-
-            elif event.type == "response.completed":
-                # Signal end of stream
-                yield sse_event("end", {"message": "Competitor analysis complete"})
-
-    except Exception as e:
-        print(f"[ERROR] ERROR in competitor streaming: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        yield f"data: Error generating competitor analysis: {str(e)}\n\n"
-
-def generate_institution_analysis_streaming(
-    filtered_df: pd.DataFrame,
-    top_institutions_table: pd.DataFrame,
-    ta_filter: str = "All"
-):
-    """
-    Token-by-token streaming institution analysis using AI-first approach.
-    """
-    if client is None:
-        yield "data: Error: OpenAI client not initialized\n\n"
-        return
-
-    try:
-        # Prepare context data
-        ta_context = f" in {ta_filter}" if ta_filter != "All" else " across all therapeutic areas"
-        abstracts_count = len(filtered_df)
-
-        # Emit report title
-        yield sse_event("heading", {"level": 1, "text": "🏥 Institution Analysis — Research Landscape Report"})
-
-        # Emit tables FIRST (so users see data immediately)
-        if not top_institutions_table.empty:
-            institutions_table_data = top_institutions_table.to_dict('records')
-            yield sse_event("table", {
-                "title": "Top Institutions",
-                "rows": institutions_table_data
-            })
-
-        # Build context for AI analysis
-        tables_context = ""
-        if not top_institutions_table.empty:
-            tables_context += f"\n\n=== Top Institutions ===\n{top_institutions_table.to_csv(index=False)}"
-
-        # Use the AI prompt from PLAYBOOKS
-        institution_prompt = f"""{PLAYBOOKS["institution"]["ai_prompt"]}
-
-CONFERENCE DATA TABLES:{tables_context}
-
-Therapeutic Area Filter: {ta_filter}
-
-Write a comprehensive, natural intelligence report based on this data."""
-
-        # Stream the analysis in real-time using new Responses API
-        from openai import Stream
-
-        stream: Stream[object] = client.responses.create(
-            model="gpt-5-mini",
-            input=[{"role": "user", "content": institution_prompt}],
-            reasoning={"effort": "low"},
-            text={"verbosity": "low"},
-            max_output_tokens=3000,
-            stream=True,
-        )
-
-        for event in stream:
-            if event.type == "response.output_text.delta":
-                token = event.delta
-
-                # Stream each token
-                yield sse_event("token", {
-                    "text": token,
-                    "section": "institution_analysis"
-                })
-
-            elif event.type == "response.completed":
-                # Signal end of stream
-                yield sse_event("end", {"message": "Institution analysis complete"})
-
-    except Exception as e:
-        print(f"[ERROR] ERROR in institution streaming: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        yield f"data: Error generating institution analysis: {str(e)}\n\n"
-
-def generate_insights_analysis_streaming(
-    filtered_df: pd.DataFrame,
-    biomarker_moa_table: pd.DataFrame,
-    ta_filter: str = "All"
-):
-    """
-    Token-by-token streaming insights analysis using AI-first approach.
-    """
-    if client is None:
-        yield "data: Error: OpenAI client not initialized\n\n"
-        return
-
-    try:
-        # Prepare context data
-        ta_context = f" in {ta_filter}" if ta_filter != "All" else " across all therapeutic areas"
-        abstracts_count = len(filtered_df)
-
-        # Emit report title
-        yield sse_event("heading", {"level": 1, "text": "🧭 Insights & Trends — Strategic Intelligence Report"})
-
-        # Emit tables FIRST (so users see data immediately)
-        if not biomarker_moa_table.empty:
-            biomarker_table_data = biomarker_moa_table.to_dict('records')
-            yield sse_event("table", {
-                "title": "Biomarker & MOA Analysis",
-                "rows": biomarker_table_data
-            })
-
-        # Build context for AI analysis
-        tables_context = ""
-        if not biomarker_moa_table.empty:
-            tables_context += f"\n\n=== Biomarker & MOA Analysis ===\n{biomarker_moa_table.to_csv(index=False)}"
-
-        # Use the AI prompt from PLAYBOOKS
-        insights_prompt = f"""{PLAYBOOKS["insights"]["ai_prompt"]}
-
-CONFERENCE DATA TABLES:{tables_context}
-
-Therapeutic Area Filter: {ta_filter}
-
-Write a comprehensive, natural intelligence report based on this data."""
-
-        # Stream the analysis in real-time using new Responses API
-        from openai import Stream
-
-        stream: Stream[object] = client.responses.create(
-            model="gpt-5-mini",
-            input=[{"role": "user", "content": insights_prompt}],
-            reasoning={"effort": "low"},
-            text={"verbosity": "low"},
-            max_output_tokens=5000,
-            stream=True,
-        )
-
-        for event in stream:
-            if event.type == "response.output_text.delta":
-                token = event.delta
-
-                # Stream each token
-                yield sse_event("token", {
-                    "text": token,
-                    "section": "insights_analysis"
-                })
-
-            elif event.type == "response.completed":
-                # Signal end of stream
-                yield sse_event("end", {"message": "Insights analysis complete"})
-
-    except Exception as e:
-        print(f"[ERROR] ERROR in insights streaming: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        yield f"data: Error generating insights analysis: {str(e)}\n\n"
-
-def generate_strategy_analysis_streaming(
-    filtered_df: pd.DataFrame,
-    ta_filter: str = "All"
-):
-    """
-    Token-by-token streaming strategy analysis using AI-first approach.
-    """
-    if client is None:
-        yield "data: Error: OpenAI client not initialized\n\n"
-        return
-
-    try:
-        # Prepare context data
-        ta_context = f" in {ta_filter}" if ta_filter != "All" else " across all therapeutic areas"
-        abstracts_count = len(filtered_df)
-
-        # Emit report title
-        yield sse_event("heading", {"level": 1, "text": "Strategic Recommendations — Medical Affairs Action Plan"})
-
-        # Build basic context from the dataset
-        sample_abstracts = filtered_df.head(10)[["Abstract #", "Title"]].to_csv(index=False)
-        tables_context = f"\n\n=== Sample Conference Data ({abstracts_count} total abstracts) ===\n{sample_abstracts}"
-
-        # TA-specific strategic context
-        ta_specific_context = ""
-        if ta_filter == "Renal Cell Carcinoma":
-            ta_specific_context = "\n\nSPECIFIC TA FOCUS: Renal Cell Carcinoma - Consider avelumab's JAVELIN Renal 101 background (avelumab + axitinib combination did not meet primary endpoint in first-line RCC). Analyze current RCC competitive landscape dominated by established combinations (pembrolizumab + axitinib, nivolumab + cabozantinib). Assess any potential re-entry opportunities, combination strategies, or strategic lessons from conference data."
-        elif ta_filter == "Bladder Cancer":
-            ta_specific_context = "\n\nSPECIFIC TA FOCUS: Bladder Cancer - Focus on avelumab's established maintenance position post-platinum, EV+P first-line impact, and competitive response strategies in bladder cancer specifically."
-
-        # Use the AI prompt from PLAYBOOKS
-        strategy_prompt = f"""{PLAYBOOKS["strategy"]["ai_prompt"]}
-
-CONFERENCE DATA TABLES:{tables_context}
-
-Therapeutic Area Filter: {ta_filter}{ta_specific_context}
-
-Write a comprehensive, natural intelligence report based on this data and therapeutic area focus."""
-
-        # Stream the analysis in real-time using new Responses API
-        from openai import Stream
-
-        stream: Stream[object] = client.responses.create(
-            model="gpt-5-mini",
-            input=[{"role": "user", "content": strategy_prompt}],
-            reasoning={"effort": "low"},
-            text={"verbosity": "low"},
-            max_output_tokens=3000,
-            stream=True,
-        )
-
-        for event in stream:
-            if event.type == "response.output_text.delta":
-                token = event.delta
-
-                # Stream each token
-                yield sse_event("token", {
-                    "text": token,
-                    "section": "strategy_analysis"
-                })
-
-            elif event.type == "response.completed":
-                # Signal end of stream
-                yield sse_event("end", {"message": "Strategy analysis complete"})
-
-    except Exception as e:
-        print(f"[ERROR] ERROR in strategy streaming: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        yield f"data: Error generating strategy analysis: {str(e)}\n\n"
-
-def format_evidence_for_prompt(evidence_pack: Dict[str, Any]) -> str:
-    """Format evidence pack for inclusion in prompts."""
-    formatted_evidence = []
-
-    for key, data in evidence_pack.items():
-        if hasattr(data, 'to_csv'):
-            # It's a DataFrame
-            csv_data = data.head(30).to_csv(index=False)
-            formatted_evidence.append(f"**{key.upper()} TABLE:**\n{csv_data}")
-        elif isinstance(data, list) and len(data) > 0:
-            # It's a list of records
-            formatted_evidence.append(f"**{key.upper()}:**\n{json.dumps(data[:20], indent=2)}")
-        else:
-            formatted_evidence.append(f"**{key.upper()}:** {str(data)}")
-
-    return "\n\n".join(formatted_evidence)
-
-# =========================
-# AI: Strict Playbook Runner
-# =========================
-def run_playbook_ai(
-    playbook_key: str,
-    ta_filter: str,
-    user_query: str,
-    filtered_df: pd.DataFrame,
-    tables_for_prompt: Dict[str, pd.DataFrame],
-    rag_snippets: List[str]
-) -> str:
-    if client is None:
-        return "Error: OpenAI client not initialized. Please ensure OPENAI_API_KEY is set."
-
-    pb = PLAYBOOKS[playbook_key]
-
-    # AI-FIRST APPROACH: Check if this playbook has an ai_prompt (Phase 2 implementation)
-    if "ai_prompt" in pb and pb["ai_prompt"]:
-        # Build table data context for the AI
-        tables_context = ""
-        for table_name, table_df in tables_for_prompt.items():
-            if not table_df.empty:
-                tables_context += f"\n\n=== {table_name} ===\n{table_df.to_csv(index=False)}"
-
-        # Build RAG context if available
-        rag_context = ""
-        if rag_snippets:
-            rag_context = f"\n\nRelevant conference context:\n" + "\n".join(rag_snippets)
-
-        # Create the AI prompt with all context
-        ai_prompt = f"""{pb["ai_prompt"]}
-
-CONFERENCE DATA TABLES:{tables_context}
-
-{rag_context}
-
-Therapeutic Area Filter: {ta_filter}
-
-Write a comprehensive, natural intelligence report based on this data."""
-
-        try:
-            response = client.responses.create(
-                model="gpt-5-mini",
-                input=[{"role": "user", "content": ai_prompt}],
-                reasoning={"effort": "low"},
-                text={"verbosity": "low"},
-                max_output_tokens=3000
-            )
-            return response.output_text
-        except Exception as e:
-            return f"Error generating AI response: {str(e)}"
-
-    # AI-Enhanced Framework Approach: Intelligent adaptation based on available data
-    ai_enhanced_frameworks = {
-        "competitor": {
-            "focus": "competitive intelligence and market dynamics",
-            "core_elements": [
-                "Executive Summary (competitive focus)",
-                "Avelumab presence and positioning at this conference",
-                "Competitor activity analysis with specific examples",
-                "Strategic implications for competitive positioning"
-            ],
-            "data_requirements": "competitor mentions, drug activity, positioning insights"
-        },
-        "kol": {
-            "focus": "key opinion leader identification and activity analysis",
-            "core_elements": [
-                "Executive Summary (KOL and author activity focus)",
-                "Most active authors and their research themes",
-                "Collaboration patterns and institutional networks",
-                "Notable research areas and trending topics among KOLs"
-            ],
-            "data_requirements": "author activity data, research focus areas, institutional affiliations"
-        },
-        "institution": {
-            "focus": "institutional research activity and capabilities analysis",
-            "core_elements": [
-                "Executive Summary (institutional research focus)",
-                "Most active institutions and their research volume",
-                "Research focus areas by institution",
-                "Geographic distribution and collaboration patterns"
-            ],
-            "data_requirements": "institutional activity data, research themes, geographic insights"
-        },
-        "insights": {
-            "focus": "scientific trends and emerging patterns analysis",
-            "core_elements": [
-                "Executive Summary (scientific trends focus)",
-                "Emerging biomarker and mechanism of action patterns",
-                "Treatment paradigm evolution signals",
-                "Evidence quality and clinical translation potential"
-            ],
-            "data_requirements": "biomarker mentions, MOA patterns, clinical trial phases"
-        },
-        "strategy": {
-            "focus": "strategic implications for medical affairs and portfolio",
-            "core_elements": [
-                "Executive Summary (strategic implications focus)",
-                "Positioning opportunities versus standard of care",
-                "Evidence themes to amplify",
-                "Portfolio adjacency opportunities"
-            ],
-            "data_requirements": "competitive landscape insights, clinical evidence themes"
-        }
-    }
-
-    framework = ai_enhanced_frameworks[playbook_key]
-
-    # Core guidelines that apply to all playbooks
-    core_guidelines = [
-        "Focus specifically on the stated analysis focus",
-        "Adapt the framework intelligently based on available data",
-        "Always cite Abstract # when referencing specific studies",
-        "Do NOT invent statistics - only use data from provided context",
-        "If insufficient data exists for a framework element, acknowledge this and focus on what is available",
-        "Keep responses relevant to the specific analytical focus",
-        "Avoid generic therapeutic landscape discussions unless directly relevant to the analysis type"
-    ]
-
-    # Build context for AI-Enhanced Analysis
-    context_data = []
-    rag_context = "\n".join(f"- {s}" for s in rag_snippets) if rag_snippets else "No specific context snippets available."
-
-    # Intelligently gather relevant data based on analysis type
-    if playbook_key == "competitor":
-        # For competitor analysis, focus on competitive activity
-        avelu_mask = safe_contains(filtered_df["Title"], r"avelumab|bavencio", regex=True) | \
-                     safe_contains(filtered_df["Authors"], r"avelumab|bavencio", regex=True)
-        avelu_df = filtered_df.loc[avelu_mask, ["Abstract #", "Title"]].drop_duplicates(subset=["Abstract #"])
-
-        if not avelu_df.empty:
-            context_data.append(f"Avelumab Presence: {len(avelu_df)} abstracts found")
-            for _, row in avelu_df.head(5).iterrows():
-                context_data.append(f"- Abstract #{row['Abstract #']}: {row['Title']}")
-        else:
-            context_data.append("Avelumab Presence: No direct mentions found in conference abstracts")
-
-        comp_df = tables_for_prompt.get("competitor_abstracts", pd.DataFrame())
-        if comp_df is not None and not comp_df.empty:
-            comp_summary = comp_df.groupby("Competitor")["Abstract #"].nunique().head(8)
-            context_data.append("Competitor Activity:")
-            for comp, count in comp_summary.items():
-                context_data.append(f"- {comp}: {count} abstracts")
-
-    elif playbook_key in ["kol", "institution"]:
-        # For KOL/Institution analysis, focus on activity data
-        if playbook_key == "kol":
-            table_key = "top_authors"
-            activity_type = "Author"
-        else:
-            table_key = "top_institutions"
-            activity_type = "Institution"
-
-        activity_df = tables_for_prompt.get(table_key, pd.DataFrame())
-        if activity_df is not None and not activity_df.empty:
-            context_data.append(f"Top {activity_type} Activity:")
-            for _, row in activity_df.head(10).iterrows():
-                if playbook_key == "kol":
-                    context_data.append(f"- {row['Authors']}: {row['Unique Abstracts']} abstracts ({row['Institutions']})")
-                else:
-                    context_data.append(f"- {row['Institutions']}: {row['#Unique Abstracts']} abstracts (Focus: {row['Main focus area']})")
-        else:
-            context_data.append(f"No {activity_type.lower()} activity data available in current dataset")
-
-    else:
-        # For insights/strategy, use available tables
-        for key, df_tbl in tables_for_prompt.items():
-            if df_tbl is not None and not df_tbl.empty:
-                context_data.append(f"{key.replace('_', ' ').title()}: {len(df_tbl)} entries available")
-
-    available_data = "\n".join(context_data) if context_data else "Limited conference data available for this analysis type."
-
-    # Medical context (keep the good stuff)
-    ta_context = {
-        "Bladder Cancer": {
-            "key_trends": "EV+P as new 1L SOC, ADC dominance, avelumab maintenance positioning, ctDNA/biomarker evolution",
-            "competitive_landscape": "EV+P disruption, sacituzumab govitecan combinations, HER2-targeted strategies",
-            "avelumab_context": "Established 1L maintenance standard, evolving role post-EV+P era"
-        },
-        "Renal Cell Carcinoma": {
-            "key_trends": "IO+TKI combinations dominance, VEGF pathway evolution, biomarker development",
-            "competitive_landscape": "Established IO+TKI standards, cabozantinib strength, novel combinations",
-            "avelumab_context": "Investigational in combinations, not yet standard therapy"
-        }
-    }
-
-    current_context = ta_context.get(ta_filter, {
-        "key_trends": "Context-dependent trends",
-        "competitive_landscape": "Multiple therapeutic approaches",
-        "avelumab_context": "Variable positioning by indication"
-    })
-
-    # AI-Enhanced Prompt: Intelligent and Adaptive
-    prompt = f"""
-You are an expert medical affairs analyst for EMD Serono providing {framework['focus']} for the {ta_filter} therapeutic area.
-
-## Analysis Focus: {framework['focus']}
-
-## Core Framework Elements (adapt intelligently based on available data):
-{chr(10).join(f"- {element}" for element in framework['core_elements'])}
-
-## Available Conference Data:
-{available_data}
-
-## Relevant Conference Context:
-{rag_context}
-
-## Therapeutic Area Context for {ta_filter}:
-- Key Trends: {current_context['key_trends']}
-- Competitive Landscape: {current_context['competitive_landscape']}
-- Avelumab Context: {current_context['avelumab_context']}
-
-## Instructions:
-{chr(10).join(f"- {guideline}" for guideline in core_guidelines)}
-
-## Data Requirements for This Analysis:
-{framework['data_requirements']}
-
-Generate a comprehensive {framework['focus']} analysis that intelligently adapts the framework based on the available data. If certain framework elements cannot be addressed due to insufficient data, acknowledge this and focus on what insights can be provided from the available conference information.
-
-## Response Requirements:
-- Structure your response using the framework elements as guidance, but adapt intelligently
-- Always cite Abstract # when referencing specific conference presentations
-- Be specific about what data is available vs. what is missing
-- Focus on actionable insights relevant to the stated analysis focus
-- Maintain medical affairs professionalism while being conversational and helpful
-- Do NOT invent statistics or data not present in the provided context
-"""
-    try:
-        response = client.responses.create(
-            model="gpt-5-mini",
-            input=[
-                {"role": "system", "content": f"You are an expert medical affairs analyst providing {framework['focus']} for EMD Serono. Focus on delivering relevant, data-driven insights that directly address the analysis objectives."},
-                {"role": "user", "content": prompt}
-            ],
-            reasoning={"effort": "low"},
-            text={"verbosity": "low"},
-            max_output_tokens=1600,
-        )
-        return response.output_text
-    except Exception as e:
-        print(f"Error generating AI-enhanced analysis: {e}")
-        return f"Error generating analysis: {str(e)}"
-
-# =========================
-# Enhanced AI Response Generation (New Architecture)
-# =========================
-
-def generate_intelligent_response(query: str, plan: QueryPlan, context: ContextPackage, ta_filter: str) -> Tuple[str, List[Tuple[str, pd.DataFrame, str]]]:
-    """
-    Generate truly flexible AI response based on user intent and available context.
-    No rigid frameworks - just intelligent, helpful responses.
-    """
-    if client is None:
-        return "Error: OpenAI client not initialized. Cannot generate intelligent response.", []
-
-    # Build context information
-    context_info = []
-    tables_to_attach = []
-
-    # Handle specific response types differently
-    if plan.response_type == "data_table":
-        # For quantitative requests like "top 20 authors" - prioritize tables with brief context
-        return handle_data_table_request(query, plan, context, ta_filter)
-
-    elif plan.response_type == "specific_lookup":
-        # For specific lookups like "show me John Smith's work" - focused data with explanation
-        return handle_specific_lookup_request(query, plan, context, ta_filter)
-
-    # For strategic_analysis or informational_narrative - build comprehensive context
-    if context.semantic_results is not None and not context.semantic_results.empty:
-        abstracts_summary = []
-        for _, row in context.semantic_results.head(8).iterrows():
-            abstracts_summary.append(f"Abstract #{row['Abstract #']}: {row['Title']}")
-        context_info.append("Relevant abstracts:\n" + "\n".join(f"- {a}" for a in abstracts_summary))
-        tables_to_attach.append(("🔎 Relevant Abstracts", context.semantic_results.head(15), "data"))
-
-    if context.competitor_data is not None and not context.competitor_data.empty:
-        comp_summary = []
-        for _, row in context.competitor_data.head(6).iterrows():
-            comp_summary.append(f"{row['Competitor']}: {row['Title']} (Abstract #{row['Abstract #']})")
-        context_info.append("Competitor activity:\n" + "\n".join(f"- {c}" for c in comp_summary))
-        tables_to_attach.append(("Competitor Analysis", context.competitor_data, "data"))
-
-    if context.author_data is not None and not context.author_data.empty:
-        tables_to_attach.append(("Author Analysis", context.author_data, "data"))
-
-    # Build flexible AI prompt based on what user actually wants
-    system_prompt = f"""You are a helpful medical affairs assistant providing information about conference data. Your goal is to directly answer the user's question in the most helpful way possible.
-
-User Intent: {plan.user_intent}
-Response Approach: {plan.response_approach}
-
-Guidelines:
-- Answer the user's question directly and helpfully
-- Use a conversational, informative tone
-- Cite Abstract # when referencing specific studies
-- If you have quantitative data tables, mention them but don't repeat the data in text
-- Be concise but thorough
-- Don't force rigid analytical frameworks unless the user specifically asks for strategic analysis
-- If data is limited, say so clearly and explain what you can provide instead"""
-
-    # Build medical context if available
-    medical_context = ""
-    if context.medical_context:
-        medical_context = "\n".join([f"{key}: {value.strip()}" for key, value in context.medical_context.items()])
-
-    user_prompt = f"""
-User Question: "{query}"
-Therapeutic Area Filter: {ta_filter}
-
-{f"Medical Context: {medical_context}" if medical_context else ""}
-
-Available Conference Data:
-{chr(10).join(context_info) if context_info else "No specific conference data found for this query in the current filter."}
-
-Please provide a helpful, direct response to the user's question. Focus on being informative and useful rather than following a rigid analytical framework.
-"""
-
-    try:
-        response = client.responses.create(
-            model="gpt-5-mini",
-            input=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            reasoning={"effort": "low"},
-            text={"verbosity": "low"},
-            max_output_tokens=800,
-        )
-
-        response_text = response.output_text
-        return response_text, tables_to_attach
-
-    except Exception as e:
-        error_msg = f"Error generating response: {str(e)}"
-        print(error_msg)
-        return error_msg, tables_to_attach
-
-def handle_data_table_request(query: str, plan: QueryPlan, context: ContextPackage, ta_filter: str) -> Tuple[str, List[Tuple[str, pd.DataFrame, str]]]:
-    """
-    Handle requests for quantitative data tables like "top 20 authors", "most active scientists"
-    Returns brief context + the actual data table
-    """
-    tables_to_attach = []
-
-    # Determine what type of table the user wants
-    entities = plan.primary_entities
-    query_lower = query.lower()
-
-    # Author-related requests
-    if (any(term in query_lower for term in ["author", "scientist", "researcher", "investigator", "people"]) or
-        entities.get("authors")):
-
-        # Extract number from query (default 20)
-        n = extract_number_default(query, 20)
-
-        # Get the current filtered data
-        current_df = get_filtered_dataframe(ta_filter)
-
-        # For data table requests, users might want individual abstracts OR summary stats
-        # Let's provide both: summary stats + recent individual abstracts from top authors
-        top_authors_summary = get_top_authors(df_sig(current_df), current_df, min(n, 15))
-
-        if not top_authors_summary.empty:
-            # Add summary table
-            tables_to_attach.append((f"Top {len(top_authors_summary)} Authors (Summary)", top_authors_summary, "data"))
-
-            # Also add individual abstracts from these top authors
-            top_author_names = top_authors_summary['Authors'].head(10).tolist()
-            individual_abstracts = []
-
-            for author in top_author_names:
-                pat = r"\b" + re.escape(author) + r"\b"
-                mask = safe_contains(current_df["Authors"], pat, regex=True)
-                author_abstracts = current_df.loc[mask, ["Abstract #", "Poster #", "Title", "Authors", "Institutions"]].drop_duplicates(subset=["Abstract #"])
-                if not author_abstracts.empty:
-                    individual_abstracts.append(author_abstracts.head(2))  # Max 2 per author
-
-            if individual_abstracts:
-                combined_abstracts = pd.concat(individual_abstracts, ignore_index=True).drop_duplicates(subset=["Abstract #"])
-                # Ensure correct column order
-                combined_abstracts = combined_abstracts[["Abstract #", "Poster #", "Title", "Authors", "Institutions"]]
-                tables_to_attach.append((f"📄 Individual Abstracts from Top Authors", combined_abstracts, "data"))
-
-            response = f"Here are the **top {len(top_authors_summary)} most active authors** in {ta_filter} based on unique abstracts at this conference. The first table shows summary statistics, and the second shows individual abstracts from these top authors."
-        else:
-            response = f"No author data found for {ta_filter} in the current dataset."
-
-    # Institution-related requests
-    elif (any(term in query_lower for term in ["institution", "center", "hospital", "university", "organization"]) or
-          entities.get("institutions")):
-
-        n = extract_number_default(query, 20)
-
-        # Use the main global dataset for institution analysis
-        current_df = df_global.copy()
-
-        # Similar approach for institutions - summary + individual abstracts
-        top_institutions_summary = get_top_institutions(df_sig(current_df), current_df, min(n, 15))
-
-        if not top_institutions_summary.empty:
-            # Add summary table
-            tables_to_attach.append((f"🏥 Top {len(top_institutions_summary)} Institutions (Summary)", top_institutions_summary, "data"))
-
-            # Also add individual abstracts from these top institutions
-            top_institution_names = top_institutions_summary['Institutions'].head(8).tolist()
-            institutional_abstracts = []
-
-            for institution in top_institution_names:
-                mask = safe_contains(current_df["Institutions"], institution, regex=False)
-                inst_abstracts = current_df.loc[mask, ["Abstract #", "Poster #", "Title", "Authors", "Institutions"]].drop_duplicates(subset=["Abstract #"])
-                if not inst_abstracts.empty:
-                    institutional_abstracts.append(inst_abstracts.head(3))  # Max 3 per institution
-
-            if institutional_abstracts:
-                combined_inst_abstracts = pd.concat(institutional_abstracts, ignore_index=True).drop_duplicates(subset=["Abstract #"])
-                # Ensure correct column order
-                combined_inst_abstracts = combined_inst_abstracts[["Abstract #", "Poster #", "Title", "Authors", "Institutions"]]
-                tables_to_attach.append((f"📄 Individual Abstracts from Top Institutions", combined_inst_abstracts, "data"))
-
-            response = f"Here are the **top {len(top_institutions_summary)} most active institutions** in {ta_filter} based on unique abstracts at this conference. The first table shows summary statistics, and the second shows individual abstracts from these institutions."
-        else:
-            response = f"No institution data found for {ta_filter} in the current dataset."
-
-    # Drug/study-related requests
-    elif any(term in query_lower for term in ["studies", "research", "abstracts", "work", "projects"]):
-        # Use semantic search results if available
-        if context.semantic_results is not None and not context.semantic_results.empty:
-            # Ensure correct column order for semantic results
-            studies_data = context.semantic_results.head(20).copy()
-            if "Abstract #" in studies_data.columns:
-                column_order = ["Abstract #", "Poster #", "Title", "Authors", "Institutions"]
-                available_columns = [col for col in column_order if col in studies_data.columns]
-                if len(available_columns) > 0:
-                    studies_data = studies_data[available_columns]
-
-            tables_to_attach.append(("🔬 Relevant Studies", studies_data, "data"))
-            response = f"Found **{len(context.semantic_results)} relevant studies** matching your query in {ta_filter}. The table below shows the most relevant abstracts based on semantic similarity."
-        else:
-            response = f"No specific studies found matching your query in {ta_filter}."
-
-    else:
-        # Generic response - try to provide the best available data
-        if context.semantic_results is not None and not context.semantic_results.empty:
-            tables_to_attach.append(("🔎 Relevant Data", context.semantic_results.head(15), "data"))
-            response = f"Here's the most relevant data I found for your query in {ta_filter}."
-        else:
-            response = f"I couldn't find specific data matching your request in {ta_filter}. Try refining your query or using different search terms."
-
-    return response, tables_to_attach
-
-def handle_specific_lookup_request(query: str, plan: QueryPlan, context: ContextPackage, ta_filter: str) -> Tuple[str, List[Tuple[str, pd.DataFrame, str]]]:
-    """
-    Handle specific lookup requests like "show me John Smith's work" or "tell me about Neil Milloy"
-    Provides KOL analysis framework for authors and relevant tables.
-    """
-    tables_to_attach = []
-
-    # Extract author name from query if possible
-    author_name = None
-    for entity_list in plan.primary_entities.values():
-        for entity in entity_list:
-            if len(entity.split()) >= 2:  # Likely a person's name (First Last)
-                author_name = entity
-                break
-        if author_name:
-            break
-
-    # Use available context data - prioritize author data
-    if context.author_data is not None and not context.author_data.empty:
-        tables_to_attach.append(("📄 Author Studies", context.author_data, "data"))
-
-        # Generate KOL analysis for the specific author
-        if client and author_name:
-            author_context = f"""Analyze {author_name} based on their conference research:
-
-Conference data ({ta_filter}):
-{context.author_data.to_csv(index=False)}
-
-Provide a comprehensive analysis covering:
-1. Research Profile & Expertise (focus areas, biomarkers, methodologies)
-2. Collaboration Network & Industry Involvement (institutions, partnerships, alliances)
-3. Strategic Value & Influence (leadership indicators, medical affairs opportunities)
-
-Write natural, detailed paragraphs for each section. Be specific about their research contributions and strategic value for medical affairs."""
-
-            try:
-                author_analysis = client.responses.create(
-                    model="gpt-5-mini",
-                    input=[{"role": "user", "content": author_context}],
-                    reasoning={"effort": "low"},
-                    text={"verbosity": "low"},
-                    max_output_tokens=800
-                )
-
-                author_profile = author_analysis.output_text
-                response = f"## KOL Profile: {author_name}\n\n{author_profile}\n\n**Research Activity**: Found **{len(context.author_data)} abstracts** by this author in {ta_filter}. See detailed studies in the table below."
-
-            except Exception as e:
-                print(f"Error generating author analysis: {e}")
-                response = f"## {author_name}\n\nFound **{len(context.author_data)} abstracts** by this author in {ta_filter}. The table below shows their research work at this conference."
-        else:
-            response = f"Found **{len(context.author_data)} abstracts** related to your lookup in {ta_filter}. The table below shows the relevant work."
-
-    else:
-        # NO AUTHOR DATA FOUND - simple, direct response
-        if author_name:
-            if ta_filter != "All":
-                response = f"No studies found for {author_name} in {ta_filter}. Try changing the filter to 'All GU Cancers' to see if other studies are available."
-            else:
-                response = f"No studies found for {author_name} in the ASCO GU 2025 conference data."
-        else:
-            response = f"No specific results found for your lookup in {ta_filter}."
-
-    return response, tables_to_attach
-
-# =========================
-# General (ad-hoc) answer (Legacy - Kept for Fallback)
-# =========================
-def run_general_ai(query: str, ta_filter: str, filtered_df: pd.DataFrame):
-    if client is None:
-        return "Error: OpenAI client not initialized. Cannot run general AI query.", pd.DataFrame()
-    if collection is None:
-        return "Error: Vector database not initialized. Cannot run general AI query.", pd.DataFrame()
-
-    try:
-        sr = semantic_search(query, ta_filter, n_results=12)
-        ctx_df = format_search_results(sr)
-        if ctx_df.empty:
-            return ("I couldn’t find relevant abstracts for that query in the current TA filter. "
-                    "Try refining your terms or using the sidebar playbooks."), pd.DataFrame()
-        snippets = []
-        for _, r in ctx_df.head(8).iterrows():
-            snippets.append(f"Abstract #{r['Abstract #']}: {r['Title']}")
-        rag = "\n".join(f"- {s}" for s in snippets)
-
-        # Enhanced context for comprehensive responses
-        ta_context = {
-            "Bladder Cancer": {
-                "avelumab_context": "Avelumab is established as standard 1L maintenance therapy post-platinum chemotherapy for non-progressive advanced urothelial carcinoma (JAVELIN Bladder 100). JAVELIN Bladder Medley shows avelumab+sacituzumab govitecan improves PFS vs avelumab monotherapy. Real-world data from Japan and Brazil confirm effectiveness.",
-                "competitive_landscape": "EV+P is new 1L SOC. Other key players: sacituzumab govitecan, disitamab vedotin (HER2-targeted), nivolumab combinations.",
-                "biomarkers": "Inflammatory markers (NLR, SII) predict avelumab maintenance outcomes. ctDNA emerging for monitoring."
-            }
-        }
-
-        current_context = ta_context.get(ta_filter, {})
-        context_info = ""
-        if "avelumab" in query.lower() and ta_filter == "Bladder Cancer":
-            context_info = f"\n\nBackground Context: {current_context.get('avelumab_context', '')}"
-
-        prompt = f"""
-You are a medical affairs expert providing comprehensive analysis for EMD Serono. Generate a substantive narrative response (3-4 paragraphs) that thoroughly addresses the user's question.
-
-## Requirements:
-- Provide detailed narrative analysis, not just data summaries
-- Cite specific Abstract # when referencing conference presentations
-- Include relevant background context about treatment landscape when appropriate
-- Analyze implications and significance of the findings
-- Do NOT invent counts; only cite numbers from the provided context
-- If information is not available in the conference data, explicitly state so
-
-User question: {query}
-TA scope: {ta_filter}
-
-Context from conference abstracts:
-{rag}{context_info}
-
-Generate a comprehensive narrative response that includes analysis, context, and implications of the conference data related to this question.
-"""
-        resp = client.responses.create(
-            model="gpt-5-mini",
-            input=[
-                {"role": "system", "content": "You are a world-class medical affairs strategist providing comprehensive, analytical responses for EMD Serono."},
-                {"role": "user", "content": prompt},
-            ],
-            reasoning={"effort": "low"},
-            text={"verbosity": "low"},
-            max_output_tokens=800,
-        )
-        narrative = resp.output_text
-        hits = ctx_df[["Abstract #","Poster #","Title","Authors","Institutions"]].head(20)
-        return narrative, hits
-    except Exception as e:
-        print(f"Error generating general AI answer: {e}")
-        return f"Error generating answer: {str(e)}", pd.DataFrame()
-
-# --- Global Initialization ---
-def initialize_app_globals():
-    """
-    Initialize application globals for ESMO 2025 data AND ChromaDB for AI features
-    """
-    global df_global, csv_hash_global, collection
-
-    if df_global is None:
-        print("Initializing ESMO 2025 application globals...")
-        try:
-            # Load ESMO 2025 data (fast - just CSV loading)
-            df_global, csv_hash_global = load_and_prepare_esmo_data()
-            print(f"ESMO data loaded successfully. Hash: {csv_hash_global[:8]}")
-
-            # Initialize ChromaDB in background during startup (30-40 seconds)
-            print("Initializing ChromaDB for AI features (30-40 seconds)...")
-            collection = setup_vector_db(csv_hash_global)
-            if collection is None:
-                print("Warning: Vector database could not be fully set up. AI features may be limited.")
-            else:
-                print("ChromaDB initialization complete - AI features ready!")
-
-            return True
-        except FileNotFoundError as e:
-            print(f"FATAL ERROR: ESMO data file not found: {e}")
-            return False
-        except Exception as e:
-            print(f"FATAL ERROR during ESMO initialization: {e}")
-            return False
-
-    return True
-
-def initialize_chromadb_lazy():
-    """
-    Initialize ChromaDB for semantic search (slow - only when needed for AI features)
-    """
-    global collection
-
-    if collection is None and df_global is not None:
-        print("Initializing ChromaDB for AI features (this may take 30-40 seconds)...")
-        try:
-            collection = setup_vector_db(csv_hash_global)
-            if collection is None:
-                print("Warning: Vector database could not be fully set up. AI features may be limited.")
-                return False
-            print("ChromaDB initialization complete - AI features ready!")
-            return True
-        except Exception as e:
-            print(f"Error setting up ChromaDB: {e}")
-            return False
-
-    return collection is not None
-
-# --- Flask Routes ---
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-# ESMO 2025 Conference Info API
-@app.route('/api/conference/info')
-def get_conference_info():
-    """Get ESMO 2025 conference information"""
-    try:
-        return jsonify({
-            "name": "ESMO 2025",
-            "therapeutic_areas": get_available_therapeutic_areas(),
-            "session_types": get_available_session_types(),
-            "features": {
-                "single_author_per_session": True,
-                "geographic_data": True,
-                "session_metadata": True,
-                "emds_drug_focus": list(ESMO_EMD_FOCUS.keys())
-            },
-            "data_quality": {
-                "affiliation_source": "PubMed/ORCID API derived",
-                "affiliation_accuracy": "Medium (7% missing, potential lag from latest publications)",
-                "total_sessions": len(df_global) if df_global is not None else 0
-            }
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/data')
-def get_data_api():
-    if not initialize_app_globals():
-        return jsonify({"error": "Application data could not be loaded. Check server logs for details."}), 500
-
-    # Handle both old single-parameter format and new array format for backward compatibility
-    # Frontend sends session_filters[] (with brackets), but Flask getlist needs session_filters
-    drug_filters = request.args.getlist('drug_filters[]') or request.args.getlist('drug_filters')
-    ta_filters = request.args.getlist('ta_filters[]') or request.args.getlist('ta_filters')
-    session_filters = request.args.getlist('session_filters[]') or request.args.getlist('session_filters')
-    date_filters = request.args.getlist('date_filters[]') or request.args.getlist('date_filters')
-
-    print(f"PARAMETER DEBUG: session_filters from URL = {session_filters}")
-
-    # Backward compatibility: if no array parameters, check for old single parameters
-    if not drug_filters and request.args.get('drug_filter'):
-        drug_filters = [request.args.get('drug_filter')]
-    if not ta_filters and request.args.get('ta_filter'):
-        ta_filters = [request.args.get('ta_filter')]
-    if not session_filters and request.args.get('session_filter'):
-        session_filters = [request.args.get('session_filter')]
-    if not date_filters and request.args.get('date_filter'):
-        date_filters = [request.args.get('date_filter')]
-
-    # SIMPLE SESSION FILTERING - If user clicks session filter, show ONLY those rows
-    print(f"SIMPLE SESSION DEBUG: session_filters={session_filters}")
-
-    # Start with full dataset
-    if df_global is None or df_global.empty:
-        return jsonify({"error": "No data available"}), 500
-
-    working_df = df_global.copy()
-
-    # Apply session filter first and simply - if user clicks "Mini Oral", show ONLY Mini Oral rows
-    if session_filters and session_filters != ["All Session Types"]:
-        session_mask = pd.Series([False] * len(working_df))
-        for session_filter in session_filters:
-            if session_filter != "All Session Types":
-                # Direct exact match with the Session column
-                exact_matches = working_df['Session'] == session_filter
-                session_mask = session_mask | exact_matches
-                print(f"SIMPLE SESSION DEBUG: '{session_filter}' exact matches: {exact_matches.sum()}")
-
-        working_df = working_df[session_mask]
-        print(f"SIMPLE SESSION DEBUG: After session filtering: {len(working_df)} rows")
-
-    # Apply date filter if provided
-    if date_filters and date_filters != ["All Days"]:
-        print(f"SIMPLE DATE DEBUG: date_filters={date_filters}")
-        date_mask = pd.Series([False] * len(working_df))
-
-        for date_filter in date_filters:
-            if date_filter != "All Days" and date_filter in ESMO_DATE_FILTERS:
-                date_keywords = ESMO_DATE_FILTERS[date_filter]
-                for keyword in date_keywords:
-                    keyword_matches = working_df['Date'].astype(str).str.contains(keyword, case=False, na=False, regex=False)
-                    date_mask = date_mask | keyword_matches
-                    print(f"SIMPLE DATE DEBUG: '{keyword}' matches: {keyword_matches.sum()}")
-
-        working_df = working_df[date_mask]
-        print(f"SIMPLE DATE DEBUG: After date filtering: {len(working_df)} rows")
-
-    # Apply proper multi-filtering logic for drug and TA filters
-    if drug_filters or ta_filters:
-        # Use the comprehensive multi-filter function
-        filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
-        filter_context = get_filter_context_multi(drug_filters, ta_filters, session_filters, date_filters)
-    else:
-        # Only session/date filters applied - use the simple result
-        filtered_df = working_df
-        filter_context = {"total_sessions": len(filtered_df), "filter_summary": f"Sessions: {session_filters}, Dates: {date_filters}"}
-
-    # Limit to first 50 only when no filters are applied (to improve performance)
-    display_df = filtered_df
+    # If no filters selected, return first 50 results to avoid overwhelming
     if not drug_filters and not ta_filters and not session_filters and not date_filters:
-        display_df = filtered_df.head(50)
+        return df_global.head(50)
 
-    # Use original dataset column names that the frontend expects
-    display_columns = ["Title", "Speakers", "Speaker Location", "Affiliation", "Identifier", "Room", "Date", "Time", "Session", "Theme"]
-    valid_columns = [col for col in display_columns if col in display_df.columns]
+    # Handle "Competitive Landscape" drug filter (show all)
+    if "Competitive Landscape" in drug_filters:
+        drug_filters = list(ESMO_DRUG_FILTERS.keys())
 
-    return jsonify({
-        "data": display_df[valid_columns].to_dict('records'),
-        "total": len(filtered_df),
-        "showing": len(display_df),
-        "filter_context": filter_context,
-        "available_filters": {
-            "drug_filters": get_available_drug_filters(),
-            "ta_filters": get_available_therapeutic_areas()
-        }
-    })
+    # Default to "All" if no selection
+    if not drug_filters:
+        drug_filters = ["Competitive Landscape"]
+    if not ta_filters:
+        ta_filters = ["All Therapeutic Areas"]
+    if not session_filters:
+        session_filters = ["All Session Types"]
+    if not date_filters:
+        date_filters = ["All Dates"]
 
-@app.route('/api/debug/filter')
-def debug_filter():
-    """Debug endpoint to test filtering logic"""
-    drug_filter = request.args.get('drug_filter', 'Avelumab Focus')
-    print(f"DEBUG: Testing filter '{drug_filter}'")
+    # Start with all True - each filter will AND to narrow down results
+    combined_mask = pd.Series([True] * len(df_global), index=df_global.index)
 
-    try:
-        filtered_df = get_filtered_dataframe(drug_filter, "All Therapeutic Areas")
-        result_count = len(filtered_df)
-        print(f"DEBUG: Filter returned {result_count} results")
+    # Apply drug filters (OR across multiple drug selections, AND with other filter types)
+    if drug_filters and "All Drugs" not in drug_filters and "Competitive Landscape" not in drug_filters:
+        drug_combined_mask = pd.Series([False] * len(df_global), index=df_global.index)
+        for drug_filter in drug_filters:
+            drug_config = ESMO_DRUG_FILTERS.get(drug_filter, {})
+            keywords = drug_config.get("keywords", [])
 
-        if result_count > 0:
-            sample_titles = filtered_df['study_title'].head(3).tolist()
-            return jsonify({
-                "filter": drug_filter,
-                "count": result_count,
-                "sample_titles": sample_titles
-            })
-        else:
-            return jsonify({
-                "filter": drug_filter,
-                "count": 0,
-                "error": "No results found"
-            })
-    except Exception as e:
-        print(f"DEBUG: Error in filtering: {e}")
-        return jsonify({"error": str(e)}), 500
+            # Build drug keyword mask
+            drug_mask = pd.Series([False] * len(df_global), index=df_global.index)
+            if keywords:
+                for keyword in keywords:
+                    drug_mask = drug_mask | df_global["Title"].str.contains(keyword, case=False, na=False, regex=False)
 
-@app.route('/api/debug/search')
-def debug_search():
-    """Debug endpoint to test search logic"""
-    keyword = request.args.get('keyword', 'tepotinib')
-    print(f"DEBUG SEARCH: Testing search for '{keyword}'")
+            # If drug has indication-specific TA filter (e.g., Cetuximab H&N vs CRC), apply it
+            if "ta_filter" in drug_config:
+                ta_name = drug_config["ta_filter"]
+                ta_mask = apply_therapeutic_area_filter(df_global, ta_name)
+                drug_mask = drug_mask & ta_mask
 
-    try:
-        # Use full dataset for search test
-        current_df = df_global.copy()
-        print(f"DEBUG SEARCH: Starting with {len(current_df)} total records")
+            drug_combined_mask = drug_combined_mask | drug_mask
 
-        # Search across all fields using ESMO column structure
-        mask = (
-            safe_contains(current_df["study_title"], keyword, regex=False) |
-            safe_contains(current_df["speaker"], keyword, regex=False) |
-            safe_contains(current_df["affiliation"], keyword, regex=False) |
-            safe_contains(current_df["location"], keyword, regex=False) |
-            current_df["identifier"].astype(str).str.contains(keyword, case=False, na=False, regex=False) |
-            safe_contains(current_df["session_category"], keyword, regex=False) |
-            safe_contains(current_df["main_filters"], keyword, regex=False)
-        )
+        combined_mask = combined_mask & drug_combined_mask
 
-        search_results_df = current_df.loc[mask]
-        result_count = len(search_results_df)
-        print(f"DEBUG SEARCH: Found {result_count} results")
+    # Apply TA filters (OR across multiple TA selections, AND with other filter types)
+    if ta_filters and "All Therapeutic Areas" not in ta_filters:
+        ta_combined_mask = pd.Series([False] * len(df_global), index=df_global.index)
+        for ta_filter in ta_filters:
+            ta_mask = apply_therapeutic_area_filter(df_global, ta_filter)
+            ta_combined_mask = ta_combined_mask | ta_mask
+        combined_mask = combined_mask & ta_combined_mask
 
-        if result_count > 0:
-            sample_titles = search_results_df['study_title'].head(3).tolist()
-            return jsonify({
-                "keyword": keyword,
-                "count": result_count,
-                "sample_titles": sample_titles
-            })
-        else:
-            return jsonify({
-                "keyword": keyword,
-                "count": 0,
-                "error": "No results found"
-            })
-    except Exception as e:
-        print(f"DEBUG SEARCH: Error: {e}")
-        return jsonify({"error": str(e)}), 500
+    # Apply session filters (OR across multiple session selections, AND with other filter types)
+    # Use EXACT matching to distinguish "Poster" from "ePoster"
+    if session_filters and "All Session Types" not in session_filters:
+        session_combined_mask = pd.Series([False] * len(df_global), index=df_global.index)
+        for session_filter in session_filters:
+            if session_filter == "Symposia":
+                # Special handling: Match any session containing "Symposium" EXCEPT "Industry-Sponsored Symposium"
+                symposium_mask = df_global["Session"].str.contains("Symposium", case=False, na=False, regex=False)
+                industry_mask = df_global["Session"] == "Industry-Sponsored Symposium"
+                session_combined_mask = session_combined_mask | (symposium_mask & ~industry_mask)
+            else:
+                session_types = ESMO_SESSION_TYPES.get(session_filter, [])
+                if session_types:
+                    for session_type in session_types:
+                        session_combined_mask = session_combined_mask | (df_global["Session"] == session_type)
+        combined_mask = combined_mask & session_combined_mask
+
+    # Apply date filters (OR across multiple date selections, AND with other filter types)
+    # Use EXACT matching for dates
+    if date_filters and "All Dates" not in date_filters:
+        date_combined_mask = pd.Series([False] * len(df_global), index=df_global.index)
+        for date_filter in date_filters:
+            dates = ESMO_DATES.get(date_filter, [])
+            if dates:
+                for date in dates:
+                    date_combined_mask = date_combined_mask | (df_global["Date"] == date)
+        combined_mask = combined_mask & date_combined_mask
+
+    # Apply combined mask and deduplicate
+    filtered_df = df_global[combined_mask].copy()
+    filtered_df = filtered_df.drop_duplicates()
+
+    return filtered_df
+
+# ============================================================================
+# SEARCH LOGIC
+# ============================================================================
 
 def parse_boolean_query(query: str, df: pd.DataFrame, search_columns: list) -> pd.Series:
-    """
-    Parse and execute boolean search queries with AND, OR, NOT operators
-    Returns a boolean mask for the dataframe
-    """
-    import re
-
-    # If no boolean operators, fall back to original search
+    """Parse boolean search with AND, OR, NOT operators."""
+    # If no boolean operators, use simple search
     if not any(op in query.upper() for op in ['AND', 'OR', 'NOT']):
         return execute_simple_search(query, df, search_columns)
 
-    # Replace boolean operators with symbols for easier parsing
-    normalized_query = query.upper()
-    normalized_query = re.sub(r'\bAND\b', ' & ', normalized_query)
-    normalized_query = re.sub(r'\bOR\b', ' | ', normalized_query)
-    normalized_query = re.sub(r'\bNOT\b', ' ~ ', normalized_query)
+    # Parse the query into tokens and operators
+    # Split by AND, OR while preserving case for search terms
+    terms = []
+    operators = []
 
-    # Split by operators but keep the operators
-    tokens = re.split(r'(\s*[&|~]\s*)', normalized_query)
-    tokens = [token.strip() for token in tokens if token.strip()]
-
-    # Build the boolean mask step by step
-    result_mask = pd.Series([True] * len(df))
+    # Split query by boolean operators (case-insensitive)
+    parts = re.split(r'\s+(AND|OR|NOT)\s+', query, flags=re.IGNORECASE)
 
     i = 0
-    while i < len(tokens):
-        term = tokens[i].strip()
-
-        if term in ['&', '|', '~']:
+    while i < len(parts):
+        part = parts[i].strip()
+        if not part:
             i += 1
             continue
 
-        # Get mask for current term
-        if term.startswith('~'):
-            # NOT operation
-            search_term = term[1:].strip()
-            term_mask = ~execute_simple_search(search_term, df, search_columns)
+        if part.upper() in ['AND', 'OR', 'NOT']:
+            operators.append(part.upper())
+            i += 1
         else:
-            term_mask = execute_simple_search(term, df, search_columns)
+            terms.append(part)
+            i += 1
 
-        # Apply operator if we have one
-        if i > 0 and i > 1:
-            prev_op = tokens[i-1].strip()
-            if prev_op == '&':
-                result_mask = result_mask & term_mask
-            elif prev_op == '|':
-                result_mask = result_mask | term_mask
+    # Build result mask
+    if not terms:
+        return pd.Series([False] * len(df), index=df.index)
+
+    # Start with first term
+    result_mask = execute_simple_search(terms[0], df, search_columns)
+
+    # Process remaining terms with operators
+    term_idx = 1
+    op_idx = 0
+
+    while term_idx < len(terms) and op_idx < len(operators):
+        operator = operators[op_idx]
+
+        if operator == 'NOT' and term_idx < len(terms):
+            # NOT negates the next term and combines with previous result using AND
+            not_mask = ~execute_simple_search(terms[term_idx], df, search_columns)
+            result_mask = result_mask & not_mask
+            term_idx += 1
+            op_idx += 1
+        elif operator == 'AND' and term_idx < len(terms):
+            term_mask = execute_simple_search(terms[term_idx], df, search_columns)
+            result_mask = result_mask & term_mask
+            term_idx += 1
+            op_idx += 1
+        elif operator == 'OR' and term_idx < len(terms):
+            term_mask = execute_simple_search(terms[term_idx], df, search_columns)
+            result_mask = result_mask | term_mask
+            term_idx += 1
+            op_idx += 1
         else:
-            # First term
-            result_mask = term_mask
-
-        i += 1
+            op_idx += 1
 
     return result_mask
 
 def execute_simple_search(keyword: str, df: pd.DataFrame, search_columns: list) -> pd.Series:
-    """
-    Execute comprehensive search across specified columns
-    Returns a boolean mask for the dataframe
-    """
-    import re
+    """Execute smart search: partial matching for single words, exact phrase for multi-word queries."""
+    # Initialize mask with same index as df to avoid index misalignment
+    mask = pd.Series([False] * len(df), index=df.index)
 
-    mask = pd.Series([False] * len(df))
+    # Strip quotes if present (for explicit phrase search)
+    keyword = keyword.strip('"').strip("'")
 
-    # Check if keyword looks like an identifier (LBA, poster numbers, etc.)
-    is_identifier_like = bool(re.match(r'^LBA\d*$|^\d+[A-Za-z]+$|^[A-Za-z]+\d+$|^\d+[A-Za-z]$', keyword))
-
-    # ESMO 2025 dataset columns only - exact column names from CSV
+    # ESMO columns (using original CSV names)
     esmo_columns = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier', 'Room', 'Date', 'Time', 'Session', 'Theme']
-
-    # Use only the actual ESMO columns that exist in dataframe
     actual_columns = [col for col in esmo_columns if col in df.columns]
 
-    print(f"SEARCH DEBUG: Searching in {len(actual_columns)} columns: {actual_columns}")
+    # Check if multi-word query (contains space)
+    is_multi_word = ' ' in keyword
 
-    # Debug: Check Affiliation column specifically for MD Anderson searches
-    if 'Affiliation' in df.columns and 'anderson' in keyword.lower():
-        affiliation_sample = df['Affiliation'].astype(str).str.contains(keyword, case=False, na=False).sum()
-        print(f"SEARCH DEBUG: Affiliation column matches for '{keyword}': {affiliation_sample}")
-
-    for col in actual_columns:
-        try:
-            if is_identifier_like and col in ['Identifier', 'Abstract #', 'Poster #']:
-                # For identifiers, use word boundary matching to avoid partial matches
-                col_mask = df[col].astype(str).str.contains(rf'\b{re.escape(keyword)}\b', case=False, na=False, regex=True)
-            else:
-                # For other fields, use contains search
+    if is_multi_word:
+        # Multi-word query: Use exact phrase matching with word boundaries
+        # This prevents "mini oral" from matching "medical oral nutrition"
+        search_pattern = r'\b' + re.escape(keyword) + r'\b'
+        for col in actual_columns:
+            try:
+                col_mask = df[col].astype(str).str.contains(search_pattern, case=False, na=False, regex=True)
+                mask = mask | col_mask
+            except Exception as e:
+                continue
+    else:
+        # Single word query: Use partial substring matching
+        # This allows "avel" to match "avelumab"
+        for col in actual_columns:
+            try:
                 col_mask = df[col].astype(str).str.contains(keyword, case=False, na=False, regex=False)
-
-            matches_in_col = col_mask.sum()
-            if matches_in_col > 0:
-                print(f"SEARCH DEBUG: {col} matches: {matches_in_col}")
-            mask = mask | col_mask
-        except Exception as e:
-            print(f"SEARCH DEBUG: Error searching column {col}: {e}")
-            continue
+                mask = mask | col_mask
+            except Exception as e:
+                continue
 
     return mask
 
 def highlight_search_results(df: pd.DataFrame, keyword: str) -> pd.DataFrame:
-    """
-    Add HTML highlighting to search results
-    """
-    import re
+    """Add HTML highlighting to search results."""
+    if df.empty:
+        return df
 
-    # Create a copy to avoid modifying original data
-    highlighted_df = df.copy()
+    df_highlighted = df.copy()
 
-    # Define ESMO columns to highlight - ALL columns from ESMO dataset
-    text_columns = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier', 'Room', 'Date', 'Time', 'Session', 'Theme']
+    # Columns to highlight
+    cols_to_highlight = ['Title', 'Speakers', 'Affiliation', 'Speaker Location', 'Session', 'Theme']
 
-    # Create highlight pattern - case insensitive
-    pattern = re.compile(f'({re.escape(keyword)})', re.IGNORECASE)
-
-    for col in text_columns:
-        if col in highlighted_df.columns:
-            highlighted_df[col] = highlighted_df[col].astype(str).apply(
-                lambda x: pattern.sub(r'<mark style="background-color: yellow; padding: 1px 2px; border-radius: 2px;">\1</mark>', x)
-                if pd.notna(x) and keyword.lower() in x.lower() else x
+    for col in cols_to_highlight:
+        if col in df_highlighted.columns:
+            df_highlighted[col] = df_highlighted[col].astype(str).apply(
+                lambda x: re.sub(
+                    f'({re.escape(keyword)})',
+                    r'<mark>\1</mark>',
+                    x,
+                    flags=re.IGNORECASE
+                ) if keyword else x
             )
 
-    return highlighted_df
+    return df_highlighted
 
-@app.route('/api/search')
-def search_data_api():
-    if not initialize_app_globals():
-        return jsonify({"error": "Application data could not be loaded. Check server logs for details."}), 500
+# ============================================================================
+# SMART QUERY CLASSIFICATION (GPT-5-MINI)
+# ============================================================================
 
-    # Get filters using the same parameter names as /api/data (with backward compatibility)
-    drug_filters = request.args.getlist('drug_filters')
-    ta_filters = request.args.getlist('ta_filters')
-    session_filters = request.args.getlist('session_filters')
-    date_filters = request.args.getlist('date_filters')
-
-    # Backward compatibility: if no array parameters, check for old single parameters
-    if not drug_filters and request.args.get('drug_filter'):
-        drug_filters = [request.args.get('drug_filter')]
-    if not ta_filters and request.args.get('ta_filter'):
-        ta_filters = [request.args.get('ta_filter')]
-    if not session_filters and request.args.get('session_filter'):
-        session_filters = [request.args.get('session_filter')]
-    if not date_filters and request.args.get('date_filter'):
-        date_filters = [request.args.get('date_filter')]
-
-    keyword = request.args.get('keyword', '').strip()
-
-    if not keyword:
-        return jsonify([])
-
-    # Apply filters first, then search within filtered results
-    current_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
-
-    # Search across all fields with Boolean search support
-    print(f"SEARCH DEBUG: Searching for '{keyword}' in dataframe with {len(current_df)} rows")
-    print(f"SEARCH DEBUG: Available columns: {list(current_df.columns)}")
-
-    # Search ALL text fields for comprehensive results
-    search_columns = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Room', 'Date', 'Time', 'Session', 'Theme', 'Identifier']
-
-    # Use Boolean search parser (supports AND, OR, NOT)
-    mask = parse_boolean_query(keyword, current_df, search_columns)
-
-    print(f"SEARCH DEBUG: Total matches: {mask.sum()}")
-
-    # Use original dataset column names for search results display
-    display_columns = ["Title", "Speakers", "Speaker Location", "Affiliation", "Identifier", "Room", "Date", "Time", "Session", "Theme"]
-    valid_columns = [col for col in display_columns if col in current_df.columns]
-    search_results_df = current_df.loc[mask, valid_columns]
-
-    # Add highlighting for search terms (only for simple searches, not boolean)
-    if not any(op in keyword.upper() for op in ['AND', 'OR', 'NOT']):
-        search_results_df = highlight_search_results(search_results_df, keyword)
-
-    result_count = len(search_results_df)
-    print(f"SEARCH DEBUG: keyword='{keyword}', found {result_count} results")
-    return jsonify(search_results_df.to_dict('records'))
-
-# API Endpoint to run a specific playbook
-@app.route('/api/playbook/kol/stream', methods=['GET'])
-def stream_kol_analysis():
+def classify_user_query(user_message: str) -> dict:
     """
-    Token-by-token streaming endpoint for KOL analysis.
-    Returns Server-Sent Events with each token as it's generated.
+    Use GPT-5-mini to classify user query and extract search parameters.
+    Returns structured JSON for dataset querying and table generation.
     """
-    if not initialize_app_globals():
-        return "data: Error: Application data could not be loaded\n\n", 500, {'Content-Type': 'text/event-stream'}
+    classification_prompt = f"""You are a query classifier for ESMO 2025 conference data.
 
-    drug_filters = request.args.getlist('drug_filters')
-    ta_filters = request.args.getlist('ta_filters')
+Available data columns: Title, Speakers, Speaker Location, Affiliation, Identifier, Room, Date, Time, Session, Theme
 
-    # Backward compatibility: if no array parameters, check for old single parameters
-    if not drug_filters and request.args.get('drug_filter'):
-        drug_filters = [request.args.get('drug_filter')]
-    if not ta_filters and request.args.get('ta_filter'):
-        ta_filters = [request.args.get('ta_filter')]
+Classify this user query and extract search intent:
+"{user_message}"
 
-    filtered_df_for_playbook = get_filtered_dataframe_multi(drug_filters, ta_filters)
+Return ONLY valid JSON with this exact structure:
+{{
+  "entity_type": "drug" | "hcp" | "institution" | "session_type" | "date" | "therapeutic_area" | "general",
+  "search_terms": ["term1", "term2"],
+  "generate_table": true | false,
+  "table_type": "author_publications" | "drug_studies" | "institution_ranking" | "session_list" | null,
+  "filter_context": {{
+    "drug": "drug name if mentioned" or null,
+    "ta": "therapeutic area if mentioned" or null,
+    "date": "Day X if mentioned" or null,
+    "session": "session type if mentioned" or null
+  }},
+  "top_n": 10
+}}
 
-    # Generate top authors table
-    top_authors_table = get_top_authors(df_sig(filtered_df_for_playbook), filtered_df_for_playbook, 20)
+Classification examples:
 
-    def generate():
-        try:
-            for token in generate_kol_analysis_streaming(filtered_df_for_playbook, top_authors_table, ta_filter):
-                yield token
-        except Exception as e:
-            yield f"data: Error: {str(e)}\n\n"
+"Tell me about Andrea Necchi" or "Dr. Necchi publications"
+→ {{"entity_type": "hcp", "search_terms": ["Andrea Necchi", "Necchi"], "generate_table": true, "table_type": "author_publications", "filter_context": {{}}, "top_n": 20}}
 
-    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
+"What is enfortumab vedotin?" or "Tell me about EV"
+→ {{"entity_type": "drug", "search_terms": ["enfortumab vedotin", "EV", "enfortumab"], "generate_table": true, "table_type": "drug_studies", "filter_context": {{"drug": "enfortumab vedotin"}}, "top_n": 20}}
 
-@app.route('/api/playbook/kol/single', methods=['GET'])
-def stream_single_kol():
-    """
-    Stream analysis for a single KOL. Returns quickly (under 30 seconds).
-    Parameters: ta (therapeutic area), author (KOL name), index (position in list)
-    """
-    if not initialize_app_globals():
-        return jsonify({"error": "Application data could not be loaded"}), 500
+"Most active institutions in bladder cancer"
+→ {{"entity_type": "institution", "search_terms": [], "generate_table": true, "table_type": "institution_ranking", "filter_context": {{"ta": "bladder cancer"}}, "top_n": 10}}
 
-    ta_filter = request.args.get('ta', 'All')
-    author_name = request.args.get('author', '')
-    kol_index = request.args.get('index', '0')
+"What are all the posters on day 3 in bladder cancer?"
+→ {{"entity_type": "session_type", "search_terms": ["poster"], "generate_table": true, "table_type": "session_list", "filter_context": {{"date": "Day 3", "ta": "bladder cancer"}}, "top_n": 50}}
 
-    if not author_name:
-        return jsonify({"error": "Author name required"}), 400
+"What are the latest trends in immunotherapy?"
+→ {{"entity_type": "general", "search_terms": ["immunotherapy", "immune checkpoint"], "generate_table": false, "table_type": null, "filter_context": {{}}, "top_n": 15}}
 
-    # Filter data based on therapeutic area
-    filtered_df = get_filtered_dataframe(ta_filter)
+Important drugs to recognize: avelumab, tepotinib, cetuximab (erbitux), enfortumab vedotin (EV), pembrolizumab (keytruda), nivolumab (opdivo), durvalumab (imfinzi)
+Important TAs: bladder cancer, urothelial, NSCLC, lung cancer, colorectal (CRC), head & neck (H&N, HNSCC), renal (RCC)"""
 
-    def generate():
-        try:
-            # Send immediate heartbeat
-            yield sse_event("status", {"message": f"⏳ Analyzing {author_name}..."})
+    try:
+        response = client.responses.create(
+            model="gpt-5-mini",
+            input=[{"role": "user", "content": classification_prompt}],
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=400
+        )
 
-            # Get author's publications
-            author_data = filtered_df[filtered_df['Authors'].str.contains(author_name, case=False, na=False)]
+        classification = json.loads(response.output_text)
+        return classification
 
-            if author_data.empty:
-                yield sse_event("kol_complete", {
-                    "author": author_name,
-                    "index": kol_index,
-                    "content": f"No publications found for {author_name} in {ta_filter}."
-                })
-                return
+    except Exception as e:
+        print(f"[CLASSIFICATION ERROR] {e}")
+        return {
+            "entity_type": "general",
+            "search_terms": [],
+            "generate_table": False,
+            "table_type": None,
+            "filter_context": {},
+            "top_n": 15
+        }
 
-            # Build analysis prompt
-            abstracts_list = []
-            for _, row in author_data.iterrows():
-                abstract_entry = f"• {row['Title']}"
-                if pd.notna(row['Institutions']):
-                    institutions = row['Institutions'].split(';')[0]  # First institution
-                    abstract_entry += f" ({institutions})"
-                abstracts_list.append(abstract_entry)
 
-            abstracts_text = "\n".join(abstracts_list[:10])  # Limit to 10 abstracts
+def apply_filters_from_context(df: pd.DataFrame, filter_context: dict) -> pd.DataFrame:
+    """Apply filters based on classification context."""
+    filtered = df.copy()
 
-            individual_prompt = f"""Analyze this KOL's research profile at ASCO GU 2025:
+    # Apply TA filter using ESMO_THERAPEUTIC_AREAS
+    if filter_context.get("ta"):
+        ta_name = filter_context["ta"]
+        # Try to find matching TA in ESMO_THERAPEUTIC_AREAS (case-insensitive)
+        ta_config = None
+        for key, config in ESMO_THERAPEUTIC_AREAS.items():
+            if ta_name.lower() in key.lower() or key.lower() in ta_name.lower():
+                ta_config = config
+                break
 
-**KOL**: {author_name}
-**Therapeutic Area**: {ta_filter}
-**Publications** ({len(author_data)}):
-{abstracts_text}
+        if ta_config and ta_config.get("keywords"):
+            mask = pd.Series([False] * len(filtered))
+            for keyword in ta_config["keywords"]:
+                mask |= filtered['Title'].str.contains(keyword, case=False, na=False)
 
-Provide a comprehensive analysis covering:
-1. **Research Focus**: Primary areas of investigation
-2. **Clinical Impact**: Significance of their work
-3. **Collaboration Patterns**: Key institutional partnerships
-4. **EMD Serono Relevance**: Potential for avelumab-related collaborations
+            # Apply exclusions if present
+            if ta_config.get("exclusions"):
+                for exclusion in ta_config["exclusions"]:
+                    mask &= ~filtered['Title'].str.contains(exclusion, case=False, na=False)
 
-Deliver insights in paragraph form, 150-200 words."""
+            filtered = filtered[mask]
+        else:
+            # Fallback to direct keyword search
+            mask = filtered['Title'].str.contains(filter_context["ta"], case=False, na=False)
+            filtered = filtered[mask]
 
-            # Stream the AI response
-            stream = client.responses.create(
-                model="gpt-5-mini",
-                input=[
-                    {"role": "system", "content": "You are a medical affairs analyst. Provide strategic insights immediately without delay."},
-                    {"role": "user", "content": individual_prompt}
-                ],
-                reasoning={"effort": "low"},
-                text={"verbosity": "low"},
-                max_output_tokens=300,
-                stream=True
-            )
+    # Apply drug filter - just search for the drug name in Title
+    if filter_context.get("drug"):
+        drug_name = filter_context["drug"]
+        mask = filtered['Title'].str.contains(drug_name, case=False, na=False)
+        filtered = filtered[mask]
 
-            profile_content = ""
+    # Apply session filter
+    if filter_context.get("session"):
+        filtered = filtered[filtered['Session'].str.contains(filter_context["session"], case=False, na=False)]
 
-            for event in stream:
-                if event.type == "response.output_text.delta":
-                    token = event.delta
-                    profile_content += token
-                    yield sse_event("token", {"token": token})
+    # Apply date filter
+    if filter_context.get("date"):
+        # Extract date pattern (e.g., "Day 3" -> "10/19/2025")
+        date_str = filter_context["date"]
+        if "day" in date_str.lower():
+            date_config = ESMO_DATES.get(date_str, [])
+            if date_config:
+                mask = pd.Series([False] * len(filtered))
+                for date_val in date_config:
+                    mask |= filtered['Date'].str.contains(date_val, case=False, na=False)
+                filtered = filtered[mask]
+        else:
+            filtered = filtered[filtered['Date'].str.contains(date_str, case=False, na=False)]
 
-            # Send completion event
-            yield sse_event("kol_complete", {
-                "author": author_name,
-                "index": kol_index,
-                "content": profile_content
+    return filtered
+
+
+def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
+    """Generate appropriate table based on classification."""
+
+    table_type = classification.get("table_type")
+    search_terms = classification.get("search_terms", [])
+    filter_ctx = classification.get("filter_context", {})
+    top_n = classification.get("top_n", 10)
+
+    # For entity searches (drug, author), search the FULL dataset first
+    # Then optionally narrow by TA/date AFTER finding the entity
+    # This ensures we find "disitamab vedotin" even if filter_context has TA filters
+
+    if table_type in ["drug_studies", "author_publications"]:
+        # Use full dataset for entity search
+        filtered_df = df.copy()
+    else:
+        # Apply filter context for ranking/aggregation tables
+        filtered_df = apply_filters_from_context(df, filter_ctx)
+
+    if table_type == "author_publications":
+        # Search for author in Speakers column
+        if not search_terms:
+            return "", pd.DataFrame()
+
+        print(f"[AUTHOR SEARCH] Searching for: {search_terms} in {len(filtered_df)} records")
+
+        mask = pd.Series([False] * len(filtered_df))
+        for term in search_terms:
+            term_mask = filtered_df['Speakers'].str.contains(term, case=False, na=False)
+            matches = term_mask.sum()
+            print(f"[AUTHOR SEARCH] Term '{term}' found {matches} matches")
+            mask |= term_mask
+
+        results = filtered_df[mask][['Identifier', 'Title', 'Speakers', 'Affiliation', 'Session', 'Date']].head(top_n)
+
+        print(f"[AUTHOR SEARCH] Total results: {len(results)}")
+
+        if results.empty:
+            no_results_html = f"""<div class='entity-table-container'>
+<h6 class='entity-table-title'>📊 Author Search: {search_terms[0]}</h6>
+<p class='text-muted' style='margin: 0;'>No presentations found for "{search_terms[0]}" in the ESMO 2025 dataset. Try searching for the full name or last name only.</p>
+</div>"""
+            return no_results_html, results
+
+        table_html = f"""<div class='entity-table-container'>
+<h6 class='entity-table-title'>📊 Publications by {search_terms[0]} ({len(results)} found)</h6>
+{results.to_html(index=False, classes='table table-sm table-striped', escape=False)}
+</div>"""
+        return table_html, results
+
+    elif table_type == "drug_studies":
+        # Search for drug in Title column
+        if not search_terms:
+            return "", pd.DataFrame()
+
+        print(f"[DRUG SEARCH] Searching for: {search_terms} in {len(filtered_df)} records")
+
+        mask = pd.Series([False] * len(filtered_df))
+        for term in search_terms:
+            term_mask = filtered_df['Title'].str.contains(term, case=False, na=False)
+            matches = term_mask.sum()
+            print(f"[DRUG SEARCH] Term '{term}' found {matches} matches")
+            mask |= term_mask
+
+        results = filtered_df[mask][['Identifier', 'Title', 'Speakers', 'Affiliation', 'Session']].head(top_n)
+
+        print(f"[DRUG SEARCH] Total results: {len(results)}")
+
+        if results.empty:
+            no_results_html = f"""<div class='entity-table-container'>
+<h6 class='entity-table-title'>💊 Drug Search: {search_terms[0]}</h6>
+<p class='text-muted' style='margin: 0;'>No studies found in the ESMO 2025 dataset mentioning "{search_terms[0]}". This drug may not be featured at this conference.</p>
+</div>"""
+            return no_results_html, results
+
+        table_html = f"""<div class='entity-table-container'>
+<h6 class='entity-table-title'>💊 Studies mentioning {search_terms[0]} ({len(results)} found)</h6>
+{results.to_html(index=False, classes='table table-sm table-striped', escape=False)}
+</div>"""
+        return table_html, results
+
+    elif table_type == "institution_ranking":
+        # Count publications per institution
+        institution_counts = filtered_df['Affiliation'].value_counts().head(top_n)
+        ranking_df = pd.DataFrame({
+            'Rank': range(1, len(institution_counts) + 1),
+            'Institution': institution_counts.index,
+            'Publications': institution_counts.values
+        })
+
+        context_str = f" in {filter_ctx.get('ta', 'all areas')}" if filter_ctx.get('ta') else ""
+        table_html = f"""<div class='entity-table-container'>
+<h6 class='entity-table-title'>🏥 Top {top_n} Most Active Institutions{context_str}</h6>
+{ranking_df.to_html(index=False, classes='table table-sm table-striped', escape=False)}
+</div>"""
+        return table_html, ranking_df
+
+    elif table_type == "session_list":
+        # Filter by session type
+        if search_terms:
+            mask = pd.Series([False] * len(filtered_df))
+            for term in search_terms:
+                mask |= filtered_df['Session'].str.contains(term, case=False, na=False)
+            results = filtered_df[mask]
+        else:
+            results = filtered_df
+
+        results = results[['Identifier', 'Title', 'Speakers', 'Room', 'Time', 'Date']].head(top_n)
+
+        context_str = " matching criteria" if filter_ctx else ""
+        table_html = f"""<div class='entity-table-container'>
+<h6 class='entity-table-title'>📅 Sessions{context_str} ({len(results)} found)</h6>
+{results.to_html(index=False, classes='table table-sm table-striped', escape=False)}
+</div>"""
+        return table_html, results
+
+    return "", pd.DataFrame()
+
+# ============================================================================
+# TABLE GENERATION FUNCTIONS
+# ============================================================================
+
+def generate_top_authors_table(df: pd.DataFrame, n: int = 15) -> pd.DataFrame:
+    """Generate top N authors by unique abstracts."""
+    if df.empty:
+        return pd.DataFrame()
+
+    # Filter out rows with empty/null speaker names before grouping
+    df_with_speakers = df[df['Speakers'].notna() & (df['Speakers'].str.strip() != '')]
+
+    if df_with_speakers.empty:
+        return pd.DataFrame()
+
+    # Count unique studies per speaker
+    author_counts = df_with_speakers.groupby('Speakers').agg({
+        'Identifier': 'count',
+        'Affiliation': 'first',
+        'Speaker Location': 'first'
+    }).reset_index()
+
+    author_counts.columns = ['Speaker', '# Studies', 'Affiliation', 'Location']
+    author_counts = author_counts.sort_values('# Studies', ascending=False).head(n)
+
+    return author_counts
+
+def generate_top_institutions_table(df: pd.DataFrame, n: int = 15) -> pd.DataFrame:
+    """Generate top N institutions by unique abstracts."""
+    if df.empty:
+        return pd.DataFrame()
+
+    # Normalize institution names (extract main institution from complex affiliations)
+    def normalize_institution(affiliation):
+        if pd.isna(affiliation) or affiliation == '' or str(affiliation).strip() == '':
+            return None  # Return None for empty/invalid so we can filter out
+
+        # Remove department/division prefixes
+        aff = re.sub(r'^Department of [^,]+,\s*', '', str(affiliation), flags=re.IGNORECASE)
+        aff = re.sub(r'^Division of [^,]+,\s*', '', aff, flags=re.IGNORECASE)
+        aff = re.sub(r'^Institute of [^,]+,\s*', '', aff, flags=re.IGNORECASE)
+        aff = re.sub(r'^School of [^,]+,\s*', '', aff, flags=re.IGNORECASE)
+        aff = re.sub(r'^Faculty of [^,]+,\s*', '', aff, flags=re.IGNORECASE)
+        aff = re.sub(r'^Center for [^,]+,\s*', '', aff, flags=re.IGNORECASE)
+        aff = re.sub(r'^Centre for [^,]+,\s*', '', aff, flags=re.IGNORECASE)
+
+        # Extract main institution (first part before comma)
+        parts = aff.split(',')
+        if len(parts) > 0:
+            institution = parts[0].strip()
+
+            # Filter out generic terms and single city names
+            generic_terms = [
+                'department of medicine', 'school of medicine', 'institute of pathology',
+                'division of oncology', 'department of oncology', 'medical oncology',
+                'clinical oncology', 'radiation oncology', 'medicine', 'oncology',
+                'pathology', 'surgery', 'radiology', 'pharmacy'
+            ]
+
+            # Check if institution is too short (likely just a city) or generic
+            if len(institution) < 10 or institution.lower() in generic_terms:
+                # Try second part if available (might be the actual institution name)
+                if len(parts) > 1:
+                    institution = parts[1].strip()
+                    # Still filter out if too short
+                    if len(institution) < 10:
+                        return None
+                else:
+                    return None
+
+            if institution:  # Only return if non-empty
+                return institution
+        return None
+
+    df['normalized_institution'] = df['Affiliation'].apply(normalize_institution)
+
+    # Filter out None/empty institutions before grouping
+    df_with_institutions = df[df['normalized_institution'].notna()]
+
+    if df_with_institutions.empty:
+        return pd.DataFrame()
+
+    # Fuzzy merge similar institution names
+    def get_canonical_name(institution):
+        """Map similar institution names to canonical form."""
+        inst_lower = institution.lower()
+
+        # IRCCS variants
+        if 'irccs' in inst_lower and ('san raffaele' in inst_lower or 'raffaele' in inst_lower):
+            return 'IRCCS San Raffaele Hospital'
+        if 'fondazione irccs' in inst_lower or 'irccs istituto' in inst_lower:
+            # Generic IRCCS - use original name
+            return institution
+
+        # Dana-Farber variants (with or without partners)
+        if 'dana-farber' in inst_lower or 'dana farber' in inst_lower:
+            return 'Dana-Farber Cancer Institute'
+
+        # MD Anderson variants
+        if 'md anderson' in inst_lower or 'anderson cancer' in inst_lower:
+            return 'MD Anderson Cancer Center'
+
+        # Memorial Sloan Kettering variants
+        if 'sloan kettering' in inst_lower or 'mskcc' in inst_lower or 'memorial sloan' in inst_lower:
+            return 'Memorial Sloan Kettering Cancer Center'
+
+        # Johns Hopkins variants
+        if 'johns hopkins' in inst_lower:
+            return 'Johns Hopkins University'
+
+        # Cleveland Clinic variants
+        if 'cleveland clinic' in inst_lower:
+            return 'Cleveland Clinic'
+
+        # Mayo Clinic variants
+        if 'mayo clinic' in inst_lower:
+            return 'Mayo Clinic'
+
+        # Default: return original
+        return institution
+
+    df_with_institutions['canonical_institution'] = df_with_institutions['normalized_institution'].apply(get_canonical_name)
+
+    # Count unique studies per canonical institution
+    inst_counts = df_with_institutions.groupby('canonical_institution').agg({
+        'Identifier': 'count',
+        'Speaker Location': lambda x: ', '.join(x.unique()[:3])  # Top 3 locations
+    }).reset_index()
+
+    inst_counts.columns = ['Institution', '# Studies', 'Locations']
+    inst_counts = inst_counts.sort_values('# Studies', ascending=False).head(n)
+
+    return inst_counts
+
+def generate_biomarker_moa_table(df: pd.DataFrame) -> pd.DataFrame:
+    """Generate comprehensive biomarker/MOA hits table."""
+    if df.empty:
+        return pd.DataFrame()
+
+    # Comprehensive biomarker and MOA keywords
+    biomarkers_moas = [
+        # Checkpoint inhibitors & IO
+        "PD-1", "PD-L1", "CTLA-4", "LAG-3", "TIM-3", "TIGIT",
+        # ADCs and targets
+        "ADC", "antibody-drug conjugate", "HER2", "TROP-2", "Nectin-4", "CEACAM5",
+        # FGFR pathway
+        "FGFR", "FGFR1", "FGFR2", "FGFR3", "FGFR4",
+        # Lung cancer biomarkers
+        "EGFR", "ALK", "ROS1", "MET", "KRAS", "BRAF", "RET", "NTRK", "HER2",
+        # Mismatch repair / microsatellite
+        "MSI", "MSI-H", "dMMR", "microsatellite",
+        # Tumor mutational burden
+        "TMB", "tumor mutational burden",
+        # Circulating tumor DNA
+        "ctDNA", "circulating tumor DNA",
+        # Cell cycle / DNA damage
+        "PARP", "ATR", "ATM", "BRCA", "HRD",
+        # Angiogenesis
+        "VEGF", "VEGFR",
+        # PI3K/AKT/mTOR
+        "PI3K", "AKT", "mTOR",
+        # CDK4/6
+        "CDK4", "CDK6",
+        # WNT pathway
+        "WNT", "beta-catenin",
+        # Epigenetic
+        "EZH2", "IDH",
+        # Cell surface
+        "CD38", "BCMA", "CD20",
+        # Treatment settings
+        "neoadjuvant", "adjuvant", "maintenance", "perioperative",
+        # Combination approaches
+        "combination", "doublet", "triplet",
+        # Resistance mechanisms
+        "resistance", "refractory"
+    ]
+
+    results = []
+    for keyword in biomarkers_moas:
+        count = df['Title'].str.contains(keyword, case=False, na=False).sum()
+        if count > 0:
+            results.append({'Biomarker/MOA': keyword, '# Studies': count})
+
+    result_df = pd.DataFrame(results)
+    if not result_df.empty:
+        result_df = result_df.sort_values('# Studies', ascending=False)
+
+    return result_df
+
+def generate_competitor_table(df: pd.DataFrame, n: int = 50) -> pd.DataFrame:
+    """Generate competitor drugs table with Drug and Company columns from drug database."""
+    if df.empty:
+        return pd.DataFrame()
+
+    # Load drug-company mapping from CSV
+    try:
+        drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
+        drug_db = pd.read_csv(drug_db_path)
+    except Exception as e:
+        print(f"Warning: Could not load Drug_Company_names.csv: {e}")
+        return pd.DataFrame()
+
+    # Find abstracts mentioning each drug (search both commercial and generic names)
+    results = []
+    for _, drug_row in drug_db.iterrows():
+        commercial = str(drug_row['drug_commercial']).strip() if pd.notna(drug_row['drug_commercial']) else ""
+        generic = str(drug_row['drug_generic']).strip() if pd.notna(drug_row['drug_generic']) else ""
+        company = str(drug_row['company']).strip() if pd.notna(drug_row['company']) else ""
+
+        # Skip if no valid drug names
+        if not commercial and not generic:
+            continue
+
+        # Build search mask for this drug (search both names)
+        mask = pd.Series([False] * len(df), index=df.index)
+
+        if commercial:
+            commercial_mask = df['Title'].str.contains(commercial, case=False, na=False, regex=False)
+            mask = mask | commercial_mask
+
+        if generic:
+            generic_mask = df['Title'].str.contains(generic, case=False, na=False, regex=False)
+            mask = mask | generic_mask
+
+        matching_abstracts = df[mask]
+
+        # Add each matching abstract as a row
+        # Use generic name preferentially, fall back to commercial
+        drug_display_name = generic if generic else commercial
+
+        for _, row in matching_abstracts.iterrows():
+            results.append({
+                'Drug': drug_display_name,
+                'Company': company,
+                'Identifier': row['Identifier'],
+                'Title': row['Title'],
+                'Speakers': row['Speakers'],
+                'Affiliation': row['Affiliation']
             })
 
-        except Exception as e:
-            yield sse_event("error", {"message": f"Error analyzing {author_name}: {str(e)}"})
+    result_df = pd.DataFrame(results)
 
-    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
+    # Remove duplicates (same abstract might match multiple drug name variants)
+    if not result_df.empty:
+        result_df = result_df.drop_duplicates(subset=['Drug', 'Identifier'])
+        result_df = result_df.sort_values(['Drug', 'Identifier'])
+        result_df = result_df.head(n)  # Limit to n results
 
-@app.route('/api/playbook/kol/list', methods=['GET'])
-def get_kol_list():
-    """Get the list of top 15 KOLs for progressive loading"""
-    if not initialize_app_globals():
-        return jsonify({"error": "Application data could not be loaded"}), 500
+    return result_df
 
-    ta_filter = request.args.get('ta', 'All')
+# ============================================================================
+# AI STREAMING FUNCTIONS
+# ============================================================================
 
-    # Filter data based on therapeutic area
-    filtered_df = get_filtered_dataframe(ta_filter)
+def stream_openai_response(prompt: str, model: str = "gpt-5-mini") -> str:
+    """Stream response from OpenAI and return full text."""
+    if not client:
+        return "OpenAI API key not configured."
 
-    # Get top authors table
-    top_authors_table = get_top_authors(df_sig(filtered_df), filtered_df, 20)
-    top_15_authors = top_authors_table.head(15)['Authors'].tolist()
+    try:
+        response = client.responses.create(
+            model=model,
+            input=[{"role": "user", "content": prompt}],
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=3000,
+            stream=False
+        )
 
-    # Return list with table data
-    authors_table_data = top_authors_table.head(15).to_dict('records')
+        return response.output_text
+    except Exception as e:
+        return f"Error generating AI response: {str(e)}"
+
+def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini"):
+    """Stream tokens from OpenAI for SSE."""
+    if not client:
+        yield "data: " + json.dumps({"text": "OpenAI API key not configured."}) + "\n\n"
+        return
+
+    try:
+        stream = client.responses.create(
+            model=model,
+            input=[{"role": "user", "content": prompt}],
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=4000,  # Comprehensive analysis for intelligence buttons
+            stream=True
+        )
+
+        for event in stream:
+            if event.type == "response.output_text.delta":
+                yield "data: " + json.dumps({"text": event.delta}) + "\n\n"
+
+        yield "data: [DONE]\n\n"
+
+    except Exception as e:
+        yield "data: " + json.dumps({"error": str(e)}) + "\n\n"
+
+# ============================================================================
+# FLASK ROUTES
+# ============================================================================
+
+@app.route('/')
+def index():
+    """Render main page."""
+    return render_template('index.html')
+
+@app.route('/api/data')
+def get_data():
+    """Get filtered conference data for Data Explorer tab."""
+    # Get filter parameters
+    drug_filters = request.args.getlist('drug_filters[]') or request.args.getlist('drug_filters') or []
+    ta_filters = request.args.getlist('ta_filters[]') or request.args.getlist('ta_filters') or []
+    session_filters = request.args.getlist('session_filters[]') or request.args.getlist('session_filters') or []
+    date_filters = request.args.getlist('date_filters[]') or request.args.getlist('date_filters') or []
+
+    # Apply multi-filters
+    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
+
+    # Convert to records for JSON serialization
+    data_records = filtered_df[['Title', 'Speakers', 'Affiliation', 'Speaker Location', 'Identifier', 'Room',
+                                 'Session', 'Date', 'Time', 'Theme']].to_dict('records')
+
+    # Sanitize Unicode
+    data_records = sanitize_data_structure(data_records)
+
+    # Build filter summary with all filter types
+    drugs_summary = ', '.join(drug_filters) if drug_filters else 'All Drugs'
+    tas_summary = ', '.join(ta_filters) if ta_filters else 'All Therapeutic Areas'
+    sessions_summary = ', '.join(session_filters) if session_filters else 'All Session Types'
+    dates_summary = ', '.join(date_filters) if date_filters else 'All Days'
 
     return jsonify({
-        "authors": top_15_authors,
-        "table_data": authors_table_data,
-        "total_count": len(top_15_authors)
+        "data": data_records,
+        "count": len(filtered_df),
+        "showing": len(filtered_df),
+        "total": len(df_global) if df_global is not None else 4686,
+        "filter_context": {
+            "total_sessions": len(filtered_df),
+            "total_available": len(df_global) if df_global is not None else 4686,
+            "filter_summary": f"{drugs_summary} + {tas_summary} + {sessions_summary} + {dates_summary}",
+            "filters_active": bool(drug_filters or ta_filters or session_filters or date_filters)
+        }
     })
 
-@app.route('/api/playbook/competitor/stream', methods=['GET'])
-def stream_competitor_analysis():
-    """
-    Token-by-token streaming endpoint for competitor analysis.
-    Returns Server-Sent Events with each token as it's generated.
-    """
-    if not initialize_app_globals():
-        return "data: Error: Application data could not be loaded\n\n", 500, {'Content-Type': 'text/event-stream'}
+@app.route('/api/search')
+def search_data():
+    """Search conference data with boolean operators."""
+    keyword = request.args.get('keyword', '')
 
-    drug_filters = request.args.getlist('drug_filters')
-    ta_filters = request.args.getlist('ta_filters')
+    # Get filter parameters
+    drug_filters = request.args.getlist('drug_filters[]') or request.args.getlist('drug_filters') or []
+    ta_filters = request.args.getlist('ta_filters[]') or request.args.getlist('ta_filters') or []
+    session_filters = request.args.getlist('session_filters[]') or request.args.getlist('session_filters') or []
+    date_filters = request.args.getlist('date_filters[]') or request.args.getlist('date_filters') or []
 
-    # Backward compatibility: if no array parameters, check for old single parameters
-    if not drug_filters and request.args.get('drug_filter'):
-        drug_filters = [request.args.get('drug_filter')]
-    if not ta_filters and request.args.get('ta_filter'):
-        ta_filters = [request.args.get('ta_filter')]
-
-    filtered_df_for_playbook = get_filtered_dataframe_multi(drug_filters, ta_filters)
-
-    # Generate competitor tables (same logic as regular competitor endpoint)
-    competitors_to_check = [
-        ("Avelumab", ["avelumab", "bavencio"]),  # ADD OUR OWN DRUG FIRST!
-        ("Enfortumab vedotin", ["enfortumab vedotin", "enfortumab", r"\bEV\b", "EV-302", "EV 302", "EV+P", "Padcev"]),
-        ("Disitamab vedotin", ["disitamab vedotin", "disitamab", "RC48"]),
-        ("Zelenectide pevedotin", ["zelenectide pevedotin", "zelenectide"]),
-        ("Pembrolizumab", ["pembrolizumab", "keytruda"]),
-        ("Nivolumab", ["nivolumab", "opdivo"]),
-        ("Atezolizumab", ["atezolizumab", "tecentriq"]),
-        ("Durvalumab", ["durvalumab", "imfinzi"]),
-        ("Sacituzumab govitecan", ["sacituzumab govitecan", "sacituzumab", "govitecan", "trodelvy"]),
-        ("Erdafitinib", ["erdafitinib", "balversa"]),
-        ("EV + Pembrolizumab", [r"ev.*pembrolizumab", r"enfortumab.*pembrolizumab", "evp", r"EV\+P", r"EV.*\+.*P"]),
-    ]
-    comp_table, emerg_table = build_competitor_tables(
-        df_sig(filtered_df_for_playbook), filtered_df_for_playbook, competitors_to_check
-    )
-
-    def generate():
-        try:
-            for token in generate_competitor_analysis_streaming(filtered_df_for_playbook, comp_table, emerg_table, ta_filter):
-                yield token
-        except Exception as e:
-            yield f"data: Error: {str(e)}\n\n"
-
-    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
-
-@app.route('/api/playbook/institution/stream', methods=['GET'])
-def stream_institution_analysis():
-    """
-    Token-by-token streaming endpoint for institution analysis.
-    Returns Server-Sent Events with each token as it's generated.
-    """
-    if not initialize_app_globals():
-        return "data: Error: Application data could not be loaded\n\n", 500, {'Content-Type': 'text/event-stream'}
-
-    drug_filters = request.args.getlist('drug_filters')
-    ta_filters = request.args.getlist('ta_filters')
-
-    # Backward compatibility: if no array parameters, check for old single parameters
-    if not drug_filters and request.args.get('drug_filter'):
-        drug_filters = [request.args.get('drug_filter')]
-    if not ta_filters and request.args.get('ta_filter'):
-        ta_filters = [request.args.get('ta_filter')]
-
-    filtered_df_for_playbook = get_filtered_dataframe_multi(drug_filters, ta_filters)
-
-    # Generate top institutions table
-    top_institutions_table = get_top_institutions(df_sig(filtered_df_for_playbook), filtered_df_for_playbook, 20)
-
-    def generate():
-        try:
-            for token in generate_institution_analysis_streaming(filtered_df_for_playbook, top_institutions_table, ta_filter):
-                yield token
-        except Exception as e:
-            yield f"data: Error: {str(e)}\n\n"
-
-    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
-
-@app.route('/api/playbook/insights/stream', methods=['GET'])
-def stream_insights_analysis():
-    """
-    Token-by-token streaming endpoint for insights analysis.
-    Returns Server-Sent Events with each token as it's generated.
-    """
-    if not initialize_app_globals():
-        return "data: Error: Application data could not be loaded\n\n", 500, {'Content-Type': 'text/event-stream'}
-
-    drug_filters = request.args.getlist('drug_filters')
-    ta_filters = request.args.getlist('ta_filters')
-
-    # Backward compatibility: if no array parameters, check for old single parameters
-    if not drug_filters and request.args.get('drug_filter'):
-        drug_filters = [request.args.get('drug_filter')]
-    if not ta_filters and request.args.get('ta_filter'):
-        ta_filters = [request.args.get('ta_filter')]
-
-    filtered_df_for_playbook = get_filtered_dataframe_multi(drug_filters, ta_filters)
-
-    # Generate biomarker MOA hits table
-    biomarker_moa_table = get_biomarker_moa_hits(df_sig(filtered_df_for_playbook), filtered_df_for_playbook)
-
-    def generate():
-        try:
-            for token in generate_insights_analysis_streaming(filtered_df_for_playbook, biomarker_moa_table, ta_filter):
-                yield token
-        except Exception as e:
-            yield f"data: Error: {str(e)}\n\n"
-
-    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
-
-@app.route('/api/playbook/strategy/stream', methods=['GET'])
-def stream_strategy_analysis():
-    """
-    Token-by-token streaming endpoint for strategy analysis.
-    Returns Server-Sent Events with each token as it's generated.
-    """
-    if not initialize_app_globals():
-        return "data: Error: Application data could not be loaded\n\n", 500, {'Content-Type': 'text/event-stream'}
-
-    drug_filters = request.args.getlist('drug_filters')
-    ta_filters = request.args.getlist('ta_filters')
-
-    # Backward compatibility: if no array parameters, check for old single parameters
-    if not drug_filters and request.args.get('drug_filter'):
-        drug_filters = [request.args.get('drug_filter')]
-    if not ta_filters and request.args.get('ta_filter'):
-        ta_filters = [request.args.get('ta_filter')]
-
-    filtered_df_for_playbook = get_filtered_dataframe_multi(drug_filters, ta_filters)
-
-    # For strategy analysis, we use basic context data from the filtered dataset
-    # No additional table preparation needed beyond the filtered dataframe
-
-    def generate():
-        try:
-            for token in generate_strategy_analysis_streaming(filtered_df_for_playbook, ta_filter):
-                yield token
-        except Exception as e:
-            yield f"data: Error: {str(e)}\n\n"
-
-    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
-
-@app.route('/api/playbook/<playbook_key>', methods=['GET'])
-def run_playbook_api_route(playbook_key):
-    if not initialize_app_globals():
-        return jsonify({"error": "Application data could not be loaded. Check server logs for details."}), 500
-
-    ta_filter = request.args.get('ta', 'All')
-    if playbook_key not in PLAYBOOKS:
-        return jsonify({"error": "Invalid playbook key"}), 400
-
-    filtered_df_for_playbook = get_filtered_dataframe(ta_filter)
-
-    pb = PLAYBOOKS.get(playbook_key)
-    tables_for_prompt: Dict[str, pd.DataFrame] = {}
-
-    if playbook_key == "competitor":
-        competitors_to_check = [
-            ("Avelumab", ["avelumab", "bavencio"]),  # ADD OUR OWN DRUG FIRST!
-            ("Enfortumab vedotin", ["enfortumab vedotin", "enfortumab", r"\bEV\b", "EV-302", "EV 302", "EV+P", "Padcev"]),
-            ("Disitamab vedotin", ["disitamab vedotin", "disitamab", "RC48"]),
-            ("Zelenectide pevedotin", ["zelenectide pevedotin", "zelenectide"]),
-            ("Pembrolizumab", ["pembrolizumab", "keytruda"]),
-            ("Nivolumab", ["nivolumab", "opdivo"]),
-            ("Atezolizumab", ["atezolizumab", "tecentriq"]),
-            ("Durvalumab", ["durvalumab", "imfinzi"]),
-            ("Sacituzumab govitecan", ["sacituzumab govitecan", "sacituzumab", "govitecan", "trodelvy"]),
-            ("Erdafitinib", ["erdafitinib", "balversa"]),
-            ("EV + Pembrolizumab", [r"ev.*pembrolizumab", r"enfortumab.*pembrolizumab", "evp", r"EV\+P", r"EV.*\+.*P"]),
-        ]
-        comp_table, emerg_table = build_competitor_tables(
-            df_sig(filtered_df_for_playbook), filtered_df_for_playbook, competitors_to_check
-        )
-        tables_for_prompt["competitor_abstracts"] = comp_table
-        tables_for_prompt["emerging_threats"] = emerg_table
-
-    elif playbook_key == "kol":
-        tables_for_prompt["top_authors"] = get_top_authors(df_sig(filtered_df_for_playbook), filtered_df_for_playbook, 20)
-
-    elif playbook_key == "institution":
-        tables_for_prompt["top_institutions"] = get_top_institutions(df_sig(filtered_df_for_playbook), filtered_df_for_playbook, 20)
-
-    elif playbook_key == "insights":
-        tables_for_prompt["biomarker_moa_hits"] = get_biomarker_moa_hits(df_sig(filtered_df_for_playbook), filtered_df_for_playbook)
-
-    rag_snippets = build_rag_snippets(
-        filtered_df_for_playbook,
-        playbook_key,
-        PLAYBOOKS[playbook_key].get("buckets", {}),
-        limit=10
-    )
-
-    user_query = f"Run the '{pb['button_label']} — {pb['subtitle']}' playbook for {ta_filter}."
-
-    # Use multi-pass analysis for KOL button, fallback to framework for others
-    if playbook_key == "kol":
-        print(f"[DEBUG] USING MULTI-PASS ANALYSIS for KOL button - TA filter: {ta_filter}")
-        narrative = generate_kol_analysis(
-            filtered_df=filtered_df_for_playbook,
-            top_authors_table=tables_for_prompt.get("top_authors", pd.DataFrame()),
-            ta_filter=ta_filter
-        )
-        print(f"[DEBUG] Multi-pass KOL analysis complete, length: {len(narrative) if narrative else 0} chars")
+    # When searching with no filters, we need to search the FULL dataset, not just first 50
+    # So if no filters are active, use the full dataset instead of calling get_filtered_dataframe_multi
+    if not drug_filters and not ta_filters and not session_filters and not date_filters:
+        filtered_df = df_global.copy()
     else:
-        # Use existing framework approach for other buttons
-        narrative = run_playbook_ai(
-            playbook_key=playbook_key,
-            ta_filter=ta_filter,
-            user_query=user_query,
-            filtered_df=filtered_df_for_playbook,
-            tables_for_prompt=tables_for_prompt,
-            rag_snippets=rag_snippets
-        )
+        # Apply multi-filters first
+        filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
 
-    response_tables = {}
-    for key, df_tbl in tables_for_prompt.items():
-        if df_tbl is not None and not df_tbl.empty:
-            response_tables[key] = df_tbl.to_dict('records')
-        else:
-            response_tables[key] = []
+    if keyword:
+        # Apply search to filtered results
+        search_columns = ['Title', 'Speakers', 'Affiliation', 'Speaker Location', 'Identifier', 'Room',
+                         'Session', 'Date', 'Time', 'Theme']
+        search_mask = parse_boolean_query(keyword, filtered_df, search_columns)
+        filtered_df = filtered_df[search_mask]
+
+        # Highlight search results
+        filtered_df = highlight_search_results(filtered_df, keyword)
+
+    # Convert to records
+    data_records = filtered_df[['Title', 'Speakers', 'Affiliation', 'Speaker Location', 'Identifier', 'Room',
+                                 'Session', 'Date', 'Time', 'Theme']].to_dict('records')
+
+    # Sanitize Unicode
+    data_records = sanitize_data_structure(data_records)
+
+    # Build filter summary with all filter types
+    drugs_summary = ', '.join(drug_filters) if drug_filters else 'All Drugs'
+    tas_summary = ', '.join(ta_filters) if ta_filters else 'All Therapeutic Areas'
+    sessions_summary = ', '.join(session_filters) if session_filters else 'All Session Types'
+    dates_summary = ', '.join(date_filters) if date_filters else 'All Days'
 
     return jsonify({
-        "narrative": narrative,
-        "tables": response_tables,
-        "playbook_title": f"{pb['button_label']} — {pb['subtitle']}",
-        "sections": pb["sections"]
+        "data": data_records,
+        "count": len(filtered_df),
+        "keyword": keyword,
+        "showing": len(filtered_df),
+        "total": len(df_global) if df_global is not None else 4686,
+        "filter_context": {
+            "total_sessions": len(filtered_df),
+            "total_available": len(df_global) if df_global is not None else 4686,
+            "filter_summary": f"{drugs_summary} + {tas_summary} + {sessions_summary} + {dates_summary}",
+            "filters_active": bool(drug_filters or ta_filters or session_filters or date_filters)
+        }
     })
 
-# API Endpoint for chat messages (NEW AI-FIRST ARCHITECTURE)
+@app.route('/api/export')
+def export_data():
+    """Export filtered data to Excel."""
+    # Get filter parameters
+    drug_filters = request.args.getlist('drug_filters[]') or request.args.getlist('drug_filters') or []
+    ta_filters = request.args.getlist('ta_filters[]') or request.args.getlist('ta_filters') or []
+    session_filters = request.args.getlist('session_filters[]') or request.args.getlist('session_filters') or []
+    date_filters = request.args.getlist('date_filters[]') or request.args.getlist('date_filters') or []
+
+    keyword = request.args.get('keyword', '')
+
+    # Apply multi-filters
+    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
+
+    if keyword:
+        search_columns = ['study_title', 'speaker', 'affiliation', 'location', 'identifier',
+                         'session_category', 'date', 'time', 'main_filters']
+        search_mask = parse_boolean_query(keyword, filtered_df, search_columns)
+        filtered_df = filtered_df[search_mask]
+
+    # Create Excel file in memory
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        filtered_df.to_excel(writer, sheet_name='ESMO 2025 Data', index=False)
+
+    output.seek(0)
+
+    # Generate filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"esmo_2025_export_{timestamp}.xlsx"
+
+    return Response(
+        output.getvalue(),
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': f'attachment; filename={filename}'}
+    )
+
+@app.route('/api/conference/info')
+def get_conference_info():
+    """Get conference metadata."""
+    return jsonify({
+        "conference_name": "ESMO 2025",
+        "total_studies": len(df_global) if df_global is not None else 0,
+        "available_filters": {
+            "drug_filters": list(ESMO_DRUG_FILTERS.keys()),
+            "ta_filters": list(ESMO_THERAPEUTIC_AREAS.keys()),
+            "session_filters": list(ESMO_SESSION_TYPES.keys()),
+            "date_filters": list(ESMO_DATES.keys())
+        }
+    })
+
+# ============================================================================
+# PLAYBOOK/BUTTON ROUTES (Simplified Streaming)
+# ============================================================================
+
+@app.route('/api/playbook/<playbook_key>/stream')
+def stream_playbook(playbook_key):
+    """
+    Simplified playbook streaming endpoint.
+
+    Flow: Get filters → Generate table → Build prompt → Stream AI response
+    """
+    if playbook_key not in PLAYBOOKS:
+        return jsonify({"error": "Invalid playbook"}), 404
+
+    # Get filter parameters
+    drug_filters = request.args.getlist('drug_filters[]') or request.args.getlist('drug_filters') or []
+    ta_filters = request.args.getlist('ta_filters[]') or request.args.getlist('ta_filters') or []
+    session_filters = request.args.getlist('session_filters[]') or request.args.getlist('session_filters') or []
+    date_filters = request.args.getlist('date_filters[]') or request.args.getlist('date_filters') or []
+
+    playbook = PLAYBOOKS[playbook_key]
+
+    def generate():
+        try:
+            # 1. Apply filters - for intelligence buttons, use full dataset when no filters (not 50-limit)
+            if not drug_filters and not ta_filters and not session_filters and not date_filters:
+                filtered_df = df_global.copy()
+            else:
+                filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
+
+            if filtered_df.empty:
+                yield "data: " + json.dumps({"error": "No data matches the selected filters."}) + "\n\n"
+                return
+
+            # 2. Generate table(s) based on playbook requirements
+            tables_data = {}
+
+            if "top_authors" in playbook.get("required_tables", []):
+                authors_table = generate_top_authors_table(filtered_df, n=15)
+                tables_data["top_authors"] = authors_table.to_markdown(index=False) if not authors_table.empty else "No author data available"
+
+                # Send table as SSE event (frontend expects: title, columns, rows as objects)
+                if not authors_table.empty:
+                    yield "data: " + json.dumps({
+                        "title": "Top 15 Authors",
+                        "columns": list(authors_table.columns),
+                        "rows": sanitize_data_structure(authors_table.to_dict('records'))
+                    }) + "\n\n"
+
+                # For KOL analysis, provide ALL abstracts from each top author (not samples)
+                if playbook_key == "kol" and not authors_table.empty:
+                    kol_abstracts = []
+                    for speaker in authors_table['Speaker'].head(15):
+                        speaker_data = filtered_df[filtered_df['Speakers'] == speaker][['Identifier', 'Title', 'Affiliation', 'Session']]
+                        if not speaker_data.empty:
+                            kol_abstracts.append(f"\n**{speaker}** ({len(speaker_data)} abstracts):\n{speaker_data.to_markdown(index=False)}")
+
+                    if kol_abstracts:
+                        tables_data["kol_abstracts"] = "\n".join(kol_abstracts)
+
+            if "top_institutions" in playbook.get("required_tables", []):
+                inst_table = generate_top_institutions_table(filtered_df, n=15)
+                tables_data["top_institutions"] = inst_table.to_markdown(index=False) if not inst_table.empty else "No institution data available"
+
+                if not inst_table.empty:
+                    yield "data: " + json.dumps({
+                        "title": "Top 15 Institutions",
+                        "columns": list(inst_table.columns),
+                        "rows": sanitize_data_structure(inst_table.to_dict('records'))
+                    }) + "\n\n"
+
+            if "biomarker_moa_hits" in playbook.get("required_tables", []):
+                bio_table = generate_biomarker_moa_table(filtered_df)
+                tables_data["biomarker_moa"] = bio_table.to_markdown(index=False) if not bio_table.empty else "No biomarker data available"
+
+                if not bio_table.empty:
+                    yield "data: " + json.dumps({
+                        "title": "Biomarker/MOA Hits",
+                        "columns": list(bio_table.columns),
+                        "rows": sanitize_data_structure(bio_table.to_dict('records'))
+                    }) + "\n\n"
+
+            if "all_data" in playbook.get("required_tables", []):
+                # For competitor button, use dedicated competitor table with Drug and Company columns
+                if playbook_key == "competitor":
+                    # Get ALL competitor studies (no limit) based on filtered dataset
+                    competitor_table = generate_competitor_table(filtered_df, n=len(filtered_df))
+                    tables_data["competitor_abstracts"] = competitor_table.to_markdown(index=False) if not competitor_table.empty else "No competitor drugs found"
+
+                    if not competitor_table.empty:
+                        yield "data: " + json.dumps({
+                            "title": f"Competitor Drug Abstracts ({len(competitor_table)} studies)",
+                            "columns": list(competitor_table.columns),
+                            "rows": sanitize_data_structure(competitor_table.to_dict('records'))
+                        }) + "\n\n"
+                else:
+                    # For strategy or other buttons, provide sample abstracts
+                    sample_df = filtered_df.head(50)[['Identifier', 'Title', 'Speakers', 'Affiliation']]
+                    tables_data["abstracts"] = sample_df.to_markdown(index=False)
+
+                    if not sample_df.empty:
+                        yield "data: " + json.dumps({
+                            "title": "Sample Abstracts (First 50)",
+                            "columns": list(sample_df.columns),
+                            "rows": sanitize_data_structure(sample_df.to_dict('records'))
+                        }) + "\n\n"
+
+            # 3. Build prompt with table data injected
+            prompt_template = playbook["ai_prompt"]
+
+            # Inject table data into prompt
+            table_context = "\n\n".join([f"**{key.upper()}**:\n{value}" for key, value in tables_data.items()])
+
+            ta_context = f"Therapeutic Area Filter: {', '.join(ta_filters) if ta_filters else 'All Therapeutic Areas'}"
+            drug_context = f"Drug Filter: {', '.join(drug_filters) if drug_filters else 'Competitive Landscape'}"
+
+            # For competitive intelligence, add guidance on which EMD drugs to analyze based on filter
+            filter_guidance = ""
+            if playbook_key == "competitor" and ta_filters and "All Therapeutic Areas" not in ta_filters:
+                relevant_drugs = []
+                if any(ta in ["Bladder Cancer", "Renal Cancer"] for ta in ta_filters):
+                    relevant_drugs.append("avelumab (bladder/urothelial cancer)")
+                if "Lung Cancer" in ta_filters:
+                    relevant_drugs.append("tepotinib (NSCLC MET)")
+                if any(ta in ["Colorectal Cancer", "Head & Neck Cancer"] for ta in ta_filters):
+                    relevant_drugs.append("cetuximab (CRC/H&N)")
+                if "TGCT" in ta_filters:
+                    relevant_drugs.append("pimicotinib (TGCT)")
+
+                if relevant_drugs:
+                    filter_guidance = f"\n\n**IMPORTANT**: This dataset is filtered to {', '.join(ta_filters)}. Focus your EMD Portfolio analysis on: {', '.join(relevant_drugs)}. You may briefly note that other EMD drugs are not relevant to this therapeutic area filter and skip their detailed analysis."
+
+            full_prompt = f"""{prompt_template}
+
+**CONFERENCE DATA CONTEXT**:
+{drug_context}
+{ta_context}
+Total Studies in Filtered Dataset: {len(filtered_df)}{filter_guidance}
+
+**DATA PROVIDED**:
+{table_context}
+
+Based on the data provided above, write a comprehensive analysis following the framework."""
+
+            # 4. Stream AI response token by token
+            for token_event in stream_openai_tokens(full_prompt):
+                yield token_event
+
+        except Exception as e:
+            yield "data: " + json.dumps({"error": f"Streaming error: {str(e)}"}) + "\n\n"
+
+    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
+
+# ============================================================================
+# CHAT ROUTE (Simplified Streaming)
+# ============================================================================
+
 @app.route('/api/chat/stream', methods=['POST'])
 def stream_chat_api():
     """
-    Token-by-token streaming endpoint for all chat responses with conversation memory.
-    Accepts: {"message": "user question", "ta_filter": "All", "conversation_history": []}
+    Simplified chat streaming endpoint.
+
+    Flow: Get query → Apply filters → Semantic search → Build prompt → Stream response
     """
-    if not initialize_app_globals():
-        return "data: Error: Application data could not be loaded\n\n", 500, {'Content-Type': 'text/event-stream'}
+    user_query = request.json.get('message', '').strip()
+    conversation_history = request.json.get('conversation_history', [])
 
-    # Check ChromaDB is available (initialized at startup)
-    if collection is None:
-        return "data: Error: AI features not available\n\n", 500, {'Content-Type': 'text/event-stream'}
-
-    try:
-        data = request.get_json()
-        if not data:
-            return "data: Error: No JSON data provided\n\n", 400, {'Content-Type': 'text/event-stream'}
-
-        user_query = data.get('message', '').strip()
-        ta_filter = data.get('ta_filter', 'All')
-        conversation_history = data.get('conversation_history', [])  # List of {"role": "user/assistant", "content": "text"}
-
-        # Limit conversation history to last 10 exchanges (20 messages)
-        if len(conversation_history) > 20:
-            conversation_history = conversation_history[-20:]
-
-    except Exception as e:
-        return f"data: Error parsing request: {str(e)}\n\n", 400, {'Content-Type': 'text/event-stream'}
+    # Get filter parameters
+    drug_filters = request.json.get('drug_filters', [])
+    ta_filters = request.json.get('ta_filters', [])
+    session_filters = request.json.get('session_filters', [])
+    date_filters = request.json.get('date_filters', [])
 
     if not user_query:
-        return "data: Error: No message provided\n\n", 400, {'Content-Type': 'text/event-stream'}
+        return "data: " + json.dumps({"error": "No message provided"}) + "\n\n", 400
 
     def generate():
         try:
-            # Use the existing AI query analysis and response generation logic
-            # Simple filtering approach that works with our dataset
-            if ta_filter == "Bladder Cancer":
-                # Filter for bladder cancer using main_filters
-                filtered_df = df_global[df_global["main_filters"].str.contains("Bladder Cancer", case=False, na=False)].copy()
-            elif ta_filter == "Lung Cancer":
-                filtered_df = df_global[df_global["main_filters"].str.contains("Lung Cancer", case=False, na=False)].copy()
-            elif ta_filter == "Colorectal Cancer":
-                filtered_df = df_global[df_global["main_filters"].str.contains("Colorectal Cancer", case=False, na=False)].copy()
-            elif ta_filter == "Head and Neck Cancer":
-                filtered_df = df_global[df_global["main_filters"].str.contains("Head and Neck Cancer", case=False, na=False)].copy()
-            elif ta_filter == "Gynecologic Cancer":
-                filtered_df = df_global[df_global["main_filters"].str.contains("Gynecologic Cancer", case=False, na=False)].copy()
-            else:
-                filtered_df = df_global.copy()
+            # 1. Classify user query to detect entity types and table needs
+            classification = classify_user_query(user_query)
+            print(f"[QUERY CLASSIFICATION] {classification}")
 
-            # Analyze the query and generate intelligent response using existing logic
-            print(f"[DEBUG] BEFORE analyze_user_query_ai() call")
-            plan = analyze_user_query_ai(user_query, ta_filter, conversation_history)
-            print(f"[DEBUG] AFTER analyze_user_query_ai() call - got plan: {plan.response_type}")
-            print(f"[DEBUG] CHAT STREAMING DEBUG - Query: '{user_query}' | Plan: {plan.response_type} | Entities: {plan.primary_entities}")
-            context = gather_intelligent_context(plan, ta_filter, filtered_df)
+            # 2. Apply filters to get relevant dataset
+            filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
 
-            # Check if this should use sophisticated author analysis
-            if plan.response_type == "specific_lookup":
-                # TRUE STREAMING: Stream directly from sophisticated prompt without pre-generation
-
-                # Extract author name or institution from query - prioritize authors for person lookups
-                author_name = None
-                institution_name = None
-
-                # First check if authors are mentioned (person names take priority)
-                if plan.primary_entities.get("authors"):
-                    author_name = plan.primary_entities["authors"][0]
-
-                # If no authors, then check for institutions
-                if not author_name and plan.primary_entities.get("institutions"):
-                    institution_name = plan.primary_entities["institutions"][0]
-
-                # Fallback: look for any entity with 2+ words (could be author or institution)
-                if not author_name and not institution_name:
-                    for entity_list in plan.primary_entities.values():
-                        for entity in entity_list:
-                            if len(entity.split()) >= 2:  # Likely a person's name (First Last)
-                                author_name = entity
-                                break
-                        if author_name:
-                            break
-
-                # AI-FIRST APPROACH: Handle institutions vs authors appropriately
-                if institution_name:
-                    # Handle institution lookup - ALWAYS do direct institution search first
-                    # First try exact search with original name
-                    mask = safe_contains(filtered_df["Affiliation"], institution_name, regex=True)
-
-                    # If no results, also try searching for normalized versions in the data
-                    if mask.sum() == 0:
-                        # Create a normalized search by looking for institutions that would normalize to the same thing
-                        normalized_target = normalize_institution_name(institution_name)
-                        if normalized_target != institution_name:
-                            mask = safe_contains(filtered_df["Affiliation"], normalized_target, regex=True)
-                    institution_results = filtered_df.loc[mask, ["Identifier","Session","Title","Speakers","Affiliation"]].drop_duplicates(subset=["Identifier"])
-
-                    if not institution_results.empty:
-                        # EMIT TABLE FIRST - showing all institution's studies
-                        institution_table_data = institution_results.to_dict('records')
-                        table_title = f"🏥 {institution_name} - Conference Studies ({len(institution_results)} abstracts)"
-                        yield sse_event("table", {
-                            "title": table_title,
-                            "rows": institution_table_data
-                        })
-
-                        # Include ALL results, but provide summary in prompt
-                        total_count = len(institution_results)
-                        institution_data = f"Total abstracts found: {total_count}\n\n" + institution_results.to_csv(index=False)
-                    else:
-                        # Fallback to semantic search if direct search finds nothing
-                        if context.semantic_results is not None and not context.semantic_results.empty:
-                            institution_data = context.semantic_results.head(20).to_csv(index=False)
-                        else:
-                            institution_data = "No data found"
-
-                    # Build conversation context
-                    conversation_context = ""
-                    if conversation_history:
-                        conversation_context = "\n\nConversation History (for context only):\n"
-                        for msg in conversation_history:
-                            role = msg.get('role', 'unknown')
-                            content = msg.get('content', '')[:200] + ('...' if len(msg.get('content', '')) > 200 else '')
-                            conversation_context += f"{role.title()}: {content}\n"
-                        conversation_context += "\n"
-
-                    streaming_prompt = f"""You are an AI medical affairs analyst. Respond to the user's request about institutional activity.
-{conversation_context}
-Current User Request: "{user_query}"
-Therapeutic Area Filter: {ta_filter}
-
-Conference Data for {institution_name}:
-{institution_data}
-
-Based on the user's specific request, provide an appropriate response that:
-- Analyzes the institution's research activity and focus areas
-- Uses natural language that flows well
-- Includes specific evidence from the conference data (Abstract #s)
-- Focuses on medical affairs insights relevant to EMD Serono/avelumab
-- Mentions the number of abstracts/studies from this institution
-
-Respond naturally to exactly what the user asked about this institution."""
-
-                elif context.author_data is not None and not context.author_data.empty:
-                    # EMIT TABLE FIRST - showing all author's studies
-                    author_table_data = context.author_data.to_dict('records')
-                    table_title = f"📄 {author_name} - Conference Studies ({len(context.author_data)} abstracts)"
-                    yield sse_event("table", {
-                        "title": table_title,
-                        "rows": author_table_data
-                    })
-
-                    # Build conversation context
-                    conversation_context = ""
-                    if conversation_history:
-                        conversation_context = "\n\nConversation History (for context only):\n"
-                        for msg in conversation_history:
-                            role = msg.get('role', 'unknown')
-                            content = msg.get('content', '')[:200] + ('...' if len(msg.get('content', '')) > 200 else '')
-                            conversation_context += f"{role.title()}: {content}\n"
-                        conversation_context += "\n"
-
-                    streaming_prompt = f"""You are an AI medical affairs analyst. Respond to the user's request naturally and appropriately.
-{conversation_context}
-Current User Request: "{user_query}"
-Therapeutic Area Filter: {ta_filter}
-
-Conference Data for {author_name}:
-{context.author_data.to_csv(index=False)}
-
-Based on the user's specific request, provide an appropriate response that:
-- Matches the level of detail they're asking for (brief, detailed, comprehensive, etc.)
-- Uses natural language that flows well
-- Includes specific evidence from the conference data
-- Focuses on medical affairs insights relevant to EMD Serono/avelumab
-- Always includes the participation count: "{author_name} participated in [X] studies at the conference"
-
-Respond naturally to exactly what the user asked - don't follow rigid frameworks or bullet points unless they specifically request that format."""
-
-                else:
-                    # NO AUTHOR/INSTITUTION DATA - return simple response immediately (no AI needed)
-                    entity_name = institution_name or author_name
-                    entity_type = "institution" if institution_name else "author"
-
-                    if ta_filter != "All":
-                        simple_response = f"No studies found for {entity_name} in {ta_filter}. Try changing the filter to 'All GU Cancers' to see if other studies are available."
-                    else:
-                        simple_response = f"No studies found for {entity_name} in the ASCO GU 2025 conference data."
-
-                    # Stream the simple response immediately
-                    for char in simple_response:
-                        import json
-                        yield f"data: {json.dumps({'text': char})}\n\n"
-                    yield f"data: [DONE]\n\n"
-                    return
-
-            elif plan.response_type == "data_table":
-                # Handle data table requests (drug counts, author lists, etc.)
-                drug_entities = plan.primary_entities.get("drugs", [])
-
-                if drug_entities:
-                    # Search for drug mentions in the dataset
-                    drug_name = drug_entities[0].lower()
-
-                    # Search in title column for drug mentions
-                    mask = filtered_df["Title"].str.contains(drug_name, case=False, na=False)
-
-                    drug_results = filtered_df[mask]
-
-                    if not drug_results.empty:
-                        # Generate table with drug studies
-                        table_data = drug_results[["Identifier","Session","Title","Speakers","Affiliation"]].to_dict('records')
-                        table_title = f"{drug_entities[0].title()} Studies - ESMO 2025 ({len(drug_results)} sessions)"
-
-                        yield sse_event("table", {
-                            "title": table_title,
-                            "rows": table_data
-                        })
-
-                        # Stream response about the findings
-                        drug_data = f"Found {len(drug_results)} studies mentioning {drug_entities[0]}:\n\n" + drug_results[["Identifier","Title","Speakers"]].to_csv(index=False)
-
-                        streaming_prompt = f"""Based on the ESMO 2025 conference data, I found {len(drug_results)} studies mentioning {drug_entities[0]}.
-
-Study Details:
-{drug_data}
-
-Provide a brief summary of these findings, mentioning the count and any notable patterns in the research areas or institutions involved."""
-
-                        # Stream AI analysis of the drug data
-                        stream = client.responses.create(
-                            model="gpt-5-mini",
-                            input=[{"role": "user", "content": streaming_prompt}],
-                            reasoning={"effort": "low"},
-                            text={"verbosity": "low"},
-                            max_output_tokens=1000,
-                            stream=True
-                        )
-
-                        for event in stream:
-                            if event.type == "response.output_text.delta":
-                                token = event.delta
-                                import json
-                                yield f"data: {json.dumps({'text': token})}\n\n"
-
-                        yield "data: [DONE]\n\n"
-                        return
-                    else:
-                        # No drug data found - stream simple response
-                        simple_response = f"I searched the ESMO 2025 dataset but couldn't find any studies specifically mentioning {drug_entities[0]}. This could be because: 1) The drug name appears in abstracts not included in our dataset, 2) It's mentioned under a different name or in combination with other drugs, or 3) The studies might be in therapeutic areas not well represented in this dataset."
-
-                        for char in simple_response:
-                            import json
-                            yield f"data: {json.dumps({'text': char})}\n\n"
-                        yield f"data: [DONE]\n\n"
-                        return
-
-            else:
-                # Use generic response for other query types
-                if context.semantic_results is not None and not context.semantic_results.empty:
-                    semantic_data = context.semantic_results.head(20).to_csv(index=False)
-                else:
-                    semantic_data = "No relevant data found."
-
-                # Build conversation context
-                conversation_context = ""
-                if conversation_history:
-                    conversation_context = "\n\nConversation History (for context only):\n"
-                    for msg in conversation_history:
-                        role = msg.get('role', 'unknown')
-                        content = msg.get('content', '')[:200] + ('...' if len(msg.get('content', '')) > 200 else '')
-                        conversation_context += f"{role.title()}: {content}\n"
-                    conversation_context += "\n"
-
-                streaming_prompt = f"""You are a medical affairs AI assistant analyzing conference data from ESMO 2025.
-{conversation_context}
-Current User Query: "{user_query}"
-Therapeutic Area Filter: {ta_filter}
-
-Relevant Conference Data:
-{semantic_data}
-
-Based on the user's query and the relevant conference data above, provide a comprehensive and helpful response. Be specific, cite session identifiers when relevant, and focus on actionable insights for medical affairs professionals.
-
-Write a natural, conversational response that directly answers the user's question."""
-
-            # Enhanced streaming with paragraph boundary detection using new Responses API
-            from openai import Stream
-
-            stream: Stream[object] = client.responses.create(
-                model="gpt-5-mini",
-                input=[{"role": "user", "content": streaming_prompt}],
-                reasoning={"effort": "low"},
-                text={"verbosity": "low"},
-                max_output_tokens=2000,
-                stream=True,
-            )
-
-            # Track content for paragraph detection
-            accumulated_content = ""
-            last_boundary_pos = 0
-
-            try:
-                for event in stream:
-                    if event.type == "response.output_text.delta":
-                        token = event.delta
-                        accumulated_content += token
-
-                        # Send the token in JSON format for frontend compatibility
-                        import json
-                        yield f"data: {json.dumps({'text': token})}\n\n"
-
-                        # Check for NEW paragraph boundaries
-                        boundary_pos = accumulated_content.find('\n\n', last_boundary_pos)
-                        if boundary_pos != -1:
-                            # Send a special boundary signal
-                            yield f"data: |||PARAGRAPH_BREAK|||\n\n"
-                            last_boundary_pos = boundary_pos + 2
-                    elif event.type == "response.completed":
-                        # Stream completed successfully
-                        yield f"data: [DONE]\n\n"
-                        break
-
-            except Exception as stream_error:
-                print(f"[ERROR] STREAM ERROR: {stream_error}")
-                yield f"data: {json.dumps({'error': f'Streaming interrupted: {str(stream_error)}'})}\n\n"
-                yield f"data: [DONE]\n\n"
+            if filtered_df.empty:
+                yield "data: " + json.dumps({"text": "No data matches your current filters. Please adjust filters and try again."}) + "\n\n"
+                yield "data: [DONE]\n\n"
                 return
 
+            # 3. Generate entity table if needed
+            table_html = ""
+            table_data = pd.DataFrame()
+
+            if classification.get('generate_table'):
+                table_html, table_data = generate_entity_table(classification, df_global)
+
+                if table_html:
+                    # Send table first as a separate event
+                    yield "data: " + json.dumps({"table": sanitize_unicode_for_windows(table_html)}) + "\n\n"
+
+            # 4. Determine data context for AI response
+            if not table_data.empty:
+                # Use table data as primary context (reduces hallucination)
+                relevant_data = table_data
+                data_source = f"entity table ({len(table_data)} records)"
+            elif table_html and table_data.empty:
+                # Table was generated but returned no results (drug/author not found)
+                # Still do semantic search to provide context for AI response
+                relevant_data = filtered_df.head(20)
+
+                if collection:
+                    try:
+                        results = collection.query(
+                            query_texts=[user_query],
+                            n_results=min(20, len(filtered_df))
+                        )
+
+                        if results and results['ids']:
+                            result_indices = [int(doc_id.replace('doc_', '')) for doc_id in results['ids'][0]]
+                            relevant_data = df_global.iloc[result_indices]
+                            relevant_data = relevant_data[relevant_data.index.isin(filtered_df.index)]
+                    except Exception as e:
+                        print(f"[SEMANTIC SEARCH] Error: {e}")
+
+                data_source = f"semantic search (no exact matches, using related studies)"
+            else:
+                # Fall back to semantic search
+                relevant_data = filtered_df.head(20)
+
+                if collection:
+                    try:
+                        results = collection.query(
+                            query_texts=[user_query],
+                            n_results=min(20, len(filtered_df))
+                        )
+
+                        if results and results['ids']:
+                            result_indices = [int(doc_id.replace('doc_', '')) for doc_id in results['ids'][0]]
+                            relevant_data = df_global.iloc[result_indices]
+                            relevant_data = relevant_data[relevant_data.index.isin(filtered_df.index)]
+                    except Exception as e:
+                        print(f"[SEMANTIC SEARCH] Error: {e}")
+
+                data_source = f"semantic search ({len(relevant_data)} records)"
+
+            # 5. Build context from relevant data
+            data_context = relevant_data[['Identifier', 'Title', 'Speakers', 'Affiliation']].head(15).to_markdown(index=False)
+
+            # 6. Build prompt with scope context
+            # Build human-readable scope description
+            scope_parts = []
+            if drug_filters:
+                scope_parts.append(f"💊 {', '.join(drug_filters)}")
+            if ta_filters:
+                scope_parts.append(f"🎯 {', '.join(ta_filters)}")
+
+            if scope_parts:
+                active_scope = " • ".join(scope_parts)
+                scope_description = f"**ACTIVE SCOPE**: {active_scope} ({len(filtered_df)} studies)"
+            else:
+                scope_description = f"**ACTIVE SCOPE**: All Conference Data ({len(filtered_df)} studies)"
+
+            ta_context = f"Therapeutic Area: {', '.join(ta_filters) if ta_filters else 'All Therapeutic Areas'}"
+            drug_context = f"Drug Focus: {', '.join(drug_filters) if drug_filters else 'Competitive Landscape'}"
+
+            # Include conversation history for context
+            history_context = ""
+            if conversation_history:
+                recent_history = conversation_history[-4:]  # Last 2 exchanges
+                history_text = "\n".join([f"User: {msg['user']}\nAssistant: {msg['assistant']}" for msg in recent_history])
+                history_context = f"\n\n**CONVERSATION HISTORY**:\n{history_text}"
+
+            # Add table context if generated
+            table_context = ""
+            if classification.get('generate_table'):
+                if not table_data.empty:
+                    table_context = f"\n\n**NOTE**: A data table has been displayed to the user showing {len(table_data)} relevant records. Use this table as your primary source of truth when answering."
+                else:
+                    table_context = f"\n\n**NOTE**: The user asked about a specific entity that was not found in the ESMO 2025 dataset. A 'no results' message has been displayed. Explain why this might be the case and suggest alternative searches or related topics."
+
+            prompt = f"""You are an expert medical affairs analyst for EMD Serono analyzing ESMO 2025 conference data.
+
+**USER QUESTION**: {user_query}
+
+{scope_description}
+
+**DATA SOURCE**: {data_source}
+{history_context}{table_context}
+
+**RELEVANT CONFERENCE DATA**:
+{data_context}
+
+**INSTRUCTIONS**:
+- **IMPORTANT**: Start your response by mentioning the active scope (e.g., "Based on {len(filtered_df)} studies in [scope]...")
+- Always cite Abstract # (identifier) when referencing specific studies
+- If a table was generated, reference it and provide analysis beyond what's in the table
+- If the data doesn't contain information to answer the question, acknowledge this clearly
+- Focus on actionable insights for medical affairs professionals
+- Consider EMD Serono's portfolio: avelumab (bladder cancer), tepotinib (NSCLC MET+), cetuximab (CRC/H&N), pimicotinib (TGCT, pre-launch)
+- Be concise but comprehensive
+
+Please answer the user's question based on the conference data provided."""
+
+            # 7. Stream AI response
+            for token_event in stream_openai_tokens(prompt):
+                yield token_event
+
         except Exception as e:
-            print(f"[ERROR] ERROR in chat streaming: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            yield sse_event("error", {"message": f"Error generating response: {str(e)}"})
+            yield "data: " + json.dumps({"error": f"Chat error: {str(e)}"}) + "\n\n"
+            yield "data: [DONE]\n\n"
 
     return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
 
-@app.route('/api/chat', methods=['POST'])
-def chat_api():
-    if not initialize_app_globals():
-        return jsonify({"error": "Application data could not be loaded. Check server logs for details."}), 500
+# ============================================================================
+# APPLICATION STARTUP
+# ============================================================================
 
-    # Check ChromaDB is available (initialized at startup)
-    if collection is None:
-        return jsonify({"error": "AI features not available"}), 500
-
-    data = request.get_json()
-    user_message = data.get('message')
-    ta_filter = data.get('ta_filter', 'All')
-    conversation_history = data.get('conversation_history', [])
-    use_legacy = data.get('use_legacy', False)  # Allow fallback to old system if needed
-
-    if not user_message:
-        return jsonify({"error": "No message provided"}), 400
-
-    # Limit conversation history to last 20 messages (10 exchanges)
-    if len(conversation_history) > 20:
-        conversation_history = conversation_history[-20:]
-
-    # Filter data based on TA
-    current_df = get_filtered_dataframe(ta_filter)
-
-    # Use legacy system if explicitly requested or for simple queries
-    simple_queries = ["hi", "hello", "help", "top authors", "top institutions"]
-    if use_legacy or any(simple in user_message.lower() for simple in simple_queries):
-        return legacy_chat_handler(user_message, ta_filter, current_df)
-
-    try:
-        # NEW AI-FIRST FLOW
-        print(f"AI-First: Analyzing query: {user_message}")
-
-        # Step 1: AI analyzes the query and creates execution plan
-        plan = analyze_user_query_ai(user_message, ta_filter, conversation_history)
-        print(f"AI-First: Plan created - Intent: {plan.intent_type}, Confidence: {plan.confidence}")
-
-        # Step 2: Gather intelligent context based on plan
-        context = gather_intelligent_context(plan, ta_filter, current_df)
-        print(f"AI-First: Context gathered - Semantic results: {context.semantic_results is not None and not context.semantic_results.empty}")
-
-        # Step 3: Generate comprehensive AI response
-        response_text, tables_to_attach = generate_intelligent_response(user_message, plan, context, ta_filter)
-        print(f"AI-First: Response generated with {len(tables_to_attach)} tables")
-
-        # Format response for frontend
-        response_tables = {}
-        for title, df_tbl, ttype in tables_to_attach:
-            if not df_tbl.empty:
-                response_tables[title] = df_tbl.to_dict('records')
-            else:
-                response_tables[title] = []
-
-        return jsonify({
-            "action": "display_message",
-            "message": response_text,
-            "tables": response_tables,
-            "ai_analysis": {
-                "intent_type": plan.intent_type,
-                "confidence": plan.confidence,
-                "mentioned_entities": plan.mentioned_entities
-            }
-        })
-
-    except Exception as e:
-        print(f"Error in AI-first chat handler: {e}")
-        # Fallback to legacy system on error
-        return legacy_chat_handler(user_message, ta_filter, current_df)
-
-# Legacy chat handler (kept for fallback and simple queries)
-def legacy_chat_handler(user_message: str, ta_filter: str, current_df: pd.DataFrame):
-    """Original chat handler kept for simple queries and fallback"""
-    original_query = user_message
-    intent, conf, slots = llm_route_query(user_message)
-    slots["original_query"] = original_query
-
-    msg, tbls_to_attach, trigger_playbook = handle_chat_intent(intent, slots, ta_filter, current_df)
-
-    response_tables = {}
-    for title, df_tbl, ttype in tbls_to_attach:
-        if not df_tbl.empty:
-            response_tables[title] = df_tbl.to_dict('records')
-        else:
-            response_tables[title] = []
-
-    if trigger_playbook:
-        return jsonify({"action": "trigger_playbook", "playbook_key": trigger_playbook, "message": msg, "tables": response_tables})
-    else:
-        return jsonify({"action": "display_message", "message": msg, "tables": response_tables})
-
-def handle_chat_intent(intent: str, slots: Dict[str, Any], ta_filter: str, filtered_df: pd.DataFrame) -> Tuple[str, List[Tuple[str, pd.DataFrame, str]], Optional[str]]:
-    """
-    Returns: (assistant_message, list_of_tables_to_attach, trigger_playbook_key|None)
-    Each table tuple: (title, df, type)
-    """
-    tables: List[Tuple[str, pd.DataFrame, str]] = []
-    trigger_playbook = None
-
-    if intent in {"smalltalk", "help"}:
-        if intent == "smalltalk":
-            msg = ("Hi! 👋 This workspace is for **conference intelligence**.\n\n"
-                   "You can:\n"
-                   "- Run a playbook from the sidebar (Competitor, KOLs, Institutions, Trends, Strategy)\n"
-                   "- Ask quick questions like **“top 20 authors”**, **“top 15 institutions”**, or **“list avelumab studies”**\n"
-                   "- Just say things like **“all abstracts with involvement from Shilpa Gupta”** — I’ll detect the author and show the table.\n\n"
-                   "What would you like to explore?")
-        else:
-            msg = ("Here’s how to use this:\n"
-                   "• **Pick a playbook** for a structured narrative; tables attach below the analysis.\n"
-                   "• **Quick queries**: “top 20 authors”, “top 20 institutions”, “list avelumab studies”.\n"
-                   "• **Natural author lookups**: “all abstracts with involvement from Shilpa Gupta”.\n"
-                   "Rules: no invented counts; cite **Abstract #**; if not in CSV, I’ll say so.")
-        return msg, tables, None
-
-    if intent == "top_authors":
-        n = int(slots.get("n", 20))
-        top_auth = get_top_authors(df_sig(filtered_df), filtered_df, n)
-        msg = ("No authors found in the current TA filter."
-               if top_auth.empty else
-               f"Here are the **top {len(top_auth)} authors** by unique abstracts within **{ta_filter}**. Counts come from the table below.")
-        if not top_auth.empty:
-            tables.append((f"Top {len(top_auth)} Authors by Unique Abstracts", top_auth, "data"))
-        return msg, tables, None
-
-    if intent == "top_institutions":
-        n = int(slots.get("n", 20))
-        top_inst = get_top_institutions(df_sig(filtered_df), filtered_df, n)
-        msg = ("No institutions found in the current TA filter."
-               if top_inst.empty else
-               f"Here are the **top {len(top_inst)} institutions** by unique abstracts within **{ta_filter}**.")
-        if not top_inst.empty:
-            tables.append((f"🏥 Top {len(top_inst)} Institutions by Unique Abstracts", top_inst, "data"))
-        return msg, tables, None
-
-    if intent == "list_avelumab":
-        mask = safe_contains(filtered_df["Title"], r"avelumab|bavencio", regex=True) | \
-               safe_contains(filtered_df["Authors"], r"avelumab|bavencio", regex=True)
-        av_df = filtered_df.loc[mask, ["Abstract #","Poster #","Title","Authors","Institutions"]].drop_duplicates(subset=["Abstract #"])
-        msg = (f"No Avelumab/Bavencio abstracts found under **{ta_filter}** in the CSV."
-               if av_df.empty else
-               f"Listed **Avelumab/Bavencio** abstracts detected in the CSV for **{ta_filter}**. Reference **Abstract #** in the table below.")
-        if not av_df.empty:
-            tables.append((f"🧪 Avelumab/Bavencio Studies ({len(av_df)})", av_df, "data"))
-        return msg, tables, None
-
-    if intent == "author_abstracts":
-        author = (slots.get("author") or "").strip()
-        if not author:
-            authors_list = get_unique_authors(df_sig(df_global), df_global)
-            author = extract_author_from_query(slots.get("original_query",""), authors_list) or ""
-        if not author:
-            return "I couldn’t detect which author you meant. Try e.g., **all abstracts with involvement from Shilpa Gupta**.", tables, None
-        pat = r"\b" + re.escape(author) + r"\b"
-        mask = safe_contains(filtered_df["Authors"], pat, regex=True)
-        res = filtered_df.loc[mask, ["Abstract #","Poster #","Title","Authors","Institutions"]].drop_duplicates(subset=["Abstract #"])
-        if res.empty:
-            return f"No abstracts with involvement from **{author}** were found under **{ta_filter}** in the CSV.", tables, None
-        msg = f"Here are the abstracts with involvement from **{author}** (TA scope: **{ta_filter}**)."
-        tables.append((f"Abstracts with {author} ({len(res)})", res, "data"))
-        return msg, tables, None
-
-    if intent == "institution_abstracts":
-        institution = (slots.get("institution") or "").strip()
-        if not institution:
-            return "Please specify the institution, e.g., **all abstracts from Memorial Sloan Kettering**.", tables, None
-        mask = safe_contains(filtered_df["Institutions"], institution, regex=True)
-        res = filtered_df.loc[mask, ["Abstract #","Poster #","Title","Authors","Institutions"]].drop_duplicates(subset=["Abstract #"])
-
-        # If no results, try searching with normalized institution name
-        if res.empty:
-            normalized_institution = normalize_institution_name(institution)
-            if normalized_institution != institution:
-                mask = safe_contains(filtered_df["Institutions"], normalized_institution, regex=True)
-                res = filtered_df.loc[mask, ["Abstract #","Poster #","Title","Authors","Institutions"]].drop_duplicates(subset=["Abstract #"])
-
-        if res.empty:
-            return f"No abstracts found for **{institution}** under **{ta_filter}** in the CSV.", tables, None
-        msg = f"Here are the abstracts associated with **{institution}** (TA scope: **{ta_filter}**)."
-        tables.append((f"🏥 Abstracts from {institution} ({len(res)})", res, "data"))
-        return msg, tables, None
-
-    if intent == "search":
-        term = str(slots.get("term", "")).strip()
-        if not term:
-            authors_list = get_unique_authors(df_sig(df_global), df_global)
-            author = extract_author_from_query(slots.get("original_query",""), authors_list)
-            if author:
-                pat = r"\b" + re.escape(author) + r"\b"
-                mask = safe_contains(filtered_df["Authors"], pat, regex=True)
-                res = filtered_df.loc[mask, ["Abstract #","Poster #","Title","Authors","Institutions"]].drop_duplicates(subset=["Abstract #"])
-                if res.empty:
-                    return f"No abstracts with involvement from **{author}** were found under **{ta_filter}** in the CSV.", tables, None
-                msg = f"Detected author **{author}**. Showing involved abstracts (TA: **{ta_filter}**)."
-                tables.append((f"Abstracts with {author} ({len(res)})", res, "data"))
-                return msg, tables, None
-            narrative, hits = run_general_ai(slots.get("original_query",""), ta_filter, filtered_df)
-            if hits is not None and not hits.empty:
-                tables.append(("🔎 Relevant Abstracts (Top Matches)", hits, "data"))
-            return narrative, tables, None
-
-        mask = (
-            safe_contains(filtered_df["Title"], term, regex=False) |
-            safe_contains(filtered_df["Authors"], term, regex=False) |
-            safe_contains(filtered_df["Institutions"], term, regex=False) |
-            filtered_df["Abstract #"].astype(str).str.contains(term, case=False, na=False, regex=False) |
-            filtered_df["Poster #"].astype(str).str.contains(term, case=False, na=False, regex=False)
-        )
-        res = filtered_df.loc[mask, ["Abstract #","Poster #","Title","Authors","Institutions"]]
-        msg = (f"No results containing **{term}** found in **{ta_filter}**."
-               if res.empty else
-               f"Found **{len(res)}** abstracts containing **{term}** in **{ta_filter}**. See table below.")
-        if not res.empty:
-            tables.append((f"🔎 Search Results: {term} ({len(res)})", res, "data"))
-        return msg, tables, None
-
-    if intent in {"competitor_playbook","kol_playbook","institution_playbook","insights_playbook","strategy_playbook"}:
-        mapping = {
-            "competitor_playbook": "competitor",
-            "kol_playbook": "kol",
-            "institution_playbook": "institution",
-            "insights_playbook": "insights",
-            "strategy_playbook": "strategy",
-        }
-        trigger_playbook = mapping[intent]
-        return "Launching requested analysis…", tables, trigger_playbook
-
-    if intent == "general_conference_question":
-        narrative, hits = run_general_ai(slots.get("original_query", ""), ta_filter, filtered_df)
-        tables_out = []
-        if hits is not None and not hits.empty:
-            tables_out.append(("🔎 Relevant Abstracts (Top Matches)", hits, "data"))
-        return narrative, tables_out, None
-
-    msg = ("This workspace focuses on **conference intelligence**. "
-           "Try a playbook from the left, or ask quick questions like **“top 20 authors”**, "
-           "**“top institutions”**, or **`all abstracts with involvement from <Author>`**.")
-    return msg, tables, None
-
-@app.route('/__healthz')
-def healthz():
-    here = Path(__file__).resolve()
-    idx = (Path(__file__).parent / "templates" / "index.html").resolve()
-    return jsonify({
-        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "app_file": str(here),
-        "app_md5": file_md5(here),
-        "index_html": str(idx),
-        "index_md5": file_md5(idx) if idx.exists() else None,
-        "cwd": str(Path.cwd()),
-        "title_check": "vTEST-A — FIXED VERSION — Data Explorer",
-        "port_note": "You can pin a unique PORT when launching to avoid ghosts."
-    })
-
-# --- Export Endpoint ---
-@app.route('/api/export', methods=['POST'])
-def export_data():
-    from flask import make_response
-    import io
-
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "No JSON data provided"}), 400
-
-        export_format = data.get('format', '').lower()
-        drug_filters = data.get('drug_filters', [])
-        ta_filters = data.get('ta_filters', [])
-
-        if export_format not in ['csv', 'excel']:
-            return jsonify({"error": "Unsupported format. Use 'csv' or 'excel'"}), 400
-
-        # Use multi-filter approach
-        filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters)
-
-        # Fix 3: Sanitize data to prevent CSV injection
-        for col in filtered_df.select_dtypes(include=['object']).columns:
-            filtered_df[col] = filtered_df[col].astype(str).str.replace(r'^[=+\-@]', '', regex=True)
-
-        # Fix 4: Generate proper response with headers
-        if export_format == 'csv':
-            output = io.StringIO()
-            filtered_df.to_csv(output, index=False)
-
-            response = make_response(output.getvalue())
-            response.headers["Content-Type"] = "text/csv"
-            drug_filename = "_".join(drug_filters).replace(' ', '_')
-            ta_filename = "_".join(ta_filters).replace(' ', '_')
-            response.headers["Content-Disposition"] = f"attachment; filename=esmo_2025_{drug_filename}_{ta_filename}.csv"
-            return response
-
-        else:  # excel
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                filtered_df.to_excel(writer, sheet_name='ASCO GU 2025 Data', index=False)
-
-            output.seek(0)
-            response = make_response(output.getvalue())
-            response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            response.headers["Content-Disposition"] = f"attachment; filename=asco_gu_2025_{ta_filter.lower().replace(' ', '_')}.xlsx"
-            return response
-
-    except Exception as e:
-        print(f"Export error: {str(e)}")
-        return jsonify({"error": "Export failed. Please try again."}), 500
-
-# --- Running the App ---
 if __name__ == '__main__':
-    if not initialize_app_globals():
-        print("Application failed to initialize and will not start. Please check your data file and configuration.")
-    else:
-        print("Starting Flask server...")
-        app.run(debug=True)
+    print("\n" + "="*80)
+    print("ESMO 2025 Conference Intelligence App - Simplified Architecture")
+    print("Medical Affairs Platform for EMD Serono")
+    print("="*80 + "\n")
+
+    # Load data on startup
+    df_global = load_and_process_data()
+
+    if df_global is None:
+        print("\n[ERROR] Failed to load conference data. Please check CSV file.")
+        exit(1)
+
+    print(f"\n[SUCCESS] Application ready with {len(df_global)} conference studies")
+    print(f"[INFO] ChromaDB: {'Initialized' if collection else 'Not available'}")
+    print(f"[INFO] OpenAI API: {'Configured' if client else 'Not configured'}")
+    print("\n" + "="*80)
+    print("Starting Flask server...")
+    print("="*80 + "\n")
+
+    # Run Flask app
+    app.run(
+        host='0.0.0.0',
+        port=5000,
+        debug=True,
+        threaded=True
+    )

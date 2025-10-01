@@ -52,16 +52,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // ===== Quick Intelligence Sidebar - Click to toggle =====
-  const quickIntelSidebar = document.getElementById('quickIntelSidebar');
-  const quickIntelHeader = quickIntelSidebar?.querySelector('.quick-intel-header');
-
-  if (quickIntelHeader) {
-    quickIntelHeader.addEventListener('click', () => {
-      quickIntelSidebar.classList.toggle('collapsed');
-    });
-  }
-
   // ===== Shared refs =====
   const tableContainer = document.getElementById('tableContainer');
   const filterContext  = document.getElementById('filterContext');
@@ -88,16 +78,15 @@ document.addEventListener('DOMContentLoaded', function() {
   // Playbooks (chips)
   const playbookTriggers = document.querySelectorAll('.playbook-trigger');
 
-  // Chat (using chatInput for new Claude-style interface)
+  // Chat
   const chatContainer  = document.getElementById('chatContainer');
-  const userInput      = document.getElementById('chatInput'); // Changed from 'userInput' to 'chatInput'
-  const sendChatBtn    = document.getElementById('chatSendBtn');
+  const userInput      = document.getElementById('userInput');
+  const sendChatBtn    = document.getElementById('sendChatBtn');
 
   // ===== State =====
   let currentFilters = { drug_filters: [], ta_filters: [], session_filters: [], date_filters: [] };
   let currentTableData = [];
   let sortState = { column: null, direction: 'asc' };
-  let conversationHistory = []; // Store last 10 messages (5 user + 5 AI)
 
   // ===== Init =====
   loadData();
@@ -627,7 +616,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ===== Playbooks via Action Bar =====
-  // REMOVED: Old direct playbook handler (now using modal-based flow at line ~1256)
+  playbookTriggers.forEach(el => {
+    el.addEventListener('click', () => handlePlaybook(el.getAttribute('data-playbook')));
+  });
 
   function createTableHTML(title, subtitle, columns, rows, tableId = 'playbookTable') {
     // Create table matching Data Explorer with sorting, resizing, and hover expansion
@@ -852,7 +843,110 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // REMOVED: Old handlePlaybook() function (replaced by handlePlaybookWithFilters() at line ~1328)
+  async function handlePlaybook(playbookType) {
+    try {
+      // ensure AI tab is visible (defensive)
+      const aiTabBtn = document.getElementById('ai-assistant-tab');
+      if (window.bootstrap && aiTabBtn) new bootstrap.Tab(aiTabBtn).show();
+
+      appendToChat(`
+        <div class="d-flex justify-content-start mb-2">
+          <div class="bg-primary text-white rounded p-2" style="max-width:80%;">
+            <strong>🤖 Running ${getPlaybookTitle(playbookType)}...</strong>
+            <span class="spinner-border spinner-border-sm ms-2" role="status"></span>
+          </div>
+        </div>`);
+
+      const params = new URLSearchParams();
+      currentFilters.drug_filters.forEach(f => params.append('drug_filters', f));
+      currentFilters.ta_filters.forEach(f => params.append('ta_filters', f));
+      currentFilters.session_filters.forEach(f => params.append('session_filters', f));
+
+      const response = await fetch(`/api/playbook/${playbookType}/stream?${params}`);
+      if (!response.ok) throw new Error('Playbook request failed');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let out = '';            // accumulated playbook text
+
+      appendToChat(`
+        <div class="d-flex justify-content-start mb-2">
+          <div class="bg-light border rounded p-3" style="max-width:90%;">
+            <div id="playbook-content" class="chat-stream"></div>
+          </div>
+        </div>`);
+
+      const contentDiv = document.getElementById('playbook-content');
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            // Extract event type (e.g., "event: table")
+            const eventType = line.slice(7).trim();
+            continue;
+          }
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6);
+            if (dataStr === '[DONE]') continue;
+            try {
+              const parsed = JSON.parse(dataStr);
+
+              // Handle table event
+              if (parsed.title && parsed.rows && parsed.columns) {
+                // This is a table event
+                console.log('[COMPETITOR FRONTEND] Received table event:', {
+                  title: parsed.title,
+                  rowCount: parsed.rows.length,
+                  columns: parsed.columns,
+                  firstRow: parsed.rows[0]
+                });
+                const tableHtml = createTableHTML(parsed.title, parsed.subtitle || '', parsed.columns, parsed.rows);
+                console.log('[COMPETITOR FRONTEND] Generated table HTML length:', tableHtml.length);
+                contentDiv.innerHTML = tableHtml + '<div class="mt-3" id="playbook-text"></div>';
+                console.log('[COMPETITOR FRONTEND] Table inserted into DOM');
+
+                // Add sorting, resizing, and mobile tap-to-expand to playbook table
+                addPlaybookTableInteractivity(parsed.columns, parsed.rows);
+
+                // Point to the text div for subsequent text tokens
+                const textDiv = document.getElementById('playbook-text');
+                if (textDiv) textDiv.textContent = '';  // Clear any existing text
+                smartScroll(chatContainer);  // Only scroll if user is near bottom
+              }
+              // Handle token event
+              else if (parsed.text) {
+                // Check if we have a separate text div (after table)
+                const textDiv = document.getElementById('playbook-text');
+                if (textDiv) {
+                  out += parsed.text;
+                  textDiv.textContent = out;
+                } else {
+                  // No table, accumulate directly
+                  out += parsed.text;
+                  contentDiv.textContent = out;
+                }
+                smartScroll(chatContainer);  // Only scroll if user is near bottom
+              }
+            } catch (e) {
+              console.error('Parse error:', e);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Playbook error:', error);
+      appendToChat(`
+        <div class="d-flex justify-content-start mb-2">
+          <div class="bg-danger text-white rounded p-2">Error: ${error.message}</div>
+        </div>`);
+    }
+  }
 
   function getPlaybookTitle(type) {
     const titles = {
@@ -866,42 +960,19 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ===== Chat (placeholder) =====
-  if (sendChatBtn) sendChatBtn.addEventListener('click', handleChat);
-  if (userInput) {
-    // Handle Enter key for textarea: Enter sends, Shift+Enter adds newline
-    userInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleChat();
-      }
-    });
-
-    // Auto-resize textarea as user types
-    userInput.addEventListener('input', () => {
-      userInput.style.height = 'auto';
-      userInput.style.height = userInput.scrollHeight + 'px';
-    });
-  }
+  sendChatBtn.addEventListener('click', handleChat);
+  userInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter') handleChat(); });
 
   async function handleChat(){
     const message = userInput.value.trim();
     if (!message) return;
     userInput.value = '';
 
-    // Hide greeting on first message
-    const aiGreeting = document.getElementById('aiGreeting');
-    if (aiGreeting) {
-      aiGreeting.style.display = 'none';
-    }
-
     // Add user message to chat
     appendToChat(`
       <div class="d-flex justify-content-end mb-2">
         <div class="bg-primary text-white rounded p-2" style="max-width:80%;">${escapeHtml(message)}</div>
       </div>`);
-
-    // Store user message temporarily (will be paired with AI response)
-    const userMessage = message;
 
     try {
       // Generate unique ID for this response
@@ -916,21 +987,14 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
         </div>`);
 
-      // Build filters from chat scope selector
-      const drugFilters = activeChatScope.type === 'drug' ? [activeChatScope.value] : [];
-      const taFilters = activeChatScope.type === 'ta' ? [activeChatScope.value] : [];
-
-      // Call streaming chat API with conversation history
+      // Call streaming chat API
       const response = await fetch('/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: message,
-          drug_filters: drugFilters,
-          ta_filters: taFilters,
-          session_filters: [],
-          date_filters: [],
-          conversation_history: conversationHistory
+          ta_filter: 'All', // For now, use All - will implement proper filtering later
+          conversation_history: []
         })
       });
 
@@ -968,34 +1032,29 @@ document.addEventListener('DOMContentLoaded', function() {
             if (dataStr === '[DONE]') continue;
 
             try {
-              const parsed = JSON.parse(dataStr);
-
-              if (parsed.table) {
-                // Handle entity table (HTML already formatted)
-                contentDiv.insertAdjacentHTML('beforebegin', parsed.table);
+              if (currentEvent === 'table') {
+                // Handle table events
+                const tableData = JSON.parse(dataStr);
+                const tableHtml = generateTableHtml(tableData.title, tableData.rows);
+                contentDiv.insertAdjacentHTML('beforebegin', tableHtml);
                 chatContainer.scrollTop = chatContainer.scrollHeight;
-              } else if (parsed.text) {
+                currentEvent = null; // Reset event type
+              } else {
                 // Handle regular text events
-                out += parsed.text;
-                contentDiv.innerHTML = formatAIText(out);
-                chatContainer.scrollTop = chatContainer.scrollHeight;
+                const parsed = JSON.parse(dataStr);
+                if (parsed.text) {
+                  // accumulate and render safely
+                  out += parsed.text;          // preserve \n as-is
+                  contentDiv.textContent = out;
+                  chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
               }
             } catch (e) {
               // Skip malformed JSON
-              console.error('JSON parse error:', e);
             }
           }
         }
       }
-
-      // Add conversation pair to history (backend expects {user: ..., assistant: ...} format)
-      conversationHistory.push({ user: userMessage, assistant: out });
-
-      // Limit conversation history to last 5 exchanges (10 messages total: 5 user + 5 AI)
-      if (conversationHistory.length > 5) {
-        conversationHistory = conversationHistory.slice(-5);
-      }
-
     } catch (error) {
       console.error('Chat error:', error);
       appendToChat(`
@@ -1010,72 +1069,9 @@ document.addEventListener('DOMContentLoaded', function() {
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
 
-  // ===== Download Conversation =====
-  const downloadChatBtn = document.getElementById('downloadChatBtn');
-  if (downloadChatBtn) {
-    downloadChatBtn.addEventListener('click', downloadConversation);
-  }
-
-  function downloadConversation() {
-    // Extract conversation from chat container
-    const chatMessages = chatContainer.querySelectorAll('.d-flex');
-    if (chatMessages.length === 0) {
-      alert('No conversation to download yet.');
-      return;
-    }
-
-    let conversation = 'ESMO 2025 Conference Intelligence - Conversation Export\n';
-    conversation += '=' .repeat(60) + '\n';
-    conversation += `Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}\n`;
-    conversation += '=' .repeat(60) + '\n\n';
-
-    chatMessages.forEach((msg, index) => {
-      const isUser = msg.classList.contains('justify-content-end');
-      const msgDiv = msg.querySelector('div:not(.spinner-border)');
-      if (!msgDiv) return;
-
-      const text = msgDiv.innerText || msgDiv.textContent;
-      if (!text.trim()) return;
-
-      if (isUser) {
-        conversation += `USER:\n${text}\n\n`;
-      } else {
-        conversation += `AI ASSISTANT:\n${text}\n\n`;
-      }
-      conversation += '-'.repeat(60) + '\n\n';
-    });
-
-    // Create blob and download
-    const blob = new Blob([conversation], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ESMO2025_Conversation_${new Date().toISOString().slice(0,10)}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
   // ===== Utilities =====
   function escapeHtml(text){ const div = document.createElement('div'); div.textContent = text ?? ''; return div.innerHTML; }
   function debounce(fn, wait){ let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn.apply(this,args), wait); }; }
-
-  // Format AI text with line breaks and basic formatting
-  function formatAIText(text) {
-    if (!text) return '';
-    // Escape HTML first
-    let formatted = escapeHtml(text);
-    // Convert double line breaks to paragraphs
-    formatted = formatted.replace(/\n\n/g, '<br><br>');
-    // Convert single line breaks to br
-    formatted = formatted.replace(/\n/g, '<br>');
-    // Bold text (**text** → <strong>text</strong>)
-    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Italic text (*text* → <em>text</em>)
-    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    return formatted;
-  }
 
   function renderCellContent(val) {
     // Check if content contains search highlighting
@@ -1149,288 +1145,6 @@ document.addEventListener('DOMContentLoaded', function() {
     aiFiltersElement.addEventListener('hide.bs.collapse', function () {
       aiChevron.textContent = '▼';
     });
-  }
-
-  // ===== Quick Intelligence Modal & Chat Scope Selector =====
-
-  const quickIntelModal = document.getElementById('quickIntelModal');
-  const modalIcon = document.getElementById('modalIcon');
-  const modalTitle = document.getElementById('modalTitle');
-  const modalInstructions = document.getElementById('modalInstructions');
-  const modalDrugSection = document.getElementById('modalDrugSection');
-  const modalTASection = document.getElementById('modalTASection');
-  const modalSelectedFilter = document.getElementById('modalSelectedFilter');
-  const modalSelectedFilterText = document.getElementById('modalSelectedFilterText');
-  const chatScopeDropdown = document.getElementById('chatScopeDropdown');
-
-  let pendingPlaybookType = null;
-  let selectedFilterType = null; // 'drug' or 'ta'
-  let selectedFilterValue = null;
-
-  // Button configurations: which filters to show for each playbook
-  const playbookConfig = {
-    competitor: {
-      icon: '🏆',
-      title: 'Competitor Intelligence',
-      filters: ['drug'], // Drug only
-      instruction: 'Select a drug to analyze:'
-    },
-    kol: {
-      icon: '👥',
-      title: 'KOL Analysis',
-      filters: ['drug', 'ta'], // Drug OR TA (pick one)
-      instruction: 'Select a drug or therapeutic area:'
-    },
-    institution: {
-      icon: '🏥',
-      title: 'Institution Analysis',
-      filters: ['ta'], // TA only
-      instruction: 'Select a therapeutic area:'
-    },
-    insights: {
-      icon: '📈',
-      title: 'Strategic Insights',
-      filters: ['drug', 'ta'], // Drug OR TA (pick one)
-      instruction: 'Select a drug or therapeutic area:'
-    },
-    strategy: {
-      icon: '📋',
-      title: 'Strategic Recommendations',
-      filters: ['drug'], // Drug only
-      instruction: 'Select a drug to analyze:'
-    }
-  };
-
-  // Show modal when playbook button is clicked
-  playbookTriggers.forEach(el => {
-    el.addEventListener('click', () => {
-      const playbookType = el.getAttribute('data-playbook');
-      pendingPlaybookType = playbookType;
-      selectedFilterType = null;
-      selectedFilterValue = null;
-
-      const config = playbookConfig[playbookType];
-
-      // Update modal title/icon
-      modalIcon.textContent = config.icon;
-      modalTitle.textContent = config.title;
-      modalInstructions.textContent = config.instruction;
-
-      // Show/hide filter sections based on config
-      modalDrugSection.style.display = config.filters.includes('drug') ? 'block' : 'none';
-      modalTASection.style.display = config.filters.includes('ta') ? 'block' : 'none';
-      modalSelectedFilter.style.display = 'none';
-
-      // Reset active states
-      document.querySelectorAll('.modal-filter-btn').forEach(btn => btn.classList.remove('active'));
-
-      // Show modal
-      const modal = new bootstrap.Modal(quickIntelModal);
-      modal.show();
-    });
-  });
-
-  // Handle filter button clicks (auto-run on selection)
-  document.querySelectorAll('.modal-filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const filterType = btn.dataset.type;
-      const filterValue = btn.dataset.value;
-
-      // Mark as selected
-      document.querySelectorAll('.modal-filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      selectedFilterType = filterType;
-      selectedFilterValue = filterValue;
-
-      // Show selected filter
-      modalSelectedFilter.style.display = 'block';
-      modalSelectedFilterText.textContent = btn.textContent;
-
-      // Auto-run analysis after brief delay (allows user to see selection)
-      setTimeout(() => {
-        runPlaybookAnalysis();
-      }, 300);
-    });
-  });
-
-  function runPlaybookAnalysis() {
-    if (!pendingPlaybookType || !selectedFilterValue) return;
-
-    // Build filter arrays
-    const drugFilters = selectedFilterType === 'drug' ? [selectedFilterValue] : [];
-    const taFilters = selectedFilterType === 'ta' ? [selectedFilterValue] : [];
-
-    // Close modal
-    const modal = bootstrap.Modal.getInstance(quickIntelModal);
-    modal.hide();
-
-    // Run playbook with filters
-    handlePlaybookWithFilters(pendingPlaybookType, drugFilters, taFilters, []);
-
-    // Reset state
-    pendingPlaybookType = null;
-    selectedFilterType = null;
-    selectedFilterValue = null;
-  }
-
-  async function handlePlaybookWithFilters(playbookType, drugFilters, taFilters, dateFilters) {
-    try {
-      // Hide greeting on first playbook click
-      const aiGreeting = document.getElementById('aiGreeting');
-      if (aiGreeting) {
-        aiGreeting.style.display = 'none';
-      }
-
-      // Ensure AI tab is visible
-      const aiTabBtn = document.getElementById('ai-assistant-tab');
-      if (window.bootstrap && aiTabBtn) new bootstrap.Tab(aiTabBtn).show();
-
-      // Show filter context in user message
-      const filterLabels = [];
-      if (drugFilters.length > 0) filterLabels.push(`💊 ${drugFilters.join(', ')}`);
-      if (taFilters.length > 0) filterLabels.push(`🎯 ${taFilters.join(', ')}`);
-      if (dateFilters.length > 0) filterLabels.push(`📅 ${dateFilters.join(', ')}`);
-      const filterText = filterLabels.length > 0 ? ` (${filterLabels.join(' • ')})` : '';
-
-      appendToChat(`
-        <div class="d-flex justify-content-start mb-2">
-          <div class="bg-primary text-white rounded p-2" style="max-width:80%;">
-            <strong>🤖 Running ${getPlaybookTitle(playbookType)}${filterText}...</strong>
-            <span class="spinner-border spinner-border-sm ms-2" role="status"></span>
-          </div>
-        </div>`);
-
-      const params = new URLSearchParams();
-      drugFilters.forEach(f => params.append('drug_filters', f));
-      taFilters.forEach(f => params.append('ta_filters', f));
-      dateFilters.forEach(f => params.append('date_filters', f));
-
-      const response = await fetch(`/api/playbook/${playbookType}/stream?${params}`);
-      if (!response.ok) throw new Error('Playbook request failed');
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let out = '';
-
-      appendToChat(`
-        <div class="d-flex justify-content-start mb-2">
-          <div class="bg-light border rounded p-3" style="max-width:90%;">
-            <div id="playbook-content" class="chat-stream"></div>
-          </div>
-        </div>`);
-
-      const contentDiv = document.getElementById('playbook-content');
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop();
-        for (const line of lines) {
-          if (line.startsWith('event: ')) continue;
-          if (line.startsWith('data: ')) {
-            const dataStr = line.slice(6);
-            if (dataStr === '[DONE]') continue;
-            try {
-              const parsed = JSON.parse(dataStr);
-
-              // Handle table event (backend sends {title, columns, rows})
-              if (parsed.title && parsed.columns && parsed.rows) {
-                const tableHtml = createTableHTML(parsed.title, parsed.subtitle || '', parsed.columns, parsed.rows);
-                contentDiv.innerHTML = tableHtml + '<div class="mt-3" id="playbook-text"></div>';
-
-                // Add interactivity to table
-                addPlaybookTableInteractivity(parsed.columns, parsed.rows);
-
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-              }
-              // Handle text event
-              else if (parsed.text) {
-                // Check if we have a separate text div (after table)
-                const textDiv = document.getElementById('playbook-text');
-                if (textDiv) {
-                  out += parsed.text;
-                  textDiv.innerHTML = formatAIText(out) + '<span class="cursor-blink">▊</span>';
-                } else {
-                  // No table yet, accumulate in main content
-                  out += parsed.text;
-                  contentDiv.innerHTML = formatAIText(out) + '<span class="cursor-blink">▊</span>';
-                }
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-              }
-
-            } catch (err) {
-              console.warn('Parse error:', err);
-            }
-          }
-        }
-      }
-
-      // Finalize - remove blinking cursor
-      const textDiv = document.getElementById('playbook-text');
-      if (textDiv) {
-        textDiv.innerHTML = formatAIText(out);
-      } else {
-        contentDiv.innerHTML = formatAIText(out);
-      }
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-
-    } catch (error) {
-      console.error('Playbook error:', error);
-      appendToChat('<div class="alert alert-danger">Error running analysis. Please try again.</div>');
-    }
-  }
-
-  // Chat Scope Selector - Apply to chat requests
-  let activeChatScope = { type: 'all', value: null };
-
-  chatScopeDropdown.addEventListener('change', () => {
-    const selected = chatScopeDropdown.value;
-    if (selected === 'all') {
-      activeChatScope = { type: 'all', value: null };
-    } else if (selected.startsWith('drug:')) {
-      activeChatScope = { type: 'drug', value: selected.replace('drug:', '') };
-    } else if (selected.startsWith('ta:')) {
-      activeChatScope = { type: 'ta', value: selected.replace('ta:', '') };
-    }
-  });
-
-  // Hide filter sidebar when on AI Assistant tab (use class toggle instead of style changes)
-  // Listen to ALL tab buttons (both appbar tabs and hidden nav-tabs)
-  const allTabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
-
-  console.log('[SIDEBAR DEBUG] Found tab buttons:', allTabButtons.length);
-
-  function handleTabSwitch(target) {
-    if (target === '#data-explorer') {
-      console.log('[SIDEBAR DEBUG] 📊 Data Explorer tab shown - showing filter sidebar');
-      document.body.classList.remove('ai-tab-active');
-      document.body.classList.add('data-tab-active');
-    } else if (target === '#ai-assistant') {
-      console.log('[SIDEBAR DEBUG] 🤖 AI Assistant tab shown - hiding filter sidebar');
-      document.body.classList.remove('data-tab-active');
-      document.body.classList.add('ai-tab-active');
-    }
-    console.log('[SIDEBAR DEBUG] Body classes:', document.body.className);
-  }
-
-  // Listen to all tab buttons
-  allTabButtons.forEach(button => {
-    button.addEventListener('shown.bs.tab', (event) => {
-      const target = event.target.getAttribute('data-bs-target');
-      handleTabSwitch(target);
-    });
-  });
-
-  // Set initial class on page load
-  const activeTab = document.querySelector('.appbar-tab.active');
-  if (activeTab) {
-    const target = activeTab.getAttribute('data-bs-target');
-    console.log('[SIDEBAR DEBUG] Initial active tab:', target);
-    handleTabSwitch(target);
   }
 
 });

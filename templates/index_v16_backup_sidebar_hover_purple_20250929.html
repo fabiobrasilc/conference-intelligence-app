@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ESMO 2025 — Conference Intelligence Platform</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  </head>
+  <body>
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Left Sidebar for Filters -->
+    <aside class="filter-sidebar collapsed" id="filterSidebar">
+      <div class="sidebar-header">
+        <div class="d-flex align-items-center justify-content-between">
+          <h6 class="mb-0 fw-bold">🧰 Filters</h6>
+          <button class="btn btn-sm btn-link text-decoration-none" id="clearAllFilters">Clear All</button>
+        </div>
+        <div class="filter-count-badge" id="filterCountBadge">0 active</div>
+      </div>
+
+      <div class="sidebar-content">
+        <!-- Drug Focus Section -->
+        <div class="filter-section">
+          <div class="filter-section-header" data-section="drug">
+            <span class="section-title">🎯 Drug Focus</span>
+            <span class="chevron">›</span>
+          </div>
+          <div class="filter-options">
+            <button class="filter-toggle-btn drug-filter-btn" data-value="Avelumab Focus">Avelumab</button>
+            <button class="filter-toggle-btn drug-filter-btn" data-value="Tepotinib Focus">Tepotinib</button>
+            <button class="filter-toggle-btn drug-filter-btn" data-value="Cetuximab Focus">Cetuximab</button>
+          </div>
+        </div>
+
+        <!-- Therapeutic Area Section -->
+        <div class="filter-section">
+          <div class="filter-section-header" data-section="ta">
+            <span class="section-title">🏥 Therapeutic Area</span>
+            <span class="chevron">›</span>
+          </div>
+          <div class="filter-options">
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Bladder Cancer">Bladder Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Renal Cancer">Renal Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Lung Cancer">Lung Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Colorectal Cancer">Colorectal Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Head and Neck Cancer">Head & Neck Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="TGCT">TGCT</button>
+          </div>
+        </div>
+
+        <!-- Session Type Section -->
+        <div class="filter-section">
+          <div class="filter-section-header" data-section="session">
+            <span class="section-title">📋 Session Type</span>
+            <span class="chevron">›</span>
+          </div>
+          <div class="filter-options">
+            <button class="filter-toggle-btn session-filter-btn" data-value="Poster">Poster</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="ePoster">ePoster</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Proffered Paper">Proffered Paper</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Mini Oral Session">Mini Oral</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Educational Session">Educational</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Symposia">Symposia</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Industry-Sponsored Symposium">Industry-Sponsored</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Multidisciplinary Session">Multidisciplinary</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Special Session">Special</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Young Oncologists Session">Young Oncologists</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Challenge Your Expert">Challenge Expert</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Patient Advocacy Session">Patient Advocacy</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="EONS Session">EONS</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Highlights">Highlights</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Keynote Lecture">Keynote Lecture</button>
+          </div>
+        </div>
+
+        <!-- Conference Day Section -->
+        <div class="filter-section">
+          <div class="filter-section-header" data-section="date">
+            <span class="section-title">📅 Conference Day</span>
+            <span class="chevron">›</span>
+          </div>
+          <div class="filter-options">
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 1">Oct 17th</button>
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 2">Oct 18th</button>
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 3">Oct 19th</button>
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 4">Oct 20th</button>
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 5">Oct 21st</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <!-- App Bar -->
+      <div class="appbar">
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <h1 class="appbar-title">COSMIC - ESMO 2025 Conference Intelligence</h1>
+        <div class="appbar-tabs" role="tablist" aria-label="Main sections">
+          <button class="appbar-tab active" data-bs-toggle="tab" data-bs-target="#data-explorer" type="button" role="tab" aria-controls="data-explorer" aria-selected="true">Data Explorer</button>
+          <span>|</span>
+          <button class="appbar-tab" data-bs-toggle="tab" data-bs-target="#ai-assistant" type="button" role="tab" aria-controls="ai-assistant" aria-selected="false">AI Assistant</button>
+        </div>
+      </div>
+
+      <!-- Hidden default nav-tabs (for bootstrap mechanics) -->
+      <ul class="nav nav-tabs" id="mainTabs" role="tablist" style="display:none;">
+        <li class="nav-item"><button class="nav-link active" id="data-explorer-tab" data-bs-toggle="tab" data-bs-target="#data-explorer" type="button" role="tab">Data Explorer</button></li>
+        <li class="nav-item"><button class="nav-link" id="ai-assistant-tab" data-bs-toggle="tab" data-bs-target="#ai-assistant" type="button" role="tab">AI Assistant</button></li>
+      </ul>
+
+      <div class="tab-content" id="mainTabContent">
+
+        <!-- ===================== DATA EXPLORER ===================== -->
+        <div class="tab-pane fade show active" id="data-explorer" role="tabpanel" aria-labelledby="data-explorer-tab">
+          <div class="content-area">
+
+            <!-- Search Bar -->
+            <div class="search-bar-container mb-3">
+              <div class="input-group">
+                <button class="btn btn-outline-secondary" id="clearSearchBtn" title="Clear search" style="display: none;">✕</button>
+                <input type="text" class="form-control form-control-lg" id="searchInput" placeholder="Search titles, authors, institutions... (use AND, OR, NOT for boolean search)" />
+                <button class="btn btn-primary" id="searchBtn">🔍 Search</button>
+              </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="card">
+              <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                  <h5 class="mb-0">
+                    Conference Data —
+                    <small id="filterContext" class="text-muted">Loading filter context...</small>
+                  </h5>
+                  <button class="btn btn-outline-secondary" id="exportBtn">Download table</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="tableContainer">
+                  <div class="text-center py-4">
+                    <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    <p class="mt-2 mb-0">Loading ESMO 2025 data...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===================== AI ASSISTANT ===================== -->
+        <div class="tab-pane fade" id="ai-assistant" role="tabpanel" aria-labelledby="ai-assistant-tab">
+          <div class="content-area">
+
+            <!-- Action Bar (playbooks) -->
+            <div class="actionbar mb-3">
+              <div class="label">⚡ Quick Intelligence</div>
+
+              <div class="action-chip playbook-trigger" data-playbook="competitor" title="Run a competitor landscape summary">
+                <div class="icon">🏆</div>
+                <div>
+                  <div class="title">Competitor</div>
+                  <div class="sub">Landscape & counts</div>
+                </div>
+              </div>
+
+              <div class="action-chip playbook-trigger" data-playbook="kol" title="Find key authors and influence">
+                <div class="icon">👥</div>
+                <div>
+                  <div class="title">KOL Analysis</div>
+                  <div class="sub">Authors & impact</div>
+                </div>
+              </div>
+
+              <div class="action-chip playbook-trigger" data-playbook="institution" title="Institution footprint and trial activity">
+                <div class="icon">🏥</div>
+                <div>
+                  <div class="title">Institutions</div>
+                  <div class="sub">Footprint & trials</div>
+                </div>
+              </div>
+
+              <div class="action-chip playbook-trigger" data-playbook="insights" title="Signals, themes, early trends">
+                <div class="icon">📈</div>
+                <div>
+                  <div class="title">Insights</div>
+                  <div class="sub">Signals & themes</div>
+                </div>
+              </div>
+
+              <div class="action-chip playbook-trigger" data-playbook="strategy" title="Implications and next steps">
+                <div class="icon">📋</div>
+                <div>
+                  <div class="title">Strategy</div>
+                  <div class="sub">Recommendations</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chat -->
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">AI Assistant Chat</h5>
+              </div>
+              <div class="card-body p-0">
+                <div id="chatContainer" class="chat-container">
+                  <div class="chat-welcome">
+                    <p class="text-muted">Ask questions about the conference data, or click a Quick Intelligence button above for structured analysis.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div class="input-group">
+                  <input type="text" class="form-control" id="chatInput" placeholder="Ask about conference insights..." />
+                  <button class="btn btn-primary" id="chatSendBtn">Send</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>

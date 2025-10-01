@@ -52,13 +52,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // ===== Quick Intelligence Sidebar - Click to toggle =====
+  // ===== Quick Intelligence Sidebar (AI Tab) =====
   const quickIntelSidebar = document.getElementById('quickIntelSidebar');
-  const quickIntelHeader = quickIntelSidebar?.querySelector('.quick-intel-header');
-
-  if (quickIntelHeader) {
-    quickIntelHeader.addEventListener('click', () => {
-      quickIntelSidebar.classList.toggle('collapsed');
+  if (quickIntelSidebar) {
+    quickIntelSidebar.addEventListener('mouseenter', () => {
+      quickIntelSidebar.classList.remove('collapsed');
+    });
+    quickIntelSidebar.addEventListener('mouseleave', () => {
+      quickIntelSidebar.classList.add('collapsed');
     });
   }
 
@@ -97,7 +98,6 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentFilters = { drug_filters: [], ta_filters: [], session_filters: [], date_filters: [] };
   let currentTableData = [];
   let sortState = { column: null, direction: 'asc' };
-  let conversationHistory = []; // Store last 10 messages (5 user + 5 AI)
 
   // ===== Init =====
   loadData();
@@ -627,7 +627,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ===== Playbooks via Action Bar =====
-  // REMOVED: Old direct playbook handler (now using modal-based flow at line ~1256)
+  playbookTriggers.forEach(el => {
+    el.addEventListener('click', () => handlePlaybook(el.getAttribute('data-playbook')));
+  });
 
   function createTableHTML(title, subtitle, columns, rows, tableId = 'playbookTable') {
     // Create table matching Data Explorer with sorting, resizing, and hover expansion
@@ -852,7 +854,116 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // REMOVED: Old handlePlaybook() function (replaced by handlePlaybookWithFilters() at line ~1328)
+  async function handlePlaybook(playbookType) {
+    try {
+      // Hide greeting on first playbook click
+      const aiGreeting = document.getElementById('aiGreeting');
+      if (aiGreeting) {
+        aiGreeting.style.display = 'none';
+      }
+
+      // ensure AI tab is visible (defensive)
+      const aiTabBtn = document.getElementById('ai-assistant-tab');
+      if (window.bootstrap && aiTabBtn) new bootstrap.Tab(aiTabBtn).show();
+
+      appendToChat(`
+        <div class="d-flex justify-content-start mb-2">
+          <div class="bg-primary text-white rounded p-2" style="max-width:80%;">
+            <strong>🤖 Running ${getPlaybookTitle(playbookType)}...</strong>
+            <span class="spinner-border spinner-border-sm ms-2" role="status"></span>
+          </div>
+        </div>`);
+
+      const params = new URLSearchParams();
+      currentFilters.drug_filters.forEach(f => params.append('drug_filters', f));
+      currentFilters.ta_filters.forEach(f => params.append('ta_filters', f));
+      currentFilters.session_filters.forEach(f => params.append('session_filters', f));
+
+      const response = await fetch(`/api/playbook/${playbookType}/stream?${params}`);
+      if (!response.ok) throw new Error('Playbook request failed');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let out = '';            // accumulated playbook text
+
+      appendToChat(`
+        <div class="d-flex justify-content-start mb-2">
+          <div class="bg-light border rounded p-3" style="max-width:90%;">
+            <div id="playbook-content" class="chat-stream"></div>
+          </div>
+        </div>`);
+
+      const contentDiv = document.getElementById('playbook-content');
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            // Extract event type (e.g., "event: table")
+            const eventType = line.slice(7).trim();
+            continue;
+          }
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6);
+            if (dataStr === '[DONE]') continue;
+            try {
+              const parsed = JSON.parse(dataStr);
+
+              // Handle table event
+              if (parsed.title && parsed.rows && parsed.columns) {
+                // This is a table event
+                console.log('[COMPETITOR FRONTEND] Received table event:', {
+                  title: parsed.title,
+                  rowCount: parsed.rows.length,
+                  columns: parsed.columns,
+                  firstRow: parsed.rows[0]
+                });
+                const tableHtml = createTableHTML(parsed.title, parsed.subtitle || '', parsed.columns, parsed.rows);
+                console.log('[COMPETITOR FRONTEND] Generated table HTML length:', tableHtml.length);
+                contentDiv.innerHTML = tableHtml + '<div class="mt-3" id="playbook-text"></div>';
+                console.log('[COMPETITOR FRONTEND] Table inserted into DOM');
+
+                // Add sorting, resizing, and mobile tap-to-expand to playbook table
+                addPlaybookTableInteractivity(parsed.columns, parsed.rows);
+
+                // Point to the text div for subsequent text tokens
+                const textDiv = document.getElementById('playbook-text');
+                if (textDiv) textDiv.textContent = '';  // Clear any existing text
+                smartScroll(chatContainer);  // Only scroll if user is near bottom
+              }
+              // Handle token event
+              else if (parsed.text) {
+                // Check if we have a separate text div (after table)
+                const textDiv = document.getElementById('playbook-text');
+                if (textDiv) {
+                  out += parsed.text;
+                  textDiv.innerHTML = formatAIText(out);
+                } else {
+                  // No table, accumulate directly
+                  out += parsed.text;
+                  contentDiv.innerHTML = formatAIText(out);
+                }
+                smartScroll(chatContainer);  // Only scroll if user is near bottom
+              }
+            } catch (e) {
+              console.error('Parse error:', e);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Playbook error:', error);
+      appendToChat(`
+        <div class="d-flex justify-content-start mb-2">
+          <div class="bg-danger text-white rounded p-2">Error: ${error.message}</div>
+        </div>`);
+    }
+  }
 
   function getPlaybookTitle(type) {
     const titles = {
@@ -900,9 +1011,6 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="bg-primary text-white rounded p-2" style="max-width:80%;">${escapeHtml(message)}</div>
       </div>`);
 
-    // Store user message temporarily (will be paired with AI response)
-    const userMessage = message;
-
     try {
       // Generate unique ID for this response
       const responseId = 'chat-content-' + Date.now();
@@ -920,7 +1028,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const drugFilters = activeChatScope.type === 'drug' ? [activeChatScope.value] : [];
       const taFilters = activeChatScope.type === 'ta' ? [activeChatScope.value] : [];
 
-      // Call streaming chat API with conversation history
+      // Call streaming chat API
       const response = await fetch('/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -930,7 +1038,7 @@ document.addEventListener('DOMContentLoaded', function() {
           ta_filters: taFilters,
           session_filters: [],
           date_filters: [],
-          conversation_history: conversationHistory
+          conversation_history: []
         })
       });
 
@@ -987,15 +1095,6 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
       }
-
-      // Add conversation pair to history (backend expects {user: ..., assistant: ...} format)
-      conversationHistory.push({ user: userMessage, assistant: out });
-
-      // Limit conversation history to last 5 exchanges (10 messages total: 5 user + 5 AI)
-      if (conversationHistory.length > 5) {
-        conversationHistory = conversationHistory.slice(-5);
-      }
-
     } catch (error) {
       console.error('Chat error:', error);
       appendToChat(`
@@ -1008,53 +1107,6 @@ document.addEventListener('DOMContentLoaded', function() {
   function appendToChat(html){
     chatContainer.insertAdjacentHTML('beforeend', html);
     chatContainer.scrollTop = chatContainer.scrollHeight;
-  }
-
-  // ===== Download Conversation =====
-  const downloadChatBtn = document.getElementById('downloadChatBtn');
-  if (downloadChatBtn) {
-    downloadChatBtn.addEventListener('click', downloadConversation);
-  }
-
-  function downloadConversation() {
-    // Extract conversation from chat container
-    const chatMessages = chatContainer.querySelectorAll('.d-flex');
-    if (chatMessages.length === 0) {
-      alert('No conversation to download yet.');
-      return;
-    }
-
-    let conversation = 'ESMO 2025 Conference Intelligence - Conversation Export\n';
-    conversation += '=' .repeat(60) + '\n';
-    conversation += `Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}\n`;
-    conversation += '=' .repeat(60) + '\n\n';
-
-    chatMessages.forEach((msg, index) => {
-      const isUser = msg.classList.contains('justify-content-end');
-      const msgDiv = msg.querySelector('div:not(.spinner-border)');
-      if (!msgDiv) return;
-
-      const text = msgDiv.innerText || msgDiv.textContent;
-      if (!text.trim()) return;
-
-      if (isUser) {
-        conversation += `USER:\n${text}\n\n`;
-      } else {
-        conversation += `AI ASSISTANT:\n${text}\n\n`;
-      }
-      conversation += '-'.repeat(60) + '\n\n';
-    });
-
-    // Create blob and download
-    const blob = new Blob([conversation], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ESMO2025_Conversation_${new Date().toISOString().slice(0,10)}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   }
 
   // ===== Utilities =====
@@ -1337,29 +1389,18 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
               const parsed = JSON.parse(dataStr);
 
-              // Handle table event (backend sends {title, columns, rows})
-              if (parsed.title && parsed.columns && parsed.rows) {
-                const tableHtml = createTableHTML(parsed.title, parsed.subtitle || '', parsed.columns, parsed.rows);
-                contentDiv.innerHTML = tableHtml + '<div class="mt-3" id="playbook-text"></div>';
-
-                // Add interactivity to table
-                addPlaybookTableInteractivity(parsed.columns, parsed.rows);
-
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-              }
-              // Handle text event
-              else if (parsed.text) {
-                // Check if we have a separate text div (after table)
-                const textDiv = document.getElementById('playbook-text');
-                if (textDiv) {
-                  out += parsed.text;
-                  textDiv.innerHTML = formatAIText(out) + '<span class="cursor-blink">▊</span>';
-                } else {
-                  // No table yet, accumulate in main content
-                  out += parsed.text;
-                  contentDiv.innerHTML = formatAIText(out) + '<span class="cursor-blink">▊</span>';
+              if (parsed.table) {
+                contentDiv.innerHTML += parsed.table;
+                const tableWrapper = contentDiv.querySelector('.playbook-table-container:last-of-type');
+                if (tableWrapper) {
+                  const table = tableWrapper.querySelector('table');
+                  if (table) addPlaybookTableInteractivity([], []);
                 }
-                chatContainer.scrollTop = chatContainer.scrollHeight;
+              }
+
+              if (parsed.text) {
+                out += parsed.text;
+                contentDiv.innerHTML = renderMarkdownBasic(out) + '<span class="cursor-blink">▊</span>';
               }
 
             } catch (err) {
@@ -1369,13 +1410,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
 
-      // Finalize - remove blinking cursor
-      const textDiv = document.getElementById('playbook-text');
-      if (textDiv) {
-        textDiv.innerHTML = formatAIText(out);
-      } else {
-        contentDiv.innerHTML = formatAIText(out);
-      }
+      contentDiv.innerHTML = renderMarkdownBasic(out);
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
     } catch (error) {
@@ -1399,38 +1434,26 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Hide filter sidebar when on AI Assistant tab (use class toggle instead of style changes)
-  // Listen to ALL tab buttons (both appbar tabs and hidden nav-tabs)
-  const allTabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
+  const dataExplorerTab = document.getElementById('data-explorer-tab');
+  const aiAssistantTab = document.getElementById('ai-assistant-tab');
 
-  console.log('[SIDEBAR DEBUG] Found tab buttons:', allTabButtons.length);
-
-  function handleTabSwitch(target) {
-    if (target === '#data-explorer') {
-      console.log('[SIDEBAR DEBUG] 📊 Data Explorer tab shown - showing filter sidebar');
+  if (dataExplorerTab && aiAssistantTab && filterSidebar) {
+    dataExplorerTab.addEventListener('shown.bs.tab', () => {
       document.body.classList.remove('ai-tab-active');
       document.body.classList.add('data-tab-active');
-    } else if (target === '#ai-assistant') {
-      console.log('[SIDEBAR DEBUG] 🤖 AI Assistant tab shown - hiding filter sidebar');
+    });
+
+    aiAssistantTab.addEventListener('shown.bs.tab', () => {
       document.body.classList.remove('data-tab-active');
       document.body.classList.add('ai-tab-active');
-    }
-    console.log('[SIDEBAR DEBUG] Body classes:', document.body.className);
-  }
-
-  // Listen to all tab buttons
-  allTabButtons.forEach(button => {
-    button.addEventListener('shown.bs.tab', (event) => {
-      const target = event.target.getAttribute('data-bs-target');
-      handleTabSwitch(target);
     });
-  });
 
-  // Set initial class on page load
-  const activeTab = document.querySelector('.appbar-tab.active');
-  if (activeTab) {
-    const target = activeTab.getAttribute('data-bs-target');
-    console.log('[SIDEBAR DEBUG] Initial active tab:', target);
-    handleTabSwitch(target);
+    // Set initial class on page load
+    if (dataExplorerTab.classList.contains('active')) {
+      document.body.classList.add('data-tab-active');
+    } else if (aiAssistantTab.classList.contains('active')) {
+      document.body.classList.add('ai-tab-active');
+    }
   }
 
 });
