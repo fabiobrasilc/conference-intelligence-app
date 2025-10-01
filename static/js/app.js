@@ -1301,6 +1301,13 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
         </div>`);
 
+      // Scroll to bottom immediately when button clicked (with slight delay for DOM update)
+      setTimeout(() => {
+        if (chatContainer) {
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+      }, 100);
+
       const params = new URLSearchParams();
       drugFilters.forEach(f => params.append('drug_filters', f));
       taFilters.forEach(f => params.append('ta_filters', f));

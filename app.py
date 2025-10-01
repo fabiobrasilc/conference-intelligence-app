@@ -64,20 +64,23 @@ def sanitize_data_structure(data):
 # SSE STREAMING UTILITIES
 # ============================================================================
 
-def stream_with_heartbeat(inner_gen, interval=10):
-    """Wrap SSE stream with periodic pings to keep connection alive."""
+def stream_with_heartbeat(inner_gen, interval=15):
+    """Wrap SSE stream with periodic pings to keep connection alive (15s interval for Railway)."""
     last = time.monotonic()
 
     for chunk in inner_gen:
         yield chunk
-        last = time.monotonic()
-
         now = time.monotonic()
+
+        # Send heartbeat comment every 15 seconds to prevent timeout
         if now - last >= interval:
-            yield f": ping {int(now)}\n\n"
+            yield ": keepalive\n\n"
+            last = now
+        else:
             last = now
 
-    yield f": ping {int(time.monotonic())}\n\n"
+    # Final heartbeat
+    yield ": done\n\n"
 
 SSE_HEADERS = {
     "Cache-Control": "no-cache, no-transform",
@@ -1819,6 +1822,74 @@ def generate_competitor_table(df: pd.DataFrame, n: int = 50) -> pd.DataFrame:
 
     return result_df
 
+def filter_competitors_by_indication(competitor_df: pd.DataFrame, indication_keywords: list) -> pd.DataFrame:
+    """Filter competitor table to only show drugs relevant to specific indication."""
+    if competitor_df.empty or not indication_keywords:
+        return competitor_df
+
+    # Search Title column for indication keywords
+    mask = pd.Series([False] * len(competitor_df), index=competitor_df.index)
+    for keyword in indication_keywords:
+        mask = mask | competitor_df['Title'].str.contains(keyword, case=False, na=False, regex=False)
+
+    return competitor_df[mask]
+
+def generate_emerging_threats_table(df: pd.DataFrame, indication_keywords: list, n: int = 20) -> pd.DataFrame:
+    """Identify emerging threats: drugs with <5 abstracts but showing novel MOAs or combinations."""
+    if df.empty:
+        return pd.DataFrame()
+
+    try:
+        drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
+        drug_db = pd.read_csv(drug_db_path)
+    except Exception as e:
+        print(f"Warning: Could not load Drug_Company_names.csv: {e}")
+        return pd.DataFrame()
+
+    # Find drugs with 2-5 mentions (emerging, not established)
+    emerging = []
+    for _, drug_row in drug_db.iterrows():
+        commercial = str(drug_row['drug_commercial']).strip() if pd.notna(drug_row['drug_commercial']) else ""
+        generic = str(drug_row['drug_generic']).strip() if pd.notna(drug_row['drug_generic']) else ""
+        company = str(drug_row['company']).strip() if pd.notna(drug_row['company']) else ""
+
+        if not commercial and not generic:
+            continue
+
+        # Build search mask
+        mask = pd.Series([False] * len(df), index=df.index)
+        if commercial:
+            mask = mask | df['Title'].str.contains(commercial, case=False, na=False, regex=False)
+        if generic:
+            mask = mask | df['Title'].str.contains(generic, case=False, na=False, regex=False)
+
+        # Filter by indication keywords
+        if indication_keywords:
+            indication_mask = pd.Series([False] * len(df), index=df.index)
+            for keyword in indication_keywords:
+                indication_mask = indication_mask | df['Title'].str.contains(keyword, case=False, na=False, regex=False)
+            mask = mask & indication_mask
+
+        matching = df[mask]
+        count = len(matching)
+
+        # Emerging: 2-5 mentions
+        if 2 <= count <= 5:
+            drug_name = generic if generic else commercial
+            sample_title = matching.iloc[0]['Title'] if not matching.empty else ""
+            emerging.append({
+                'Drug': drug_name,
+                'Company': company,
+                '# Studies': count,
+                'Sample Title': sample_title[:100] + '...' if len(sample_title) > 100 else sample_title
+            })
+
+    result_df = pd.DataFrame(emerging)
+    if not result_df.empty:
+        result_df = result_df.sort_values('# Studies', ascending=False).head(n)
+
+    return result_df
+
 # ============================================================================
 # AI STREAMING FUNCTIONS
 # ============================================================================
@@ -2059,13 +2130,23 @@ def stream_playbook(playbook_key):
         try:
             print(f"[PLAYBOOK] Starting {playbook_key} with filters: drugs={drug_filters}, tas={ta_filters}")
 
-            # 1. Apply filters - for intelligence buttons, use full dataset when no filters (not 50-limit)
-            if not drug_filters and not ta_filters and not session_filters and not date_filters:
-                filtered_df = df_global.copy()
+            # 1. For COMPETITOR button: Drug filter is for FOCUS, not dataset filtering
+            # Apply TA filters only, use drug filter to guide competitor search
+            if playbook_key == "competitor":
+                # For competitor intelligence, drug_filters guide which EMD drug's competitors to focus on
+                # TA filters still apply to narrow therapeutic area scope
+                if ta_filters or session_filters or date_filters:
+                    filtered_df = get_filtered_dataframe_multi([], ta_filters, session_filters, date_filters)
+                else:
+                    filtered_df = df_global.copy()
+                print(f"[PLAYBOOK] Competitor mode: Using dataset with {len(filtered_df)} studies (drug filter used for competitor focus)")
             else:
-                filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
-
-            print(f"[PLAYBOOK] Filtered dataset: {len(filtered_df)} studies")
+                # For other buttons, apply all filters normally
+                if not drug_filters and not ta_filters and not session_filters and not date_filters:
+                    filtered_df = df_global.copy()
+                else:
+                    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
+                print(f"[PLAYBOOK] Filtered dataset: {len(filtered_df)} studies")
 
             if filtered_df.empty:
                 print(f"[PLAYBOOK] ERROR: No data after filtering")
@@ -2136,16 +2217,52 @@ def stream_playbook(playbook_key):
             if "all_data" in playbook.get("required_tables", []):
                 # For competitor button, use dedicated competitor table with Drug and Company columns
                 if playbook_key == "competitor":
-                    # Get ALL competitor studies (no limit) based on filtered dataset
-                    competitor_table = generate_competitor_table(filtered_df, n=len(filtered_df))
+                    # IMPORTANT: For competitor intelligence, search FULL dataset (not filtered)
+                    print(f"[PLAYBOOK] Generating competitor table from FULL dataset ({len(df_global)} studies)")
+                    competitor_table_full = generate_competitor_table(df_global, n=len(df_global))
+
+                    # Filter competitors by indication if drug focus is selected
+                    indication_keywords = []
+                    if drug_filters and drug_filters[0] == "Avelumab Focus":
+                        indication_keywords = ["bladder", "urothelial", "uroepithelial"]
+                    elif drug_filters and drug_filters[0] == "Tepotinib Focus":
+                        indication_keywords = ["lung", "NSCLC", "MET"]
+                    elif drug_filters and drug_filters[0] == "Cetuximab Focus":
+                        indication_keywords = ["colorectal", "CRC", "head and neck", "HNSCC"]
+
+                    if indication_keywords:
+                        competitor_table = filter_competitors_by_indication(competitor_table_full, indication_keywords)
+                        print(f"[PLAYBOOK] Filtered to {len(competitor_table)} competitors in relevant indication")
+                    else:
+                        competitor_table = competitor_table_full
+
                     tables_data["competitor_abstracts"] = competitor_table.to_markdown(index=False) if not competitor_table.empty else "No competitor drugs found"
 
                     if not competitor_table.empty:
+                        print(f"[PLAYBOOK] Sending main competitor table with {len(competitor_table)} studies")
                         yield "data: " + json.dumps({
-                            "title": f"Competitor Drug Abstracts ({len(competitor_table)} studies)",
+                            "title": f"Competitor Drugs ({len(competitor_table)} studies)",
                             "columns": list(competitor_table.columns),
                             "rows": sanitize_data_structure(competitor_table.to_dict('records'))
                         }) + "\n\n"
+
+                    # Generate emerging threats table
+                    if indication_keywords:
+                        print(f"[PLAYBOOK] Generating emerging threats table...")
+                        emerging_table = generate_emerging_threats_table(df_global, indication_keywords, n=15)
+                        if not emerging_table.empty:
+                            print(f"[PLAYBOOK] Found {len(emerging_table)} emerging threats")
+                            tables_data["emerging_threats"] = emerging_table.to_markdown(index=False)
+                            yield "data: " + json.dumps({
+                                "title": f"Emerging Threats (2-5 studies each)",
+                                "columns": list(emerging_table.columns),
+                                "rows": sanitize_data_structure(emerging_table.to_dict('records'))
+                            }) + "\n\n"
+                        else:
+                            print(f"[PLAYBOOK] No emerging threats found")
+
+                    if competitor_table.empty and (not indication_keywords or emerging_table.empty):
+                        print(f"[PLAYBOOK] WARNING: No competitor drugs found in dataset")
                 else:
                     # For strategy or other buttons, provide sample abstracts
                     sample_df = filtered_df.head(50)[['Identifier', 'Title', 'Speakers', 'Affiliation']]
@@ -2165,11 +2282,46 @@ def stream_playbook(playbook_key):
             table_context = "\n\n".join([f"**{key.upper()}**:\n{value}" for key, value in tables_data.items()])
 
             ta_context = f"Therapeutic Area Filter: {', '.join(ta_filters) if ta_filters else 'All Therapeutic Areas'}"
-            drug_context = f"Drug Filter: {', '.join(drug_filters) if drug_filters else 'Competitive Landscape'}"
 
-            # For competitive intelligence, add guidance on which EMD drugs to analyze based on filter
+            # For COMPETITOR button: drug_filters guide analysis focus, not dataset filtering
+            if playbook_key == "competitor" and drug_filters:
+                drug_context = f"**EMD Drug Focus**: {', '.join(drug_filters)} - Analyze competitors relevant to this drug's indication(s)"
+            else:
+                drug_context = f"Drug Filter: {', '.join(drug_filters) if drug_filters else 'Competitive Landscape'}"
+
+            # For competitive intelligence, add specific competitor guidance based on selected EMD drug
             filter_guidance = ""
-            if playbook_key == "competitor" and ta_filters and "All Therapeutic Areas" not in ta_filters:
+            if playbook_key == "competitor":
+                if drug_filters:
+                    # Map EMD drug selection to specific competitors to focus on
+                    competitor_focus = {
+                        "Avelumab Focus": {
+                            "indication": "Metastatic Bladder Cancer (1L maintenance)",
+                            "key_competitors": ["enfortumab vedotin (EV)", "EV+pembrolizumab (EV+P)", "pembrolizumab", "nivolumab", "durvalumab", "atezolizumab", "sacituzumab govitecan", "erdafitinib"],
+                            "therapeutic_area": "Bladder/Urothelial Cancer"
+                        },
+                        "Tepotinib Focus": {
+                            "indication": "NSCLC with MET exon 14 skipping mutations",
+                            "key_competitors": ["capmatinib", "crizotinib", "osimertinib", "alectinib", "selpercatinib", "pralsetinib", "pembrolizumab"],
+                            "therapeutic_area": "Non-Small Cell Lung Cancer (NSCLC) - MET alterations"
+                        },
+                        "Cetuximab Focus": {
+                            "indication": "Colorectal Cancer & Head & Neck Cancer (EGFR+)",
+                            "key_competitors": ["panitumumab", "bevacizumab", "pembrolizumab", "nivolumab", "regorafenib", "trifluridine/tipiracil"],
+                            "therapeutic_area": "Colorectal Cancer and Head & Neck Squamous Cell Carcinoma"
+                        }
+                    }
+
+                    selected_drug = drug_filters[0] if drug_filters else None
+                    if selected_drug in competitor_focus:
+                        focus = competitor_focus[selected_drug]
+                        competitor_list = "', '".join(focus["key_competitors"])
+                        filter_guidance = f"\n\n**COMPETITIVE ANALYSIS FOCUS**:\n"
+                        filter_guidance += f"- **Primary EMD Asset**: {selected_drug.replace(' Focus', '')} in {focus['indication']}\n"
+                        filter_guidance += f"- **Therapeutic Area**: {focus['therapeutic_area']}\n"
+                        filter_guidance += f"- **Key Competitors to Analyze**: '{competitor_list}'\n"
+                        filter_guidance += f"- **Analysis Scope**: Prioritize these competitors in your analysis. Search the competitor abstracts table for mentions of these drugs and provide detailed competitive positioning insights."
+                elif ta_filters and "All Therapeutic Areas" not in ta_filters:
                 relevant_drugs = []
                 if any(ta in ["Bladder Cancer", "Renal Cancer"] for ta in ta_filters):
                     relevant_drugs.append("avelumab (bladder/urothelial cancer)")
