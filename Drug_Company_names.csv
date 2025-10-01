@@ -1,0 +1,445 @@
+﻿drug_commercial,drug_generic,company
+Keytruda ,pembrolizumab , Merck (MSD)
+Opdivo ,nivolumab ," Ono Pharma, BMS"
+Avastin ,bevacizumab , Roche
+Tecentriq ,atezolizumab , Roche
+Tevimbra ,tislelizumab-jsgr , BeOne Medicines
+Yervoy ,ipilimumab , BMS
+Imfinzi ,durvalumab , AstraZeneca
+Tagrisso ,osimertinib , AstraZeneca
+Enhertu ,fam-trastuzumab deruxtecan-nxki ," Daiichi Sankyo, AstraZeneca"
+Lenvima ,lenvatinib ," Eisai, Merck (MSD)"
+Tyvyt ,sintilimab ," Innovent Biologics, Eli Lilly"
+Erbitux ,cetuximab , Eli Lilly
+Padcev ,enfortumab vedotin-ejfv ," Astellas, Pfizer"
+Pluvicto ,lutetium Lu 177 vipivotide tetraxetan , Novartis
+Loqtorzi ,toripalimab-tpzi ," Shanghai Junshi Biosci, Coherus Oncology"
+AiRuiKa ,camrelizumab , HLB Bio Group
+Herceptin ,trastuzumab , Roche
+Lynparza ,olaparib ," Merck (MSD), AstraZeneca"
+AiRuiLi ,adebrelimab , Jiangsu Hengrui Pharma
+Kisqali ,ribociclib , Novartis
+Kaitanni ,cadonilimab , Akesobio
+Perjeta ,pertuzumab , Roche
+Cabometyx ,cabozantinib tablet , Exelixis
+Xtandi ,enzalutamide ," Pfizer, Astellas"
+Libtayo ,cemiplimab-rwlc , Regeneron
+Braftovi ,encorafenib , Pfizer
+Focus V ,anlotinib ," Advenchen, Sino Biopharm"
+Ibrance ,palbociclib , Pfizer
+Stivarga ,regorafenib , Bayer
+Jiataile ,sacituzumab tirumotecan , Merck (MSD)
+Rituxan ,rituximab , Roche
+Aidixi ,disitamab vedotin , Pfizer
+AiTan ,rivoceranib , HLB Bio Group
+Bavencio ,avelumab , EMD Serono
+Trodelvy ,sacituzumab govitecan-hziy , Gilead
+Fruzaqla ,fruquintinib , Takeda
+Rybrevant ,amivantamab-vmjw , J&J
+Qibeian ,iparomlimab/tuvonralimab ," Sound Biologics, Qilu Pharma"
+Enweida ,envafolimab ," 3DMed, Ascletis"
+iparomlimab ,QL1604 , Qilu Pharma
+Cyramza ,ramucirumab , Eli Lilly
+Xofigo ,radium Ra-223 dichloride , Bayer
+Nubeqa ,darolutamide ," Bayer, Orion Corp"
+relatlimab ,BMS-986016 , BMS
+Epidaza ,chidamide , Chipscreen
+Zejula ,niraparib ," GSK, J&J"
+Mektovi ,binimetinib , Pfizer
+Vitrakvi ,larotrectinib , Bayer
+Hetronifly ,serplulimab , Fosun Pharma
+Alecensa ,alectinib , Roche
+Talzenna ,talazoparib , Pfizer
+Ivesa ,firmonertinib ," Allist, ArriVent"
+Sulanda ,surufatinib , Hutchmed
+Lutathera ,lutetium Lu 177 dotatate , Novartis
+Mekinist ,trametinib ," Novartis, BeOne Medicines"
+Lonsurf ,trifluridine/tipiracil , Otsuka
+Welireg ,belzutifan , Merck (MSD)
+Yondelis ,trabectedin ," PharmaMar, J&J"
+Vectibix ,panitumumab , Amgen
+rilvegostomig ,AZD2936 , AstraZeneca
+micvotabart pelidotin ,PYX-201 , Pyxis Oncology
+balstilimab ,AGEN2034 , Agenus
+telisotuzumab adizutecan ,ABBV-400 , AbbVie
+Irene ,pyrotinib , Jiangsu Hengrui Pharma
+Truqap ,capivasertib , AstraZeneca
+Teysuno ,gimeracil/oteracil/tegafur ," Nordic Group, Otsuka"
+Lumakras ,sotorasib , Amgen
+izalontamab brengitecan ,BL-B01D1 ," Biokin Pharma, BMS"
+Cosela ,trilaciclib , Pharmacosmos
+TheraCIM ,nimotuzumab ," Daiichi Sankyo, Oncoscience, Biocon"
+Halaven ,eribulin mesylate , Eisai
+AiRuiKang ,dalpiciclib , Jiangsu Hengrui Pharma
+Tafinlar ,dabrafenib , Novartis
+Verzenio ,abemaciclib , Eli Lilly
+tiragolumab ,RG6058 , Roche
+atirmociclib ,PF-07220060 , Pfizer
+Inokai ,orelabrutinib ," InnoCare, Biogen"
+domvanalimab ,AB154 ," Arcus Biosci, Gilead"
+Venclexta ,venetoclax ," Roche, AbbVie"
+Rina-S ,rinatabart sesutecan , Genmab
+Datroway ,datopotamab deruxtecan-dlnk ," Daiichi Sankyo, AstraZeneca"
+Imjudo ,tremelimumab-actl , AstraZeneca
+Xuan Yue Ning ,bireociclib , Sihuan Pharmaceutical
+trastuzumab rezetecan ,SHR-A1811 , Jiangsu Hengrui Pharma
+ifinatamab deruxtecan ,DS-7300 ," Daiichi Sankyo, Merck (MSD)"
+Yutuo ,zimberelimab ," Arcus Biosci, Gilead"
+Jemperli ,dostarlimab-gxly , GSK
+anbenitamab repodatecan ,JSKN003 , Alphamab
+ImmuFact ,eftilagimod alpha , Immutep
+Zepzelca ,lurbinectedin ," PharmaMar, Jazz"
+Emrelis ,telisotuzumab vedotin-tllv , AbbVie
+caxmotabart entudotin ,IKS014 , Iksuda Therap
+evorpacept ,ALX148 , ALX Oncology
+famitinib ,SHR 1020 , Jiangsu Hengrui Pharma
+Kadcyla ,ado-trastuzumab emtansine , Roche
+Tepmetko ,tepotinib , EMD Serono
+obrixtamig ,BI 764532 , Boehringer Ingelheim
+trastuzumab,, EirGenix
+Hernexeos ,zongertinib , Boehringer Ingelheim
+ABBV-706 ,, AbbVie
+becotatug vedotin ,MRG003 , Lepu Med
+Ziihera ,zanidatamab-hrii , Jazz
+patritumab deruxtecan ,U3-1402 ," Daiichi Sankyo, Merck (MSD)"
+ceralasertib ,AZD6738 , AstraZeneca
+pumitamig ,BNT327 ," BioNTech, BMS"
+Onivyde ,nanoliposomal irinotecan , Ipsen
+BL-M07D1 ,, Biokin Pharma
+Tedopi ,OSE 2101 , OSE Immunotherapeutics
+Imdelltra ,tarlatamab-dlle , Amgen
+ODM-212 ,, Orion Biotech
+Andewei ,benmelstobart ," Apollomics, Sino Biopharm"
+Lazcluze ,lazertinib , J&J
+alveltamig ,ZG006 , Suzhou Zelgen
+gocatamig ,MK-6070 ," Merck (MSD), Daiichi Sankyo"
+KO-2806 ,, Kura Oncology
+Krazati ,adagrasib , BMS
+vepdegestrant ,ARV-471 ," Arvinas, Pfizer"
+ginisortamab ,UCB6114 , UCB
+Prolia ,denosumab , Amgen
+intismeran autogene ,mRNA-4157 ," Merck (MSD), Moderna"
+Recentin ,cediranib , AstraZeneca
+Kimmtrak ,tebentafusp-tebn , Immunocore
+ASP2138 ,, Astellas
+becotarug ,JMT101 , CSPC Pharma
+ezabenlimab ,BI 754091 , Boehringer Ingelheim
+Ogsiveo ,nirogacestat , EMD Serono
+raludotatug deruxtecan ,DS-6000 ," Daiichi Sankyo, Merck (MSD)"
+Alunbrig ,brigatinib , Takeda
+CVL-006 ,, Convalife
+AlphaMedix ,ORM-2110 ," RadioMedix, Orano, Sanofi"
+Tudriqev ,vusolimogene oderparepvec-wtpg , Replimune
+Inlyta ,axitinib , Pfizer
+BNT325 ,, BioNTech
+Ezharmia ,valemetostat , Daiichi Sankyo
+Fyarro ,nanoparticle albumin-bound rapamycin , Kaken Pharma
+Rubraca ,rucaparib , Pharma& Schweiz
+Augtyro ,repotrectinib , BMS
+ateganosine ,THIO , MAIA Biotech
+Oncorine ,recombinant human adenovirus type 5 , Mergen Ltd.
+zipalertinib ,CLN-081 ," Cullinan Therap, Otsuka"
+Dupert ,fulzerasib , GenFleet Therap
+IMA203 ,, Immatics
+camizestrant ,AZD9833 , AstraZeneca
+Bria-IMT ,SV-BR-1-GM , BriaCell
+AiRuiYi ,fluzoparib , Jiangsu Hengrui Pharma
+AiRuiEn ,rezvilutamide , Jiangsu Hengrui Pharma
+Tivdak ,tisotumab vedotin-tftv ," Genmab, Pfizer"
+INCB123667 ,, Incyte
+Yidafan ,ivonescimab ," Akesobio, Summit Therapeutics"
+Piqray ,alpelisib , Novartis
+ACR246 ,, Adcoris
+LY4170156 ,, Eli Lilly
+simmitinib ,SYHA1817 , CSPC Pharma
+Puyouheng ,pucotenlimab ," Taizhou Hanzhong Biopharma, Lepu Med"
+botensilimab ,AGEN1181 , Agenus
+HRS-4642 ,, Jiangsu Hengrui Pharma
+Actemra IV ,tocilizumab ," Roche, JW Pharma"
+Lorbrena ,lorlatinib , Pfizer
+Orpathys ,savolitinib ," AstraZeneca, Hutchmed"
+Tibsovo ,ivosidenib , Servier
+giredestrant ,GDC-9545 , Roche
+Itovebi ,inavolisib , Roche
+RGT-61159 ,, Rgenta Therap
+MTL-CEBPA ,, MiNA Therap
+pasritamig ,JNJ-8343 , J&J
+precemtabart tocentecan ,M9140 , EMD Serono
+ATTR-01 ,, Accession Therap
+AAA817 ,, Novartis
+GSK5733584 ,, GSK
+ulixertinib ,BVD-523 , BioMed Valley Discoveries
+SKB315 ,, Sichuan Kelun Pharma
+Duoenda ,mitoxantrone liposomal , CSPC Pharma
+NOUS-209 ,, Nouscom
+BI 1703880 ,, Boehringer Ingelheim
+sevabertinib ,BAY 2927088 , Bayer
+PF-08046054 ,, Pfizer
+relacorilant ,CORT125134 , Corcept Therap
+BMS‐986504 ,, BMS
+TQ-B3234 ,, Sino Biopharm
+GSK5764227 ,, GSK
+igrelimogene litadenorepvec ,TILT-123 , Tilt Biotherap
+olomorasib ,LY3537982 , Eli Lilly
+CTS3497 ,, CytosinLab
+Besremi ,ropeginterferon alfa-2b-njft , PharmaEssentia
+mRNA-4359 ,, Moderna
+Rozlytrek ,entrectinib , Roche
+FIT-001 ,, Guangzhou FineImmune Biotech
+HFB200603 ,, HiFiBiO
+GBC-11004 ,, Gradiant Bioconvergence
+IAG933 ,, Novartis
+IBR854 ,, Imbioray Bio
+ubidecarenone IV ,BPM31510 IV , BPGbio
+DS-3939 ,, Daiichi Sankyo
+lirafugratinib ,RLY-4008 , HLB Bio Group
+limertinib ,ASK120067 , Aosaikang Pharma
+QLH12016 ,, Qilu Pharma
+Ryzneuta ,efbemalenograstim alpha , Yifan Pharma
+BGB-26808 ,, BeOne Medicines
+tizetatug rezetecan ,SHR-A1921 , Jiangsu Hengrui Pharma
+ficerafusp alfa ,BCA101 , Biocon
+HFB200301 ,, HiFiBiO
+Ac-225 rosopatamab tetraxetan ,CONV01-α , Dominari Holdings
+GI-102 ,, GI Innovation
+taselisib ,GDC-0032 , Roche
+anvatabart opadotin ,JNJ-0683 , J&J
+EVT801 ,, Kazia
+TT125-802 ,, TOLREMO Therap
+Abecma ,idecabtagene vicleucel , BMS
+OMTX705 ,, Oncomatryx
+torvutatug samrotecan ,AZD5335 , AstraZeneca
+MK-1084 ,, Merck (MSD)
+GenSci140 ,, GeneScience
+IMC-001 ,, Immuneoncia Therap
+TY-302 ,, TYK Medicines
+fexagratinib ,ABSK091 , Abbisko
+Erivedge ,vismodegib , Roche
+quisinostat ,JNJ 26481585 ," ChemRar, Viriom"
+onvapegleukin alfa ,TransCon IL-2 b/y, Ascendis
+UCB4594 ,," UCB, Cancer Research UK"
+ERY974 ,, Roche
+AMT-116 ADC ,, Multitude Therap
+Inluriyo ,imlunestrant , Eli Lilly
+retlirafusp alfa ,SHR-1701 , Jiangsu Hengrui Pharma
+Anktiva ,nogapendekin alfa inbakicept-pmln , ImmunityBio
+SON-1010 ,, Sonnet BioTherap
+AB-001 ,, Aubrak Therapeutics
+ubamatamab ,REGN4018 , Regeneron
+HS-IT101 ,, Sino-Cell Biomed
+certepetide ,LSTA1 , Lisata Therap
+porustobart ,HBM4003 , Harbour BioMed
+nanoencapsulated paclitaxel ,FID-007 ," ANP Technologies, Fulgent Genetics"
+solnerstotug ,SNS-101 , Sensei Biotherap
+JS105 ,," Shanghai Junshi Biosci, Risen (Suzhou) Biosci"
+SYS6010 ,, CSPC Pharma
+THE001 ,, Thermosome
+JNJ-0631 ,, J&J
+BI 770371 ,, Boehringer Ingelheim
+WSD0922 ,, Wayshine Biopharm
+domatinostat ,4SC-202 , 4SC
+Byvasda ,bevacizumab biosimilar ," Innovent Biologics, Etana"
+RMC-8839 ,, Revolution Medicines
+Romvimza ,vimseltinib , Ono Pharma
+CAN1012 ,, Canwell Biotech
+ciforadenant ,CPI-444 , Corvus Pharma
+PRT7732 ,, Prelude Therap
+vevoctadekin ,ST-067 , Simcha Therap
+BNT111 ,, BioNTech
+KH617 ,, Chengdu Kanghong Pharma
+Modufolin ,arfolitixorin ," Isofol Medical, Solasia"
+Darzalex ,daratumumab , J&J
+darovasertib ,IDE196 , Ideaya Biosci
+imifoplatin ,PT-112 , Promontory Therap
+ASKB589 ,, Aosaikang Pharma
+daraxonrasib ,RMC-6236 , Revolution Medicines
+JNJ-4916 ,, J&J
+prifetrastat ,PF-07248144 , Pfizer
+Orserdu ,elacestrant , Menarini
+CLSP-1025 ,, Clasp Therapeutics
+andamertinib ,PLB1004 , Avistone Biotech
+abiraterone decanoate ,ASP5541 , Astellas
+IAM1363 ,, Iambic Therap
+icaritin ,SNG-162 , Shenogen Pharma
+marlotamig ,REGN7075 , Regeneron
+GenSci139 ,, GeneScience
+Darzalex Faspro ,daratumumab and hyaluronidase-fihj , J&J
+UCPVax ,, Invectys
+Zynyz ,retifanlimab-dlwr , Incyte
+gunagratinib ,ICP-192 , InnoCare
+ulevostinag ,MK-1454 , Merck (MSD)
+TQB2102 ,, Sino Biopharm
+TY-2699a ,, TYK Medicines
+E7386 ,," Eisai, PRISM Pharma"
+Solucin ,177Lu-edotreotide , ITM Isotopen Technologien Munchen
+IPN01195 ,, Ipsen
+TY-0540 ,, TYK Medicines
+sasanlimab ,PF-06801591 , Pfizer
+CRB-701 ,, Corbus Pharma
+ADCE-D01 ,, Adcendo
+chlorogenic acid ,, Jiuzhang Biotech
+falbikitug ,AZD0171 , AstraZeneca
+BNT324 ,, BioNTech
+WGc-0201 ,, WestGene Biopharma
+saruparib ,AZD5305 , AstraZeneca
+FHND5071 ,, Sino Biopharm
+HTMC0435 ,, Shanghai Huilun
+JK06 ,, Shenzhen Salubris
+MDX2001 ,, OPKO Health
+bemarituzumab ,AMG 552 , Amgen
+Elahere ,mirvetuximab soravtansine-gynx , AbbVie
+ADU-1604 ,, Sairopa
+PF-08634404 ,, Pfizer
+SY-5007 ,, Shouyao Holdings
+BT-001 ,," BioInvent, Transgene"
+THEO-260 ,, Theolytics
+SVV-001 ,, Seneca Therap
+zabilugene almadenorepvec ,VCN-01 , Theriva Bio
+GNTbm-38 ,, GNT Biotech
+BI 765049 ,, Boehringer Ingelheim
+Yescarta ,axicabtagene ciloleucel , Gilead
+NI-1801 ,, Light Chain Biosci
+Ibtrozi ,taletrectinib , Nuvation Bio
+evexomostat ,SDX-7320 , SynDevRx
+NXE0039732 ,, Nxera Pharma
+JYB1907 ,, Jemincare
+STX-478 ,, Eli Lilly
+KH815 ,, Chengdu Kanghong Pharma
+INCB161734 ,, Incyte
+Zolinza ,vorinostat , Merck (MSD)
+tamnorzatinib ,ONO-7475 , Ono Pharma
+gedatolisib ,PF-05212384 , Celcuity
+HWH340 ,," WuXi AppTec, Humanwell Healthcare"
+KLS-3021 ,, Kolon Life Sci
+BGB-15025 ,, BeOne Medicines
+nelmastobart ,STT-003 , STCube Pharma
+TTX-MC138 ,, TransCode
+UCART123 ,, Cellectis
+Portrazza ,necitumumab , Eli Lilly
+Aliqopa ,copanlisib , Bayer
+IMC002 ,, Immuneoncia Therap
+pimicotinib ,ABSK021 , EMD Serono
+Cipterbin ,inetetamab , 3SBio
+SGR-4174 ,, Schrodinger
+COM701 ,, Compugen
+cambritaxestat ,IOA-289 , iOnctura
+Neulasta ,pegfilgrastim , Roche
+NDI-219216 ,, Nimbus Therap
+CS2009 ,, CStone Pharma
+HRO761 ,, Novartis
+Balversa ,erdafitinib , J&J
+neladalkib ,NVL-655 , Nuvalent
+iSCIB1+ ,, Scancell
+Xalkori ,crizotinib , Pfizer
+IPN01194 ,, Ipsen
+IPM001 ,, Immupeutics Medicine
+BL0020 ,, Shanghai Best-Link Biosci
+AVA6000 ,, Avacta
+BDC-4182 ,, Bolt Biotherap
+177Lu-rosopatamab tetraxetan ,TLX591 , Telix
+CD19/CD22-bispecific CAR-T ,, Beijing Tongren Hospital
+Amtagvi ,lifileucel , Iovance Biotherap
+Zadaxin ,thymalfasin , SciClone
+tolododekin alfa ,ANK-101 , Ankyra Therap
+Ilumya ,tildrakizumab-asmn ," Sun Pharma, Almirall"
+7MW3711 ,, Mabwell (Shanghai) Biosci
+CS5001 ,, CStone Pharma
+BA3182 ,, BioAtla
+Telomelysin ,suratadenoturev ," Oncolys BioPharma, Medigen Biotech"
+AFNT-211 ,, Affini-T Therap
+Zantrene ,bisantrene , Race Oncology
+Zarnestra ,tipifarnib , Kura Oncology
+EVX-01 ,, Evaxion
+Anniko ,penpulimab ," Akesobio, Sino Biopharm"
+TSN222 ,, Tyligand
+bulumtatug fuvedotin ,9MW2821 , Mabwell (Shanghai) Biosci
+VT3989 ,, Vivace Therap
+OPM-101 ,, Oncodesign
+trastuzumab pamirtecan ,BNT323 , BioNTech
+IVX037 ,, ImmVirx
+OPB-111077 ,, Otsuka
+Nerlynx ,neratinib , Puma
+ASKC202 ,, Aosaikang Pharma
+mevrometostat ,PF-06821497 , Pfizer
+KD-496 ,, KAEDI
+Sylvant ,siltuximab , Jazz
+cetrelimab ,JNJ-63723283 , J&J
+vepugratinib ,LY3866288 , Eli Lilly
+TYRA-430 ,, Tyra Biosci
+AMT-253 ,, Suzhou Maximum Bio-tech
+JIN-A02 ,, J Ints Bio
+Cylembio ,"imsapepimut and etimupepimut, adjuvanted ", IO Biotech
+SMP-656 ,, Chengdu Kelingyuan Pharma
+AT108 ,, Asgard Therapeutics
+HRS-5041 ,, Jiangsu Hengrui Pharma
+Carvykti ,ciltacabtagene autoleucel , J&J
+divarasib ,RG6330 , Roche
+Sarclisa ,isatuximab-irfc , Sanofi
+ANV600 ,, Anaveon
+FOG-001 ,, Parabilis Medicines
+volrustomig ,MEDI5752 , AstraZeneca
+Clevegen ,bexmarilimab , Faron Pharma
+mosperafenib ,RG6344 , Roche
+AZD-0022 ,, AstraZeneca
+NUC-7738 ,, NuCana
+SNV1521 ,, Synnovation Therap
+palazestrant ,OP-1250 , Olema Pharma
+ATG-022 ,, Antengene
+AL2846 ,," Advenchen, Sino Biopharm"
+NP137 ,, NETRIS Pharma
+PTT-4256 ,, Pathios Therap
+zanzalintinib ,XL092 , Exelixis
+OBX-115 ,," Obsidian, UT MD Anderson Cancer Center"
+satricabtagene autoleucel ,CT041 , CARsgen
+LY-4066434 ,, Eli Lilly
+INCA33890 ,, Incyte
+FHND9041 ,, Sino Biopharm
+SKY02 ,, Seekyo
+NCE 401 ,," Tium Bio, Chiesi"
+STK-012 ,, Synthekine
+Pembroria ,pembrolizumab biosimilar , Biocad
+IMM-101 ,, Immodulon
+utidelone IV ,UTD1 , Beijing Biostar Technologies
+autogene cevumeran ,RG6180 , Roche
+ixotatug vedotin ,TORL-1-23 , TORL Biotherap
+DSB2455 ,, Duke Street Bio
+Imbruvica ,ibrutinib ," AbbVie, J&J"
+AMB-05X ,, AmMax
+Monjuvi ,tafasitamab-cxix , Incyte
+resiquimod sulfate ,EIK1001 , Eikon Therap
+Partruvix ,pamiparib , BeOne Medicines
+Triapine ,3-AP ," Vion, Northwestern University"
+NX-1607 ,, Nurix Therap
+PBP1710 ,, Prestige BioPharma
+JMKX000197 ,, Jemincare
+tuvusertib ,M1774 , EMD Serono
+FWD1802 ,, Shenzhen Forward Pharma
+HRS-7058 ,, Jiangsu Hengrui Pharma
+nanvuranlat ,JPH203 ," J-Pharma, Ohara Pharma"
+luvometinib ,FCN-159 , Fosun Pharma
+CTS2190 ,, CytosinLab
+ulenistamab ,PBP1510 , Prestige BioPharma
+GRWD5769 ,, GreyWolf Therapeutics
+OQY-3258 ,, Oqory
+OKN4395 ,, Owkin
+PhOx430 ,, Phost'IN
+QL2109 ,daratumumab hyaluronidase biosimilar , Qilu Pharma
+MYTX-011 ,, Mythic Therap
+212 Pb-ADVC001 ,, AdvanCell Isotopes
+Lytgobi ,futibatinib , Otsuka
+Ameile ,aumolertinib , Jiangsu Hansoh Pharma
+EGL-001 ,, Egle Therap
+Conmana ,icotinib , Betta Pharma
+HM97662 ,, Hanmi
+SCG142 ,, SCG Cell Therapy
+tinengotinib ,TT-00420 , TransThera Biosci
+PEP07 ,, PharmaEngine
+IOS-1002 ,, ImmunOs Therap
+ART6043 ,, Artios Pharma
+GemRIS ,gemcitabine-releasing intravesical system , J&J
+MDX-124 ,, Medannex
+SCIB1 ,, Scancell
+cirtuvivint ,SM08502 , Biosplice Therap
+Paishuning ,senaparib , IMPACT Therap
+Odomzo ,sonidegib , Sun Pharma
+MRG004A ,, Lepu Med
