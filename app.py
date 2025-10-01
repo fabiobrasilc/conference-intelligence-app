@@ -183,25 +183,32 @@ ESMO_DRUG_FILTERS = {
 ESMO_THERAPEUTIC_AREAS = {
     "All Therapeutic Areas": {"keywords": []},
     "Bladder Cancer": {
-        "keywords": ["bladder", "urothelial", "uroepithelial", "transitional cell", "GU", "genitourinary"],
-        "exclusions": ["prostate"]
+        "keywords": ["bladder", "urothelial", "uroepithelial", "transitional cell", r"\bGU\b", "genitourinary"],
+        "exclusions": ["prostate"],
+        "regex": True
     },
     "Renal Cancer": {
-        "keywords": ["renal", "renal cell", "RCC"]
+        "keywords": ["renal", "renal cell", r"\bRCC\b"],
+        "regex": True
     },
     "Lung Cancer": {
-        "keywords": ["lung", "non-small cell lung cancer", "non-small-cell lung cancer", "NSCLC", "MET", "ALK", "EGFR", "KRAS"]
+        "keywords": ["lung", "non-small cell lung cancer", "non-small-cell lung cancer", "NSCLC",
+                     r"\bMET\b", r"\bALK\b", r"\bEGFR\b", r"\bKRAS\b", r"\bBRAF\b", r"\bRET\b", r"\bROS1\b", r"\bNTRK\b"],
+        "regex": True
     },
     "Colorectal Cancer": {
-        "keywords": ["colorectal", "CRC", "colon", "rectal", "bowel"],
-        "exclusions": ["gastric", "esophageal", "pancreatic", "hepatocellular", "HCC"]
+        "keywords": ["colorectal", r"\bCRC\b", "colon", "rectal", "bowel"],
+        "exclusions": ["gastric", "esophageal", "pancreatic", "hepatocellular", r"\bHCC\b"],
+        "regex": True
     },
     "Head and Neck Cancer": {
-        "keywords": ["head and neck", "head & neck", "H&N", "HNSCC", "SCCHN",
-                     "squamous cell carcinoma of the head", "oral", "pharyngeal", "laryngeal"]
+        "keywords": ["head and neck", "head & neck", r"\bH&N\b", r"\bHNSCC\b", r"\bSCCHN\b",
+                     "squamous cell carcinoma of the head", "oral", "pharyngeal", "laryngeal"],
+        "regex": True
     },
     "TGCT": {
-        "keywords": ["TGCT", "PVNS", "tenosynovial giant cell tumor", "pigmented villonodular synovitis"]
+        "keywords": [r"\bTGCT\b", r"\bPVNS\b", "tenosynovial giant cell tumor", "pigmented villonodular synovitis"],
+        "regex": True
     },
     "DNA Damage Response (DDRi)": {
         "keywords": [r"\bATR\b", r"\bATRi\b", r"\bATM\b", r"\bATMi\b", r"\bPARP\b", r"\bPARPi\b", "DNA Damage Response"],
@@ -886,7 +893,7 @@ def apply_renal_cancer_filter(df: pd.DataFrame) -> pd.Series:
 def apply_lung_cancer_filter(df: pd.DataFrame) -> pd.Series:
     """Apply lung cancer filter."""
     keywords = ["lung", "non-small cell lung cancer", "non-small-cell lung cancer"]
-    acronyms = ["NSCLC", "MET", "ALK", "EGFR", "KRAS"]  # All with word boundaries
+    acronyms = ["NSCLC", "MET", "ALK", "EGFR", "KRAS", "BRAF", "RET", "ROS1", "NTRK"]  # All with word boundaries
 
     mask = pd.Series([False] * len(df), index=df.index)
 
@@ -896,9 +903,10 @@ def apply_lung_cancer_filter(df: pd.DataFrame) -> pd.Series:
         mask = mask | title_mask | theme_mask
 
     for acronym in acronyms:
+        # Use word boundaries and case-sensitivity for acronyms to prevent false matches
         pattern = r'\b' + re.escape(acronym) + r'\b'
-        title_mask = df["Title"].str.contains(pattern, case=False, na=False, regex=True)
-        theme_mask = df["Theme"].str.contains(pattern, case=False, na=False, regex=True)
+        title_mask = df["Title"].str.contains(pattern, case=True, na=False, regex=True)
+        theme_mask = df["Theme"].str.contains(pattern, case=True, na=False, regex=True)
         mask = mask | title_mask | theme_mask
 
     return mask
@@ -1820,47 +1828,53 @@ def generate_biomarker_moa_table(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame()
 
-    # Comprehensive biomarker and MOA keywords
+    # Comprehensive biomarker and MOA keywords (biological mechanisms only, no treatment terms)
     biomarkers_moas = [
-        # Checkpoint inhibitors & IO
-        "PD-1", "PD-L1", "CTLA-4", "LAG-3", "TIM-3", "TIGIT",
-        # ADCs and targets
-        "ADC", "antibody-drug conjugate", "HER2", "TROP-2", "Nectin-4", "CEACAM5",
+        # Checkpoint inhibitors & IO targets
+        "PD-1", "PD-L1", "CTLA-4", "LAG-3", "TIM-3", "TIGIT", "ICOS",
+        # ADC targets
+        "Nectin-4", "TROP-2", "HER2", "HER3", "CEACAM5", "FOLR1", "Claudin 18.2",
         # FGFR pathway
-        "FGFR", "FGFR1", "FGFR2", "FGFR3", "FGFR4",
-        # Lung cancer biomarkers
-        "EGFR", "ALK", "ROS1", "MET", "KRAS", "BRAF", "RET", "NTRK", "HER2",
+        "FGFR3", "FGFR2", "FGFR1", "FGFR4", "FGFR",
+        # Tyrosine kinases
+        "EGFR", "ALK", "ROS1", "MET", "KRAS", "BRAF", "RET", "NTRK",
         # Mismatch repair / microsatellite
-        "MSI", "MSI-H", "dMMR", "microsatellite",
+        "MSI-H", "dMMR", "MSI",
         # Tumor mutational burden
-        "TMB", "tumor mutational burden",
-        # Circulating tumor DNA
-        "ctDNA", "circulating tumor DNA",
-        # Cell cycle / DNA damage
-        "PARP", "ATR", "ATM", "BRCA", "HRD",
+        "TMB-high", "TMB",
+        # Circulating biomarkers
+        "ctDNA", "CTC",
+        # DNA damage response
+        "PARP", "ATR", "ATM", "BRCA1", "BRCA2", "BRCA", "HRD", "DDR",
         # Angiogenesis
-        "VEGF", "VEGFR",
-        # PI3K/AKT/mTOR
-        "PI3K", "AKT", "mTOR",
-        # CDK4/6
-        "CDK4", "CDK6",
-        # WNT pathway
+        "VEGF", "VEGFR", "VEGFR2",
+        # PI3K/AKT/mTOR pathway
+        "PI3K", "AKT", "mTOR", "PIK3CA",
+        # Cell cycle
+        "CDK4/6", "CDK4", "CDK6",
+        # WNT/beta-catenin
         "WNT", "beta-catenin",
         # Epigenetic
-        "EZH2", "IDH",
-        # Cell surface
-        "CD38", "BCMA", "CD20",
-        # Treatment settings
-        "neoadjuvant", "adjuvant", "maintenance", "perioperative",
-        # Combination approaches
-        "combination", "doublet", "triplet",
-        # Resistance mechanisms
-        "resistance", "refractory"
+        "EZH2", "IDH1", "IDH2",
+        # Heme targets
+        "CD38", "BCMA", "CD20", "CD19",
+        # Emerging targets
+        "DLL3", "CLDN18.2", "B7-H3", "NaPi2b",
+        # Resistance biomarkers
+        "NRG1", "ERBB2", "ERBB3"
     ]
 
     results = []
     for keyword in biomarkers_moas:
-        count = df['Title'].str.contains(keyword, case=False, na=False).sum()
+        # Use word boundaries for short acronyms to prevent false matches
+        if len(keyword) <= 6 and keyword.isupper():
+            # Case-sensitive search with word boundaries for acronyms
+            pattern = r'\b' + re.escape(keyword) + r'\b'
+            count = df['Title'].str.contains(pattern, case=True, na=False, regex=True).sum()
+        else:
+            # Case-insensitive for longer terms
+            count = df['Title'].str.contains(keyword, case=False, na=False).sum()
+
         if count > 0:
             results.append({'Biomarker/MOA': keyword, '# Studies': count})
 
