@@ -2907,6 +2907,70 @@ def export_data():
         headers={'Content-Disposition': f'attachment; filename={filename}'}
     )
 
+@app.route('/api/debug/enrichment')
+def debug_enrichment():
+    """Debug endpoint to view enrichment cache status and sample data."""
+    if not ENABLE_AI_ENRICHMENT or not enrichment_cache_manager:
+        return jsonify({"error": "AI enrichment not enabled"}), 400
+
+    import glob
+
+    # Get cache file info
+    cache_files = glob.glob(os.path.join(CACHE_DIR, "enriched_*.parquet"))
+
+    result = {
+        "cache_dir": CACHE_DIR,
+        "cache_files_found": len(cache_files),
+        "cache_manager_status": {
+            "is_building": enrichment_cache_manager.is_building if enrichment_cache_manager else None,
+            "cache_file": enrichment_cache_manager.cache_file if enrichment_cache_manager else None,
+        }
+    }
+
+    # Check Postgres status
+    if enrichment_cache_manager and enrichment_cache_manager.pg_cache:
+        pg_record = enrichment_cache_manager.pg_cache.get_cache_record(
+            enrichment_cache_manager.csv_hash,
+            enrichment_cache_manager.model_version,
+            enrichment_cache_manager.prompt_version
+        )
+        result["postgres_status"] = pg_record
+
+    # Try to load enriched data
+    if cache_files:
+        latest_cache = sorted(cache_files)[-1]
+        result["latest_cache_file"] = latest_cache
+
+        try:
+            import pandas as pd
+            enriched_df = pd.read_parquet(latest_cache)
+
+            # Get enrichment statistics
+            unknown_therapy = (enriched_df['line_of_therapy'] == 'Unknown').sum() if 'line_of_therapy' in enriched_df.columns else 0
+            total_studies = len(enriched_df)
+            successful = total_studies - unknown_therapy
+
+            result["enrichment_stats"] = {
+                "total_studies": total_studies,
+                "successfully_enriched": successful,
+                "failed_enrichment": unknown_therapy,
+                "success_rate": f"{successful*100/total_studies:.1f}%"
+            }
+
+            # Sample of enriched data
+            if 'line_of_therapy' in enriched_df.columns:
+                enriched_sample = enriched_df[enriched_df['line_of_therapy'] != 'Unknown'].head(5)
+                result["enriched_sample"] = enriched_sample[['Title', 'line_of_therapy', 'phase', 'biomarkers', 'is_emerging']].to_dict('records')
+
+            # Sample of failed enrichment
+            failed_sample = enriched_df[enriched_df['line_of_therapy'] == 'Unknown'].head(5) if 'line_of_therapy' in enriched_df.columns else pd.DataFrame()
+            result["failed_sample"] = failed_sample[['Title', 'Identifier']].to_dict('records') if len(failed_sample) > 0 else []
+
+        except Exception as e:
+            result["error_loading_cache"] = str(e)
+
+    return jsonify(result)
+
 @app.route('/api/conference/info')
 def get_conference_info():
     """Get conference metadata."""
