@@ -127,20 +127,36 @@ class PostgresEnrichmentCache:
 
 
     def get_cache_record(self, csv_hash: str, model_version: str, prompt_version: str) -> Optional[Dict]:
-        """Get cache metadata from Postgres"""
+        """Get cache metadata from Postgres (with stale lock detection)"""
         if not self.db_available:
             return None
 
         try:
             with self.conn.cursor() as cur:
                 cur.execute("""
-                    SELECT enriched_file_path, status, message, updated_at
+                    SELECT enriched_file_path, status, message, updated_at,
+                           EXTRACT(EPOCH FROM (NOW() - updated_at)) as age_seconds
                     FROM enrichment_cache
                     WHERE csv_hash = %s AND model_version = %s AND prompt_version = %s
                 """, (csv_hash, model_version, prompt_version))
 
                 row = cur.fetchone()
                 if row:
+                    status = row[1]
+                    age_seconds = row[4]
+
+                    # Detect stale locks (building for >10 minutes)
+                    if status == 'building' and age_seconds > 600:
+                        print(f"[POSTGRES] Stale lock detected (age: {int(age_seconds)}s). Clearing...")
+                        cur.execute("""
+                            UPDATE enrichment_cache
+                            SET status = 'failed',
+                                message = 'Stale lock cleared (timeout)',
+                                updated_at = NOW()
+                            WHERE csv_hash = %s AND model_version = %s AND prompt_version = %s
+                        """, (csv_hash, model_version, prompt_version))
+                        return None  # Treat as no cache, will rebuild
+
                     return {
                         'enriched_file_path': row[0],
                         'status': row[1],
