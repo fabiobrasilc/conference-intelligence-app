@@ -1,0 +1,282 @@
+{
+  "project": "Conference Intelligence App (COSMIC)",
+  "last_updated": "2025-09-29",
+  "current_status": "Production-ready with perfect AI chat formatting",
+  "development_sessions": [
+    {
+      "date": "2025-09-23",
+      "session_id": "001",
+      "participants": ["User (m337928)", "Claude"],
+      "topics": [
+        {
+          "topic": "Development Chat History Setup",
+          "status": "completed",
+          "discussion": "Created development_chat_history.json to track our conversations and progress between sessions.",
+          "decisions": [
+            "Use JSON format for conversation tracking",
+            "Updated backup files list to reflect v17 as latest"
+          ],
+          "next_steps": []
+        },
+        {
+          "topic": "Agent System Setup",
+          "status": "completed",
+          "discussion": "Initially created documentation-based agents, then switched to Claude Code's built-in agent system for better functionality.",
+          "decisions": [
+            "Use Claude Code's built-in code-reviewer agent instead of documentation",
+            "Deleted custom agent documentation files",
+            "Agent works via Task tool with subagent_type parameter"
+          ],
+          "code_changes": [
+            "Tested code-reviewer agent successfully",
+            "Agent provides comprehensive code review with security analysis"
+          ],
+          "next_steps": []
+        },
+        {
+          "topic": "Export Functionality Implementation",
+          "status": "completed",
+          "discussion": "Added /api/export endpoint to allow CSV and Excel data export with security fixes.",
+          "decisions": [
+            "Implement only fixes 1, 3, and 4 (skip authentication and performance limits)",
+            "Focus on undefined variable, CSV injection, and response headers"
+          ],
+          "code_changes": [
+            "Added /api/export POST endpoint to app.py",
+            "Fixed undefined filtered_df variable using df_global",
+            "Added CSV injection prevention (sanitize =+\\-@ characters)",
+            "Implemented proper response headers for file downloads",
+            "Support for both CSV and Excel formats with proper MIME types"
+          ],
+          "files_modified": ["app.py"],
+          "next_steps": ["Add frontend export buttons (future)"]
+        },
+        {
+          "topic": "Railway Deployment Planning",
+          "status": "completed",
+          "discussion": "Successfully deployed COSMIC app to Railway via GitHub integration. App is running flawlessly in production.",
+          "decisions": [
+            "Use Railway over Render for deployment",
+            "Keep Flask architecture (no conversion to Streamlit)",
+            "Deploy via GitHub integration"
+          ],
+          "implementation": [
+            "Created GitHub repository with app files",
+            "Set up requirements.txt and Procfile",
+            "Configured Railway environment variables (OpenAI API key)",
+            "Successfully deployed via Railway GitHub integration"
+          ],
+          "results": [
+            "App deployed and running flawlessly on Railway",
+            "Production-ready ASCO GU 2025 intelligence platform",
+            "Ready for colleague testing and stakeholder demos"
+          ],
+          "next_steps": []
+        },
+        {
+          "topic": "ESMO 2025 Multi-Conference Integration Planning",
+          "status": "planned",
+          "discussion": "Planning to transform COSMIC from ASCO-only to unified multi-conference platform supporting both ASCO GU 2025 and ESMO 2025 data.",
+          "decisions": [
+            "Use unified app approach with conference toggle (vs separate apps)",
+            "Implement 5-phase incremental development strategy",
+            "Create comprehensive backup before any changes",
+            "Support broader EMD Serono/Merck KGaA therapeutic portfolio"
+          ],
+          "key_considerations": [
+            "ESMO data has single speaker per presentation (no multi-author analysis)",
+            "ESMO includes additional metadata: dates, times, rooms, session tracks",
+            "Need separate scraping for oral presentations beyond posters/mini-orals",
+            "Geographic context: EMD Serono (US/Canada) vs Merck KGaA (global outside US/Canada)",
+            "Erbitux/cetuximab coverage for CRC and Head & Neck cancers",
+            "Institution data limitations requiring AI-assisted collection"
+          ],
+          "planned_phases": [
+            "Phase 0: Comprehensive backup and documentation",
+            "Phase 1: Foundation & conference selection infrastructure",
+            "Phase 2: Data harmonization for dual CSV support",
+            "Phase 3: AI intelligence adaptation for conference-specific analysis",
+            "Phase 4: UI/UX enhancement for multi-conference experience",
+            "Phase 5: Production deployment and optimization"
+          ],
+          "technical_approach": [
+            "Conference toggle in UI header",
+            "Session-based conference state management",
+            "Data normalization layer for different CSV structures",
+            "Conference-specific AI prompt templates",
+            "Conditional logic for single vs multi-author analysis"
+          ],
+          "next_steps": [
+            "Execute Phase 0: Create v18 backup before any changes",
+            "Wait for user to unify ESMO CSV files (posters + mini-orals + orals)",
+            "Begin Phase 1: Conference selection UI implementation"
+          ]
+        }
+      ],
+      "current_app_state": {
+        "main_file": "app.py",
+        "status": "Production-ready Flask application deployed on Railway",
+        "key_features": [
+          "AI-powered query analysis using GPT-5-mini",
+          "Quick Intelligence buttons (Competitor, KOL, Institution, Insights, Strategic)",
+          "Dual-tab interface (Data Explorer + AI Assistant)",
+          "Real-time conference data analysis with ChromaDB",
+          "EMD Serono/avelumab-focused strategic insights",
+          "Export functionality (CSV/Excel)",
+          "Server-sent events for real-time AI streaming"
+        ],
+        "deployment": {
+          "platform": "Railway",
+          "status": "Live and running flawlessly",
+          "github_integration": "Enabled",
+          "environment": "Production-ready"
+        },
+        "known_issues": [
+          "none"
+        ],
+        "planned_enhancements": [
+          "Multi-conference support (ASCO + ESMO 2025)",
+          "Conference toggle functionality",
+          "Broader therapeutic portfolio coverage",
+          "Enhanced geographic context (EMD Serono vs Merck KGaA)"
+        ]
+      },
+      "backup_files": [
+        "app_v18_backup_before_esmo_integration.py - Pre-ESMO integration backup (current production state)",
+        "app_v17_backup_gpt5mini_complete.py - Latest GPT-5 mini upgrade",
+        "app_v16_backup_gpt5mini_upgrade.py - GPT-5 mini upgrade version",
+        "templates_backup/index_v18_before_esmo.html - UI backup before ESMO changes",
+        "static_backup/styles_v18_before_esmo.css - CSS backup before ESMO changes",
+        "static_backup/app_v18_before_esmo.js - JavaScript backup before ESMO changes",
+        "requirements_v18_backup.txt - Dependencies backup",
+        "Multiple named backups for specific features"
+      ]
+    },
+    {
+      "date": "2025-09-29",
+      "session_id": "002",
+      "participants": ["User (m337928)", "Claude"],
+      "topics": [
+        {
+          "topic": "AI Chat Formatting Problem Resolution",
+          "status": "completed",
+          "discussion": "User reported AI responses showing as single paragraph without formatting. Problem was frontend streaming implementation not respecting newlines.",
+          "root_cause_analysis": {
+            "primary_issue": "Frontend using innerHTML += which collapsed newlines",
+            "secondary_issue": "No CSS telling browser to respect newlines",
+            "impact": "AI responses appeared as unreadable single paragraphs"
+          },
+          "solution_implemented": {
+            "approach": "Three-layer fix: CSS + HTML + JavaScript",
+            "css_fix": "Added .chat-stream class with white-space: pre-wrap",
+            "html_fix": "Added chat-stream class to both chat and playbook containers",
+            "javascript_fix": "Replaced innerHTML += with textContent buffering approach"
+          },
+          "technical_details": {
+            "css_added": {
+              "class": ".chat-stream",
+              "properties": {
+                "white-space": "pre-wrap",
+                "word-break": "break-word",
+                "overflow-wrap": "anywhere",
+                "line-height": "1.5"
+              },
+              "purpose": "Turn \\n into visual breaks while maintaining safe text wrapping"
+            },
+            "html_changes": [
+              "Updated chat response container: <div id=\"${responseId}\" class=\"chat-stream\">",
+              "Updated playbook container: <div id=\"playbook-content\" class=\"chat-stream\">"
+            ],
+            "javascript_refactor": {
+              "before": "contentDiv.innerHTML += escapeHtml(parsed.text);",
+              "after": "out += parsed.text; contentDiv.textContent = out;",
+              "benefits": [
+                "Preserves newlines as-is",
+                "Safe from HTML injection",
+                "More efficient than HTML concatenation",
+                "Works perfectly with CSS pre-wrap"
+              ]
+            }
+          },
+          "files_modified": [
+            "static/css/styles.css - Added .chat-stream utility class",
+            "static/js/app.js - Updated both chat and playbook streaming logic"
+          ],
+          "testing": {
+            "test_file_created": "test_chat_formatting.py",
+            "manual_verification": "User confirmed perfect formatting",
+            "result": "PERFECTION!!!! - exact user feedback"
+          },
+          "impact": {
+            "before": "AI responses displayed as unreadable single paragraphs",
+            "after": "Perfect formatting with proper line breaks, bullet points, and readable structure"
+          },
+          "code_changes": [
+            "Added .chat-stream CSS utility for proper newline rendering",
+            "Updated chat message HTML to include chat-stream class",
+            "Refactored JavaScript streaming to use textContent with buffer",
+            "Applied fixes to both chat responses and intelligence button responses"
+          ],
+          "next_steps": []
+        }
+      ],
+      "current_app_state": {
+        "main_file": "app.py",
+        "status": "Production-ready with perfect AI chat formatting",
+        "key_features": [
+          "AI-powered query analysis using GPT-5-mini (OpenAI Responses API)",
+          "Perfect formatted AI responses with proper line breaks",
+          "Quick Intelligence buttons with formatted output",
+          "Dual-tab interface (Data Explorer + AI Assistant)",
+          "Real-time conference data analysis with ChromaDB",
+          "EMD Serono/avelumab-focused strategic insights",
+          "Export functionality (CSV/Excel)",
+          "Server-sent events for real-time AI streaming"
+        ],
+        "recent_fixes": [
+          "AI chat formatting completely resolved",
+          "Both chat and playbook responses now display with proper formatting",
+          "CSS, HTML, and JavaScript all working in harmony"
+        ],
+        "deployment": {
+          "platform": "Railway",
+          "status": "Live with latest formatting improvements",
+          "local_dev": "Running on http://127.0.0.1:5000",
+          "environment": "Production-ready"
+        },
+        "known_issues": [
+          "none"
+        ]
+      }
+    }
+  ],
+  "key_decisions": [
+    {
+      "date": "Previous sessions",
+      "decision": "Focus on medical affairs strategic intelligence rather than generic oncology insights",
+      "rationale": "EMD Serono needs avelumab-specific competitive positioning vs EV+P dominance"
+    },
+    {
+      "date": "Previous sessions",
+      "decision": "Dual AI system - Chat (natural) vs Buttons (structured)",
+      "rationale": "Chat provides flexible queries, buttons provide consistent frameworks"
+    },
+    {
+      "date": "Previous sessions",
+      "decision": "Disabled biomarker table generation temporarily",
+      "rationale": "Title-only data causes inaccuracies, waiting for full abstract text"
+    }
+  ],
+  "tech_stack": {
+    "backend": "Flask, OpenAI GPT-5-mini, ChromaDB, Pandas",
+    "frontend": "Bootstrap, JavaScript, Server-Sent Events",
+    "data": "ASCO GU 2025 CSV (Abstract #, Poster #, Title, Authors, Institutions)"
+  },
+  "next_priorities": [
+    "Phase 1: Multi-conference foundation and UI infrastructure",
+    "Phase 2: ESMO data integration and harmonization",
+    "Phase 3: Conference-aware AI intelligence system",
+    "Phase 4: Enhanced multi-conference user experience",
+    "Phase 5: Production deployment optimization"
+  ]
+}

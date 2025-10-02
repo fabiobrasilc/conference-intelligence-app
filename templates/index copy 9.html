@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ESMO 2025 — Conference Intelligence Platform</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  </head>
+  <body>
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Left Sidebar for Filters -->
+    <aside class="filter-sidebar collapsed" id="filterSidebar">
+      <div class="sidebar-header">
+        <div class="d-flex align-items-center justify-content-between">
+          <h6 class="mb-0 fw-bold">🧰 Filters</h6>
+          <button class="btn btn-sm btn-link text-decoration-none" id="clearAllFilters">Clear All</button>
+        </div>
+        <div class="filter-count-badge" id="filterCountBadge">0 active</div>
+      </div>
+
+      <div class="sidebar-content">
+        <!-- Drug Focus Section -->
+        <div class="filter-section">
+          <div class="filter-section-header" data-section="drug">
+            <span class="section-title">🎯 Drug Focus</span>
+            <span class="chevron">›</span>
+          </div>
+          <div class="filter-options">
+            <button class="filter-toggle-btn drug-filter-btn" data-value="Avelumab Focus">Avelumab</button>
+            <button class="filter-toggle-btn drug-filter-btn" data-value="Tepotinib Focus">Tepotinib</button>
+            <button class="filter-toggle-btn drug-filter-btn" data-value="Cetuximab Focus">Cetuximab</button>
+          </div>
+        </div>
+
+        <!-- Therapeutic Area Section -->
+        <div class="filter-section">
+          <div class="filter-section-header" data-section="ta">
+            <span class="section-title">🏥 Therapeutic Area</span>
+            <span class="chevron">›</span>
+          </div>
+          <div class="filter-options">
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Bladder Cancer">Bladder Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Renal Cancer">Renal Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Lung Cancer">Lung Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Colorectal Cancer">Colorectal Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Head and Neck Cancer">Head & Neck Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="TGCT">TGCT</button>
+          </div>
+        </div>
+
+        <!-- Session Type Section -->
+        <div class="filter-section">
+          <div class="filter-section-header" data-section="session">
+            <span class="section-title">📋 Session Type</span>
+            <span class="chevron">›</span>
+          </div>
+          <div class="filter-options">
+            <button class="filter-toggle-btn session-filter-btn" data-value="Poster">Poster</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="ePoster">ePoster</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Proffered Paper">Proffered Paper</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Mini Oral Session">Mini Oral</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Educational Session">Educational</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Symposia">Symposia</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Industry-Sponsored Symposium">Industry-Sponsored</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Multidisciplinary Session">Multidisciplinary</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Special Session">Special</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Young Oncologists Session">Young Oncologists</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Challenge Your Expert">Challenge Expert</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Patient Advocacy Session">Patient Advocacy</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="EONS Session">EONS</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Highlights">Highlights</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Keynote Lecture">Keynote Lecture</button>
+          </div>
+        </div>
+
+        <!-- Conference Day Section -->
+        <div class="filter-section">
+          <div class="filter-section-header" data-section="date">
+            <span class="section-title">📅 Conference Day</span>
+            <span class="chevron">›</span>
+          </div>
+          <div class="filter-options">
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 1">Oct 17th</button>
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 2">Oct 18th</button>
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 3">Oct 19th</button>
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 4">Oct 20th</button>
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 5">Oct 21st</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Quick Intelligence Sidebar (AI Assistant only) -->
+    <aside class="quick-intel-sidebar" id="quickIntelSidebar">
+      <div class="quick-intel-header">
+        <span class="quick-intel-icon">⚡</span>
+        <h6 class="quick-intel-title">Quick Intelligence</h6>
+        <span class="chevron-toggle">‹</span>
+      </div>
+      <div class="quick-intel-content">
+        <div class="action-chip playbook-trigger" data-playbook="kol">
+          <div class="icon">👥</div>
+          <div>
+            <div class="title">KOL Analysis</div>
+            <div class="sub">Authors & impact</div>
+          </div>
+        </div>
+        <div class="action-chip playbook-trigger" data-playbook="competitor">
+          <div class="icon">🏆</div>
+          <div>
+            <div class="title">Competitor</div>
+            <div class="sub">Landscape & counts</div>
+          </div>
+        </div>
+        <div class="action-chip playbook-trigger" data-playbook="institution">
+          <div class="icon">🏥</div>
+          <div>
+            <div class="title">Institutions</div>
+            <div class="sub">Footprint & trials</div>
+          </div>
+        </div>
+        <div class="action-chip playbook-trigger" data-playbook="insights">
+          <div class="icon">📈</div>
+          <div>
+            <div class="title">Insights</div>
+            <div class="sub">Signals & themes</div>
+          </div>
+        </div>
+        <div class="action-chip playbook-trigger" data-playbook="strategy">
+          <div class="icon">📋</div>
+          <div>
+            <div class="title">Medical Strategy</div>
+            <div class="sub">Recommendations</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <!-- App Bar -->
+      <div class="appbar">
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <h1 class="appbar-title">COSMIC - ESMO 2025 Conference Intelligence</h1>
+        <div class="appbar-tabs" role="tablist" aria-label="Main sections">
+          <button class="appbar-tab active" data-bs-toggle="tab" data-bs-target="#data-explorer" type="button" role="tab" aria-controls="data-explorer" aria-selected="true">Data Explorer</button>
+          <span>|</span>
+          <button class="appbar-tab" data-bs-toggle="tab" data-bs-target="#ai-assistant" type="button" role="tab" aria-controls="ai-assistant" aria-selected="false">AI Assistant</button>
+        </div>
+      </div>
+
+      <!-- Hidden default nav-tabs (for bootstrap mechanics) -->
+      <ul class="nav nav-tabs" id="mainTabs" role="tablist" style="display:none;">
+        <li class="nav-item"><button class="nav-link active" id="data-explorer-tab" data-bs-toggle="tab" data-bs-target="#data-explorer" type="button" role="tab">Data Explorer</button></li>
+        <li class="nav-item"><button class="nav-link" id="ai-assistant-tab" data-bs-toggle="tab" data-bs-target="#ai-assistant" type="button" role="tab">AI Assistant</button></li>
+      </ul>
+
+      <div class="tab-content" id="mainTabContent">
+
+        <!-- ===================== DATA EXPLORER ===================== -->
+        <div class="tab-pane fade show active" id="data-explorer" role="tabpanel" aria-labelledby="data-explorer-tab">
+          <div class="content-area">
+
+            <!-- Search Bar -->
+            <div class="search-bar-container mb-3">
+              <div class="input-group">
+                <button class="btn btn-outline-secondary" id="clearSearchBtn" title="Clear search" style="display: none;">✕</button>
+                <input type="text" class="form-control form-control-lg" id="searchInput" placeholder="Search titles, authors, institutions... (use AND, OR, NOT for boolean search)" />
+                <button class="btn btn-primary" id="searchBtn">🔍 Search</button>
+              </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="card">
+              <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                  <h5 class="mb-0">
+                    Conference Data —
+                    <small id="filterContext" class="text-muted">Loading filter context...</small>
+                  </h5>
+                  <button class="btn btn-outline-secondary" id="exportBtn">Download table</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="tableContainer">
+                  <div class="text-center py-4">
+                    <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    <p class="mt-2 mb-0">Loading ESMO 2025 data...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===================== AI ASSISTANT ===================== -->
+        <div class="tab-pane fade" id="ai-assistant" role="tabpanel" aria-labelledby="ai-assistant-tab">
+          <div class="ai-chat-layout">
+
+            <!-- Chat Container (Full height, centered) -->
+            <div class="ai-chat-main">
+
+              <!-- Scrollable Content Area -->
+              <div class="ai-chat-scrollable">
+                <!-- Greeting (shows before first message) -->
+                <div id="aiGreeting" class="ai-greeting">
+                  <h2 class="ai-greeting-title">Welcome to COSMIC AI</h2>
+                  <p class="ai-greeting-subtitle">Your ESMO 2025 Conference Intelligence Assistant</p>
+
+                  <div class="ai-greeting-description">
+                    <div class="greeting-section">
+                      <p>What I can do</p>
+                      <ul>
+                        <li>Analyze all 4,686 ESMO 2025 sessions/studies with natural language AI conversations</li>
+                        <li>Use the Quick Inteligence buttons to generate comprehensive insights on HCPs/KOLs, 
+                          institutions, competitive intelligence, general scientific insights and trends, and Medical affairs strategy insights</li>
+                        <li>Try asking questions like: "what is zelenectide pevedotin?" | "Who is Andrea Necchi?" | "Show me all stdudies involving [drug] / [author] / [institution]".
+                          Or anything else, let your imagination shine!</li>
+                      </ul>
+                    </div>
+
+                    <div class="greeting-section">
+                      <p>Important limitations</p>
+                      <ul>
+                        <li><strong>Affiliations:</strong> Not provided by ESMO. Affiliations harvested from PubMed API by matching author + location + cancer theme + recency
+                        <li>80%+ of authors have a perfect confidence match; 7% of authors do not have PubMed indexed publications (likely early-career)</li>
+                        <li><strong>Data scope:</strong> All conference data except abstracts. Full abstracts will be available on Oct 13th!
+                        <li><strong>AI responses:</strong> Powered by chatGPT. Always verify critical information!</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Chat Messages Container -->
+                <div id="chatContainer" class="ai-chat-messages">
+                  <!-- Messages will appear here -->
+                </div>
+              </div>
+
+              <!-- Chat Input (Fixed at bottom of chat area) -->
+              <div class="ai-chat-input-container">
+                <!-- Chat Scope Selector (Integrated into input box) -->
+                <div class="chat-scope-selector">
+                  <label for="chatScopeDropdown">🔍 Scope:</label>
+                  <select id="chatScopeDropdown" class="chat-scope-dropdown">
+                    <option value="all">All Conference Data (4,686 studies)</option>
+                    <optgroup label="💊 Drug Focus">
+                      <option value="drug:Avelumab Focus">Avelumab (Bavencio)</option>
+                      <option value="drug:Tepotinib Focus">Tepotinib</option>
+                      <option value="drug:Cetuximab H&N">Cetuximab - Head & Neck</option>
+                      <option value="drug:Cetuximab CRC">Cetuximab - Colorectal</option>
+                      <option value="drug:All EMD Portfolio">All EMD Portfolio</option>
+                    </optgroup>
+                    <optgroup label="🎯 Therapeutic Area">
+                      <option value="ta:Bladder Cancer">Bladder Cancer</option>
+                      <option value="ta:Renal Cancer">Renal Cancer</option>
+                      <option value="ta:Lung Cancer">Lung Cancer (NSCLC)</option>
+                      <option value="ta:Colorectal Cancer">Colorectal Cancer</option>
+                      <option value="ta:Head and Neck Cancer">Head & Neck Cancer</option>
+                      <option value="ta:TGCT">TGCT</option>
+                    </optgroup>
+                  </select>
+                  <button class="download-chat-btn" id="downloadChatBtn" title="Download conversation">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                    </svg>
+                    <span class="download-chat-text">Download this chat</span>
+                  </button>
+                </div>
+
+                <div class="ai-chat-input-wrapper">
+                  <textarea
+                    id="chatInput"
+                    class="ai-chat-input"
+                    placeholder="Ask about conference insights, competitive intelligence, KOLs..."
+                    rows="1"></textarea>
+                  <button class="ai-chat-send-btn" id="chatSendBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Quick Intelligence Filter Modal -->
+    <div class="modal fade" id="quickIntelModal" tabindex="-1" aria-labelledby="quickIntelModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.12);">
+          <div class="modal-header" style="border-bottom: 1px solid #e9ecef; padding: 20px 24px;">
+            <h5 class="modal-title fw-bold" id="quickIntelModalLabel">
+              <span id="modalIcon">⚡</span> <span id="modalTitle">Quick Intelligence</span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" style="padding: 24px;">
+            <p class="text-muted" id="modalInstructions" style="margin-bottom: 20px; font-size: 14px;">
+              Select a filter to scope your analysis.
+            </p>
+
+            <!-- Drug Focus Filter Section -->
+            <div id="modalDrugSection" class="mb-4" style="display: none;">
+              <label class="form-label fw-semibold" style="font-size: 13px; color: #6c757d; margin-bottom: 12px;">💊 EMD DRUG FOCUS</label>
+              <div class="d-flex flex-wrap gap-2">
+                <button class="modal-filter-btn" data-type="drug" data-value="Avelumab Focus">Avelumab (mUC 1LM)</button>
+                <button class="modal-filter-btn" data-type="drug" data-value="Tepotinib Focus">Tepotinib (NSCLC METex14)</button>
+                <button class="modal-filter-btn" data-type="drug" data-value="Cetuximab CRC">Cetuximab (mCRC)</button>
+                <button class="modal-filter-btn" data-type="drug" data-value="Cetuximab H&N">Cetuximab (la/mH&N)</button>
+              </div>
+            </div>
+
+            <!-- Therapeutic Area Filter Section -->
+            <div id="modalTASection" class="mb-4" style="display: none;">
+              <label class="form-label fw-semibold" style="font-size: 13px; color: #6c757d; margin-bottom: 12px;">🎯 THERAPEUTIC AREA</label>
+              <div class="d-flex flex-wrap gap-2">
+                <button class="modal-filter-btn" data-type="ta" data-value="All Therapeutic Areas">All TAs</button>
+                <button class="modal-filter-btn" data-type="ta" data-value="Bladder Cancer">Bladder Cancer</button>
+                <button class="modal-filter-btn" data-type="ta" data-value="Renal Cancer">Renal Cancer</button>
+                <button class="modal-filter-btn" data-type="ta" data-value="Lung Cancer">Lung Cancer</button>
+                <button class="modal-filter-btn" data-type="ta" data-value="Colorectal Cancer">Colorectal</button>
+                <button class="modal-filter-btn" data-type="ta" data-value="Head and Neck Cancer">Head & Neck</button>
+                <button class="modal-filter-btn" data-type="ta" data-value="TGCT">TGCT</button>
+              </div>
+            </div>
+
+            <!-- Selected Filter Display -->
+            <div id="modalSelectedFilter" class="alert alert-light" style="border-radius: 8px; font-size: 13px; margin-top: 16px; display: none;">
+              <strong>Selected:</strong> <span id="modalSelectedFilterText"></span>
+            </div>
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 16px 24px;">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 8px;">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>

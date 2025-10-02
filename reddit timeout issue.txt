@@ -1,0 +1,43 @@
+● Help! Railway keeps timing out my Flask app's AI streaming responses after ~30 seconds
+
+  Platform: Railway (Hobby plan)Stack: Flask + OpenAI API + SSE streamingIssue: ALL streaming responses       
+  (chat queries, button responses) get killed after ~30 seconds with connection errors
+
+  What we've tried:
+
+  Gunicorn config tweaks:
+  - Increased --timeout to 180s, then 300s
+  - Tried sync workers, then UvicornWorker
+  - Added --keep-alive, --graceful-timeout settings
+
+  OpenAI client optimization:
+  - Custom httpx client with controlled connection pooling
+  - Reduced max connections (3), keep-alive connections (1)
+  - Set explicit timeouts (60s, 300s)
+  - Added retry logic
+
+  Worker management:
+  - Force worker recycling with --max-requests 5
+  - Single worker to avoid complexity
+  - Added shared memory temp dir /dev/shm
+
+  Progressive loading architecture:
+  - Split long analysis (90+ seconds) into individual 15-20 second requests
+  - Created separate endpoints for list + individual processing
+  - Immediate heartbeat responses to prevent proxy timeouts
+
+  Dependencies cleanup:
+  - Removed conflicting packages (gevent, uvicorn)
+  - Clean httpx + gunicorn setup
+
+  Current status:
+
+  Still getting connection drops at ~30 seconds consistently. The pattern happens on ANY response longer      
+  than 30s, regardless of optimization.
+
+  Question: Is there a Railway infrastructure timeout that can't be configured at the app level? Has
+  anyone solved long-running SSE streams on Railway?
+
+  The app works perfectly locally, only fails in Railway deployment.
+
+
