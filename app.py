@@ -113,6 +113,7 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 # Enrichment cache configuration
 ENABLE_AI_ENRICHMENT = os.environ.get("ENABLE_AI_ENRICHMENT", "false").lower() == "true"
 CACHE_DIR = os.environ.get("CACHE_DIR", "./data")
+DATABASE_URL = os.environ.get("DATABASE_URL")  # Railway Postgres (optional)
 
 # OpenAI client with controlled connection pooling for Railway deployment
 if OPENAI_API_KEY:
@@ -3614,11 +3615,17 @@ else:
     # Initialize enrichment cache (optional, for AI-powered title classification)
     if ENABLE_AI_ENRICHMENT:
         print(f"[INFO] AI Enrichment: ENABLED (cache dir: {CACHE_DIR})")
+        if DATABASE_URL:
+            print(f"[INFO] Postgres cache backend: ENABLED (multi-instance safe)")
+        else:
+            print(f"[INFO] Postgres cache backend: NOT CONFIGURED (file-only mode)")
+
         enrichment_cache_manager = EnrichmentCacheManager(
             csv_path=str(CSV_FILE),
             cache_dir=CACHE_DIR,
             model_version="gpt-5-mini",
-            prompt_version="v1"
+            prompt_version="v1",
+            database_url=DATABASE_URL  # Pass Railway Postgres URL
         )
         # Note: Enrichment will be triggered on first playbook button click
     else:

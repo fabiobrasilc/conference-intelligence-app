@@ -1,6 +1,12 @@
 """
 Enrichment Cache System - Production-Ready AI Title Classification
 Implements ChatGPT's best practices for Railway deployment
+
+Features:
+- Postgres metadata storage with advisory locks (multi-instance safe)
+- Railway volume storage for Parquet files
+- Automatic fallback to file-based metadata if Postgres unavailable
+- Background async enrichment
 """
 
 import hashlib
@@ -15,6 +21,14 @@ from typing import Optional, Dict, Any
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from openai import OpenAI
+
+# Import Postgres backend (with graceful fallback)
+try:
+    from postgres_cache import PostgresEnrichmentCache, sha256_file, atomic_write_parquet
+    POSTGRES_AVAILABLE = True
+except ImportError:
+    POSTGRES_AVAILABLE = False
+    print("[CACHE] Postgres module not available, using file-based cache only")
 
 # ============================================================================
 # UTILITY FUNCTIONS (ChatGPT's recommendations)
@@ -49,17 +63,21 @@ def atomic_write_parquet(df: pd.DataFrame, target_path: str):
 class EnrichmentCacheManager:
     """
     Manages AI-enriched dataset cache with:
-    - File-based cache (Railway volume compatible)
+    - Postgres metadata storage (Railway Postgres - multi-instance safe)
+    - File-based Parquet cache (Railway volume - survives deployments)
+    - Advisory locks (prevents duplicate enrichment across instances)
     - Model/prompt versioning
     - Automatic invalidation on CSV changes
     - Background async enrichment
+    - Graceful fallback to file-only mode if Postgres unavailable
     """
 
     def __init__(self,
                  csv_path: str,
                  cache_dir: str = "/app/data",
                  model_version: str = "gpt-5-mini",
-                 prompt_version: str = "v1"):
+                 prompt_version: str = "v1",
+                 database_url: Optional[str] = None):
 
         self.csv_path = csv_path
         self.cache_dir = cache_dir
@@ -78,6 +96,14 @@ class EnrichmentCacheManager:
         self.cache_file = os.path.join(cache_dir, f"enriched_{self.dataset_key}.parquet")
         self.metadata_file = os.path.join(cache_dir, f"metadata_{self.dataset_key}.json")
 
+        # Postgres backend (optional, graceful fallback)
+        self.pg_cache = None
+        if POSTGRES_AVAILABLE and database_url:
+            self.pg_cache = PostgresEnrichmentCache(database_url)
+            print(f"[CACHE] Postgres mode enabled (DB + volume hybrid)")
+        else:
+            print(f"[CACHE] File-only mode (no Postgres)")
+
         # State
         self.enriched_df: Optional[pd.DataFrame] = None
         self.is_building = False
@@ -85,12 +111,32 @@ class EnrichmentCacheManager:
 
 
     def get_cached_data(self) -> Optional[pd.DataFrame]:
-        """Load cached enriched data if valid"""
+        """Load cached enriched data if valid (checks Postgres metadata if available)"""
+
+        # MODE 1: Postgres + Volume (production Railway)
+        if self.pg_cache and self.pg_cache.db_available:
+            record = self.pg_cache.get_cache_record(
+                self.csv_hash,
+                self.model_version,
+                self.prompt_version
+            )
+
+            if record and record['status'] == 'ready' and record['enriched_file_path']:
+                if os.path.exists(record['enriched_file_path']):
+                    try:
+                        print(f"[CACHE] Loading from volume (Postgres-verified): {record['enriched_file_path']}")
+                        df = pd.read_parquet(record['enriched_file_path'])
+                        print(f"[CACHE] Loaded {len(df)} enriched studies")
+                        return df
+                    except Exception as e:
+                        print(f"[CACHE] Error loading Parquet: {e}")
+
+        # MODE 2: File-only fallback (local dev or Postgres unavailable)
         if not os.path.exists(self.cache_file) or not os.path.exists(self.metadata_file):
             return None
 
         try:
-            # Load metadata
+            # Load file-based metadata
             with open(self.metadata_file, 'r') as f:
                 metadata = json.load(f)
 
@@ -98,19 +144,32 @@ class EnrichmentCacheManager:
             if (metadata.get('dataset_key') == self.dataset_key and
                 metadata.get('status') == 'ready'):
 
-                print(f"[CACHE] Loading enriched data: {self.cache_file}")
+                print(f"[CACHE] Loading enriched data (file-based): {self.cache_file}")
                 df = pd.read_parquet(self.cache_file)
                 print(f"[CACHE] Loaded {len(df)} enriched studies")
                 return df
 
         except Exception as e:
-            print(f"[CACHE] Error loading cache: {e}")
+            print(f"[CACHE] Error loading file cache: {e}")
 
         return None
 
 
-    def save_metadata(self, status: str, message: str = ""):
-        """Save cache metadata"""
+    def save_metadata(self, status: str, message: str = "", enriched_file_path: str = None):
+        """Save cache metadata to both Postgres (if available) and file"""
+
+        # Save to Postgres (production)
+        if self.pg_cache and self.pg_cache.db_available:
+            self.pg_cache.upsert_cache_record(
+                csv_hash=self.csv_hash,
+                model_version=self.model_version,
+                prompt_version=self.prompt_version,
+                status=status,
+                enriched_file_path=enriched_file_path or self.cache_file,
+                message=message
+            )
+
+        # Also save to file (dev mode + backup)
         metadata = {
             'dataset_key': self.dataset_key,
             'csv_hash': self.csv_hash,
@@ -118,6 +177,7 @@ class EnrichmentCacheManager:
             'prompt_version': self.prompt_version,
             'status': status,
             'message': message,
+            'enriched_file_path': enriched_file_path or self.cache_file,
             'updated_at': time.time()
         }
 
@@ -126,22 +186,32 @@ class EnrichmentCacheManager:
 
 
     def build_cache_async(self, df: pd.DataFrame, ta_filters: list):
-        """Start background enrichment process"""
+        """Start background enrichment process (with Postgres advisory lock if available)"""
         if self.is_building:
             print("[CACHE] Build already in progress, skipping...")
             return
 
+        # Try to acquire advisory lock (prevents duplicate builds across instances)
+        if self.pg_cache and self.pg_cache.db_available:
+            lock_acquired = self.pg_cache.try_acquire_lock(self.dataset_key)
+            if not lock_acquired:
+                print("[CACHE] Another instance is building, will wait for result...")
+                self.is_building = False
+                return
+        else:
+            lock_acquired = False  # File-only mode, no lock needed
+
         self.is_building = True
-        self.save_metadata('building', 'Enriching titles with AI...')
+        self.save_metadata('building', 'Enriching titles with AI...', self.cache_file)
 
         def background_enrich():
             try:
                 print(f"[CACHE] Starting enrichment: {len(df)} studies")
                 enriched = enrich_titles_batch(df, self.model_version)
 
-                # Save atomically
+                # Save atomically to volume
                 atomic_write_parquet(enriched, self.cache_file)
-                self.save_metadata('ready', f'Enriched {len(enriched)} studies')
+                self.save_metadata('ready', f'Enriched {len(enriched)} studies', self.cache_file)
 
                 # Update in-memory cache
                 self.enriched_df = enriched
@@ -151,27 +221,54 @@ class EnrichmentCacheManager:
 
             except Exception as e:
                 print(f"[CACHE] ✗ Enrichment failed: {e}")
-                self.save_metadata('failed', str(e))
+                self.save_metadata('failed', str(e), self.cache_file)
                 self.is_building = False
+
+            finally:
+                # Release advisory lock
+                if lock_acquired and self.pg_cache:
+                    self.pg_cache.release_lock(self.dataset_key)
+                    print("[CACHE] Advisory lock released")
 
         self.build_thread = threading.Thread(target=background_enrich, daemon=True)
         self.build_thread.start()
 
 
     def get_or_build(self, df: pd.DataFrame, ta_filters: list) -> Optional[pd.DataFrame]:
-        """Get cached data or trigger background build"""
+        """
+        Get cached data or trigger background build (Postgres-aware)
+
+        Flow:
+        1. Check cache (Postgres metadata + volume file)
+        2. If missing, check if another instance is building (Postgres status)
+        3. If no one building, try to acquire lock and start build
+        4. Return None if building (caller uses fallback)
+        """
         # Try to load from cache
         cached = self.get_cached_data()
         if cached is not None:
             self.enriched_df = cached
             return cached
 
-        # Check if build in progress
+        # Check if another instance is building (Postgres-aware)
+        if self.pg_cache and self.pg_cache.db_available:
+            record = self.pg_cache.get_cache_record(
+                self.csv_hash,
+                self.model_version,
+                self.prompt_version
+            )
+
+            if record and record['status'] == 'building':
+                print("[CACHE] Another instance is building, waiting...")
+                # Could optionally wait here, but better to return None and serve fallback
+                return None
+
+        # Check if local build in progress
         if self.is_building:
-            print("[CACHE] Enrichment in progress, returning None (use fallback)")
+            print("[CACHE] Enrichment in progress (local), returning None (use fallback)")
             return None
 
-        # Start background build
+        # Start background build (will acquire advisory lock if Postgres available)
         print("[CACHE] No valid cache found, starting enrichment...")
         self.build_cache_async(df, ta_filters)
 
