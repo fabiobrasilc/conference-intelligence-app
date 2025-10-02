@@ -2838,6 +2838,11 @@ def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini"):
 # FLASK ROUTES
 # ============================================================================
 
+@app.route('/health')
+def health():
+    """Health check endpoint for Railway (lightweight, no data loading required)."""
+    return {"status": "ok", "service": "cosmic"}, 200
+
 @app.route('/')
 def index():
     """Render main page."""
