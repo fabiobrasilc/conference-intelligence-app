@@ -3779,7 +3779,6 @@ else:
         )
 
         # Trigger enrichment of ALL 4,686 studies (non-blocking, async)
-        global df_enriched_global
         print(f"[CACHE] Checking for enriched data cache...")
         enriched_df = enrichment_cache_manager.get_or_build(df_global, ta_filters=[])
 
