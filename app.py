@@ -1421,11 +1421,11 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
         return pd.DataFrame()
 
     # Start with empty mask (all False)
-    combined_mask = pd.Series([False] * len(df_global), index=df_global.index)
+    combined_mask = pd.Series([False] * len(source_df), index=source_df.index)
 
     # If no filters selected, return all data (chat will use semantic search to find relevant subset)
     if not drug_filters and not ta_filters and not session_filters and not date_filters:
-        return df_global
+        return source_df
 
     # Handle "Competitive Landscape" drug filter (show all)
     if "Competitive Landscape" in drug_filters:
@@ -1442,25 +1442,25 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
         date_filters = ["All Dates"]
 
     # Start with all True - each filter will AND to narrow down results
-    combined_mask = pd.Series([True] * len(df_global), index=df_global.index)
+    combined_mask = pd.Series([True] * len(source_df), index=source_df.index)
 
     # Apply drug filters (OR across multiple drug selections, AND with other filter types)
     if drug_filters and "All Drugs" not in drug_filters and "Competitive Landscape" not in drug_filters:
-        drug_combined_mask = pd.Series([False] * len(df_global), index=df_global.index)
+        drug_combined_mask = pd.Series([False] * len(source_df), index=source_df.index)
         for drug_filter in drug_filters:
             drug_config = ESMO_DRUG_FILTERS.get(drug_filter, {})
             keywords = drug_config.get("keywords", [])
 
             # Build drug keyword mask
-            drug_mask = pd.Series([False] * len(df_global), index=df_global.index)
+            drug_mask = pd.Series([False] * len(source_df), index=source_df.index)
             if keywords:
                 for keyword in keywords:
-                    drug_mask = drug_mask | df_global["Title"].str.contains(keyword, case=False, na=False, regex=False)
+                    drug_mask = drug_mask | source_df["Title"].str.contains(keyword, case=False, na=False, regex=False)
 
             # If drug has indication-specific TA filter (e.g., Cetuximab H&N vs CRC), apply it
             if "ta_filter" in drug_config:
                 ta_name = drug_config["ta_filter"]
-                ta_mask = apply_therapeutic_area_filter(df_global, ta_name)
+                ta_mask = apply_therapeutic_area_filter(source_df, ta_name)
                 drug_mask = drug_mask & ta_mask
 
             drug_combined_mask = drug_combined_mask | drug_mask
@@ -1469,42 +1469,42 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
 
     # Apply TA filters (OR across multiple TA selections, AND with other filter types)
     if ta_filters and "All Therapeutic Areas" not in ta_filters:
-        ta_combined_mask = pd.Series([False] * len(df_global), index=df_global.index)
+        ta_combined_mask = pd.Series([False] * len(source_df), index=source_df.index)
         for ta_filter in ta_filters:
-            ta_mask = apply_therapeutic_area_filter(df_global, ta_filter)
+            ta_mask = apply_therapeutic_area_filter(source_df, ta_filter)
             ta_combined_mask = ta_combined_mask | ta_mask
         combined_mask = combined_mask & ta_combined_mask
 
     # Apply session filters (OR across multiple session selections, AND with other filter types)
     # Use EXACT matching to distinguish "Poster" from "ePoster"
     if session_filters and "All Session Types" not in session_filters:
-        session_combined_mask = pd.Series([False] * len(df_global), index=df_global.index)
+        session_combined_mask = pd.Series([False] * len(source_df), index=source_df.index)
         for session_filter in session_filters:
             if session_filter == "Symposia":
                 # Special handling: Match any session containing "Symposium" EXCEPT "Industry-Sponsored Symposium"
-                symposium_mask = df_global["Session"].str.contains("Symposium", case=False, na=False, regex=False)
-                industry_mask = df_global["Session"] == "Industry-Sponsored Symposium"
+                symposium_mask = source_df["Session"].str.contains("Symposium", case=False, na=False, regex=False)
+                industry_mask = source_df["Session"] == "Industry-Sponsored Symposium"
                 session_combined_mask = session_combined_mask | (symposium_mask & ~industry_mask)
             else:
                 session_types = ESMO_SESSION_TYPES.get(session_filter, [])
                 if session_types:
                     for session_type in session_types:
-                        session_combined_mask = session_combined_mask | (df_global["Session"] == session_type)
+                        session_combined_mask = session_combined_mask | (source_df["Session"] == session_type)
         combined_mask = combined_mask & session_combined_mask
 
     # Apply date filters (OR across multiple date selections, AND with other filter types)
     # Use EXACT matching for dates
     if date_filters and "All Dates" not in date_filters:
-        date_combined_mask = pd.Series([False] * len(df_global), index=df_global.index)
+        date_combined_mask = pd.Series([False] * len(source_df), index=source_df.index)
         for date_filter in date_filters:
             dates = ESMO_DATES.get(date_filter, [])
             if dates:
                 for date in dates:
-                    date_combined_mask = date_combined_mask | (df_global["Date"] == date)
+                    date_combined_mask = date_combined_mask | (source_df["Date"] == date)
         combined_mask = combined_mask & date_combined_mask
 
     # Apply combined mask and deduplicate
-    filtered_df = df_global[combined_mask].copy()
+    filtered_df = source_df[combined_mask].copy()
     filtered_df = filtered_df.drop_duplicates()
 
     return filtered_df
@@ -2631,10 +2631,10 @@ def generate_drug_moa_ranking(competitor_df: pd.DataFrame, n: int = 20) -> pd.Da
 def generate_emerging_threats_table(df: pd.DataFrame, indication_keywords: list = None, n: int = 20) -> pd.DataFrame:
     """
     Identify emerging threats: novel mechanisms, innovative combinations, early phase signals.
-    Enhanced to detect innovation types like bicycle toxins, bispecifics, novel payloads, etc.
+    Enhanced to use AI-enriched data (phase, biomarkers, novelty) when available.
 
     Args:
-        df: Dataframe to search
+        df: Dataframe to search (enriched or original)
         indication_keywords: Keywords to filter by indication (e.g., ["bladder", "urothelial"])
         n: Max results to return
     """
@@ -2649,6 +2649,13 @@ def generate_emerging_threats_table(df: pd.DataFrame, indication_keywords: list 
     if df.empty:
         print("[EMERGING] No studies left after filtering session titles")
         return pd.DataFrame()
+
+    # Check if we have enriched data with AI metadata
+    has_enrichment = 'is_emerging' in df.columns and 'phase' in df.columns
+    if has_enrichment:
+        print(f"[EMERGING] ✓ Using AI-enriched metadata (phase, biomarkers, novelty)")
+    else:
+        print(f"[EMERGING] Using rule-based drug count approach")
 
     try:
         drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
@@ -2703,14 +2710,38 @@ def generate_emerging_threats_table(df: pd.DataFrame, indication_keywords: list 
         if 3 <= count <= 5:
             drug_name = generic if generic else commercial
             sample_title = matching.iloc[0]['Title'] if not matching.empty else ""
-            emerging.append({
-                'Drug': drug_name,
-                'Company': company,
-                'MOA Class': moa_class,
-                'MOA Target': moa_target,
-                '# Studies': count,
-                'Sample Title': sample_title[:80] + '...' if len(sample_title) > 80 else sample_title
-            })
+
+            # Extract enriched metadata if available
+            if has_enrichment and not matching.empty:
+                first_row = matching.iloc[0]
+                phase = first_row.get('phase', 'Unknown')
+                biomarkers = first_row.get('biomarkers', [])
+                novelty = first_row.get('novelty', [])
+
+                # Format biomarkers and novelty as comma-separated strings
+                biomarkers_str = ', '.join(biomarkers) if isinstance(biomarkers, list) and biomarkers else ''
+                novelty_str = ', '.join(novelty) if isinstance(novelty, list) and novelty else ''
+
+                emerging.append({
+                    'Drug': drug_name,
+                    'Company': company,
+                    'MOA Class': moa_class,
+                    'Phase': phase,
+                    'Biomarkers': biomarkers_str,
+                    'Novelty': novelty_str,
+                    '# Studies': count,
+                    'Sample Title': sample_title[:60] + '...' if len(sample_title) > 60 else sample_title
+                })
+            else:
+                # Fallback: original format without enrichment
+                emerging.append({
+                    'Drug': drug_name,
+                    'Company': company,
+                    'MOA Class': moa_class,
+                    'MOA Target': moa_target,
+                    '# Studies': count,
+                    'Sample Title': sample_title[:80] + '...' if len(sample_title) > 80 else sample_title
+                })
 
     result_df = pd.DataFrame(emerging)
     if not result_df.empty:
@@ -3043,16 +3074,16 @@ def stream_playbook(playbook_key):
                 # For competitor intelligence, drug_filters guide which EMD drug's competitors to focus on
                 # TA filters still apply to narrow therapeutic area scope
                 if ta_filters or session_filters or date_filters:
-                    filtered_df = get_filtered_dataframe_multi([], ta_filters, session_filters, date_filters)
+                    filtered_df = get_filtered_dataframe_multi([], ta_filters, session_filters, date_filters, use_enriched=True)
                 else:
-                    filtered_df = df_global.copy()
+                    filtered_df = get_dataset_for_analysis()
                 print(f"[PLAYBOOK] Competitor mode: Using dataset with {len(filtered_df)} studies (drug filter used for competitor focus)")
             else:
                 # For other buttons, apply all filters normally
                 if not drug_filters and not ta_filters and not session_filters and not date_filters:
-                    filtered_df = df_global.copy()
+                    filtered_df = get_dataset_for_analysis()
                 else:
-                    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
+                    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters, use_enriched=True)
                 print(f"[PLAYBOOK] Filtered dataset: {len(filtered_df)} studies")
 
             if filtered_df.empty:
@@ -3725,6 +3756,19 @@ else:
 
         if enriched_df is not None:
             df_enriched_global = enriched_df
+
+            # Add deterministic session enrichment (no LLM needed)
+            print(f"[CACHE] Adding session metadata...")
+            s = df_enriched_global['Session'].fillna('').str.lower()
+            df_enriched_global['session_type'] = pd.Series(
+                ['Oral' if 'oral' in x else
+                 'Poster' if 'poster' in x else
+                 'Educational' if 'educational' in x else
+                 'Industry' if 'industry' in x else 'Other'
+                 for x in s],
+                index=df_enriched_global.index
+            )
+
             print(f"[CACHE] ✓ Enriched data loaded successfully ({len(enriched_df)} studies)")
             print(f"[CACHE] ✓ All playbook buttons will use enriched data with AI metadata")
         else:
