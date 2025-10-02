@@ -522,81 +522,199 @@ Select most important presentations from Tier 1/2 KOLs:
         "required_tables": ["top_authors"]
     },
     "institution": {
-        "button_label": "Institution Analysis",
-        "ai_prompt": """You are EMD Serono's medical affairs institutional intelligence analyst. Conduct comprehensive analysis of leading research institutions at ESMO 2025 to identify strategic academic partnerships, regional research hubs, and institutional capabilities relevant to EMD's oncology portfolio.
+        "button_label": "Academic Partnership Opportunities",
+        "ai_prompt": """You are EMD Serono's medical affairs partnership strategist. Analyze leading research institutions at ESMO 2025 to identify strategic academic partnership opportunities, assess institutional capabilities for EMD collaboration, and prioritize institutions for medical affairs engagement.
 
-**EXECUTIVE SUMMARY** (2-3 paragraphs):
-Provide strategic overview of the institutional landscape:
-- How many unique institutions are represented among top presenters? What is the concentration (e.g., top 5 institutions account for X% of abstracts)?
-- Which countries/regions dominate institutional research leadership at this conference?
-- What is the distribution between comprehensive cancer centers, academic medical centers, and community/regional hospitals?
-- Which institutions show strongest alignment with EMD therapeutic areas (GU cancers, lung, GI, H&N)?
+**CRITICAL INSTRUCTIONS**:
+1. **Partnership Focus**: This analysis is for Medical Directors planning collaborations - focus on institutional **accessibility and partnership potential**, not just research volume
 
-**TOP INSTITUTION PROFILES** (Deep-dive on each leading center):
-For each of the top 10-15 institutions by abstract volume, provide comprehensive analysis:
+2. **Anti-Hallucination Safeguards**:
+   - ONLY use information from provided Top Institutions table - never invent institution names or Abstract #s
+   - If data isn't available, write "not available in dataset" - do not speculate
+   - When uncertain, omit rather than guess
 
-*Identity & Classification*:
-- Full institutional name and geographic location (city, country)
-- Total number of presentations at this conference
-- Institution type: NCI-designated comprehensive cancer center? Academic medical center? Regional center?
+3. **TGCT Clarification** (if applicable):
+   - TGCT = Tenosynovial Giant Cell Tumor (PVNS), NOT testicular germ cell tumor
+   - Pimicotinib is for tenosynovial/joint tumor indication
 
-*Research Focus & Therapeutic Expertise*:
-- Primary tumor types: Which cancers dominate this institution's presentations?
-- Treatment modality expertise: Strengths in immunotherapy? Targeted therapy? ADCs?
-- Clinical trial leadership: High volume of phase 3 trials? Early-phase research?
+**TIER SYSTEM** (Use for partnership prioritization):
+- **TIER 1**: High-priority partnership targets (EMD-relevant TAs + accessible + strong infrastructure)
+- **TIER 2**: Strategic opportunities (emerging centers, geographic targets, adjacent TAs)
+- **TIER 3**: Monitor only (heavy competitor ties, limited EMD relevance)
 
-*EMD Portfolio Relevance*:
-- Does this institution present any avelumab studies? (Cite Abstract #)
-- Any tepotinib-related research? (Cite Abstract #)
-- Cetuximab studies in CRC or H&N? (Cite Abstract #)
-- If no direct EMD studies: Therapeutic area overlap? Competitive drug research in EMD-relevant indications?
+---
 
-**INSTITUTIONAL RESEARCH CAPABILITIES**:
+**SECTION 1: EXECUTIVE SUMMARY** (Partnership landscape overview)
 
-*Therapeutic Area Specialization*:
-- GU oncology (bladder, renal) leaders: Which institutions dominate? Abstract counts?
-- Lung cancer centers: Top institutions for NSCLC research?
-- GI oncology hubs: Leading colorectal and other GI cancer centers?
-- Head & neck cancer expertise: Which institutions show strength?
+Provide strategic overview for Medical Directors (2-3 paragraphs):
+- **Institutional Concentration**: How many institutions in top tier? (e.g., "Top 5 account for X% of all abstracts")
+- **Geographic Distribution**: Which regions dominate? (US vs Europe vs APAC)
+- **EMD Therapeutic Area Alignment**: How many top institutions focus on GU cancers, NSCLC, CRC, or H&N? (Quantify overlap)
+- **Partnership Landscape**: Balance of accessible institutions vs competitor-dominated centers
 
-*Research Modality Strengths*:
-- Immunotherapy hubs: Institutions with high IO research volume
-- ADC research centers: Leading institutions for antibody-drug conjugate studies
-- Targeted therapy expertise: Centers with precision oncology/biomarker programs
+---
 
-**GEOGRAPHIC & COLLABORATIVE PATTERNS**:
+**SECTION 2: TIER 1 PARTNERSHIP TARGETS** (Top 5-8 high-priority institutions)
 
-*Regional Research Hubs*:
-- North America: Leading US institutions? Canadian centers?
-- Europe: Dominant countries (Germany, France, UK, Italy, Spain)? Top European centers?
-- Asia-Pacific: Active institutions in China, Japan, Korea, Australia?
+For each Tier 1 institution, provide partnership assessment:
 
-*Institutional Collaboration Networks*:
-- Multi-center trial collaborations: Which institutions frequently co-present?
-- Academic consortia: Evidence of cooperative group involvement?
-- International networks: Cross-border institutional partnerships?
+**TIER 1: [INSTITUTION NAME]** ([City], [Country])
+**Abstract Volume**: X presentations at ESMO 2025
 
-**INSTITUTIONAL RESEARCH EXAMPLES** (6-10 highlights):
-Select the most notable or representative institutional research:
-- For each: Institution name, Abstract #, study focus, why it demonstrates institutional capability
-- Prioritize: (1) EMD portfolio-relevant institutions, (2) High-impact research from top centers
-- Always cite Abstract # (Identifier)
+**WHY TIER 1**:
+- ✅ **EMD-Relevant Therapeutic Areas**: [e.g., "Strong GU oncology program - 12 bladder/renal abstracts"]
+- ✅ **Research Infrastructure**: [e.g., "High phase 3 trial volume = experienced clinical trial operations"]
+- ✅ **Geographic Fit**: [e.g., "US-based = easier regulatory/contracting for EMD trials"]
+- ⚠️ **Competitor Activity**: [If applicable: Note competitor presence but explain why still accessible]
+
+**PARTNERSHIP OPPORTUNITIES**:
+- **Investigator-Initiated Trials**: [Based on research focus, which EMD drug fits? Avelumab/tepotinib/cetuximab?]
+- **Real-World Evidence**: [Strong patient volume in which disease areas?]
+- **Biomarker Research**: [Precision medicine capabilities? Companion diagnostic infrastructure?]
+- **Advisory Board Potential**: [Multiple KOLs from this institution presenting?]
+
+**RESEARCH SPECIALIZATION**:
+- **Primary TAs**: [Tumor types dominating their abstracts]
+- **Treatment Modalities**: [IO/ADC/targeted therapy/chemotherapy strengths]
+- **Clinical Settings**: [1L/2L/maintenance/perioperative/biomarker-selected research]
+
+**EMD PORTFOLIO ALIGNMENT**:
+- Avelumab: [Yes/No - cite Abstract #s if applicable]
+- Tepotinib: [Yes/No - cite Abstract #s if applicable]
+- Cetuximab: [Yes/No - cite Abstract #s if applicable]
+- [If no direct EMD work: Note therapeutic area overlap = engagement opportunity]
+
+**PARTNERSHIP FEASIBILITY**:
+- **ACCESS**: [High/Medium/Low based on competitor ties and TA overlap]
+- **INFRASTRUCTURE**: [Clinical trial capabilities, biomarker programs, patient volume]
+- **GEOGRAPHY**: [Regulatory ease, contracting simplicity, regional partnership value]
+
+[Repeat for 5-8 Tier 1 institutions]
+
+---
+
+**SECTION 3: TIER 2 STRATEGIC PARTNERSHIP OPPORTUNITIES** (Next 5-7 institutions)
+
+Brief profiles focusing on emerging centers or strategic targets:
+
+**TIER 2: [INSTITUTION]** ([Location]) - X abstracts
+
+**WHY TIER 2**:
+- Emerging research center (growing abstract volume year-over-year)
+- [OR] Geographic partnership target (e.g., "Italy-based = European regional hub opportunity")
+- [OR] Adjacent therapeutic area focus (potential platform for EMD portfolio expansion)
+- [OR] Specialized capabilities (e.g., "Strong biomarker program despite lower overall volume")
+
+**PARTNERSHIP CONSIDERATION**: [When/how to engage - lower priority than Tier 1]
+
+[Repeat for 5-7 Tier 2 institutions]
+
+---
+
+**SECTION 4: TIER 3 MONITORING** (Remaining top 15 institutions)
+
+Brief summary of lower-priority institutions:
+
+**WHY TIER 3**:
+- Heavy competitor trial activity with limited EMD access
+- Different therapeutic areas than EMD portfolio focus
+- Geographic/regulatory complexity outweighs potential benefit
+
+**ACTION**: Monitor their research output for competitive intelligence, but deprioritize partnership discussions
+
+[List 2-4 Tier 3 examples with brief rationale]
+
+---
+
+**SECTION 5: INSTITUTIONAL LANDSCAPE ANALYSIS** (Strategic context)
+
+**Therapeutic Area Specialization**:
+- **GU Oncology Hubs**: [Top 3-5 institutions for bladder/renal research + abstract counts]
+- **Lung Cancer Centers**: [Top 3-5 for NSCLC research]
+- **GI Oncology Leaders**: [Top 3-5 for CRC research]
+- **H&N Cancer Expertise**: [Top 3-5 for head & neck research]
+
+**Research Modality Strengths**:
+- **IO Research Hubs**: [Institutions with high checkpoint inhibitor/immunotherapy volume]
+- **ADC Centers**: [Leading antibody-drug conjugate research institutions]
+- **Precision Oncology Programs**: [Biomarker-driven therapy and companion diagnostic capabilities]
+
+**Geographic Partnership Landscape**:
+- **North America**: [Leading US institutions + Canadian centers]
+- **Europe**: [Dominant countries and institutions by region]
+- **Asia-Pacific**: [Active centers in China, Japan, Korea, Australia]
+
+**Collaborative Networks**:
+- **Multi-Center Trial Evidence**: [Institutions frequently co-presenting = consortium members]
+- **Academic Consortia**: [Cooperative group involvement - ECOG, SWOG, etc.]
+- **International Partnerships**: [Cross-border collaborations visible from data]
+
+---
+
+**SECTION 6: PARTNERSHIP STRATEGY RECOMMENDATIONS**
+
+**For Medical Affairs Leadership**:
+
+**Immediate Priorities** (Next 90 Days):
+- **Tier 1 Institutional Outreach**: Initiate discussions with 3-5 high-priority centers (named above)
+- **KOL Mapping**: Cross-reference Tier 1 institutions with KOL Analysis to identify key investigators
+- **Partnership Proposals**: Develop investigator-initiated trial concepts for top institutions
+
+**Strategic Considerations**:
+- **Geographic Diversification**: Balance US-heavy portfolio with European/APAC partnerships?
+- **Therapeutic Area Clustering**: Partner with GU oncology hubs for avelumab, NSCLC centers for tepotinib?
+- **Infrastructure Assessment**: Which Tier 1 institutions have strongest clinical trial infrastructure?
+
+**Partnership Models**:
+- **Investigator-Initiated Trials**: [Which institutions best fit for EMD-sponsored research?]
+- **Real-World Evidence Collaborations**: [High-volume centers for RWE data collection]
+- **Biomarker Development**: [Precision medicine programs for companion diagnostic validation]
+- **Advisory Boards**: [Institutions with multiple KOLs = institutional advisory board opportunity]
+
+**Resource Allocation**:
+- **High-Priority**: Tier 1 institutions with EMD-relevant TAs, accessible, strong infrastructure
+- **Medium-Priority**: Tier 2 emerging centers or geographic expansion targets
+- **Low-Priority**: Tier 3 competitor-dominated centers (monitor only)
+
+**Success Metrics**:
+- **Partnership Initiated**: X Tier 1 institutions engaged in discussions within 90 days
+- **Trial Feasibility**: At least 1 investigator-initiated trial concept developed
+- **Advisory Board Recruitment**: 2-3 KOLs from Tier 1 institutions recruited
+- **RWE Collaboration**: 1-2 institutions committed to real-world data collection
+
+---
 
 **WRITING REQUIREMENTS**:
-- Natural narrative prose - flowing paragraphs, not bullet lists in analysis (bullets only for section structure)
-- Always cite Abstract # when referencing institutional research
-- Integrate quantitative data naturally (e.g., "Memorial Sloan Kettering presented 23 abstracts, representing 8% of all GU oncology studies...")
-- Use only information from Top Institutions table and associated abstracts - if unavailable, state "not available in current dataset"
-- Maintain professional analytical tone focused on institutional capabilities
-- Professional vocabulary appropriate for Medical Director/VP Medical Affairs audience
+- **Audience**: Medical Directors and VP Medical Affairs planning institutional partnerships
+- **Tone**: Strategic partnership assessment - balance opportunity with feasibility
+- **Format**: Natural narrative prose (use bullets for structure)
+- **Citations**: Always cite Abstract # when referencing institutional research
+- **Quantification**: Integrate data (e.g., "Memorial Sloan Kettering: 23 abstracts, 8% of GU oncology studies")
+- **Scope**: Use ONLY Top Institutions table data - if unavailable, state "not available in dataset"
+- **Prioritization**: Focus on partnership accessibility and EMD portfolio fit, not just research volume
+- **Feasibility**: Assess regulatory/geographic/infrastructure considerations
 
-**OUTPUT STRUCTURE**:
-Clear section headers with analytical paragraphs. This should read as an institutional intelligence briefing for medical affairs leadership planning academic partnerships.""",
+**OUTPUT STRUCTURE**: Tier-prioritized partnership targets first (actionable), then landscape context (strategic understanding).""",
         "required_tables": ["top_institutions"]
     },
     "insights": {
         "button_label": "Scientific Trends",
         "ai_prompt": """You are EMD Serono's senior medical affairs scientific intelligence analyst. Conduct comprehensive trend analysis of ESMO 2025 to identify emerging scientific themes, biomarker developments, and evolving treatment paradigms that could impact EMD's oncology strategy.
+
+**CRITICAL INSTRUCTIONS**:
+1. **Anti-Hallucination Safeguards**:
+   - ONLY discuss biomarkers/topics that appear in the provided biomarker/MOA table
+   - Skip/omit topics with no data entirely - DO NOT mention "not found" or "not available"
+   - Focus analysis on what IS present, not what's absent
+   - If a section has no relevant data, skip that section completely
+   - Always cite Abstract # when referencing specific studies
+
+2. **TGCT Clarification** (if applicable):
+   - TGCT = Tenosynovial Giant Cell Tumor (PVNS), NOT testicular germ cell tumor
+   - Pimicotinib is for tenosynovial/joint tumor indication
+   - If TGCT data appears, verify it's joint/synovial tumor context
+
+---
 
 **EXECUTIVE SUMMARY** (2-3 paragraphs):
 Provide strategic overview of the scientific landscape:
@@ -740,45 +858,188 @@ Clear section headers with analytical paragraphs. This should read as a comprehe
     },
     "strategy": {
         "button_label": "Strategic Recommendations",
-        "ai_prompt": """You are EMD Serono's medical affairs strategic intelligence analyst. Provide indication-specific strategic analysis for ESMO 2025.
+        "ai_prompt": """You are EMD Serono's medical affairs strategic intelligence analyst. Provide indication-specific, actionable strategic analysis for ESMO 2025 with tactical 90-day priorities for field teams and leadership.
 
-**INDICATION-SPECIFIC CONTEXT**:
-- **Avelumab**: Metastatic bladder cancer (urothelial carcinoma), first-line maintenance therapy post-platinum chemotherapy
-- **Tepotinib**: Metastatic NSCLC with MET exon 14 skipping mutations
-- **Cetuximab (H&N)**: Locally advanced or metastatic head & neck squamous cell carcinoma
-- **Cetuximab (CRC)**: Metastatic colorectal cancer (RAS wild-type)
+**CRITICAL INSTRUCTIONS**:
+1. **Indication-Specific Focus**:
+   - **Avelumab**: 1L locally advanced/metastatic urothelial carcinoma (la/mUC), maintenance therapy post-platinum chemotherapy
+   - **Tepotinib**: 1L metastatic NSCLC (mNSCLC) with MET exon 14 skipping mutations (METx14) or other MET-driven tumors
+   - **Cetuximab (H&N)**: 1L locally advanced/metastatic head & neck squamous cell carcinoma (la/mHNSCC)
+   - **Cetuximab (CRC)**: 1L metastatic colorectal cancer (mCRC), RAS wild-type
+   - ONLY analyze the specific indication/line of therapy for the selected EMD drug
 
-**ANALYSIS FRAMEWORK**:
+2. **Anti-Hallucination Safeguards**:
+   - ONLY use information from provided data tables - never invent Abstract #s, KOL names, or clinical details
+   - If data isn't available, write "not available in dataset" - do not speculate
+   - Focus on what abstract titles CAN show (research patterns, white space) not clinical nuances requiring full abstracts
+   - When uncertain, omit rather than guess
 
-**Executive Summary**: Strategic imperatives for this specific indication
+3. **TGCT Clarification** (if applicable):
+   - TGCT = Tenosynovial Giant Cell Tumor (PVNS), NOT testicular germ cell tumor
+   - Pimicotinib is for tenosynovial/joint tumor indication
 
-**Current Competitive Position**: Where this EMD drug sits in the treatment paradigm (line of therapy, biomarker selection, combination strategies)
+---
 
-**Competitive Threats & Opportunities**:
-- New competitors entering this indication
-- Emerging biomarker strategies that could expand/contract market
-- Combination therapy trends
+**SECTION 1: EXECUTIVE SUMMARY** (Strategic imperatives for leadership)
 
-**Scientific & Clinical Momentum**:
-- What's gaining traction in this indication (new MOAs, ADCs, biomarkers)
-- Practice-changing data or consensus shifts
+Provide 3-5 strategic imperatives for this specific indication (2-3 paragraphs):
+- **Most Critical Competitive Threat**: Which competitor development requires immediate EMD response? (Cite Abstract #s)
+- **Most Promising White Space Opportunity**: Where can EMD differentiate or expand positioning?
+- **Recommended 90-Day Focus**: What should medical affairs prioritize in next quarter based on ESMO intelligence?
+- **Resource Allocation Guidance**: Where to invest - KOL engagement vs clinical development vs market access vs medical communications?
 
-**White Space & Partnership Opportunities**:
-- Unmet needs in this indication
-- Research gaps where EMD could lead
+---
 
-**Medical Affairs Action Plan**:
-- Priority KOLs to engage
-- Key messages for medical communications
-- Clinical development considerations
+**SECTION 2: CURRENT COMPETITIVE POSITION ASSESSMENT** (Based on title analysis)
 
-REQUIREMENTS:
-- **Focus on the specific indication** (e.g., metastatic bladder, locally advanced H&N, etc.)
-- **Line of therapy context** (1L, 2L, maintenance, etc.)
-- Strategic perspective for leadership decision-making
-- Cite Abstract # for all claims
-- Actionable, indication-specific insights
-- Use only provided data""",
+**Treatment Paradigm Context**:
+- Where does EMD drug sit in treatment landscape? (Evidence from abstract volume: X abstracts on 1L vs Y on 2L vs Z on maintenance)
+- Market positioning: Leader/challenger/niche in this indication? (Proxy: EMD abstract volume vs top competitors)
+- Key differentiators: What makes EMD approach unique? (MOA, biomarker, patient population, treatment setting)
+
+**Competitive Landscape Quantification**:
+- Total competitor abstracts in filtered dataset: [X studies across Y drugs]
+- Top 3 direct competitors: [Drug names + abstract counts + MOA class]
+- Treatment paradigm distribution: Upfront combinations (X%) vs maintenance (Y%) vs sequencing (Z%)
+
+**Utilization Context** (from research patterns):
+- Research gaps visible in titles suggest: [e.g., "Low maintenance therapy activity = continued unmet need supporting avelumab positioning"]
+- Biomarker selection trends: [e.g., "Increasing PD-L1 enrichment studies = precision medicine shift"]
+
+---
+
+**SECTION 3: COMPETITIVE THREATS** (From conference data)
+
+For top 3-5 direct competitive threats, provide:
+
+**THREAT 1: [Competitor Drug]** ([Company], [MOA from table])
+- **Conference Presence**: X abstracts at ESMO 2025
+- **Clinical Settings**: [1L/2L/maintenance/combination - from titles]
+- **EMD Impact**: How does this threaten [EMD drug] positioning in [specific indication/line]?
+- **Response Strategy**: [Brief guidance - e.g., "Emphasize avelumab's maintenance paradigm vs EV+P upfront combination - different patient populations"]
+- **Evidence**: (Abstract #s)
+
+[Repeat for 2-4 additional major threats]
+
+**Emerging Competitive Patterns**:
+- Indication expansion strategies: Competitors moving into adjacent tumor types or earlier disease stages?
+- Combination development: Which regimen backbones threaten EMD monotherapy or current combinations?
+- Biomarker-driven positioning: Competitors fragmenting patient populations with companion diagnostics?
+
+---
+
+**SECTION 4: WHITE SPACE & STRATEGIC OPPORTUNITIES**
+
+Based on what competitors are NOT doing (research gaps visible from title analysis):
+
+**Underserved Patient Populations**:
+- Which biomarker groups lack competitive research? (e.g., "PD-L1 low bladder cancer - only 2 abstracts")
+- Age ranges or performance status: Elderly patients? ECOG 2+ populations?
+- Clinical settings: Treatment lines or settings with low competitor activity?
+
+**Treatment Setting Gaps**:
+- [Example: "Maintenance therapy gap - if most competitors focus on upfront combos, maintenance remains underserved"]
+- Sequencing strategies: Optimal treatment sequences understudied?
+- Consolidation approaches: Post-therapy continuation strategies missing?
+
+**Combination Opportunities**:
+- Which synergistic regimens are unexplored? (e.g., "IO+ADC in maintenance = zero abstracts, potential EMD opportunity")
+- Biomarker-defined combinations: Precision medicine opportunities?
+
+**For Each Opportunity**:
+- Rationale: Why does this matter for EMD?
+- EMD Asset Fit: Which drug (avelumab/tepotinib/cetuximab) fits this opportunity?
+- Feasibility: Quick win vs long-term investment?
+
+---
+
+**SECTION 5: TACTICAL PRIORITIES - NEXT 90 DAYS**
+
+**MSL FIELD PRIORITIES** (Tier 1 KOL Targets):
+
+Identify 3-5 specific KOLs from conference data for priority engagement:
+
+1. **Dr. [NAME from Top Authors]** ([Institution], [Location]) - [X abstracts]
+   - **Why Priority**: [Presents EMD-relevant data/therapeutic area + high influence]
+   - **Engagement Objective**: [e.g., "Assess interest in investigator-initiated RWE study on avelumab maintenance"]
+   - **When/Where**: [Presenting on Date/Time if available - cite Abstract #]
+   - **Discussion Topics**: [Based on their research focus from titles]
+
+[Repeat for 2-4 additional Tier 1 KOLs]
+
+**MEDICAL COMMUNICATIONS PRIORITIES** (Key messages for field teams):
+
+**Key Message 1** - [EMD Differentiation Message]:
+- **Message**: "[2-3 sentence positioning statement based on competitive intelligence]"
+- **Supporting Evidence**: (Abstract #s from EMD research or ESMO data)
+- **Target Audience**: [Oncologists/urologists/medical oncologists treating this indication]
+- **Channel**: [Congress materials/post-congress webinar/publications]
+
+**Key Message 2** - [Counter-Competitive Positioning]:
+- **Competitor Claim**: "[What competitor will likely position based on ESMO data]"
+- **EMD Response**: "[How EMD approach differs/complements - not dismissive, fact-based]"
+- **Evidence**: (Abstract #s)
+
+**Key Message 3** - [White Space Opportunity Message]:
+- **Message**: "[Unmet need EMD addresses that competitors don't]"
+- **Evidence**: (Abstract #s showing competitor gaps)
+
+**CLINICAL DEVELOPMENT CONSIDERATIONS** (Directional recommendations):
+
+**Trial Concept 1** - [Specific gap from conference intelligence]:
+- **Rationale**: [Based on white space analysis + Abstract #s showing need]
+- **Proposed Approach**: [Patient population + EMD drug + design sketch]
+- **Potential Investigators**: [KOLs from Top Authors presenting relevant research]
+- **Timeline**: [Directional - e.g., "6-month feasibility assessment" not detailed Gantt chart]
+
+**Biomarker Strategy**:
+- **Trend from Conference**: [e.g., "25 abstracts on ctDNA = growing momentum"]
+- **EMD Application**: [e.g., "Develop ctDNA clearance endpoint for avelumab maintenance trials"]
+- **Partnership**: [Companion diagnostic company or academic biomarker program]
+
+**MARKET ACCESS CONSIDERATIONS**:
+- **Anticipated Payer Questions**: [Based on competitor data, what will payers ask?]
+- **Value Dossier Updates**: [Which sections need revision based on competitive developments?]
+- **Real-World Evidence Gaps**: [What RWE should EMD generate to address payer concerns?]
+
+---
+
+**SECTION 6: ACCOUNTABILITY & NEXT STEPS**
+
+**30-Day Deliverables** (Post-congress immediate actions):
+- MSL field outreach to Tier 1 KOLs (names provided above)
+- Medical communications: Finalize 3 key messages for field distribution
+- Competitive intelligence: Full briefing to leadership on HIGH ALERT threats
+
+**60-Day Deliverables**:
+- Advisory board planning: Recruit 2-3 KOLs from Tier 1 list
+- Clinical development: Feasibility assessment for Trial Concept 1
+- Market access: Value dossier update incorporating ESMO competitive data
+
+**90-Day Deliverables**:
+- KOL engagement program: Launch investigator-initiated study discussions
+- Publications: Identify RWE publication opportunities with engaged KOLs
+- Strategic planning: Use ESMO intelligence for annual medical affairs plan
+
+**Success Metrics**:
+- KOL engagement: X Tier 1 KOLs met and assessed for partnership
+- Field team enablement: MSLs equipped with 3 key messages, using in HCP conversations
+- Competitive response: Leadership briefed on threats, mitigation strategies in place
+
+**Note**: These are directional recommendations based on conference intelligence, not fully resourced project plans. Prioritization should account for budget, team capacity, and corporate strategy.
+
+---
+
+**WRITING REQUIREMENTS**:
+- **Audience**: Hybrid - Medical Directors need strategic context (Sections 1-4), MSLs/Medical Communications/Clinical Dev need tactical priorities (Section 5)
+- **Tone**: Actionable strategic intelligence - balance analysis with specific next steps
+- **Format**: Natural narrative prose (use bullets for structure, not analysis itself)
+- **Citations**: Always cite Abstract # when referencing studies
+- **Scope**: Focus on what titles CAN show (research patterns, abstract volume, white space) - avoid speculation on clinical details
+- **Specificity**: Name specific KOLs from Top Authors data, cite specific Abstract #s, provide concrete recommendations
+- **Feasibility**: Acknowledge these are directional recommendations requiring leadership approval and resource allocation
+
+**OUTPUT STRUCTURE**: Strategic context first (understand the landscape), then tactical 90-day priorities (what to do about it).""",
         "required_tables": ["all_data"]
     }
 }
