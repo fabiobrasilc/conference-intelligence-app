@@ -305,7 +305,7 @@ Title: "{title}"
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 max_completion_tokens=120,  # Changed from max_tokens for gpt-5-mini compatibility
-                temperature=0,
+                # temperature not specified - gpt-5-mini only supports default (1)
                 response_format={"type": "json_object"}
             )
 
