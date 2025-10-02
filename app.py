@@ -1070,7 +1070,8 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
 
     # Handle "Competitive Landscape" drug filter (show all)
     if "Competitive Landscape" in drug_filters:
-        drug_filters = list(ESMO_DRUG_FILTERS.keys())
+        # Get all drug filters EXCEPT "Competitive Landscape" itself
+        drug_filters = [k for k in ESMO_DRUG_FILTERS.keys() if k != "Competitive Landscape"]
 
     # Default to "All" if no selection
     if not drug_filters:
@@ -2865,3 +2866,4 @@ if __name__ == '__main__':
         debug=False,  # Changed to False for production readiness
         threaded=True
     )
+
