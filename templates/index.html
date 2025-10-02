@@ -137,6 +137,14 @@
             <div class="sub">Recommendations</div>
           </div>
         </div>
+
+        <!-- Data Sources & Warnings Button -->
+        <button class="qi-warning-btn" data-bs-toggle="modal" data-bs-target="#dataWarningModal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Data Sources & Warnings
+        </button>
       </div>
     </aside>
 
@@ -228,24 +236,27 @@
                   <p class="ai-greeting-subtitle">Your ESMO 2025 Conference Intelligence Assistant</p>
 
                   <div class="ai-greeting-description">
-                    <div class="greeting-section">
-                      <p>What I can do</p>
-                      <ul>
-                        <li>Analyze all 4,686 ESMO 2025 sessions/studies with natural language AI conversations</li>
-                        <li>Use the Quick Inteligence buttons to generate comprehensive insights on HCPs/KOLs, 
-                          institutions, competitive intelligence, general scientific insights and trends, and Medical affairs strategy insights</li>
-                        <li>Try asking questions like: "what is zelenectide pevedotin?" | "Who is Andrea Necchi?" | "Show me all stdudies involving [drug] / [author] / [institution]".
-                          Or anything else, let your imagination shine!</li>
-                      </ul>
+                    <p class="greeting-intro">Ask questions, explore insights, and analyze 4,686 ESMO 2025 abstracts with AI-powered conversations.</p>
+
+                    <div class="greeting-examples">
+                      <p class="greeting-examples-title">Try asking:</p>
+                      <div class="example-chips">
+                        <span class="example-chip">"What is zelenectide pevedotin?"</span>
+                        <span class="example-chip">"Who is Andrea Necchi?"</span>
+                        <span class="example-chip">"Avelumab combination studies in bladder cancer"</span>
+                      </div>
                     </div>
 
-                    <div class="greeting-section">
-                      <p>Important limitations</p>
+                    <div class="greeting-qi-hint">
+                      <strong>Quick Intelligence:</strong> Use the sidebar buttons for instant comprehensive reports on KOLs, institutions, competitors, and strategic insights.
+                    </div>
+
+                    <div class="greeting-limitations">
+                      <p class="limitations-title">Data Sources & Limitations</p>
                       <ul>
-                        <li><strong>Affiliations:</strong> Not provided by ESMO. Affiliations harvested from PubMed API by matching author + location + cancer theme + recency
-                        <li>80%+ of authors have a perfect confidence match; 7% of authors do not have PubMed indexed publications (likely early-career)</li>
-                        <li><strong>Data scope:</strong> All conference data except abstracts. Full abstracts will be available on Oct 13th!
-                        <li><strong>AI responses:</strong> Powered by chatGPT. Always verify critical information!</li>
+                        <li><strong>Affiliations:</strong> PubMed API (80%+ confidence match; 7% early-career authors may lack indexed publications)</li>
+                        <li><strong>Scope:</strong> Titles, authors, sessions only. Full abstracts available Oct 13th.</li>
+                        <li><strong>AI:</strong> Powered by GPT-5-mini. Always verify critical information.</li>
                       </ul>
                     </div>
                   </div>
@@ -306,6 +317,11 @@
                     </svg>
                   </button>
                 </div>
+
+                <!-- Persistent Warning Footer -->
+                <div class="ai-warning-footer">
+                  ⚠️ COSMIC is powered by GPT-5-mini and can make mistakes. Do not input any internal/confidential information. All data sourced from public ESMO/PubMed.
+                </div>
               </div>
 
             </div>
@@ -364,6 +380,57 @@
           </div>
           <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 16px 24px;">
             <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 8px;">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Warning Modal -->
+    <div class="modal fade" id="dataWarningModal" tabindex="-1" aria-labelledby="dataWarningModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.12);">
+          <div class="modal-header" style="border-bottom: 1px solid #e9ecef; padding: 20px 24px; background-color: #fff3cd;">
+            <h5 class="modal-title fw-bold" id="dataWarningModalLabel">
+              ⚠️ Data Sources & Important Warnings
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" style="padding: 24px;">
+            <div style="margin-bottom: 20px; padding: 12px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px;">
+              <strong>⛔ DO NOT SHARE CONFIDENTIAL/INTERNAL INFORMATION</strong>
+              <p style="margin: 8px 0 0 0; font-size: 14px;">No internal EMD Serono/Merck KGaA data was used to train the AI model. All prompts are sent to OpenAI servers.</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <h6 class="fw-bold">Data Sources</h6>
+              <ul style="font-size: 14px; margin: 8px 0;">
+                <li><strong>Conference Data:</strong> All sourced from publicly available ESMO 2025 materials</li>
+                <li><strong>Affiliations:</strong> Harvested from PubMed API using author + location + theme + recency matching</li>
+                <li><strong>Training Data:</strong> OpenAI GPT-5-mini (general knowledge, not app-specific)</li>
+              </ul>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <h6 class="fw-bold">Data Limitations</h6>
+              <ul style="font-size: 14px; margin: 8px 0;">
+                <li><strong>Affiliation Confidence:</strong> 80%+ perfect match; 7% of authors lack PubMed publications (likely early-career)</li>
+                <li><strong>Scope:</strong> Titles, authors, sessions only. <strong>Full abstracts available Oct 13th</strong></li>
+                <li><strong>AI Accuracy:</strong> AI can make mistakes. Always verify critical information before acting</li>
+              </ul>
+            </div>
+
+            <div style="padding: 12px; background-color: #e7f3ff; border-left: 4px solid #0d6efd; border-radius: 8px;">
+              <strong>✅ Best Practices</strong>
+              <ul style="font-size: 14px; margin: 8px 0 0 0;">
+                <li>Use for hypothesis generation and trend identification</li>
+                <li>Verify AI outputs with source abstracts (Identifier #)</li>
+                <li>Cross-reference findings with internal data systems</li>
+                <li>Do not make strategic decisions based solely on AI responses</li>
+              </ul>
+            </div>
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 16px 24px;">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="border-radius: 8px;">I Understand</button>
           </div>
         </div>
       </div>

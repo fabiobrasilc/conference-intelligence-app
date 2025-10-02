@@ -1399,7 +1399,28 @@ def get_dataset_for_analysis() -> pd.DataFrame:
     """
     Get the best available dataset for analysis.
     Returns enriched data if available, otherwise falls back to original df_global.
+    Checks if background enrichment completed and updates global variable.
     """
+    global df_enriched_global, enrichment_cache_manager
+
+    # Check if enrichment completed in background
+    if df_enriched_global is None and enrichment_cache_manager is not None:
+        if enrichment_cache_manager.enriched_df is not None and not enrichment_cache_manager.is_building:
+            print("[CACHE] ✓ Background enrichment completed! Loading enriched data...")
+            df_enriched_global = enrichment_cache_manager.enriched_df
+
+            # Add session enrichment
+            s = df_enriched_global['Session'].fillna('').str.lower()
+            df_enriched_global['session_type'] = pd.Series(
+                ['Oral' if 'oral' in x else
+                 'Poster' if 'poster' in x else
+                 'Educational' if 'educational' in x else
+                 'Industry' if 'industry' in x else 'Other'
+                 for x in s],
+                index=df_enriched_global.index
+            )
+            print(f"[CACHE] ✓ Enriched data now active ({len(df_enriched_global)} studies)")
+
     if df_enriched_global is not None:
         return df_enriched_global
     return df_global if df_global is not None else pd.DataFrame()
@@ -3749,12 +3770,13 @@ else:
             database_url=DATABASE_URL  # Pass Railway Postgres URL
         )
 
-        # Trigger enrichment of ALL 4,686 studies (one-time, cached forever)
+        # Trigger enrichment of ALL 4,686 studies (non-blocking, async)
         global df_enriched_global
         print(f"[CACHE] Checking for enriched data cache...")
         enriched_df = enrichment_cache_manager.get_or_build(df_global, ta_filters=[])
 
         if enriched_df is not None:
+            # Cache exists - load immediately
             df_enriched_global = enriched_df
 
             # Add deterministic session enrichment (no LLM needed)
@@ -3772,8 +3794,10 @@ else:
             print(f"[CACHE] ✓ Enriched data loaded successfully ({len(enriched_df)} studies)")
             print(f"[CACHE] ✓ All playbook buttons will use enriched data with AI metadata")
         else:
-            print(f"[CACHE] Building enriched data in background (first time only, 60-90s)")
-            print(f"[CACHE] App will use rule-based approach until enrichment completes")
+            # No cache - enrichment building in background (non-blocking)
+            print(f"[CACHE] ⏳ Building enriched data in background (60-90s)")
+            print(f"[CACHE] ✓ App starting immediately - buttons will use rule-based approach until enrichment completes")
+            print(f"[CACHE] ✓ Enrichment will auto-load when ready (check logs for completion)")
     else:
         print(f"[INFO] AI Enrichment: DISABLED (using fast rule-based approach)")
 

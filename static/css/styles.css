@@ -801,50 +801,93 @@ mark {
 
 .ai-greeting-description {
   text-align: left;
-  background: transparent; /* Match page background */
-  border: none; /* Remove outline */
+  background: transparent;
   border-radius: 16px;
-  padding: 24px 32px;
+  padding: 16px 24px;
   margin-bottom: 24px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
 }
 
-.ai-greeting-description .greeting-section {
-  display: flex;
-  flex-direction: column;
+.greeting-intro {
+  font-size: 15px;
+  color: var(--ink-2);
+  margin-bottom: 20px;
+  line-height: 1.6;
 }
 
-.ai-greeting-description p {
-  margin-bottom: 12px;
-  color: var(--ink);
+.greeting-examples {
+  margin-bottom: 20px;
+}
+
+.greeting-examples-title {
+  font-size: 13px;
   font-weight: 600;
-  font-size: 14px;
+  color: var(--ink);
+  margin-bottom: 8px;
 }
 
-.ai-greeting-description ul {
+.example-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.example-chip {
+  background: #f0f0f0;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.example-chip:hover {
+  background: var(--brand);
+  color: white;
+}
+
+.greeting-qi-hint {
+  background: #f8f9fa;
+  border-left: 3px solid var(--brand);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+  margin-bottom: 20px;
+}
+
+.greeting-limitations {
+  background: #fff9e6;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.limitations-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.greeting-limitations ul {
   margin: 0;
   padding-left: 20px;
   list-style: none;
 }
 
-.ai-greeting-description li {
-  margin-bottom: 8px;
+.greeting-limitations li {
+  font-size: 12px;
   color: var(--ink-2);
-  font-size: 13px;
-  line-height: 1.6;
+  margin-bottom: 6px;
   position: relative;
-  padding-left: 0;
+  padding-left: 12px;
 }
 
-.ai-greeting-description li::before {
+.greeting-limitations li::before {
   content: "•";
-  color: var(--brand);
-  font-weight: bold;
-  display: inline-block;
-  width: 1em;
-  margin-left: -1em;
+  color: #f39c12;
+  position: absolute;
+  left: 0;
 }
 
 /* Quick Intelligence Chips in Greeting */
@@ -1323,5 +1366,45 @@ mark {
 .playbook-table-viewport table {
   border-collapse: separate;
   border-spacing: 0;
+}
+
+/* Warning Footer (persistent under chat input) */
+.ai-warning-footer {
+  padding: 8px 16px;
+  background: #fff3cd;
+  border-top: 1px solid #f0e5b8;
+  font-size: 11px;
+  color: #664d03;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* QI Warning Button */
+.qi-warning-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  margin-top: 16px;
+  background: white;
+  border: 1.5px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.qi-warning-btn:hover {
+  background: #f8f9fa;
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.qi-warning-btn svg {
+  flex-shrink: 0;
 }
 
