@@ -3627,7 +3627,17 @@ else:
             prompt_version="v1",
             database_url=DATABASE_URL  # Pass Railway Postgres URL
         )
-        # Note: Enrichment will be triggered on first playbook button click
+
+        # Trigger enrichment of ALL 4,686 studies (one-time, cached forever)
+        print(f"[CACHE] Checking for enriched data cache...")
+        enriched_df = enrichment_cache_manager.get_or_build(df_global, ta_filters=[])
+
+        if enriched_df is not None:
+            print(f"[CACHE] ✓ Enriched data loaded successfully ({len(enriched_df)} studies)")
+            # TODO: Use enriched_df in playbook functions instead of df_global
+        else:
+            print(f"[CACHE] Building enriched data in background (first time only, 60-90s)")
+            print(f"[CACHE] App will use rule-based approach until enrichment completes")
     else:
         print(f"[INFO] AI Enrichment: DISABLED (using fast rule-based approach)")
 
