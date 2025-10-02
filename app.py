@@ -2624,6 +2624,15 @@ def generate_emerging_threats_table(df: pd.DataFrame, indication_keywords: list 
     if df.empty:
         return pd.DataFrame()
 
+    # IMPORTANT: Filter out Educational Sessions and entries without Identifiers
+    # These are session titles/speakers, not actual research abstracts
+    df = df[df['Identifier'].notna() & (df['Identifier'].str.strip() != '')].copy()
+    print(f"[EMERGING] Analyzing {len(df)} actual studies (excluded non-abstract entries)")
+
+    if df.empty:
+        print("[EMERGING] No studies left after filtering session titles")
+        return pd.DataFrame()
+
     try:
         drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
         drug_db = pd.read_csv(drug_db_path, encoding='utf-8-sig')
