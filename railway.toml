@@ -7,3 +7,8 @@ healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
+
+# Persistent volume for AI enrichment cache
+[[deploy.volumes]]
+name = "data"
+mountPath = "/app/data"

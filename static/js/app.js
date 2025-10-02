@@ -92,6 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const chatContainer  = document.getElementById('chatContainer');
   const userInput      = document.getElementById('chatInput'); // Changed from 'userInput' to 'chatInput'
   const sendChatBtn    = document.getElementById('chatSendBtn');
+  const jumpToBottomBtn = document.getElementById('jumpToBottomBtn');
 
   // ===== State =====
   let currentFilters = { drug_filters: [], ta_filters: [], session_filters: [], date_filters: [] };
@@ -668,12 +669,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Define column widths based on common columns
     const getColWidth = (col) => {
       const widthMap = {
-        'Drug': '10%', 'Company': '15%',
-        'Title': '25%', 'Speakers': '15%', 'Speaker': '20%', 'Speaker Location': '12%',
-        'Affiliation': '20%', 'Identifier': '8%', 'Room': '10%',
+        'Drug': '12%', 'Company': '15%',
+        'Title': '22%', 'Speakers': '15%', 'Speaker': '20%', 'Speaker Location': '12%',
+        'Affiliation': '18%', 'Identifier': '7%', 'Room': '10%',
         'Date': '8%', 'Time': '7%', 'Session': '12%', 'Theme': '15%',
         'Threat Type': '12%', 'Location': '15%',
-        '# Studies': '8%', 'Institution': '25%', '# Abstracts': '8%'
+        'MOA Class': '10%', 'MOA Target': '12%', 'Setting/Novelty': '15%',
+        '# Studies': '8%', 'Institution': '25%', '# Abstracts': '8%', 'Study Type': '10%'
       };
       return widthMap[col] || 'auto';
     };
@@ -1340,21 +1342,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (dateFilters.length > 0) filterLabels.push(`📅 ${dateFilters.join(', ')}`);
       const filterText = filterLabels.length > 0 ? ` (${filterLabels.join(' • ')})` : '';
 
-      appendToChat(`
-        <div class="d-flex justify-content-start mb-2">
-          <div class="bg-primary text-white rounded p-2" style="max-width:80%;">
-            <strong>🤖 Running ${getPlaybookTitle(playbookType)}${filterText}...</strong>
-            <span class="spinner-border spinner-border-sm ms-2" role="status"></span>
-          </div>
-        </div>`);
-
-      // Scroll to bottom immediately when button clicked (with slight delay for DOM update)
-      setTimeout(() => {
-        if (chatContainer) {
-          chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-      }, 100);
-
       const params = new URLSearchParams();
       drugFilters.forEach(f => params.append('drug_filters', f));
       taFilters.forEach(f => params.append('ta_filters', f));
@@ -1371,6 +1358,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Generate unique IDs for this playbook response to avoid conflicts
       const playbookId = 'playbook-content-' + Date.now();
       const playbookTextId = 'playbook-text-' + Date.now();
+      const playbookLoadingId = 'playbook-loading-' + Date.now();
 
       appendToChat(`
         <div class="d-flex justify-content-start mb-2">
@@ -1378,6 +1366,14 @@ document.addEventListener('DOMContentLoaded', function() {
             <div id="${playbookId}" class="chat-stream"></div>
           </div>
         </div>`);
+
+      // Scroll to bottom immediately when playbook starts
+      const chatScrollable = document.querySelector('.ai-chat-scrollable');
+      setTimeout(() => {
+        if (chatScrollable) {
+          chatScrollable.scrollTop = chatScrollable.scrollHeight;
+        }
+      }, 100);
 
       const contentDiv = document.getElementById(playbookId);
 
@@ -1401,14 +1397,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Check if text div already exists (from previous table)
                 let textDiv = document.getElementById(playbookTextId);
+                let loadingDiv = document.getElementById(playbookLoadingId);
+
                 if (!textDiv) {
                   // First table - append table using insertAdjacentHTML to preserve content
                   contentDiv.insertAdjacentHTML('beforeend', tableHtml);
-                  // Create text div for AI response
-                  contentDiv.insertAdjacentHTML('beforeend', '<div class="mt-3" id="' + playbookTextId + '"></div>');
+
+                  // Add loading indicator AFTER table (chat-style "Thinking...")
+                  contentDiv.insertAdjacentHTML('beforeend', `
+                    <div class="mt-3" id="${playbookLoadingId}">
+                      <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                      <span class="text-muted">Analyzing...</span>
+                    </div>
+                  `);
+
+                  // Create text div for AI response (will be populated when text arrives)
+                  contentDiv.insertAdjacentHTML('beforeend', '<div class="mt-3" id="' + playbookTextId + '" style="display:none;"></div>');
                 } else {
-                  // Subsequent tables - insert BEFORE the text div
-                  textDiv.insertAdjacentHTML('beforebegin', tableHtml);
+                  // Subsequent tables - insert BEFORE the loading div
+                  if (loadingDiv) {
+                    loadingDiv.insertAdjacentHTML('beforebegin', tableHtml);
+                  } else {
+                    textDiv.insertAdjacentHTML('beforebegin', tableHtml);
+                  }
                 }
 
                 // Add interactivity to the last table added
@@ -1418,9 +1429,17 @@ document.addEventListener('DOMContentLoaded', function() {
               }
               // Handle text event
               else if (parsed.text) {
+                // Remove loading indicator on first text arrival
+                const loadingDiv = document.getElementById(playbookLoadingId);
+                if (loadingDiv) {
+                  loadingDiv.remove();
+                }
+
                 // Check if we have a separate text div (after table)
                 let textDiv = document.getElementById(playbookTextId);
                 if (textDiv) {
+                  // Show text div (was hidden initially)
+                  textDiv.style.display = 'block';
                   out += parsed.text;
                   textDiv.innerHTML = formatAIText(out) + '<span class="cursor-blink">▊</span>';
                 } else {
@@ -1569,5 +1588,42 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }, 300);
+
+  // ===== Jump to Bottom Button Logic =====
+  const chatScrollable = document.querySelector('.ai-chat-scrollable');
+
+  function updateJumpToBottomButton() {
+    if (!chatScrollable || !jumpToBottomBtn) return;
+
+    const isAtBottom = chatScrollable.scrollHeight - chatScrollable.scrollTop <= chatScrollable.clientHeight + 50;
+
+    if (isAtBottom) {
+      jumpToBottomBtn.classList.remove('show');
+      jumpToBottomBtn.style.display = 'none';
+    } else {
+      jumpToBottomBtn.classList.add('show');
+      jumpToBottomBtn.style.display = 'block';
+    }
+  }
+
+  // Listen to scroll events on scrollable container
+  if (chatScrollable) {
+    chatScrollable.addEventListener('scroll', updateJumpToBottomButton);
+  }
+
+  // Jump to bottom button click handler
+  if (jumpToBottomBtn) {
+    jumpToBottomBtn.addEventListener('click', () => {
+      if (chatScrollable) {
+        chatScrollable.scrollTo({
+          top: chatScrollable.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    });
+  }
+
+  // Initial check
+  updateJumpToBottomButton();
 
 });
