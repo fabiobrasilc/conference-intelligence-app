@@ -718,8 +718,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Add sorting, resizing, and tap-to-expand interactivity to playbook tables
-  function addPlaybookTableInteractivity(columns, rows) {
-    const table = document.querySelector('#playbookTable');
+  function addPlaybookTableInteractivity(columns, rows, tableId = 'playbookTable') {
+    const table = document.querySelector('#' + tableId);
     if (!table) return;
 
     const viewport = table.closest('.playbook-table-viewport');
@@ -1393,7 +1393,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
               // Handle table event (backend sends {title, columns, rows})
               if (parsed.title && parsed.columns && parsed.rows) {
-                const tableHtml = createTableHTML(parsed.title, parsed.subtitle || '', parsed.columns, parsed.rows);
+                // Generate unique table ID to avoid conflicts with multiple tables
+                const uniqueTableId = 'playbookTable-' + Date.now();
+                const tableHtml = createTableHTML(parsed.title, parsed.subtitle || '', parsed.columns, parsed.rows, uniqueTableId);
 
                 // Check if text div already exists (from previous table)
                 let textDiv = document.getElementById(playbookTextId);
@@ -1422,8 +1424,8 @@ document.addEventListener('DOMContentLoaded', function() {
                   }
                 }
 
-                // Add interactivity to the last table added
-                addPlaybookTableInteractivity(parsed.columns, parsed.rows);
+                // Add interactivity to the last table added (pass unique ID)
+                addPlaybookTableInteractivity(parsed.columns, parsed.rows, uniqueTableId);
 
                 chatContainer.scrollTop = chatContainer.scrollHeight;
               }
