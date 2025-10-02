@@ -142,6 +142,7 @@ chroma_client = None
 collection = None
 csv_hash_global = None
 df_global = None
+df_enriched_global = None  # AI-enriched dataset (optional, has extra columns)
 enrichment_cache_manager = None  # AI enrichment cache (optional)
 
 # ============================================================================
@@ -1394,13 +1395,29 @@ def apply_therapeutic_area_filter(df: pd.DataFrame, ta_filter: str) -> pd.Series
 # MULTI-FILTER LOGIC (Main Filtering Function)
 # ============================================================================
 
+def get_dataset_for_analysis() -> pd.DataFrame:
+    """
+    Get the best available dataset for analysis.
+    Returns enriched data if available, otherwise falls back to original df_global.
+    """
+    if df_enriched_global is not None:
+        return df_enriched_global
+    return df_global if df_global is not None else pd.DataFrame()
+
+
 def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
-                                  session_filters: List[str], date_filters: List[str]) -> pd.DataFrame:
+                                  session_filters: List[str], date_filters: List[str],
+                                  use_enriched: bool = True) -> pd.DataFrame:
     """
     Apply multi-selection filters with OR logic.
     Returns filtered DataFrame combining all selected filter combinations.
+
+    Args:
+        use_enriched: If True and enriched data available, use it. Otherwise use df_global.
     """
-    if df_global is None:
+    source_df = get_dataset_for_analysis() if use_enriched else df_global
+
+    if source_df is None or source_df.empty:
         return pd.DataFrame()
 
     # Start with empty mask (all False)
@@ -3702,12 +3719,14 @@ else:
         )
 
         # Trigger enrichment of ALL 4,686 studies (one-time, cached forever)
+        global df_enriched_global
         print(f"[CACHE] Checking for enriched data cache...")
         enriched_df = enrichment_cache_manager.get_or_build(df_global, ta_filters=[])
 
         if enriched_df is not None:
+            df_enriched_global = enriched_df
             print(f"[CACHE] ✓ Enriched data loaded successfully ({len(enriched_df)} studies)")
-            # TODO: Use enriched_df in playbook functions instead of df_global
+            print(f"[CACHE] ✓ All playbook buttons will use enriched data with AI metadata")
         else:
             print(f"[CACHE] Building enriched data in background (first time only, 60-90s)")
             print(f"[CACHE] App will use rule-based approach until enrichment completes")
