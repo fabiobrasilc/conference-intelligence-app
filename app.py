@@ -1090,8 +1090,11 @@ def load_and_process_data():
 
     print(f"[DATA] Loaded {len(df)} studies from ESMO 2025")
 
-    # Initialize ChromaDB for semantic search
-    initialize_chromadb(df)
+    # Initialize ChromaDB in background (non-blocking)
+    import threading
+    chroma_thread = threading.Thread(target=initialize_chromadb, args=(df,), daemon=True)
+    chroma_thread.start()
+    print(f"[CHROMADB] Initializing in background (non-blocking)...")
 
     return df
 
