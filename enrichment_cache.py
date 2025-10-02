@@ -14,6 +14,7 @@ import struct
 import os
 import time
 import json
+import random
 import pandas as pd
 from pathlib import Path
 import threading
@@ -309,8 +310,24 @@ Title: "{title}"
                 response_format={"type": "json_object"}
             )
 
-            result = json.loads(response.choices[0].message.content)
+            content = response.choices[0].message.content
+
+            # Validate we got actual content
+            if not content or content.strip() == "":
+                raise ValueError("Empty response from API")
+
+            result = json.loads(content)
             return result
+
+        except json.JSONDecodeError as e:
+            # JSON parsing error - retry with backoff
+            if attempt < max_retries - 1:
+                wait_time = (2 ** attempt) + random.uniform(0, 1)
+                print(f"[ENRICH] Invalid JSON response, retrying in {wait_time:.1f}s... (attempt {attempt + 1}/{max_retries})")
+                time.sleep(wait_time)
+                continue
+            else:
+                print(f"[ENRICH] JSON parsing failed after {max_retries} retries: {e}")
 
         except Exception as e:
             error_str = str(e)
@@ -319,15 +336,21 @@ Title: "{title}"
             if "rate_limit" in error_str.lower() or "429" in error_str:
                 if attempt < max_retries - 1:
                     # Exponential backoff: 1s, 2s, 4s
-                    wait_time = 2 ** attempt
-                    print(f"[ENRICH] Rate limit hit, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})")
+                    wait_time = (2 ** attempt) + random.uniform(0, 1)
+                    print(f"[ENRICH] Rate limit hit, retrying in {wait_time:.1f}s... (attempt {attempt + 1}/{max_retries})")
                     time.sleep(wait_time)
                     continue
                 else:
                     print(f"[ENRICH] Rate limit exceeded after {max_retries} retries: {e}")
             else:
-                # Non-rate-limit error, log and return fallback
-                print(f"[ENRICH] Error processing title: {e}")
+                # Non-rate-limit error, retry anyway
+                if attempt < max_retries - 1:
+                    wait_time = (2 ** attempt) + random.uniform(0, 1)
+                    print(f"[ENRICH] Error (will retry): {e}")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    print(f"[ENRICH] Error processing title after {max_retries} retries: {e}")
 
             # Return fallback after all retries exhausted
             break
@@ -342,11 +365,12 @@ Title: "{title}"
     }
 
 
-def enrich_titles_batch(df: pd.DataFrame, model: str = "gpt-5-mini", max_workers: int = 8) -> pd.DataFrame:
+def enrich_titles_batch(df: pd.DataFrame, model: str = "gpt-5-mini", max_workers: int = 4) -> pd.DataFrame:
     """
     Enrich all titles with AI classification using concurrent workers
-    Reduced to 8 workers to stay under OpenAI rate limit (500 RPM for gpt-5-mini)
-    Expected: ~120-180s for 4,686 titles with 8 workers
+    Reduced to 4 workers to stay under OpenAI rate limit (500 RPM for gpt-5-mini)
+    With improved retry logic (3 retries per study with exponential backoff)
+    Expected: ~3-5 minutes for 4,686 titles with 4 workers
     """
     print(f"[ENRICH] Processing {len(df)} titles with {max_workers} workers (rate-limit optimized)...")
 
