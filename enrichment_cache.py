@@ -279,10 +279,11 @@ class EnrichmentCacheManager:
 # AI ENRICHMENT FUNCTIONS
 # ============================================================================
 
-def enrich_single_title(title: str, model: str = "gpt-5-mini") -> Dict[str, Any]:
+def enrich_single_title(title: str, model: str = "gpt-5-mini", max_retries: int = 3) -> Dict[str, Any]:
     """
     Extract metadata from single title using ultra-lean prompt
     Returns: {line_of_therapy, phase, disease_state, biomarkers, novelty, is_emerging}
+    Includes retry logic with exponential backoff for rate limits
     """
     client = OpenAI()
 
@@ -298,36 +299,56 @@ Title: "{title}"
   "is_emerging": true|false
 }}"""
 
-    try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=120,
-            temperature=0,
-            response_format={"type": "json_object"}
-        )
+    for attempt in range(max_retries):
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                max_completion_tokens=120,  # Changed from max_tokens for gpt-5-mini compatibility
+                temperature=0,
+                response_format={"type": "json_object"}
+            )
 
-        result = json.loads(response.choices[0].message.content)
-        return result
+            result = json.loads(response.choices[0].message.content)
+            return result
 
-    except Exception as e:
-        print(f"[ENRICH] Error processing title: {e}")
-        return {
-            "line_of_therapy": "Unknown",
-            "phase": "Unknown",
-            "disease_state": [],
-            "biomarkers": [],
-            "novelty": [],
-            "is_emerging": False
-        }
+        except Exception as e:
+            error_str = str(e)
+
+            # Check if rate limit error
+            if "rate_limit" in error_str.lower() or "429" in error_str:
+                if attempt < max_retries - 1:
+                    # Exponential backoff: 1s, 2s, 4s
+                    wait_time = 2 ** attempt
+                    print(f"[ENRICH] Rate limit hit, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    print(f"[ENRICH] Rate limit exceeded after {max_retries} retries: {e}")
+            else:
+                # Non-rate-limit error, log and return fallback
+                print(f"[ENRICH] Error processing title: {e}")
+
+            # Return fallback after all retries exhausted
+            break
+
+    return {
+        "line_of_therapy": "Unknown",
+        "phase": "Unknown",
+        "disease_state": [],
+        "biomarkers": [],
+        "novelty": [],
+        "is_emerging": False
+    }
 
 
-def enrich_titles_batch(df: pd.DataFrame, model: str = "gpt-5-mini", max_workers: int = 16) -> pd.DataFrame:
+def enrich_titles_batch(df: pd.DataFrame, model: str = "gpt-5-mini", max_workers: int = 8) -> pd.DataFrame:
     """
     Enrich all titles with AI classification using concurrent workers
-    Expected: ~60-90s for 1,000 titles with 16 workers
+    Reduced to 8 workers to stay under OpenAI rate limit (500 RPM for gpt-5-mini)
+    Expected: ~120-180s for 4,686 titles with 8 workers
     """
-    print(f"[ENRICH] Processing {len(df)} titles with {max_workers} workers...")
+    print(f"[ENRICH] Processing {len(df)} titles with {max_workers} workers (rate-limit optimized)...")
 
     enriched_data = []
 
