@@ -2481,14 +2481,18 @@ If no drugs: empty arrays. Use your pharma knowledge for MOA/company."""
         max_retries = 3
         for attempt in range(max_retries):
             try:
+                print(f"[AI EXTRACT] Calling OpenAI for batch {i//batch_size} ({len(batch)} titles)...")
+
                 response = client.responses.create(
                     model="gpt-5-mini",
                     input=[{"role": "user", "content": prompt}],
                     reasoning={"effort": "low"},
                     text={"verbosity": "low"},
-                    max_output_tokens=3000  # Increased from 2000 to prevent truncation
+                    max_output_tokens=3000,
+                    timeout=30  # Add 30 second timeout
                 )
 
+                print(f"[AI EXTRACT] Got response for batch {i//batch_size}, parsing JSON...")
                 result = json.loads(response.output_text)
 
                 # Map back to original titles
