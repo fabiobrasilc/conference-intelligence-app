@@ -424,12 +424,12 @@ Title: "{title}"
     }
 
 
-def enrich_titles_batch(df: pd.DataFrame, model: str = "gpt-5-mini", max_workers: int = 4) -> pd.DataFrame:
+def enrich_titles_batch(df: pd.DataFrame, model: str = "gpt-5-mini", max_workers: int = 8) -> pd.DataFrame:
     """
     Enrich all titles with AI classification using concurrent workers
-    Reduced to 4 workers to stay under OpenAI rate limit (500 RPM for gpt-5-mini)
+    Increased to 8 workers for faster processing (RPM not saturated)
     With improved retry logic (3 retries per study with exponential backoff)
-    Expected: ~3-5 minutes for 4,686 titles with 4 workers
+    Expected: ~20-25 minutes for 4,686 titles with 8 workers
     """
     print(f"[ENRICH] Processing {len(df)} titles with {max_workers} workers (rate-limit optimized)...")
 
