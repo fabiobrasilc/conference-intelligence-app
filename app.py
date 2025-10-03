@@ -303,8 +303,8 @@ def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area:
     result_df = result_df.sort_values(['_threat_sort', '_study_count', 'Drug'], ascending=[True, False, True])
     result_df = result_df.head(n)
 
-    # Drop internal sorting columns
-    result_df = result_df.drop(columns=['_study_count', '_threat_sort'])
+    # Drop internal sorting columns and ThreatLevel
+    result_df = result_df.drop(columns=['_study_count', '_threat_sort', 'ThreatLevel'])
 
     print(f"[MATCHER] Final: {len(result_df)} studies across {result_df['Drug'].nunique()} unique drug combinations")
 
