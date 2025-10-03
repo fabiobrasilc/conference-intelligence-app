@@ -302,15 +302,16 @@ Title: "{title}"
 
     for attempt in range(max_retries):
         try:
-            response = client.chat.completions.create(
+            # Use responses.create API for gpt-5-mini (same as chat/playbook system)
+            response = client.responses.create(
                 model=model,
-                messages=[{"role": "user", "content": prompt}],
-                max_completion_tokens=120,  # Changed from max_tokens for gpt-5-mini compatibility
-                # temperature not specified - gpt-5-mini only supports default (1)
-                response_format={"type": "json_object"}
+                input=[{"role": "user", "content": prompt}],
+                reasoning={"effort": "minimal"},  # Fastest reasoning for simple extraction
+                text={"verbosity": "low"},  # Concise JSON output
+                max_output_tokens=120
             )
 
-            content = response.choices[0].message.content
+            content = response.output_text
 
             # Validate we got actual content
             if not content or content.strip() == "":
