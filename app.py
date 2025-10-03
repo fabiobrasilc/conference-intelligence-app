@@ -226,119 +226,37 @@ def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area:
         if matched_drugs:
             study_drug_matches[row['Identifier']] = matched_drugs
 
-    # STEP 3: Combination detection - if study matches multiple drugs from JSON, it's a combo
-    # Also detect chemotherapy, radiation, and treatment setting context
+    # STEP 3: Process matched studies
+    # Use first matched drug only (JSON drugs are already correctly defined)
+    # No automatic combination detection (causes false positives)
     results = []
     processed_identifiers = set()
-
-    # Define chemotherapy keywords (common regimens)
-    chemo_keywords = [
-        'cisplatin', 'carboplatin', 'oxaliplatin', 'platinum',
-        'gemcitabine', 'pemetrexed', 'paclitaxel', 'docetaxel', 'nab-paclitaxel',
-        'folfox', 'folfiri', 'folfoxiri', 'xelox', 'capox',
-        '5-fu', '5-fluorouracil', 'capecitabine',
-        'chemotherapy', 'chemo'
-    ]
-
-    # Define radiation keywords
-    radiation_keywords = [
-        'radiation', 'radiotherapy', 'rt', 'chemoradiation', 'chemoradiotherapy',
-        'concurrent radiation', 'definitive radiation'
-    ]
-
-    # Define treatment setting keywords
-    setting_keywords = {
-        'adjuvant': ['adjuvant'],
-        'neoadjuvant': ['neoadjuvant', 'perioperative'],
-        'maintenance': ['maintenance', 'switch maintenance'],
-        'metastatic': ['metastatic', 'advanced', 'recurrent']
-    }
 
     for identifier, matched_drugs in study_drug_matches.items():
         row = df[df['Identifier'] == identifier].iloc[0]
         title_lower = str(row['Title']).lower()
 
-        # Detect chemotherapy
-        has_chemo = any(chemo in title_lower for chemo in chemo_keywords)
+        # Use FIRST matched drug only (JSON drugs are already correctly defined as combinations)
+        # If EV+P is one entity in JSON, and study matches it, use that
+        # Don't try to auto-detect multi-drug combinations (causes false positives)
+        drug_name = matched_drugs[0]
+        drug_info = json_drugs[drug_name]
 
-        # Detect radiation
-        has_radiation = any(rad in title_lower for rad in radiation_keywords)
+        # Use drug name as-is from JSON (no context appending)
+        display_name = drug_name
+        moa_display = drug_info['moa']
 
-        # Detect treatment setting
-        treatment_setting = None
-        for setting, keywords in setting_keywords.items():
-            if any(keyword in title_lower for keyword in keywords):
-                treatment_setting = setting
-                break
-
-        if len(matched_drugs) > 1:
-            # MULTI-DRUG COMBINATION detected (2+ drugs from JSON)
-            combo_name = " + ".join(sorted(matched_drugs))
-
-            # Add chemotherapy context if present
-            if has_chemo:
-                combo_name += " + Chemotherapy"
-
-            # Add radiation context if present
-            if has_radiation:
-                combo_name += " + Radiation"
-
-            companies = [json_drugs[d]['company'] for d in matched_drugs]
-            company_str = " / ".join(set(companies))
-            moas = [json_drugs[d]['moa'] for d in matched_drugs]
-            moa_str = " + ".join(moas)
-            if has_chemo:
-                moa_str += " + Chemotherapy"
-
-            # Threat level: take highest priority (HIGH > MEDIUM > LOW > EMERGING)
-            threat_levels = [json_drugs[d]['threat_level'] for d in matched_drugs]
-            threat_priority = {'HIGH': 1, 'MEDIUM': 2, 'LOW': 3, 'EMERGING': 4, 'UNKNOWN': 5}
-            highest_threat = min(threat_levels, key=lambda x: threat_priority.get(x, 5))
-
-            results.append({
-                'Drug': combo_name,
-                'Company': company_str,
-                'MOA Class': moa_str,
-                'MOA Target': '',
-                'ThreatLevel': highest_threat,
-                'Identifier': identifier,
-                'Title': row['Title'][:80] + '...' if len(row['Title']) > 80 else row['Title'],
-                'Source': 'JSON-Combo'
-            })
-            processed_identifiers.add(identifier)
-
-        else:
-            # MONOTHERAPY (single drug from JSON)
-            drug_name = matched_drugs[0]
-            drug_info = json_drugs[drug_name]
-
-            display_name = drug_name
-            moa_display = drug_info['moa']
-
-            # Add chemotherapy context if present
-            if has_chemo:
-                display_name += " + Chemotherapy"
-                moa_display += " + Chemotherapy"
-
-            # Add radiation context if present
-            if has_radiation:
-                display_name += " + Radiation"
-
-            # Add treatment setting if relevant (not metastatic, since that's default)
-            if treatment_setting and treatment_setting != 'metastatic':
-                display_name += f" ({treatment_setting})"
-
-            results.append({
-                'Drug': display_name,
-                'Company': drug_info['company'],
-                'MOA Class': moa_display,
-                'MOA Target': '',
-                'ThreatLevel': drug_info['threat_level'],
-                'Identifier': identifier,
-                'Title': row['Title'][:80] + '...' if len(row['Title']) > 80 else row['Title'],
-                'Source': 'JSON-Mono'
-            })
-            processed_identifiers.add(identifier)
+        results.append({
+            'Drug': display_name,
+            'Company': drug_info['company'],
+            'MOA Class': moa_display,
+            'MOA Target': '',
+            'ThreatLevel': drug_info['threat_level'],
+            'Identifier': identifier,
+            'Title': row['Title'][:80] + '...' if len(row['Title']) > 80 else row['Title'],
+            'Source': 'JSON'
+        })
+        processed_identifiers.add(identifier)
 
     print(f"[JSON MATCHER] Step 1 complete: {len(results)} studies matched ({len(processed_identifiers)} identifiers)")
 

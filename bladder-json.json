@@ -47,7 +47,7 @@
 "phase": "Withdrawn from bladder cancer",
 "biomarker": "None required",
 "threat_level": "LOW",
-"keywords": ["sacituzumab", "trodelvy", "TROPiCS-04", "TROPHY-U-01", "trop-2"]
+"keywords": ["sacituzumab", "sacituzumab govitecan", "trodelvy", "TROPiCS-04", "TROPHY-U-01"]
 },
 {
 "drug": "Erdafitinib",
@@ -56,7 +56,7 @@
 "phase": "FDA approved",
 "biomarker": "FGFR3/2 alterations (20% prevalence)",
 "threat_level": "LOW",
-"keywords": ["erdafitinib", "balversa", "FGFR", "FGFR3", "THOR", "biomarker"]
+"keywords": ["erdafitinib", "balversa", "THOR"]
 },
 {
 "drug": "Tisotumab vedotin",
@@ -65,7 +65,7 @@
 "phase": "Phase 2",
 "biomarker": "Tissue factor expression",
 "threat_level": "LOW",
-"keywords": ["tisotumab", "tivdak", "tissue factor", "InnovaTV", "ADC"]
+"keywords": ["tisotumab", "tisotumab vedotin", "tivdak", "InnovaTV"]
 }
 ],
 "key_biomarkers": [
