@@ -2493,27 +2493,44 @@ Rules:
 - Include experimental drugs (tratetumab, etc.)
 """
 
-        try:
-            response = client.responses.create(
-                model="gpt-5-mini",
-                input=[{"role": "user", "content": prompt}],
-                reasoning={"effort": "low"},
-                text={"verbosity": "low"},
-                max_output_tokens=2000
-            )
+        # Retry logic for JSON parsing errors
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = client.responses.create(
+                    model="gpt-5-mini",
+                    input=[{"role": "user", "content": prompt}],
+                    reasoning={"effort": "low"},
+                    text={"verbosity": "low"},
+                    max_output_tokens=3000  # Increased from 2000 to prevent truncation
+                )
 
-            result = json.loads(response.output_text)
+                result = json.loads(response.output_text)
 
-            # Map back to original titles
-            for idx, data in result.items():
-                original_title = batch[int(idx)]
-                all_results[original_title] = data
+                # Map back to original titles
+                for idx, data in result.items():
+                    original_title = batch[int(idx)]
+                    all_results[original_title] = data
 
-        except Exception as e:
-            print(f"[AI EXTRACT] Error in batch {i//batch_size}: {e}")
-            # Fallback: empty results for this batch
-            for title in batch:
-                all_results[title] = {'drugs': [], 'moas': [], 'companies': []}
+                break  # Success, exit retry loop
+
+            except json.JSONDecodeError as e:
+                if attempt < max_retries - 1:
+                    wait_time = (2 ** attempt)  # Exponential backoff: 1s, 2s, 4s
+                    print(f"[AI EXTRACT] JSON error in batch {i//batch_size}, retrying in {wait_time}s... (attempt {attempt+1}/{max_retries})")
+                    time.sleep(wait_time)
+                else:
+                    print(f"[AI EXTRACT] JSON parsing failed after {max_retries} retries in batch {i//batch_size}: {e}")
+                    # Fallback: empty results for this batch
+                    for title in batch:
+                        all_results[title] = {'drugs': [], 'moas': [], 'companies': []}
+
+            except Exception as e:
+                print(f"[AI EXTRACT] Error in batch {i//batch_size}: {e}")
+                # Fallback: empty results for this batch
+                for title in batch:
+                    all_results[title] = {'drugs': [], 'moas': [], 'companies': []}
+                break  # Don't retry for non-JSON errors
 
     return all_results
 
