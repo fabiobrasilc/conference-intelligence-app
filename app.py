@@ -227,19 +227,68 @@ def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area:
             study_drug_matches[row['Identifier']] = matched_drugs
 
     # STEP 3: Combination detection - if study matches multiple drugs from JSON, it's a combo
+    # Also detect chemotherapy, radiation, and treatment setting context
     results = []
     processed_identifiers = set()
 
+    # Define chemotherapy keywords (common regimens)
+    chemo_keywords = [
+        'cisplatin', 'carboplatin', 'oxaliplatin', 'platinum',
+        'gemcitabine', 'pemetrexed', 'paclitaxel', 'docetaxel', 'nab-paclitaxel',
+        'folfox', 'folfiri', 'folfoxiri', 'xelox', 'capox',
+        '5-fu', '5-fluorouracil', 'capecitabine',
+        'chemotherapy', 'chemo'
+    ]
+
+    # Define radiation keywords
+    radiation_keywords = [
+        'radiation', 'radiotherapy', 'rt', 'chemoradiation', 'chemoradiotherapy',
+        'concurrent radiation', 'definitive radiation'
+    ]
+
+    # Define treatment setting keywords
+    setting_keywords = {
+        'adjuvant': ['adjuvant'],
+        'neoadjuvant': ['neoadjuvant', 'perioperative'],
+        'maintenance': ['maintenance', 'switch maintenance'],
+        'metastatic': ['metastatic', 'advanced', 'recurrent']
+    }
+
     for identifier, matched_drugs in study_drug_matches.items():
         row = df[df['Identifier'] == identifier].iloc[0]
+        title_lower = str(row['Title']).lower()
+
+        # Detect chemotherapy
+        has_chemo = any(chemo in title_lower for chemo in chemo_keywords)
+
+        # Detect radiation
+        has_radiation = any(rad in title_lower for rad in radiation_keywords)
+
+        # Detect treatment setting
+        treatment_setting = None
+        for setting, keywords in setting_keywords.items():
+            if any(keyword in title_lower for keyword in keywords):
+                treatment_setting = setting
+                break
 
         if len(matched_drugs) > 1:
-            # COMBINATION detected
+            # MULTI-DRUG COMBINATION detected (2+ drugs from JSON)
             combo_name = " + ".join(sorted(matched_drugs))
+
+            # Add chemotherapy context if present
+            if has_chemo:
+                combo_name += " + Chemotherapy"
+
+            # Add radiation context if present
+            if has_radiation:
+                combo_name += " + Radiation"
+
             companies = [json_drugs[d]['company'] for d in matched_drugs]
             company_str = " / ".join(set(companies))
             moas = [json_drugs[d]['moa'] for d in matched_drugs]
             moa_str = " + ".join(moas)
+            if has_chemo:
+                moa_str += " + Chemotherapy"
 
             # Threat level: take highest priority (HIGH > MEDIUM > LOW > EMERGING)
             threat_levels = [json_drugs[d]['threat_level'] for d in matched_drugs]
@@ -259,14 +308,30 @@ def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area:
             processed_identifiers.add(identifier)
 
         else:
-            # MONOTHERAPY
+            # MONOTHERAPY (single drug from JSON)
             drug_name = matched_drugs[0]
             drug_info = json_drugs[drug_name]
 
+            display_name = drug_name
+            moa_display = drug_info['moa']
+
+            # Add chemotherapy context if present
+            if has_chemo:
+                display_name += " + Chemotherapy"
+                moa_display += " + Chemotherapy"
+
+            # Add radiation context if present
+            if has_radiation:
+                display_name += " + Radiation"
+
+            # Add treatment setting if relevant (not metastatic, since that's default)
+            if treatment_setting and treatment_setting != 'metastatic':
+                display_name += f" ({treatment_setting})"
+
             results.append({
-                'Drug': drug_name,
+                'Drug': display_name,
                 'Company': drug_info['company'],
-                'MOA Class': drug_info['moa'],
+                'MOA Class': moa_display,
                 'MOA Target': '',
                 'ThreatLevel': drug_info['threat_level'],
                 'Identifier': identifier,
