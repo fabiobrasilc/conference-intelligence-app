@@ -1,4 +1,54 @@
 // ESMO 2025 – Filters, Table, AI (Sidebar layout)
+
+// ===== Button Disable/Enable Functions (Prevent concurrent requests) =====
+function disablePlaybookButtons() {
+  // Disable all Quick Intelligence buttons
+  document.querySelectorAll('.playbook-btn').forEach(btn => {
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
+  });
+
+  // Disable chat send button
+  const sendBtn = document.getElementById('sendChatBtn');
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.style.opacity = '0.5';
+    sendBtn.style.cursor = 'not-allowed';
+  }
+
+  // Disable chat input
+  const chatInput = document.getElementById('chatInput');
+  if (chatInput) {
+    chatInput.disabled = true;
+    chatInput.style.opacity = '0.7';
+  }
+}
+
+function enablePlaybookButtons() {
+  // Re-enable all Quick Intelligence buttons
+  document.querySelectorAll('.playbook-btn').forEach(btn => {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+  });
+
+  // Re-enable chat send button
+  const sendBtn = document.getElementById('sendChatBtn');
+  if (sendBtn) {
+    sendBtn.disabled = false;
+    sendBtn.style.opacity = '1';
+    sendBtn.style.cursor = 'pointer';
+  }
+
+  // Re-enable chat input
+  const chatInput = document.getElementById('chatInput');
+  if (chatInput) {
+    chatInput.disabled = false;
+    chatInput.style.opacity = '1';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 
   // ===== Sidebar Toggle with Hover =====
@@ -923,6 +973,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!message) return;
     userInput.value = '';
 
+    // Disable buttons during chat streaming
+    disablePlaybookButtons();
+
     // Hide greeting on first message
     const aiGreeting = document.getElementById('aiGreeting');
     if (aiGreeting) {
@@ -1045,12 +1098,17 @@ document.addEventListener('DOMContentLoaded', function() {
         conversationHistory = conversationHistory.slice(-5);
       }
 
+      // Re-enable buttons after chat completes
+      enablePlaybookButtons();
+
     } catch (error) {
       console.error('Chat error:', error);
       appendToChat(`
         <div class="d-flex justify-content-start mb-2">
           <div class="bg-danger text-white rounded p-2">Error: ${error.message}</div>
         </div>`);
+      // Re-enable buttons on error
+      enablePlaybookButtons();
     }
   }
 
@@ -1325,6 +1383,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   async function handlePlaybookWithFilters(playbookType, drugFilters, taFilters, dateFilters) {
     try {
+      // Disable all buttons during streaming
+      disablePlaybookButtons();
+
       // Hide greeting on first playbook click
       const aiGreeting = document.getElementById('aiGreeting');
       if (aiGreeting) {
@@ -1472,8 +1533,13 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
+      // Re-enable buttons after streaming completes
+      enablePlaybookButtons();
+
     } catch (error) {
       console.error('Playbook error:', error);
+      // Re-enable buttons on error
+      enablePlaybookButtons();
       appendToChat('<div class="alert alert-danger">Error running analysis. Please try again.</div>');
     }
   }

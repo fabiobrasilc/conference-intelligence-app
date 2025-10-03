@@ -549,87 +549,117 @@ ESMO_DATES = {
 PLAYBOOKS = {
     "competitor": {
         "button_label": "Competitive Intelligence",
-        "ai_prompt": """You are EMD Serono's senior competitive intelligence analyst for medical affairs. Analyze the competitive landscape at ESMO 2025 based on the provided tables to identify strategic threats and positioning insights.
+        "ai_prompt": """You are EMD Serono's medical affairs competitive intelligence analyst. Analyze competitor activity at ESMO 2025 to identify research trends, data signals, and material threats to EMD portfolio positioning.
 
 **CRITICAL INSTRUCTIONS**:
 
 1. **THERAPEUTIC AREA FOCUS - ABSOLUTELY CRITICAL**:
    - The tables below contain ONLY studies from the selected therapeutic area (shown in filter_guidance)
    - You MUST discuss ONLY competitors relevant to this specific TA
-   - IGNORE any drugs that are primarily used in other TAs
-   - Example: If "Bladder Cancer" is selected:
-     * DISCUSS: EV+P, erdafitinib, sacituzumab govitecan, other bladder drugs
-     * DO NOT DISCUSS: osimertinib (lung), panitumumab (CRC), H&N-specific drugs
-   - The filter_guidance section will tell you EXACTLY which competitors to focus on
+   - The filter_guidance section tells you EXACTLY which competitors to focus on
 
-2. **Two tables are provided**:
-   - **Table 1: Competitor Presence** - Major competitors by volume with MOA and threat level
-   - **Table 2: Emerging Threats** - Novel mechanisms, early-phase signals, innovative combinations
+2. **EMD Drug Recognition - CRITICAL**:
+   - If you see **avelumab**, **bavencio**, **tepotinib**, **cetuximab**, **erbitux**, or **pimicotinib** in a study:
+     * CHECK if it's being COMPARED to our drug (competitor study) OR
+     * CHECK if it's an EMD-SPONSORED study (our data presentation)
+   - **DO NOT** label EMD-sponsored studies as "competitor threats"
+   - Example: "JAVELIN Bladder Medley: avelumab + sacituzumab" → EMD combination study, NOT a sacituzumab threat
+   - Example: "EV-302: enfortumab vedotin + pembrolizumab vs chemotherapy" → IS a threat (comparing competitor to standard)
+
+3. **Three tables are provided**:
+   - **Table 1: Competitor Drug Ranking** - Major competitors by # studies and MOA
+   - **Table 2: Competitor Studies** - Full list of competitor abstracts with identifiers
+   - **Table 3: Emerging Threats** - Novel mechanisms, early-phase signals
    - These tables contain ONLY data from the filtered TA - analyze what's IN the tables
 
-3. **EMD Asset Context by TA**:
-   - **Bladder/Urothelial**: Avelumab **1L la/mUC maintenance therapy post-platinum**
-   - **Lung/NSCLC**: Tepotinib **1L mNSCLC with METex14 skipping mutations**
-   - **Head & Neck**: Cetuximab **1L la/mHNSCC**
-   - **Colorectal**: Cetuximab **1L mCRC RAS wild-type**
-   - **TGCT**: Pimicotinib (tenosynovial giant cell tumor)
-   - ONLY discuss the EMD asset relevant to the filtered TA
+4. **EMD Asset Context by TA**:
+   - **Bladder/Urothelial**: Avelumab 1L maintenance therapy post-platinum (la/mUC)
+   - **Lung/NSCLC**: Tepotinib 1L mNSCLC with MET exon 14 skipping mutations
+   - **Head & Neck**: Cetuximab 1L la/mHNSCC
+   - **Colorectal**: Cetuximab 1L mCRC RAS wild-type
+   - **TGCT**: Pimicotinib (tenosynovial giant cell tumor, pre-launch)
 
-4. **Anti-Hallucination**: Use ONLY data from the provided tables - never invent Abstract #s
-
----
-
-**SECTION 1: EXECUTIVE SUMMARY** (1 paragraph)
-
-Provide a high-level overview of the competitive landscape in [filtered TA]:
-- Total number of competitor studies and which drugs dominate (from Table 1)
-- MOA class distribution (what types of mechanisms are most active)
-- EMD portfolio positioning (how many EMD asset studies vs competitors)
-- Key strategic imperatives based on the data
+5. **Anti-Hallucination**: Use ONLY data from the provided tables - never invent Abstract #s
 
 ---
 
-**SECTION 2: COMPETITOR DEEP-DIVE**
+**SECTION 1: COMPETITIVE ACTIVITY OVERVIEW**
 
-**[Table 1: Competitor Presence is shown to user]**
-
-Based on the Competitor Presence table above, analyze each major competitor (focus on top 5-10 by volume). For each, provide one paragraph covering:
-
-**[Drug Name] - [Company]** (X studies)
-Describe the focus of their studies based on titles and MOA class. Identify treatment settings (1L vs 2L, maintenance vs upfront, biomarker-selected vs all-comers). **Threat to [specific EMD indication]**: [HIGH/MEDIUM/LOW] - explain how this directly impacts our positioning. Key abstracts include [cite specific Abstract #s from table]. MSL differentiation points: [2-3 tactical talking points to position EMD asset].
-
-[Continue for each major competitor from Table 1]
+Write a natural, flowing narrative paragraph (3-5 sentences) covering:
+- Total competitor studies and which drugs/companies are most active (cite # from Table 1)
+- MOA class distribution (what types of mechanisms dominate: ADCs, ICIs, TKIs, etc.)
+- Geographic hotspots if visible from Table 2 affiliations (MD Anderson, MSK, IGR, etc.)
+- EMD portfolio presence (# of EMD drug studies vs competitors, if visible)
 
 ---
 
-**SECTION 3: EMERGING THREATS & INNOVATION**
+**SECTION 2: COMPETITOR INTELLIGENCE SUMMARIES**
 
-**[Table 2: Emerging Threats is shown to user]**
+**[Table 1 and Table 2 are shown to user above]**
 
-Based on the Emerging Threats table above, analyze the highest-priority innovations. For the top 3-5 most concerning/interesting:
+Based on Tables 1-2, analyze the **top 5-8 most active competitors** by study count. For each competitor, provide a concise summary using this exact format:
 
-**[Drug/Mechanism]** (Abstract #X)
-One paragraph on why this emerging threat matters. Discuss the novel mechanism or approach, potential timeline to market if early phase, implications for current treatment paradigms, and specific risk to EMD portfolio. If it's a novel combination, explain what makes it innovative. If it's a new target, discuss how it could disrupt current approaches.
+**[Drug Name]** ([Company]) — **X studies** at ESMO 2025
 
-[Continue for top emerging threats from Emerging Threats Table]
+**Research Focus**: [Briefly describe the themes visible in study titles: biomarkers, combinations, resistance, safety, subgroups, etc.]
+
+**Treatment Settings**: [List settings visible in titles: 1L, 2L+, maintenance, adjuvant, neoadjuvant, metastatic, locally advanced, biomarker-selected]
+
+**Key Studies** (cite 2-3 highest-value abstracts):
+- **(Abstract #X)** [Brief description based on title - trial name, setting, phase if visible]
+- **(Abstract #Y)** [Brief description]
+
+**Material Threat to [EMD Drug] [Indication]?**: **YES** or **NO**
+[One sentence explaining why: direct competitor in same line/indication OR niche/biomarker-restricted OR earlier/later line]
+
+[Repeat for next competitor]
+
+---
+
+**SECTION 3: EMERGING SIGNALS & INNOVATION**
+
+**[Table 3: Emerging Threats is shown to user above]**
+
+Based on Table 3, analyze the **top 3-5 highest-priority emerging signals**. Prioritize:
+- Phase 1/2 studies with novel MOAs
+- First-in-human trials
+- Innovative combinations
+- Next-generation approaches to established targets
+
+For each emerging signal:
+
+**[Drug/Mechanism]** — ([Company], [Institution if visible])
+- **(Abstract #X)**: [Brief title summary]
+- **What's Novel**: [Mechanism, target, or combination approach that's innovative]
+- **Development Timeline**: [Phase 1/2/3, FIH, pivotal, etc. if stated in title]
+- **Material Threat?**: [YES if targets same indication/line as EMD drug, NO if biomarker-restricted to small subset or distant line of therapy]
+
+[Repeat for next emerging signal]
 
 **Innovation Patterns Observed**:
-- What types of novel mechanisms are appearing? (bispecifics, bicycle toxins, masked antibodies, etc.)
-- What combination strategies are being explored?
-- Which established targets are seeing next-generation approaches?
+[Bullet list of 3-5 patterns]:
+- Novel mechanisms appearing (bispecifics, ADCs, TLR agonists, etc.)
+- Combination strategies (IO+ADC, TKI+ICI, triplets, etc.)
+- Next-generation approaches to established targets (next-gen MET inhibitors, improved FGFR selectivity, etc.)
 
 ---
 
-**WRITING REQUIREMENTS**:
-- **Audience**: Hybrid - MSLs need tactical alerts (Section 1), Medical Directors need strategic landscape (Sections 2-5)
-- **Tone**: Objective, fact-based competitive intelligence - not defensive or dismissive
-- **Format**: Natural narrative prose with section structure (use bullets sparingly)
-- **Citations**: Always cite Abstract # when referencing specific studies
-- **Quantification**: Integrate data (e.g., "Pembrolizumab: 87 abstracts, 43% of IO studies")
-- **Scope**: Use only provided data - if unavailable, state "not found in current dataset"
-- **Vocabulary**: Professional medical terminology appropriate for oncology medical affairs
+**FORMATTING REQUIREMENTS** (CRITICAL FOR READABILITY):
+- **Drug names**: Always bold
+- **Section headers**: Bold and uppercase (e.g., **SECTION 1: COMPETITIVE ACTIVITY OVERVIEW**)
+- **Abstract citations**: Use format **(Abstract #1234P)** in bold
+- **Study summaries**: Use bullet lists with consistent formatting
+- **Threat assessment**: Separate line with clear **YES** or **NO** answer in bold
+- **Avoid**: Long run-on paragraphs mixing data, settings, and threat assessment
+- **Tone**: Factual, concise, intelligence-focused (not defensive or strategic advice)
 
-**OUTPUT STRUCTURE**: Tactical alerts first (immediate action), then strategic context (landscape understanding).""",
+**WHAT THIS IS**: Competitive intelligence - competitor presence, activity, and data signals
+**WHAT THIS IS NOT**: Strategic recommendations, MSL talking points, positioning advice
+
+**OUTPUT GOAL**: Medical affairs directors should be able to scan this report and immediately understand:
+1. Who's most active in this TA at ESMO 2025
+2. What they're presenting (trials, settings, biomarkers)
+3. Which competitors pose material threats vs niche/non-competing programs""",
         "required_tables": ["all_data"]
     },
     "kol": {
@@ -3018,9 +3048,9 @@ def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini"):
         stream = client.responses.create(
             model=model,
             input=[{"role": "user", "content": prompt}],
-            reasoning={"effort": "low"},
+            reasoning={"effort": "medium"},  # Medium reasoning for better contextual understanding
             text={"verbosity": "low"},
-            max_output_tokens=6000,  # Increased for comprehensive KOL analysis
+            max_output_tokens=6000,  # Increased for comprehensive analysis
             stream=True
         )
 
