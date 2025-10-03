@@ -1404,10 +1404,10 @@ def initialize_chromadb(df):
 # ============================================================================
 
 def apply_bladder_cancer_filter(df: pd.DataFrame) -> pd.Series:
-    """Apply bladder cancer filter with prostate exclusion."""
+    """Apply bladder cancer filter with prostate and RCC exclusion."""
     keywords = ["bladder", "urothelial", "uroepithelial", "transitional cell", "genitourinary"]
     acronym = "GU"  # Case-sensitive, word boundary
-    exclusions = ["prostate"]
+    exclusions = ["prostate", " rcc", "renal cell", "clear cell rcc", "ccrcc"]
 
     mask = pd.Series([False] * len(df), index=df.index)
 
@@ -1423,10 +1423,13 @@ def apply_bladder_cancer_filter(df: pd.DataFrame) -> pd.Series:
     theme_mask = df["Theme"].str.contains(pattern, case=True, na=False, regex=True)
     mask = mask | title_mask | theme_mask
 
-    # Build theme-has-prostate mask
-    theme_has_prostate = pd.Series([False] * len(df), index=df.index)
+    # Build theme-has-exclusions mask (prostate OR RCC)
+    theme_has_exclusions = pd.Series([False] * len(df), index=df.index)
     for exclusion in exclusions:
-        theme_has_prostate = theme_has_prostate | df["Theme"].str.contains(exclusion, case=False, na=False, regex=False)
+        theme_has_exclusions = theme_has_exclusions | df["Theme"].str.contains(exclusion, case=False, na=False, regex=False)
+
+    # Also check title for RCC-specific terms
+    title_has_rcc = df["Title"].str.contains(" rcc|renal cell|clear cell", case=False, na=False, regex=True)
 
     # Build title-has-bladder mask for smart exclusion
     title_has_bladder = pd.Series([False] * len(df), index=df.index)
@@ -1435,8 +1438,9 @@ def apply_bladder_cancer_filter(df: pd.DataFrame) -> pd.Series:
     pattern_gu = r'\b' + re.escape(acronym) + r'\b'
     title_has_bladder = title_has_bladder | df["Title"].str.contains(pattern_gu, case=True, na=False, regex=True)
 
-    # Logic: (title match) OR (theme match AND no prostate in theme) OR (theme has prostate BUT title has bladder)
-    mask = title_has_bladder | (mask & ~theme_has_prostate) | (theme_has_prostate & title_has_bladder)
+    # Logic: (title match AND not RCC) OR (theme match AND no exclusions) OR (theme has exclusions BUT title has bladder)
+    # Exclude if title explicitly mentions RCC
+    mask = (title_has_bladder & ~title_has_rcc) | (mask & ~theme_has_exclusions) | (theme_has_exclusions & title_has_bladder & ~title_has_rcc)
 
     return mask
 
