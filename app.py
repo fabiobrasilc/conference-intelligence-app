@@ -219,14 +219,23 @@ def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area:
             if generic in emd_drugs:
                 continue
 
+            # Strip FDA suffixes (-ejfv, -nxki, etc.) for matching
+            # Example: "enfortumab vedotin-ejfv" → "enfortumab vedotin"
+            generic_base = generic.split('-')[0].strip()
+
+            # Skip drugs with very short base names (≤3 chars) to avoid false matches
+            # Examples: "bl" (from BL-B01D1), "st", "pt" match common words
+            if len(generic_base) <= 3:
+                continue
+
             # Check if drug generic name appears in title
-            if generic in title_lower:
+            if generic_base in title_lower:
                 company = str(drug_row['company']).strip() if pd.notna(drug_row['company']) else "Unknown"
                 moa_class = str(drug_row['moa_class']).strip() if pd.notna(drug_row['moa_class']) else "Unknown"
                 moa_target = str(drug_row['moa_target']).strip() if pd.notna(drug_row['moa_target']) else ""
 
                 found_drugs.append({
-                    'name': generic,
+                    'name': generic_base,  # Use base name without suffix
                     'company': company,
                     'moa_class': moa_class,
                     'moa_target': moa_target
