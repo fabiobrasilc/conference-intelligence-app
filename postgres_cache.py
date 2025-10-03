@@ -259,8 +259,11 @@ class PostgresEnrichmentCache:
                         message = EXCLUDED.message,
                         updated_at = NOW()
                 """, (csv_hash, model_version, prompt_version, status, enriched_file_path, message))
+                self.conn.commit()  # CRITICAL: Must commit the transaction!
+                print(f"[POSTGRES] ✓ Cache record updated: status={status}, message={message}")
         except Exception as e:
-            print(f"[POSTGRES] UPSERT error: {e}")
+            print(f"[POSTGRES] ✗ UPSERT error: {e}")
+            self.conn.rollback()  # Rollback on error to clean up transaction state
 
 
     def wait_for_build(self, csv_hash: str, model_version: str, prompt_version: str,

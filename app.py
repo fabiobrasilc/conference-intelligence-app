@@ -1529,7 +1529,13 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
 
     # Apply combined mask and deduplicate
     filtered_df = source_df[combined_mask].copy()
-    filtered_df = filtered_df.drop_duplicates()
+
+    # Drop duplicates using only base columns (enriched columns may contain unhashable lists)
+    base_columns = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier',
+                    'Room', 'Date', 'Time', 'Session', 'Theme']
+    # Only use columns that exist in the DataFrame
+    dedup_columns = [col for col in base_columns if col in filtered_df.columns]
+    filtered_df = filtered_df.drop_duplicates(subset=dedup_columns)
 
     return filtered_df
 
