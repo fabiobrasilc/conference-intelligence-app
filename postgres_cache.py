@@ -95,8 +95,8 @@ class PostgresEnrichmentCache:
             print(f"[POSTGRES] Schema creation error: {e}")
 
 
-    def try_acquire_lock(self, dataset_key: str) -> bool:
-        """Try to acquire Postgres advisory lock (non-blocking)"""
+    def try_acquire_lock(self, dataset_key: str, force_cleanup: bool = True) -> bool:
+        """Try to acquire Postgres advisory lock (non-blocking, with stale session termination)"""
         if not self.db_available:
             return True  # Fallback mode - always "acquire"
 
@@ -104,9 +104,56 @@ class PostgresEnrichmentCache:
 
         try:
             with self.conn.cursor() as cur:
+                # Try to acquire lock
                 cur.execute("SELECT pg_try_advisory_lock(%s)", (key,))
                 result = cur.fetchone()[0]
-                return bool(result)
+
+                if result:
+                    return True  # Lock acquired successfully
+
+                if not force_cleanup:
+                    return False
+
+                # Lock acquisition failed - find and terminate stale sessions holding this lock
+                print("[POSTGRES] Lock held by another session, checking for stale sessions...")
+
+                # Find PIDs holding advisory locks for our key
+                cur.execute("""
+                    SELECT pid, state, state_change, backend_start
+                    FROM pg_stat_activity
+                    WHERE pid IN (
+                        SELECT pid FROM pg_locks WHERE locktype = 'advisory' AND objid = %s
+                    )
+                """, (key,))
+
+                stale_pids = []
+                for row in cur.fetchall():
+                    pid, state, state_change, backend_start = row
+                    print(f"[POSTGRES] Lock held by PID {pid} (state: {state}, since: {state_change})")
+
+                    # Consider idle sessions as stale (safe to kill)
+                    if state in ('idle', 'idle in transaction'):
+                        stale_pids.append(pid)
+
+                if stale_pids:
+                    for pid in stale_pids:
+                        print(f"[POSTGRES] Terminating stale session PID {pid}...")
+                        cur.execute("SELECT pg_terminate_backend(%s)", (pid,))
+
+                    self.conn.commit()
+                    print(f"[POSTGRES] ✓ Terminated {len(stale_pids)} stale sessions")
+
+                    # Try to acquire lock again
+                    cur.execute("SELECT pg_try_advisory_lock(%s)", (key,))
+                    result = cur.fetchone()[0]
+
+                    if result:
+                        print("[POSTGRES] ✓ Lock acquired after cleanup")
+                        return True
+
+                print("[POSTGRES] Lock still held by active session")
+                return False
+
         except Exception as e:
             print(f"[POSTGRES] Lock acquisition error: {e}")
             return False
