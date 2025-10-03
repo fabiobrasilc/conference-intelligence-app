@@ -16,9 +16,10 @@ from datetime import datetime
 
 
 def lock_key(s: str) -> int:
-    """Generate stable 64-bit lock key from string (for Postgres advisory locks)"""
+    """Generate stable 32-bit lock key from string (for Postgres advisory locks)"""
     h = hashlib.sha1(s.encode()).digest()
-    return struct.unpack('>q', h[:8])[0]
+    # Use unsigned 32-bit int (Postgres advisory locks accept bigint but safer to use 32-bit)
+    return struct.unpack('>I', h[:4])[0]
 
 
 def sha256_file(path: str) -> str:
