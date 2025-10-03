@@ -132,6 +132,22 @@ class EnrichmentCacheManager:
                     except Exception as e:
                         print(f"[CACHE] Error loading Parquet: {e}")
 
+            # No Postgres record, but check if Parquet file exists on volume (orphaned cache)
+            if record is None and os.path.exists(self.cache_file):
+                print(f"[CACHE] No Postgres record, but found orphaned Parquet file: {self.cache_file}")
+                try:
+                    df = pd.read_parquet(self.cache_file)
+                    print(f"[CACHE] ✓ Loaded {len(df)} enriched studies from orphaned file")
+                    # Re-register in Postgres
+                    self.pg_cache.upsert_cache_record(
+                        self.csv_hash, self.model_version, self.prompt_version,
+                        'ready', self.cache_file, f'Recovered orphaned cache ({len(df)} studies)'
+                    )
+                    print(f"[CACHE] ✓ Re-registered cache in Postgres")
+                    return df
+                except Exception as e:
+                    print(f"[CACHE] Error loading orphaned Parquet: {e}")
+
         # MODE 2: File-only fallback (local dev or Postgres unavailable)
         if not os.path.exists(self.cache_file) or not os.path.exists(self.metadata_file):
             return None
