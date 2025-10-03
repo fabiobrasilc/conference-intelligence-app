@@ -195,13 +195,8 @@ def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area:
     # EMD portfolio drugs to exclude
     emd_drugs = ['avelumab', 'bavencio', 'tepotinib', 'cetuximab', 'erbitux', 'pimicotinib']
 
-    # Radiation/Chemo context keywords (avoid short acronyms like "RT", "CT")
-    radiation_keywords = ['radiation', 'radiotherapy', 'sbrt', 'imrt', 'proton therapy']
-    chemo_keywords = ['chemotherapy', 'folfox', 'folfiri', 'folfoxiri', 'carboplatin', 'cisplatin',
-                      'paclitaxel', 'docetaxel', 'gemcitabine', 'pemetrexed']
-
     # Build study-to-drugs mapping
-    study_drugs = {}  # identifier -> {drugs: [...], has_radiation: bool, has_chemo: bool, title: str}
+    study_drugs = {}  # identifier -> {drugs: [...], title: str}
 
     for _, row in df.iterrows():
         identifier = row['Identifier']
@@ -241,15 +236,9 @@ def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area:
                     'moa_target': moa_target
                 })
 
-        # Check for radiation/chemo context
-        has_radiation = any(keyword in title_lower for keyword in radiation_keywords)
-        has_chemo = any(keyword in title_lower for keyword in chemo_keywords)
-
         if found_drugs:
             study_drugs[identifier] = {
                 'drugs': found_drugs,
-                'has_radiation': has_radiation,
-                'has_chemo': has_chemo,
                 'title': row['Title']
             }
 
@@ -260,19 +249,10 @@ def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area:
 
     for identifier, study_info in study_drugs.items():
         drugs = study_info['drugs']
-        has_radiation = study_info['has_radiation']
-        has_chemo = study_info['has_chemo']
         title = study_info['title']
 
         # Build combined drug name
         drug_names = [d['name'].title() for d in drugs]
-
-        # Append radiation/chemo if present
-        if has_chemo:
-            drug_names.append('Chemotherapy')
-        if has_radiation:
-            drug_names.append('Radiation')
-
         display_name = ' + '.join(drug_names)
 
         # Build combined company (unique companies only, preserve order)
