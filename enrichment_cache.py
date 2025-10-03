@@ -136,6 +136,9 @@ class EnrichmentCacheManager:
                         return df
                     except Exception as e:
                         print(f"[CACHE] Error loading Parquet: {e}")
+                else:
+                    print(f"[CACHE] ✗ Parquet file missing despite status='ready': {record['enriched_file_path']}")
+                    print(f"[CACHE] Volume may have been reset - cache needs rebuild")
 
             # No Postgres record, but check if Parquet file exists on volume (orphaned cache)
             if record is None and os.path.exists(self.cache_file):
@@ -231,18 +234,32 @@ class EnrichmentCacheManager:
                 print(f"[CACHE] Starting enrichment: {len(df)} studies")
                 enriched = enrich_titles_batch(df, self.model_version)
 
+                print(f"[CACHE] Enrichment batch complete, writing to volume: {self.cache_file}")
+
                 # Save atomically to volume
                 atomic_write_parquet(enriched, self.cache_file)
+
+                # Verify file was written
+                if os.path.exists(self.cache_file):
+                    file_size = os.path.getsize(self.cache_file)
+                    print(f"[CACHE] ✓ Parquet file written successfully: {file_size:,} bytes")
+                else:
+                    raise Exception(f"Parquet file not found after write: {self.cache_file}")
+
+                # Update Postgres status (with commit fix applied)
                 self.save_metadata('ready', f'Enriched {len(enriched)} studies', self.cache_file)
+                print(f"[CACHE] ✓ Postgres metadata updated to 'ready'")
 
                 # Update in-memory cache
                 self.enriched_df = enriched
                 self.is_building = False
 
-                print(f"[CACHE] ✓ Enrichment complete: {self.cache_file}")
+                print(f"[CACHE] ✓✓✓ ENRICHMENT FULLY COMPLETE - Cache ready for next deploy ✓✓✓")
 
             except Exception as e:
                 print(f"[CACHE] ✗ Enrichment failed: {e}")
+                import traceback
+                traceback.print_exc()
                 self.save_metadata('failed', str(e), self.cache_file)
                 self.is_building = False
 
