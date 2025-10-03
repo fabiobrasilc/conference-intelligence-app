@@ -3229,113 +3229,31 @@ def stream_playbook(playbook_key):
                             "rows": sanitize_data_structure(competitor_table.to_dict('records'))
                         }) + "\n\n"
 
-                        # Table 3: Emerging Threats - Analyze FULL filtered dataset (not just competitor studies)
-                        # This ensures we catch novel molecules not in our drug database
+                        # Table 3: Emerging Threats - Use AI-enriched is_emerging field
                         try:
                             print(f"[PLAYBOOK] Starting emerging threats analysis on FULL {len(filtered_df)} studies...")
 
-                            # Track match counts for debugging
-                            match_counts = {
-                                'novel_mechanisms': 0,
-                                'combinations': 0,
-                                'novel_targets': 0,
-                                'biomarkers': 0,
-                                'excluded_standard_ici': 0
-                            }
+                            # Check if we have AI-enriched data
+                            has_enrichment = 'is_emerging' in filtered_df.columns and 'phase' in filtered_df.columns
 
-                            # Define emerging threat criteria (fast rule-based matching)
-                            def is_emerging_threat(row):
-                                """Identify emerging threats based on title keywords only (no drug name dependency)"""
-                                title = str(row['Title']).lower()
+                            if has_enrichment:
+                                print(f"[PLAYBOOK] ✓ Using AI-enriched is_emerging field")
+                                # Use AI classification: is_emerging == True
+                                emerging_threats_base = filtered_df[filtered_df['is_emerging'] == True].copy()
+                                print(f"[PLAYBOOK] AI identified {len(emerging_threats_base)} emerging threats")
+                            else:
+                                print(f"[PLAYBOOK] ⚠ No enrichment available, using rule-based fallback")
+                                # Fallback to keyword matching if enrichment not available
+                                def is_emerging_fallback(row):
+                                    title = str(row['Title']).lower()
+                                    return any(keyword in title for keyword in [
+                                        'adc', 'antibody-drug conjugate', 'bispecific', 'tce', 'bite',
+                                        'car-t', 'radioligand', 'nectin-4', 'trop-2', 'fgfr',
+                                        '+', ' plus ', ' in combination'
+                                    ])
 
-                                # EXCLUDE: Only established single-agent ICIs in standard settings (not novel ICIs)
-                                # Check if title mentions standard ICI WITHOUT novel context
-                                standard_icis = ['pembrolizumab', 'nivolumab', 'atezolizumab', 'durvalumab']
-                                novel_context = ['novel', 'next-generation', 'modified', 'engineered', 'bispecific',
-                                               'dual', 'combination', '+', ' plus ', ' in combination', ' combined with']
-
-                                # If it's a standard ICI alone (no combination, no novel context), exclude
-                                if any(ici in title for ici in standard_icis):
-                                    # But include if it has novel context or is a combination
-                                    if not any(novel in title for novel in novel_context):
-                                        match_counts['excluded_standard_ici'] += 1
-                                        return False
-
-                                # INCLUDE: Novel mechanisms
-                                novel_mechanisms = [
-                                    'adc', 'antibody-drug conjugate', 'antibody drug conjugate',
-                                    'bispecific', 'tce', 'bite', 't-cell engager',
-                                    'car-t', 'car t', 'cellular therapy',
-                                    'radioligand', 'radiopharmaceutical', 'lutetium', 'radium',
-                                    'bicycle', 'masked antibody', 'probody'
-                                ]
-                                if any(nm in title for nm in novel_mechanisms):
-                                    match_counts['novel_mechanisms'] += 1
-                                    return True
-
-                                # INCLUDE: Novel combinations (REMOVED ' and ' - too broad)
-                                # Only look for specific combination indicators
-                                if any(combo in title for combo in ['+', ' plus ', ' in combination', ' combined with']):
-                                    match_counts['combinations'] += 1
-                                    return True
-
-                                # INCLUDE: Novel targets/biomarkers
-                                novel_targets = [
-                                    'nectin-4', 'nectin4', 'trop-2', 'trop2',
-                                    'fgfr', 'fibroblast growth factor receptor',
-                                    'her3', 'claudin', 'b7-h3', 'tigit', 'lag-3', 'tim-3',
-                                    'met exon 14', 'metex14', 'ret fusion', 'ntrk', 'kras g12c'
-                                ]
-                                if any(nt in title for nt in novel_targets):
-                                    match_counts['novel_targets'] += 1
-                                    return True
-
-                                # INCLUDE: Novel biomarker studies
-                                biomarker_keywords = ['biomarker', 'predictive', 'expression pattern',
-                                                    'genomic profile', 'molecular subtype', 'signature']
-                                if any(bk in title for bk in biomarker_keywords):
-                                    match_counts['biomarkers'] += 1
-                                    return True
-
-                                return False
-
-                            # Classify threat type based on title only
-                            def classify_threat_type(row):
-                                title = str(row['Title']).lower()
-
-                                if any(x in title for x in ['nectin-4', 'nectin4']):
-                                    return 'Nectin-4 Target'
-                                elif any(x in title for x in ['trop-2', 'trop2']):
-                                    return 'TROP-2 Target'
-                                elif 'adc' in title or 'antibody-drug conjugate' in title:
-                                    return 'Novel ADC'
-                                elif any(x in title for x in ['bispecific', 'tce', 'bite', 't-cell engager']):
-                                    return 'Bispecific/TCE'
-                                elif any(x in title for x in ['fgfr', 'fibroblast growth factor']):
-                                    return 'FGFR Inhibitor'
-                                elif any(x in title for x in ['+', ' plus ', ' with ']):
-                                    return 'Novel Combination'
-                                elif any(x in title for x in ['biomarker', 'predictive', 'expression', 'genomic', 'signature']):
-                                    return 'Novel Biomarker'
-                                elif any(x in title for x in ['car-t', 'car t', 'cellular therapy']):
-                                    return 'Cellular Therapy'
-                                elif any(x in title for x in ['radioligand', 'radiopharmaceutical']):
-                                    return 'Radioligand Therapy'
-                                else:
-                                    return 'Emerging Mechanism'
-
-                            # Step 1: Apply emerging threats filter to filtered_df (which has Title)
-                            emerging_mask = filtered_df.apply(is_emerging_threat, axis=1)
-                            emerging_threats_base = filtered_df[emerging_mask].copy()
-
-                            # Debug logging - show match breakdown
-                            print(f"[PLAYBOOK] Filter match counts:")
-                            print(f"  - Novel mechanisms: {match_counts['novel_mechanisms']}")
-                            print(f"  - Combinations: {match_counts['combinations']}")
-                            print(f"  - Novel targets: {match_counts['novel_targets']}")
-                            print(f"  - Biomarkers: {match_counts['biomarkers']}")
-                            print(f"  - Excluded (standard ICIs): {match_counts['excluded_standard_ici']}")
-                            print(f"[PLAYBOOK] Total emerging threats found: {len(emerging_threats_base)}")
+                                emerging_threats_base = filtered_df[filtered_df.apply(is_emerging_fallback, axis=1)].copy()
+                                print(f"[PLAYBOOK] Fallback identified {len(emerging_threats_base)} emerging threats")
 
                             if not emerging_threats_base.empty:
                                 # Step 2: Run drug matcher on emerging threats to get MOA data
