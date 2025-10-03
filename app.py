@@ -135,9 +135,6 @@ collection = None
 csv_hash_global = None
 df_global = None
 
-# Runtime cache for button results (lazy caching)
-button_cache = {}
-
 # ============================================================================
 # FILTER CONFIGURATIONS
 # ============================================================================
@@ -1488,7 +1485,7 @@ def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
     # Apply combined mask and deduplicate
     filtered_df = source_df[combined_mask].copy()
 
-    # Drop duplicates using only base columns (enriched columns may contain unhashable lists)
+    # Drop duplicates using base columns for deduplication
     base_columns = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier',
                     'Room', 'Date', 'Time', 'Session', 'Theme']
     # Only use columns that exist in the DataFrame
@@ -2711,25 +2708,6 @@ def generate_emerging_threats_table(df: pd.DataFrame, indication_keywords: list 
 # AI STREAMING FUNCTIONS
 # ============================================================================
 
-def stream_openai_response(prompt: str, model: str = "gpt-5-mini") -> str:
-    """Stream response from OpenAI and return full text."""
-    if not client:
-        return "OpenAI API key not configured."
-
-    try:
-        response = client.responses.create(
-            model=model,
-            input=[{"role": "user", "content": prompt}],
-            reasoning={"effort": "low"},
-            text={"verbosity": "low"},
-            max_output_tokens=3000,
-            stream=False
-        )
-
-        return response.output_text
-    except Exception as e:
-        return f"Error generating AI response: {str(e)}"
-
 def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini"):
     """Stream tokens from OpenAI for SSE."""
     if not client:
@@ -3096,7 +3074,7 @@ def stream_playbook(playbook_key):
                             "rows": sanitize_data_structure(competitor_table.to_dict('records'))
                         }) + "\n\n"
 
-                        # Table 3: Emerging Threats - Use AI-enriched is_emerging field
+                        # Table 3: Emerging Threats
                         try:
                             print(f"[PLAYBOOK] Starting emerging threats analysis on FULL {len(filtered_df)} studies...")
 
