@@ -2460,38 +2460,22 @@ def ai_extract_drugs_batch(titles: list, ta_context: str = "") -> dict:
     if not client or not titles:
         return {}
 
-    # Process in batches of 50 for efficiency
-    batch_size = 50
+    # Process in smaller batches to prevent JSON truncation
+    batch_size = 20  # Reduced from 50 to prevent output truncation
     all_results = {}
 
     for i in range(0, len(titles), batch_size):
         batch = titles[i:i+batch_size]
 
-        prompt = f"""Extract drug names from these oncology abstract titles. Return JSON only.
+        # Simpler prompt to reduce token usage
+        prompt = f"""Extract drugs from these {len(batch)} oncology titles ({ta_context if ta_context else "oncology"}). Return JSON with index: {{drugs: [], moas: [], companies: []}}.
 
-Therapeutic area context: {ta_context if ta_context else "All oncology"}
+{chr(10).join([f"{idx}. {title[:120]}" for idx, title in enumerate(batch)])}
 
-Titles:
-{chr(10).join([f"{idx}. {title}" for idx, title in enumerate(batch)])}
+Return this exact format:
+{{"0": {{"drugs": ["drug1"], "moas": ["ADC"], "companies": ["Company1"]}}, "1": {{"drugs": [], "moas": [], "companies": []}}}}
 
-For each title, identify:
-- Drug names (generic or commercial, including new/experimental drugs)
-- MOA class (ADC, ICI, TKI, Bispecific, etc.)
-- Company (use your training knowledge)
-
-Return JSON:
-{{
-  "0": {{"drugs": ["enfortumab vedotin", "pembrolizumab"], "moas": ["ADC", "ICI"], "companies": ["Astellas/Seagen", "Merck"]}},
-  "1": {{"drugs": [], "moas": [], "companies": []}},
-  ...
-}}
-
-Rules:
-- If no drugs mentioned: empty arrays
-- For combinations: list all drugs/MOAs/companies
-- Use your pharma knowledge (you know EV=Astellas, Pembro=Merck, etc.)
-- Include experimental drugs (tratetumab, etc.)
-"""
+If no drugs: empty arrays. Use your pharma knowledge for MOA/company."""
 
         # Retry logic for JSON parsing errors
         max_retries = 3
