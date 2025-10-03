@@ -2447,9 +2447,147 @@ def classify_studies_with_drug_db(df: pd.DataFrame, therapeutic_area: str) -> pd
 
     return result_df
 
+# ============================================================================
+# AI-ENHANCED DRUG EXTRACTION (Context-Aware Analysis)
+# ============================================================================
+
+def ai_extract_drugs_batch(titles: list, ta_context: str = "") -> dict:
+    """
+    Extract drugs from study titles using AI (detects new molecules not in hardcoded DB).
+
+    Returns: {title: {'drugs': [...], 'moas': [...], 'companies': [...]}}
+    """
+    if not client or not titles:
+        return {}
+
+    # Process in batches of 50 for efficiency
+    batch_size = 50
+    all_results = {}
+
+    for i in range(0, len(titles), batch_size):
+        batch = titles[i:i+batch_size]
+
+        prompt = f"""Extract drug names from these oncology abstract titles. Return JSON only.
+
+Therapeutic area context: {ta_context if ta_context else "All oncology"}
+
+Titles:
+{chr(10).join([f"{idx}. {title}" for idx, title in enumerate(batch)])}
+
+For each title, identify:
+- Drug names (generic or commercial, including new/experimental drugs)
+- MOA class (ADC, ICI, TKI, Bispecific, etc.)
+- Company (use your training knowledge)
+
+Return JSON:
+{{
+  "0": {{"drugs": ["enfortumab vedotin", "pembrolizumab"], "moas": ["ADC", "ICI"], "companies": ["Astellas/Seagen", "Merck"]}},
+  "1": {{"drugs": [], "moas": [], "companies": []}},
+  ...
+}}
+
+Rules:
+- If no drugs mentioned: empty arrays
+- For combinations: list all drugs/MOAs/companies
+- Use your pharma knowledge (you know EV=Astellas, Pembro=Merck, etc.)
+- Include experimental drugs (tratetumab, etc.)
+"""
+
+        try:
+            response = client.responses.create(
+                model="gpt-5-mini",
+                input=[{"role": "user", "content": prompt}],
+                reasoning={"effort": "low"},
+                text={"verbosity": "low"},
+                max_output_tokens=2000
+            )
+
+            result = json.loads(response.output_text)
+
+            # Map back to original titles
+            for idx, data in result.items():
+                original_title = batch[int(idx)]
+                all_results[original_title] = data
+
+        except Exception as e:
+            print(f"[AI EXTRACT] Error in batch {i//batch_size}: {e}")
+            # Fallback: empty results for this batch
+            for title in batch:
+                all_results[title] = {'drugs': [], 'moas': [], 'companies': []}
+
+    return all_results
+
+
+def generate_competitor_table_ai(df: pd.DataFrame, ta_context: str = "") -> pd.DataFrame:
+    """
+    AI-ENHANCED competitor table: Uses AI to extract drugs/MOAs from titles.
+
+    Benefits over hardcoded DB:
+    - Detects new molecules not in database
+    - Uses AI pharma knowledge for MOA/Company
+    - No maintenance of drug CSV needed
+
+    Returns: Real DataFrame with actual Abstract #s (no hallucinations)
+    """
+    if df.empty:
+        return pd.DataFrame()
+
+    # Filter out non-abstracts (educational sessions, etc.)
+    df = df[df['Identifier'].notna() & (df['Identifier'].str.strip() != '')].copy()
+
+    if df.empty:
+        print("[AI COMPETITOR] No abstracts to analyze")
+        return pd.DataFrame()
+
+    print(f"[AI COMPETITOR] Extracting drugs from {len(df)} study titles using AI...")
+
+    # Extract drugs using AI
+    extraction_results = ai_extract_drugs_batch(df['Title'].tolist(), ta_context)
+
+    # Build table with REAL data from CSV
+    results = []
+    for _, row in df.iterrows():
+        title = row['Title']
+        extracted = extraction_results.get(title, {'drugs': [], 'moas': [], 'companies': []})
+
+        drugs = extracted.get('drugs', [])
+        moas = extracted.get('moas', [])
+        companies = extracted.get('companies', [])
+
+        if not drugs:
+            continue  # Skip if no drugs found
+
+        # Exclude EMD portfolio
+        emd_drugs = ['avelumab', 'bavencio', 'tepotinib', 'cetuximab', 'erbitux', 'pimicotinib']
+        filtered_drugs = [d for d in drugs if d.lower() not in emd_drugs]
+
+        if not filtered_drugs:
+            continue  # Skip EMD-only studies
+
+        # Build result entry with REAL CSV data (no hallucinations)
+        results.append({
+            'Drug': ' + '.join(filtered_drugs),
+            'Company': ' + '.join(companies) if companies else 'Unknown',
+            'MOA Class': ' + '.join(moas) if moas else 'Unknown',
+            'Identifier': row['Identifier'],  # REAL from CSV
+            'Title': row['Title'],            # REAL from CSV
+            'Speakers': row.get('Speakers', ''),  # REAL from CSV
+            'Affiliation': row.get('Affiliation', ''),  # REAL from CSV
+            'Study Type': 'Combination' if len(filtered_drugs) > 1 else 'Monotherapy'
+        })
+
+    result_df = pd.DataFrame(results)
+
+    if not result_df.empty:
+        result_df = result_df.sort_values('Drug', ascending=True)
+
+    print(f"[AI COMPETITOR] Generated table with {len(result_df)} competitor studies")
+    return result_df
+
+
 def generate_competitor_table(df: pd.DataFrame, indication_keywords: list = None, focus_moa_classes: list = None, n: int = 200) -> pd.DataFrame:
     """
-    Generate competitor drugs table using CSV with MOA/target data.
+    LEGACY: Generate competitor drugs table using CSV with MOA/target data.
     Enhanced to detect combination therapies and prevent double-counting.
 
     Args:
@@ -3095,16 +3233,25 @@ def stream_playbook(playbook_key):
             if "all_data" in playbook.get("required_tables", []):
                 # For competitor button, use fast drug database matching
                 if playbook_key == "competitor":
-                    # Use the filtered dataset (e.g., 158 bladder studies)
-                    print(f"[PLAYBOOK] Using drug matcher on {len(filtered_df)} studies")
-
                     # Determine therapeutic area for context
                     therapeutic_area = ta_filters[0] if ta_filters and len(ta_filters) > 0 else "All Therapeutic Areas"
 
-                    # Call fast drug matcher with MOA appending
-                    competitor_table = classify_studies_with_drug_db(filtered_df, therapeutic_area)
+                    # Check lazy cache first
+                    cache_key = f"competitor_{hash(frozenset(drug_filters))}_{hash(frozenset(ta_filters))}_{hash(frozenset(session_filters))}_{hash(frozenset(date_filters))}"
 
-                    print(f"[PLAYBOOK] Drug matcher returned {len(competitor_table)} competitor studies")
+                    if cache_key in button_cache:
+                        print(f"[CACHE] ✓ Loading competitor analysis from cache (instant)")
+                        competitor_table = button_cache[cache_key]
+                    else:
+                        # AI-ENHANCED drug extraction (detects new molecules, uses AI pharma knowledge)
+                        print(f"[AI COMPETITOR] Analyzing {len(filtered_df)} studies with AI-enhanced extraction...")
+                        competitor_table = generate_competitor_table_ai(filtered_df, therapeutic_area)
+
+                        # Cache for future clicks with same filters
+                        button_cache[cache_key] = competitor_table
+                        print(f"[CACHE] ✓ Cached competitor analysis for filter combo")
+
+                    print(f"[PLAYBOOK] Generated competitor table with {len(competitor_table)} studies")
                     tables_data["competitor_abstracts"] = competitor_table.to_markdown(index=False) if not competitor_table.empty else "No competitor drugs found"
 
                     if not competitor_table.empty:
