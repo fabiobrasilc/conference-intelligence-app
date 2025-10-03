@@ -372,7 +372,7 @@ body.ai-tab-active .quick-intel-sidebar:not(.collapsed) ~ .main-content {
 .appbar {
   background: var(--card);
   border-bottom: 1px solid var(--stroke);
-  padding: 16px 24px;
+  padding: 10px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -381,7 +381,7 @@ body.ai-tab-active .quick-intel-sidebar:not(.collapsed) ~ .main-content {
 }
 
 .appbar-title {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--ink);
   margin: 0;
@@ -475,22 +475,22 @@ body.ai-tab-active .quick-intel-sidebar:not(.collapsed) ~ .main-content {
   align-items: center;
   gap: 2px;
   flex-wrap: wrap;
-  padding: 6px 12px;
+  padding: 4px 10px;
   background: transparent;
   border-radius: var(--radius);
   border: none;
 }
 
 .toggle-label {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--ink);
-  margin-right: 8px;
+  margin-right: 6px;
 }
 
 .column-toggle-btn {
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 3px 6px;
+  font-size: 11px;
   font-weight: 500;
   border: none;
   border-radius: 4px;
@@ -683,12 +683,12 @@ mark {
 }
 
 .quick-intel-header {
-  padding: 20px;
+  padding: 12px;
   border-bottom: 1.5px solid var(--stroke);
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   cursor: pointer;
   user-select: none;
 }
@@ -698,12 +698,12 @@ mark {
 }
 
 .quick-intel-icon {
-  font-size: 24px;
+  font-size: 18px;
   flex-shrink: 0;
 }
 
 .quick-intel-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--ink);
   margin: 0;
