@@ -366,7 +366,7 @@ Title: "{title}"
                 input=[{"role": "user", "content": prompt}],
                 reasoning={"effort": "minimal"},  # Fastest reasoning for simple extraction
                 text={"verbosity": "low"},  # Concise JSON output
-                max_output_tokens=120
+                max_output_tokens=200  # Increased from 120 to prevent JSON truncation
             )
 
             content = response.output_text
@@ -424,12 +424,12 @@ Title: "{title}"
     }
 
 
-def enrich_titles_batch(df: pd.DataFrame, model: str = "gpt-5-mini", max_workers: int = 8) -> pd.DataFrame:
+def enrich_titles_batch(df: pd.DataFrame, model: str = "gpt-5-mini", max_workers: int = 10) -> pd.DataFrame:
     """
     Enrich all titles with AI classification using concurrent workers
-    Increased to 8 workers for faster processing (RPM not saturated)
+    Increased to 10 workers for faster processing (RPM not saturated)
     With improved retry logic (3 retries per study with exponential backoff)
-    Expected: ~20-25 minutes for 4,686 titles with 8 workers
+    Expected: ~15-18 minutes for 4,686 titles with 10 workers
     """
     print(f"[ENRICH] Processing {len(df)} titles with {max_workers} workers (rate-limit optimized)...")
 
