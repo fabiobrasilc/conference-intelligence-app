@@ -3553,11 +3553,19 @@ Total Studies in Filtered Dataset: {len(filtered_df)}{filter_guidance}
 
 Based on the data provided above, write a comprehensive analysis following the framework."""
 
+            print(f"[PLAYBOOK] Full prompt length: {len(full_prompt)} chars")
+            print(f"[PLAYBOOK] Tables in prompt: {list(tables_data.keys())}")
+
             # 4. Stream AI response token by token
+            print(f"[PLAYBOOK] Starting OpenAI streaming...")
             for token_event in stream_openai_tokens(full_prompt):
                 yield token_event
+            print(f"[PLAYBOOK] OpenAI streaming completed")
 
         except Exception as e:
+            print(f"[PLAYBOOK] EXCEPTION in generate(): {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
             yield "data: " + json.dumps({"error": f"Streaming error: {str(e)}"}) + "\n\n"
 
     return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
