@@ -85,8 +85,28 @@ class EnrichmentCacheManager:
         self.model_version = model_version
         self.prompt_version = prompt_version
 
-        # Ensure cache directory exists
+        # Ensure cache directory exists and verify it's writable
         Path(cache_dir).mkdir(parents=True, exist_ok=True)
+
+        # CRITICAL: Verify volume is writable (Railway volume mount check)
+        test_file = os.path.join(cache_dir, ".volume_test")
+        try:
+            with open(test_file, 'w') as f:
+                f.write("volume_test")
+            os.remove(test_file)
+            print(f"[CACHE] ✓ Volume writable at: {cache_dir}")
+        except Exception as e:
+            print(f"[CACHE] ✗✗✗ CRITICAL: Volume NOT writable at {cache_dir}: {e}")
+            print(f"[CACHE] Cache will NOT persist across deploys! Check Railway volume mount.")
+
+        # List existing files in cache directory
+        existing_files = list(Path(cache_dir).glob("*"))
+        if existing_files:
+            print(f"[CACHE] Found {len(existing_files)} existing files in volume:")
+            for f in existing_files[:5]:  # Show first 5
+                print(f"[CACHE]   - {f.name} ({f.stat().st_size:,} bytes)")
+        else:
+            print(f"[CACHE] Volume is empty (fresh deploy or volume was reset)")
 
         # Compute dataset key (includes CSV hash + model + prompt version)
         self.csv_hash = sha256_file(csv_path)
