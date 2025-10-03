@@ -119,7 +119,7 @@ if OPENAI_API_KEY:
 
     client = OpenAI(
         api_key=OPENAI_API_KEY,
-        timeout=60.0,
+        timeout=120.0,  # Increased from 60s to 120s for medium reasoning effort
         max_retries=2,
         http_client=custom_http_client
     )
@@ -3036,7 +3036,7 @@ def generate_emerging_threats_table(df: pd.DataFrame, indication_keywords: list 
 # AI STREAMING FUNCTIONS
 # ============================================================================
 
-def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini"):
+def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini", reasoning_effort: str = "medium"):
     """Stream tokens from OpenAI for SSE."""
     if not client:
         print("[OPENAI] ERROR: Client not initialized")
@@ -3044,11 +3044,11 @@ def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini"):
         return
 
     try:
-        print(f"[OPENAI] Creating streaming response with model: {model}")
+        print(f"[OPENAI] Creating streaming response with model: {model}, reasoning effort: {reasoning_effort}")
         stream = client.responses.create(
             model=model,
             input=[{"role": "user", "content": prompt}],
-            reasoning={"effort": "medium"},  # Medium reasoning for better contextual understanding
+            reasoning={"effort": reasoning_effort},
             text={"verbosity": "low"},
             max_output_tokens=6000,  # Increased for comprehensive analysis
             stream=True
@@ -3543,10 +3543,9 @@ def stream_playbook(playbook_key):
                     if competitor_table.empty:
                         print(f"[PLAYBOOK] WARNING: No competitor drugs found in dataset")
 
-                    # Add sample studies for AI context (titles only for speed)
-                    print(f"[PLAYBOOK] Adding {min(50, len(filtered_df))} sample studies for context...")
-                    full_dataset = filtered_df[['Identifier', 'Title']].head(50)  # Just ID + Title, max 50
-                    tables_data["full_dataset_context"] = full_dataset.to_markdown(index=False)
+                    # REMOVED: full_dataset_context - tables already contain all necessary data
+                    # Competitor Studies table + Emerging Threats table provide sufficient context
+                    # Adding 50 more studies bloats prompt unnecessarily
 
                 else:
                     # For strategy or other buttons, provide sample abstracts
@@ -3639,7 +3638,9 @@ Based on the data provided above, write a comprehensive analysis following the f
 
             # 4. Stream AI response token by token
             print(f"[PLAYBOOK] Starting OpenAI streaming...")
-            for token_event in stream_openai_tokens(full_prompt):
+            # Use low reasoning for CI button to avoid timeout with large prompts
+            reasoning_effort = "low" if playbook_key == "competitor" else "medium"
+            for token_event in stream_openai_tokens(full_prompt, reasoning_effort=reasoning_effort):
                 yield token_event
             print(f"[PLAYBOOK] OpenAI streaming completed")
 
