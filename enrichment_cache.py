@@ -122,6 +122,11 @@ class EnrichmentCacheManager:
                 self.prompt_version
             )
 
+            # DEBUG: Show what we got from Postgres
+            print(f"[CACHE] DEBUG: Postgres record = {record}")
+            print(f"[CACHE] DEBUG: csv_hash = {self.csv_hash}")
+            print(f"[CACHE] DEBUG: cache_file path = {self.cache_file}")
+
             if record and record['status'] == 'ready' and record['enriched_file_path']:
                 if os.path.exists(record['enriched_file_path']):
                     try:
