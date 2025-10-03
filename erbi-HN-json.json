@@ -15,7 +15,7 @@
 "status": "FDA approved (1L R/M HNSCC)",
 "threat_level": "HIGH",
 "rationale": "Established 1L standard replacing cetuximab-based EXTREME in PD-L1–positive disease and broadly used regardless of HPV status.",
-"keywords": ["KEYNOTE-048", "pembrolizumab", "pembro", "keytruda", "PD-L1 CPS", "first-line", "EXTREME"]
+"keywords": ["KEYNOTE-048", "pembrolizumab", "pembro", "keytruda"]
 },
 {
 "drug": "Pembrolizumab (monotherapy, CPS ≥1)",
@@ -24,7 +24,7 @@
 "status": "FDA approved (1L for CPS ≥1; later-line regardless of CPS)",
 "threat_level": "HIGH",
 "rationale": "Preferred 1L option in CPS ≥1 and CPS ≥20, directly displacing cetuximab-containing regimens.",
-"keywords": ["KEYNOTE-048", "pembrolizumab", "pembro", "keytruda", "CPS 1-19", "CPS ≥20", "first-line monotherapy"]
+"keywords": ["KEYNOTE-048", "pembrolizumab", "pembro", "keytruda"]
 },
 {
 "drug": "Nivolumab",
@@ -33,7 +33,7 @@
 "status": "FDA approved (post-platinum)",
 "threat_level": "MEDIUM",
 "rationale": "Standard after platinum failure, reducing later-line cetuximab monotherapy use.",
-"keywords": ["nivolumab", "opdivo", "CheckMate 141", "CheckMate-141", "post-platinum", "second-line"]
+"keywords": ["nivolumab", "opdivo", "CheckMate 141", "CheckMate-141"]
 },
 {
 "drug": "Taxane chemotherapy (docetaxel/paclitaxel)",
@@ -42,7 +42,7 @@
 "status": "Guideline-recommended option (post-IO/chemo)",
 "threat_level": "LOW",
 "rationale": "Competes for later-line use where cetuximab monotherapy was historically used.",
-"keywords": ["docetaxel", "paclitaxel", "investigator's choice", "salvage therapy"]
+"keywords": ["docetaxel", "paclitaxel"]
 }
 ],
 "emerging_threats": [
@@ -53,7 +53,7 @@
 "phase": "Phase 2 (pivotal, AIM-HN/SEQ-HN)",
 "biomarker": "HRAS-mutant HNSCC (~4–8%)",
 "threat_level": "MEDIUM",
-"keywords": ["tipifarnib", "HRAS mutation", "AIM-HN", "SEQ-HN", "head and neck"]
+"keywords": ["tipifarnib", "AIM-HN", "SEQ-HN"]
 },
 {
 "drug": "AFM24 ± anti–PD-(L)1",
@@ -62,7 +62,7 @@
 "phase": "Phase 1/2",
 "biomarker": "EGFR-expressing tumors (includes HNSCC cohorts)",
 "threat_level": "LOW",
-"keywords": ["AFM24", "innate cell engager", "EGFR CD16A", "HNSCC cohort"]
+"keywords": ["AFM24"]
 },
 {
 "drug": "REGN7075 ± cemiplimab",
@@ -71,7 +71,7 @@
 "phase": "Phase 1/2",
 "biomarker": "EGFR-expressing tumors (includes HNSCC cohorts)",
 "threat_level": "LOW",
-"keywords": ["REGN7075", "EGFRxCD28", "cemiplimab", "HNSCC expansion"]
+"keywords": ["REGN7075", "cemiplimab"]
 },
 {
 "drug": "Patritumab deruxtecan (HER3-DXd)",
@@ -80,7 +80,7 @@
 "phase": "Phase 2 (pan-tumor; HNSCC cohorts planned/ongoing)",
 "biomarker": "HER3 expression (exploratory)",
 "threat_level": "LOW",
-"keywords": ["HER3-DXd", "patritumab deruxtecan", "head and neck cohort", "ADC"]
+"keywords": ["HER3-DXd", "patritumab deruxtecan"]
 },
 {
 "drug": "Pembrolizumab + lenvatinib",
@@ -89,7 +89,7 @@
 "phase": "Phase 3 (LEAP-010; negative OS)",
 "biomarker": "Unselected (PD-L1 stratified analyses)",
 "threat_level": "LOW",
-"keywords": ["LEAP-010", "lenvatinib", "negative OS", "first-line HNSCC"]
+"keywords": ["LEAP-010", "lenvatinib"]
 }
 ],
 "key_biomarkers": [

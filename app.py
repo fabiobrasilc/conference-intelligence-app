@@ -165,14 +165,16 @@ def load_competitive_landscapes():
 
 def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area: str, n: int = 200) -> pd.DataFrame:
     """
-    Match studies against JSON competitive landscape with combination detection + CSV fallback.
+    Match studies to competitive drugs using CSV database with combination detection.
 
-    Step 1: Match JSON-defined competitors (with combination detection)
-    Step 2: Match remaining studies against CSV drug database (400+ drugs)
+    For each study title:
+    1. Search for ALL drug generic names (from CSV)
+    2. Build combination name: "Drug1 + Drug2 + Chemotherapy + Radiation"
+    3. Append company/MOA info for each drug found
 
     Args:
         df: DataFrame of conference studies
-        therapeutic_area: One of ["Bladder Cancer", "Lung Cancer", "Colorectal Cancer", "Head and Neck Cancer"]
+        therapeutic_area: Filter context (for logging only)
         n: Max results to return
 
     Returns:
@@ -181,149 +183,119 @@ def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area:
     if df.empty:
         return pd.DataFrame()
 
-    # Get the competitive landscape for this therapeutic area
-    landscape = competitive_landscapes.get(therapeutic_area)
-    if not landscape:
-        print(f"[JSON MATCHER] No competitive landscape loaded for {therapeutic_area}")
+    # Load CSV drug database
+    try:
+        drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
+        drug_db = pd.read_csv(drug_db_path, encoding='utf-8-sig')
+        print(f"[CSV MATCHER] Loaded {len(drug_db)} drugs from database")
+    except Exception as e:
+        print(f"[CSV MATCHER] ERROR: Could not load Drug_Company_names.csv: {e}")
         return pd.DataFrame()
 
-    print(f"[JSON MATCHER] Step 1: Matching studies for {therapeutic_area} using JSON keywords with combination detection")
+    # EMD portfolio drugs to exclude
+    emd_drugs = ['avelumab', 'bavencio', 'tepotinib', 'cetuximab', 'erbitux', 'pimicotinib']
 
-    # STEP 1: Build a map of all JSON-defined drugs with their keywords
-    json_drugs = {}  # drug_name -> {keywords, company, moa, threat_level}
+    # Radiation/Chemo context keywords (avoid short acronyms like "RT", "CT")
+    radiation_keywords = ['radiation', 'radiotherapy', 'sbrt', 'imrt', 'proton therapy']
+    chemo_keywords = ['chemotherapy', 'folfox', 'folfiri', 'folfoxiri', 'carboplatin', 'cisplatin',
+                      'paclitaxel', 'docetaxel', 'gemcitabine', 'pemetrexed']
 
-    for comp in landscape.get("direct_competitors", []):
-        drug_name = comp.get("drug", "Unknown")
-        json_drugs[drug_name] = {
-            'keywords': comp.get("keywords", []),
-            'company': comp.get("company", "Unknown"),
-            'moa': comp.get("moa", "Unknown"),
-            'threat_level': comp.get("threat_level", "UNKNOWN")
-        }
+    # Build study-to-drugs mapping
+    study_drugs = {}  # identifier -> {drugs: [...], has_radiation: bool, has_chemo: bool, title: str}
 
-    for threat in landscape.get("emerging_threats", []):
-        drug_name = threat.get("drug", "Unknown")
-        json_drugs[drug_name] = {
-            'keywords': threat.get("keywords", []),
-            'company': threat.get("company", "Unknown"),
-            'moa': threat.get("moa", "Unknown"),
-            'threat_level': threat.get("threat_level", "EMERGING")
-        }
-
-    # STEP 2: First pass - match ALL studies to ALL JSON drugs (collect candidates)
-    study_drug_matches = {}  # identifier -> [list of drug names that matched]
-
-    for identifier, row in df.iterrows():
+    for _, row in df.iterrows():
+        identifier = row['Identifier']
         title_lower = str(row['Title']).lower()
-        matched_drugs = []
+        found_drugs = []
 
-        for drug_name, drug_info in json_drugs.items():
-            for keyword in drug_info['keywords']:
-                if keyword.lower() in title_lower:
-                    matched_drugs.append(drug_name)
-                    break  # Stop after first keyword match for this drug
+        # Search for ALL drugs in this study title (generic name only)
+        for _, drug_row in drug_db.iterrows():
+            generic = str(drug_row['drug_generic']).strip().lower() if pd.notna(drug_row['drug_generic']) else ""
 
-        if matched_drugs:
-            study_drug_matches[row['Identifier']] = matched_drugs
+            if not generic:
+                continue
 
-    # STEP 3: Process matched studies
-    # Use first matched drug only (JSON drugs are already correctly defined)
-    # No automatic combination detection (causes false positives)
-    results = []
-    processed_identifiers = set()
+            # Skip EMD portfolio
+            if generic in emd_drugs:
+                continue
 
-    for identifier, matched_drugs in study_drug_matches.items():
-        row = df[df['Identifier'] == identifier].iloc[0]
-        title_lower = str(row['Title']).lower()
-
-        # Use FIRST matched drug only (JSON drugs are already correctly defined as combinations)
-        # If EV+P is one entity in JSON, and study matches it, use that
-        # Don't try to auto-detect multi-drug combinations (causes false positives)
-        drug_name = matched_drugs[0]
-        drug_info = json_drugs[drug_name]
-
-        # Use drug name as-is from JSON (no context appending)
-        display_name = drug_name
-        moa_display = drug_info['moa']
-
-        results.append({
-            'Drug': display_name,
-            'Company': drug_info['company'],
-            'MOA Class': moa_display,
-            'MOA Target': '',
-            'ThreatLevel': drug_info['threat_level'],
-            'Identifier': identifier,
-            'Title': row['Title'][:80] + '...' if len(row['Title']) > 80 else row['Title'],
-            'Source': 'JSON'
-        })
-        processed_identifiers.add(identifier)
-
-    print(f"[JSON MATCHER] Step 1 complete: {len(results)} studies matched ({len(processed_identifiers)} identifiers)")
-
-    # Debug: Show first 5 matches + stats
-    if study_drug_matches:
-        print(f"[DEBUG] Sample matches:")
-        for identifier, drugs in list(study_drug_matches.items())[:5]:
-            title_snippet = df[df['Identifier'] == identifier].iloc[0]['Title'][:70]
-            print(f"  {identifier}: {drugs} | {title_snippet}...")
-        print(f"[DEBUG] Total unique studies: {len(study_drug_matches)}, Total results: {len(results)}")
-
-    # STEP 4: CSV fallback for unmatched studies
-    unmatched_df = df[~df['Identifier'].isin(processed_identifiers)]
-
-    if not unmatched_df.empty:
-        print(f"[CSV FALLBACK] Step 2: Matching {len(unmatched_df)} remaining studies against CSV drug database")
-
-        try:
-            drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
-            drug_db = pd.read_csv(drug_db_path, encoding='utf-8-sig')
-
-            # EMD portfolio drugs to exclude
-            emd_drugs = ['avelumab', 'bavencio', 'tepotinib', 'cetuximab', 'erbitux', 'pimicotinib']
-
-            for _, drug_row in drug_db.iterrows():
-                commercial = str(drug_row['drug_commercial']).strip().lower() if pd.notna(drug_row['drug_commercial']) else ""
-                generic = str(drug_row['drug_generic']).strip().lower() if pd.notna(drug_row['drug_generic']) else ""
+            # Check if drug generic name appears in title
+            if generic in title_lower:
                 company = str(drug_row['company']).strip() if pd.notna(drug_row['company']) else "Unknown"
                 moa_class = str(drug_row['moa_class']).strip() if pd.notna(drug_row['moa_class']) else "Unknown"
                 moa_target = str(drug_row['moa_target']).strip() if pd.notna(drug_row['moa_target']) else ""
 
-                if not commercial and not generic:
-                    continue
+                found_drugs.append({
+                    'name': generic,
+                    'company': company,
+                    'moa_class': moa_class,
+                    'moa_target': moa_target
+                })
 
-                # Skip EMD portfolio
-                if generic in emd_drugs or commercial in emd_drugs:
-                    continue
+        # Check for radiation/chemo context
+        has_radiation = any(keyword in title_lower for keyword in radiation_keywords)
+        has_chemo = any(keyword in title_lower for keyword in chemo_keywords)
 
-                # Search in unmatched studies
-                mask = pd.Series([False] * len(unmatched_df), index=unmatched_df.index)
-                if commercial:
-                    mask = mask | unmatched_df['Title'].str.contains(commercial, case=False, na=False, regex=False)
-                if generic:
-                    mask = mask | unmatched_df['Title'].str.contains(generic, case=False, na=False, regex=False)
+        if found_drugs:
+            study_drugs[identifier] = {
+                'drugs': found_drugs,
+                'has_radiation': has_radiation,
+                'has_chemo': has_chemo,
+                'title': row['Title']
+            }
 
-                matching_studies = unmatched_df[mask]
+    print(f"[CSV MATCHER] Found {len(study_drugs)} studies with drug matches")
 
-                for _, row in matching_studies.iterrows():
-                    if row['Identifier'] in processed_identifiers:
-                        continue
+    # Build results with combined drug names
+    results = []
 
-                    processed_identifiers.add(row['Identifier'])
-                    results.append({
-                        'Drug': generic if generic else commercial,
-                        'Company': company,
-                        'MOA Class': moa_class,
-                        'MOA Target': moa_target,
-                        'ThreatLevel': 'CSV',  # Mark as CSV-sourced
-                        'Identifier': row['Identifier'],
-                        'Title': row['Title'][:80] + '...' if len(row['Title']) > 80 else row['Title'],
-                        'Source': 'CSV-Fallback'
-                    })
+    for identifier, study_info in study_drugs.items():
+        drugs = study_info['drugs']
+        has_radiation = study_info['has_radiation']
+        has_chemo = study_info['has_chemo']
+        title = study_info['title']
 
-            print(f"[CSV FALLBACK] Step 2 complete: {len([r for r in results if r['Source'] == 'CSV-Fallback'])} additional studies matched")
+        # Build combined drug name
+        drug_names = [d['name'].title() for d in drugs]
 
-        except Exception as e:
-            print(f"[CSV FALLBACK] ERROR: Could not load Drug_Company_names.csv: {e}")
+        # Append radiation/chemo if present
+        if has_chemo:
+            drug_names.append('Chemotherapy')
+        if has_radiation:
+            drug_names.append('Radiation')
+
+        display_name = ' + '.join(drug_names)
+
+        # Build combined company (unique companies only, preserve order)
+        companies = []
+        for d in drugs:
+            comp = d['company']
+            # Split by comma and clean
+            for c in comp.split(','):
+                c_clean = c.strip()
+                if c_clean and c_clean not in companies:
+                    companies.append(c_clean)
+        company_display = ' + '.join(companies) if companies else "Unknown"
+
+        # Build combined MOA class
+        moa_classes = [d['moa_class'] for d in drugs if d['moa_class'] != 'Unknown']
+        moa_class_display = ' + '.join(moa_classes) if moa_classes else 'Unknown'
+
+        # Build combined MOA target
+        moa_targets = [d['moa_target'] for d in drugs if d['moa_target']]
+        moa_target_display = ' + '.join(moa_targets)
+
+        results.append({
+            'Drug': display_name,
+            'Company': company_display,
+            'MOA Class': moa_class_display,
+            'MOA Target': moa_target_display,
+            'ThreatLevel': 'CSV',
+            'Identifier': identifier,
+            'Title': title[:80] + '...' if len(title) > 80 else title
+        })
+
+    print(f"[CSV MATCHER] Generated {len(results)} competitive landscape entries")
 
     if not results:
         print(f"[MATCHER] No matches found for {therapeutic_area}")
@@ -342,12 +314,10 @@ def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area:
     result_df = result_df.sort_values(['_threat_sort', '_study_count', 'Drug'], ascending=[True, False, True])
     result_df = result_df.head(n)
 
-    # Drop internal sorting columns and Source column
-    result_df = result_df.drop(columns=['_study_count', '_threat_sort', 'Source'])
+    # Drop internal sorting columns
+    result_df = result_df.drop(columns=['_study_count', '_threat_sort'])
 
-    json_count = len([r for r in results if r.get('Source', '').startswith('JSON')])
-    csv_count = len([r for r in results if r.get('Source') == 'CSV-Fallback'])
-    print(f"[MATCHER] Final: {len(result_df)} studies across {result_df['Drug'].nunique()} drugs (JSON: {json_count}, CSV: {csv_count})")
+    print(f"[MATCHER] Final: {len(result_df)} studies across {result_df['Drug'].nunique()} unique drug combinations")
 
     return result_df
 
@@ -425,10 +395,6 @@ ESMO_THERAPEUTIC_AREAS = {
     "TGCT": {
         "keywords": [r"\bTGCT\b", r"\bPVNS\b", "tenosynovial giant cell tumor", "pigmented villonodular synovitis"],
         "regex": True
-    },
-    "DNA Damage Response (DDRi)": {
-        "keywords": [r"\bATR\b", r"\bATRi\b", r"\bATM\b", r"\bATMi\b", r"\bPARP\b", r"\bPARPi\b", "DNA Damage Response"],
-        "regex": True  # Special flag for word boundary matching
     }
 }
 
@@ -1582,37 +1548,6 @@ def apply_tgct_filter(df: pd.DataFrame) -> pd.Series:
 
     return mask
 
-def apply_ddri_filter(df: pd.DataFrame) -> pd.Series:
-    """Apply DNA Damage Response Inhibitor filter with strict word boundaries."""
-    # Strict patterns with word boundaries to avoid false matches
-    patterns = [
-        r'\bATR\b',      # ATR (not "atrocious")
-        r'\bATRi\b',     # ATR inhibitor
-        r'\bATM\b',      # ATM (not "atmosphere")
-        r'\bATMi\b',     # ATM inhibitor
-        r'\bPARP\b',     # PARP
-        r'\bPARPi\b'     # PARP inhibitor
-    ]
-
-    # Long-form phrase (must match full phrase)
-    phrases = ["DNA Damage Response", "DNA damage response"]
-
-    mask = pd.Series([False] * len(df), index=df.index)
-
-    # Search patterns with word boundaries (case-sensitive for acronyms)
-    for pattern in patterns:
-        title_mask = df["Title"].str.contains(pattern, case=True, na=False, regex=True)
-        theme_mask = df["Theme"].str.contains(pattern, case=True, na=False, regex=True)
-        mask = mask | title_mask | theme_mask
-
-    # Search phrases (case-insensitive)
-    for phrase in phrases:
-        title_mask = df["Title"].str.contains(phrase, case=False, na=False, regex=False)
-        theme_mask = df["Theme"].str.contains(phrase, case=False, na=False, regex=False)
-        mask = mask | title_mask | theme_mask
-
-    return mask
-
 def apply_therapeutic_area_filter(df: pd.DataFrame, ta_filter: str) -> pd.Series:
     """Apply therapeutic area filter by name."""
     if ta_filter == "All Therapeutic Areas":
@@ -1629,8 +1564,6 @@ def apply_therapeutic_area_filter(df: pd.DataFrame, ta_filter: str) -> pd.Series
         return apply_head_neck_cancer_filter(df)
     elif ta_filter == "TGCT":
         return apply_tgct_filter(df)
-    elif ta_filter == "DNA Damage Response (DDRi)":
-        return apply_ddri_filter(df)
     else:
         return pd.Series([True] * len(df), index=df.index)
 

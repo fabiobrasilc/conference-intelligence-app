@@ -53,7 +53,7 @@
 "phase": "Phase 1 (CHRYSALIS)",
 "biomarker": "METex14 or MET amplification",
 "threat_level": "MEDIUM",
-"keywords": ["amivantamab", "rybrevant", "JNJ-61186372", "CHRYSALIS", "bispecific"]
+"keywords": ["amivantamab", "rybrevant", "JNJ-61186372", "CHRYSALIS"]
 },
 {
 "drug": "Cabozantinib",
@@ -62,7 +62,7 @@
 "phase": "Phase 2 (CAPTURE for resistance)",
 "biomarker": "MET D1228/Y1230 resistance mutations",
 "threat_level": "LOW",
-"keywords": ["cabozantinib", "cabometyx", "cometriq", "XL184", "type II"]
+"keywords": ["cabozantinib", "cabometyx", "cometriq", "XL184"]
 },
 {
 "drug": "Foretinib",
@@ -71,7 +71,7 @@
 "phase": "Preclinical/Phase 1",
 "biomarker": "MET resistance mutations",
 "threat_level": "LOW",
-"keywords": ["foretinib", "GSK1363089", "XL880", "resistance"]
+"keywords": ["foretinib", "GSK1363089", "GSK-1363089", "XL880"]
 },
 {
 "drug": "Merestinib",
@@ -80,7 +80,7 @@
 "phase": "Phase 2",
 "biomarker": "MET alterations",
 "threat_level": "LOW",
-"keywords": ["merestinib", "LY2801653", "type II inhibitor"]
+"keywords": ["merestinib", "LY2801653", "LY-2801653"]
 }
 ],
 "key_biomarkers": [
