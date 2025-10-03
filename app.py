@@ -134,6 +134,151 @@ chroma_client = None
 collection = None
 csv_hash_global = None
 df_global = None
+competitive_landscapes = {}  # Will hold loaded JSON competitive landscape data
+
+# ============================================================================
+# COMPETITIVE LANDSCAPE JSON LOADING
+# ============================================================================
+
+def load_competitive_landscapes():
+    """Load all competitive landscape JSON files at startup."""
+    global competitive_landscapes
+
+    json_files = {
+        "Bladder Cancer": "bladder-json.json",
+        "Lung Cancer": "nsclc-json.json",
+        "Colorectal Cancer": "erbi-crc-json.json",
+        "Head and Neck Cancer": "erbi-HN-json.json"
+    }
+
+    for ta_name, filename in json_files.items():
+        filepath = Path(__file__).parent / filename
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                competitive_landscapes[ta_name] = json.load(f)
+            print(f"[LANDSCAPE] Loaded {ta_name} competitive landscape from {filename}")
+        except Exception as e:
+            print(f"[LANDSCAPE] ERROR loading {filename}: {e}")
+            competitive_landscapes[ta_name] = None
+
+    return competitive_landscapes
+
+def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area: str, n: int = 200) -> pd.DataFrame:
+    """
+    Match studies against JSON competitive landscape using keyword-based detection.
+
+    Args:
+        df: DataFrame of conference studies
+        therapeutic_area: One of ["Bladder Cancer", "Lung Cancer", "Colorectal Cancer", "Head and Neck Cancer"]
+        n: Max results to return
+
+    Returns:
+        DataFrame with columns: Drug, Company, MOA, ThreatLevel, Identifier, Title
+    """
+    if df.empty:
+        return pd.DataFrame()
+
+    # Get the competitive landscape for this therapeutic area
+    landscape = competitive_landscapes.get(therapeutic_area)
+    if not landscape:
+        print(f"[JSON MATCHER] No competitive landscape loaded for {therapeutic_area}")
+        return pd.DataFrame()
+
+    print(f"[JSON MATCHER] Matching studies for {therapeutic_area} using JSON keywords")
+
+    results = []
+    processed_identifiers = set()  # Prevent duplicates
+
+    # Process direct competitors
+    for comp in landscape.get("direct_competitors", []):
+        drug_name = comp.get("drug", "Unknown")
+        company = comp.get("company", "Unknown")
+        moa = comp.get("moa", "Unknown")
+        threat_level = comp.get("threat_level", "UNKNOWN")
+        keywords = comp.get("keywords", [])
+
+        if not keywords:
+            continue
+
+        # Build mask for this drug using all keywords
+        mask = pd.Series([False] * len(df), index=df.index)
+        for keyword in keywords:
+            mask = mask | df['Title'].str.contains(keyword, case=False, na=False, regex=False)
+
+        matching_studies = df[mask]
+
+        for _, row in matching_studies.iterrows():
+            identifier = row['Identifier']
+            if identifier in processed_identifiers:
+                continue
+
+            processed_identifiers.add(identifier)
+            results.append({
+                'Drug': drug_name,
+                'Company': company,
+                'MOA Class': moa,
+                'MOA Target': '',  # Not provided in JSON
+                'ThreatLevel': threat_level,
+                'Identifier': identifier,
+                'Title': row['Title'][:80] + '...' if len(row['Title']) > 80 else row['Title']
+            })
+
+    # Process emerging threats
+    for threat in landscape.get("emerging_threats", []):
+        drug_name = threat.get("drug", "Unknown")
+        company = threat.get("company", "Unknown")
+        moa = threat.get("moa", "Unknown")
+        threat_level = threat.get("threat_level", "EMERGING")
+        keywords = threat.get("keywords", [])
+
+        if not keywords:
+            continue
+
+        # Build mask for this drug using all keywords
+        mask = pd.Series([False] * len(df), index=df.index)
+        for keyword in keywords:
+            mask = mask | df['Title'].str.contains(keyword, case=False, na=False, regex=False)
+
+        matching_studies = df[mask]
+
+        for _, row in matching_studies.iterrows():
+            identifier = row['Identifier']
+            if identifier in processed_identifiers:
+                continue
+
+            processed_identifiers.add(identifier)
+            results.append({
+                'Drug': drug_name,
+                'Company': company,
+                'MOA Class': moa,
+                'MOA Target': '',  # Not provided in JSON, use empty string
+                'ThreatLevel': threat_level,
+                'Identifier': identifier,
+                'Title': row['Title'][:80] + '...' if len(row['Title']) > 80 else row['Title']
+            })
+
+    if not results:
+        print(f"[JSON MATCHER] No matches found for {therapeutic_area}")
+        return pd.DataFrame()
+
+    result_df = pd.DataFrame(results)
+
+    # Add study count for sorting
+    study_counts = result_df.groupby('Drug').size().to_dict()
+    result_df['_study_count'] = result_df['Drug'].map(study_counts)
+
+    # Sort by threat level and study count
+    threat_order = {'HIGH': 1, 'MEDIUM': 2, 'LOW': 3, 'EMERGING': 4, 'UNKNOWN': 5}
+    result_df['_threat_sort'] = result_df['ThreatLevel'].map(threat_order).fillna(5)
+
+    result_df = result_df.sort_values(['_threat_sort', '_study_count', 'Drug'], ascending=[True, False, True])
+    result_df = result_df.head(n)
+
+    # Drop internal sorting columns
+    result_df = result_df.drop(columns=['_study_count', '_threat_sort'])
+
+    print(f"[JSON MATCHER] Matched {len(result_df)} studies across {result_df['Drug'].nunique()} drugs")
+    return result_df
 
 # ============================================================================
 # FILTER CONFIGURATIONS
@@ -3040,14 +3185,14 @@ def stream_playbook(playbook_key):
                     }) + "\n\n"
 
             if "all_data" in playbook.get("required_tables", []):
-                # For competitor button, use fast drug database matching
+                # For competitor button, use JSON competitive landscape matching
                 if playbook_key == "competitor":
                     # Determine therapeutic area for context
                     therapeutic_area = ta_filters[0] if ta_filters and len(ta_filters) > 0 else "All Therapeutic Areas"
 
-                    # Use fast hardcoded drug database (instant)
-                    print(f"[COMPETITOR] Using drug database matcher (instant)...")
-                    competitor_table = classify_studies_with_drug_db(filtered_df, therapeutic_area)
+                    # Use JSON-based competitive landscape matching
+                    print(f"[COMPETITOR] Using JSON competitive landscape matcher...")
+                    competitor_table = match_studies_with_competitive_landscape(filtered_df, therapeutic_area)
 
                     print(f"[PLAYBOOK] Generated competitor table with {len(competitor_table)} studies")
                     tables_data["competitor_abstracts"] = competitor_table.to_markdown(index=False) if not competitor_table.empty else "No competitor drugs found"
@@ -3512,6 +3657,7 @@ print("ESMO 2025 Conference Intelligence App - Initializing")
 print("="*80 + "\n")
 
 df_global = load_and_process_data()
+load_competitive_landscapes()
 
 if df_global is None:
     print("\n[ERROR] Failed to load conference data. Application cannot start.")
@@ -3522,6 +3668,7 @@ else:
     print(f"\n[SUCCESS] Application ready with {len(df_global)} conference studies")
     print(f"[INFO] ChromaDB: {'Initialized' if collection else 'Not available'}")
     print(f"[INFO] OpenAI API: {'Configured' if client else 'Not configured'}")
+    print(f"[INFO] Competitive Landscapes: {len([k for k, v in competitive_landscapes.items() if v])} loaded")
 
     print("="*80 + "\n")
 
