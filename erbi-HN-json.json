@@ -1,0 +1,165 @@
+{
+"indication": {
+"drug": "Cetuximab (Erbitux)",
+"disease": "Recurrent/Metastatic Head & Neck Squamous Cell Carcinoma",
+"line": "1L with platinum/5-FU, monotherapy after platinum failure",
+"setting": "R/M HNSCC (oral, pharyngeal, laryngeal)",
+"last_updated": "2025-10-03",
+"updated_by": "GPT-5 Thinking"
+},
+"direct_competitors": [
+{
+"drug": "Pembrolizumab + platinum/5-FU",
+"company": "Merck (MSD)",
+"moa": "PD-1 monoclonal antibody (with chemotherapy)",
+"status": "FDA approved (1L R/M HNSCC)",
+"threat_level": "HIGH",
+"rationale": "Established 1L standard replacing cetuximab-based EXTREME in PD-L1–positive disease and broadly used regardless of HPV status.",
+"keywords": ["KEYNOTE-048", "pembrolizumab", "pembro", "keytruda", "PD-L1 CPS", "first-line", "EXTREME"]
+},
+{
+"drug": "Pembrolizumab (monotherapy, CPS ≥1)",
+"company": "Merck (MSD)",
+"moa": "PD-1 monoclonal antibody",
+"status": "FDA approved (1L for CPS ≥1; later-line regardless of CPS)",
+"threat_level": "HIGH",
+"rationale": "Preferred 1L option in CPS ≥1 and CPS ≥20, directly displacing cetuximab-containing regimens.",
+"keywords": ["KEYNOTE-048", "pembrolizumab", "pembro", "keytruda", "CPS 1-19", "CPS ≥20", "first-line monotherapy"]
+},
+{
+"drug": "Nivolumab",
+"company": "Bristol Myers Squibb",
+"moa": "PD-1 monoclonal antibody",
+"status": "FDA approved (post-platinum)",
+"threat_level": "MEDIUM",
+"rationale": "Standard after platinum failure, reducing later-line cetuximab monotherapy use.",
+"keywords": ["nivolumab", "opdivo", "CheckMate 141", "CheckMate-141", "post-platinum", "second-line"]
+},
+{
+"drug": "Taxane chemotherapy (docetaxel/paclitaxel)",
+"company": "Generic",
+"moa": "Microtubule inhibitor (cytotoxic)",
+"status": "Guideline-recommended option (post-IO/chemo)",
+"threat_level": "LOW",
+"rationale": "Competes for later-line use where cetuximab monotherapy was historically used.",
+"keywords": ["docetaxel", "paclitaxel", "investigator's choice", "salvage therapy"]
+}
+],
+"emerging_threats": [
+{
+"drug": "Tipifarnib",
+"company": "Kura Oncology",
+"moa": "Farnesyl transferase inhibitor",
+"phase": "Phase 2 (pivotal, AIM-HN/SEQ-HN)",
+"biomarker": "HRAS-mutant HNSCC (~4–8%)",
+"threat_level": "MEDIUM",
+"keywords": ["tipifarnib", "HRAS mutation", "AIM-HN", "SEQ-HN", "head and neck"]
+},
+{
+"drug": "AFM24 ± anti–PD-(L)1",
+"company": "Affimed (and collaborators)",
+"moa": "EGFR×CD16A bispecific innate cell engager (NK/macrophage)",
+"phase": "Phase 1/2",
+"biomarker": "EGFR-expressing tumors (includes HNSCC cohorts)",
+"threat_level": "LOW",
+"keywords": ["AFM24", "innate cell engager", "EGFR CD16A", "HNSCC cohort"]
+},
+{
+"drug": "REGN7075 ± cemiplimab",
+"company": "Regeneron",
+"moa": "EGFR×CD28 costimulatory bispecific (± PD-1)",
+"phase": "Phase 1/2",
+"biomarker": "EGFR-expressing tumors (includes HNSCC cohorts)",
+"threat_level": "LOW",
+"keywords": ["REGN7075", "EGFRxCD28", "cemiplimab", "HNSCC expansion"]
+},
+{
+"drug": "Patritumab deruxtecan (HER3-DXd)",
+"company": "Daiichi Sankyo / Merck",
+"moa": "HER3-directed antibody–drug conjugate",
+"phase": "Phase 2 (pan-tumor; HNSCC cohorts planned/ongoing)",
+"biomarker": "HER3 expression (exploratory)",
+"threat_level": "LOW",
+"keywords": ["HER3-DXd", "patritumab deruxtecan", "head and neck cohort", "ADC"]
+},
+{
+"drug": "Pembrolizumab + lenvatinib",
+"company": "Merck (MSD) / Eisai",
+"moa": "PD-1 inhibitor + VEGFR/FGFR TKI",
+"phase": "Phase 3 (LEAP-010; negative OS)",
+"biomarker": "Unselected (PD-L1 stratified analyses)",
+"threat_level": "LOW",
+"keywords": ["LEAP-010", "lenvatinib", "negative OS", "first-line HNSCC"]
+}
+],
+"key_biomarkers": [
+{
+"biomarker": "PD-L1 Combined Positive Score (CPS)",
+"clinical_utility": "Selects 1L pembrolizumab monotherapy (CPS ≥1) and enriches benefit for pembrolizumab ± chemo; informs IO vs cetuximab regimens.",
+"prevalence": "CPS ≥1 in ~70–85% of R/M HNSCC; CPS ≥20 in ~30–35%",
+"keywords": ["PD-L1", "CPS", "22C3", "KEYNOTE-048"]
+},
+{
+"biomarker": "HPV/p16 status (primarily oropharyngeal)",
+"clinical_utility": "Prognostic; HPV+ disease has better outcomes and may influence treatment intensity and expectations.",
+"prevalence": "HPV+ in ~60–70% of oropharyngeal; lower in oral cavity/larynx",
+"keywords": ["HPV", "p16", "oropharyngeal", "prognosis"]
+},
+{
+"biomarker": "HRAS mutation",
+"clinical_utility": "Identifies candidates for farnesyl transferase inhibition (e.g., tipifarnib) in R/M setting.",
+"prevalence": "~4–8% overall; enriched in oral cavity primaries",
+"keywords": ["HRAS", "farnesyl transferase", "tipifarnib"]
+},
+{
+"biomarker": "Tumor Mutational Burden (TMB-high)",
+"clinical_utility": "Tissue-agnostic indication for pembrolizumab (TMB ≥10 mut/Mb) may support IO use when PD-L1 is low/negative.",
+"prevalence": "Subset (~10–20% depending on cutoff/assay)",
+"keywords": ["TMB", "mut/Mb", "tissue-agnostic", "pembrolizumab"]
+},
+{
+"biomarker": "EGFR overexpression/amplification",
+"clinical_utility": "Biologic rationale for EGFR targeting (cetuximab, emerging EGFR engagers/ADCs); not a robust predictive marker.",
+"prevalence": "Common in HNSCC (majority overexpress EGFR)",
+"keywords": ["EGFR", "overexpression", "amplification", "IHC", "FISH"]
+}
+],
+"hpv_stratification": [
+{
+"hpv_status": "HPV-positive",
+"prognosis": "Better",
+"treatment_differences": "Pembrolizumab ± chemo remains preferred in 1L; de-escalation strategies are investigational. Cetuximab-based regimens used less often in 1L.",
+"keywords": ["HPV+", "p16+", "oropharyngeal", "better prognosis", "IO benefit"]
+},
+{
+"hpv_status": "HPV-negative",
+"prognosis": "Worse",
+"treatment_differences": "Higher-risk biology; pembrolizumab + chemotherapy commonly favored in CPS-low/negative disease; cetuximab usage largely limited to select cases.",
+"keywords": ["HPV−", "p16−", "aggressive", "chemoimmunotherapy"]
+}
+],
+"paradigm_shifts": [
+{
+"old": "EXTREME regimen (cetuximab + platinum/5-FU) as default 1L",
+"new": "Pembrolizumab ± platinum/5-FU as preferred 1L based on PD-L1 CPS",
+"impact": "Material loss of 1L share for cetuximab-containing regimens; repositioned mainly to non-IO niches or combinations.",
+"year": "2019-2025"
+},
+{
+"old": "Cytotoxic chemotherapy as standard after platinum failure",
+"new": "PD-1 inhibitors (nivolumab, pembrolizumab) in post-platinum disease",
+"impact": "Reduces later-line cetuximab monotherapy utilization.",
+"year": "2016-2022"
+},
+{
+"old": "Minimal biomarker use beyond site/stage",
+"new": "PD-L1 CPS and HPV/p16 status routinely considered in 1L decisions",
+"impact": "Shifts prescribing from cetuximab toward PD-1–based regimens in eligible patients.",
+"year": "2019-2024"
+}
+],
+"exclusions": {
+"settings": ["Adjuvant therapy", "Neoadjuvant therapy", "Definitive chemoradiation for locally advanced disease"],
+"rationale": "Non-R/M settings not competitive with recurrent/metastatic indication"
+}
+}

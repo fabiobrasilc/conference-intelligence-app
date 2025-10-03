@@ -342,6 +342,14 @@ def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area:
 
     print(f"[JSON MATCHER] Step 1 complete: {len(results)} studies matched ({len(processed_identifiers)} identifiers)")
 
+    # Debug: Show first 5 matches + stats
+    if study_drug_matches:
+        print(f"[DEBUG] Sample matches:")
+        for identifier, drugs in list(study_drug_matches.items())[:5]:
+            title_snippet = df[df['Identifier'] == identifier].iloc[0]['Title'][:70]
+            print(f"  {identifier}: {drugs} | {title_snippet}...")
+        print(f"[DEBUG] Total unique studies: {len(study_drug_matches)}, Total results: {len(results)}")
+
     # STEP 4: CSV fallback for unmatched studies
     unmatched_df = df[~df['Identifier'].isin(processed_identifiers)]
 
