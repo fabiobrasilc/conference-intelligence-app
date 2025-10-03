@@ -196,14 +196,37 @@ class PostgresEnrichmentCache:
                     # Detect stale locks (building for >10 minutes)
                     if status == 'building' and age_seconds > 600:
                         print(f"[POSTGRES] Stale lock detected (age: {int(age_seconds)}s). Clearing...")
-                        cur.execute("""
-                            UPDATE enrichment_cache
-                            SET status = 'failed',
-                                message = 'Stale lock cleared (timeout)',
-                                updated_at = NOW()
-                            WHERE csv_hash = %s AND model_version = %s AND prompt_version = %s
-                        """, (csv_hash, model_version, prompt_version))
-                        return None  # Treat as no cache, will rebuild
+
+                        # Check if Parquet file exists (enrichment may have completed despite stale lock)
+                        enriched_file_path = row[0]
+                        if enriched_file_path and os.path.exists(enriched_file_path):
+                            print(f"[POSTGRES] ✓ Found existing Parquet file: {enriched_file_path}")
+                            print(f"[POSTGRES] Updating stale 'building' status to 'ready'")
+                            cur.execute("""
+                                UPDATE enrichment_cache
+                                SET status = 'ready',
+                                    message = 'Recovered from stale lock',
+                                    updated_at = NOW()
+                                WHERE csv_hash = %s AND model_version = %s AND prompt_version = %s
+                            """, (csv_hash, model_version, prompt_version))
+                            self.conn.commit()
+                            return {
+                                'enriched_file_path': enriched_file_path,
+                                'status': 'ready',
+                                'message': 'Recovered from stale lock',
+                                'updated_at': row[3]
+                            }
+                        else:
+                            print(f"[POSTGRES] No Parquet file found, marking as failed")
+                            cur.execute("""
+                                UPDATE enrichment_cache
+                                SET status = 'failed',
+                                    message = 'Stale lock cleared (timeout)',
+                                    updated_at = NOW()
+                                WHERE csv_hash = %s AND model_version = %s AND prompt_version = %s
+                            """, (csv_hash, model_version, prompt_version))
+                            self.conn.commit()
+                            return None  # Treat as no cache, will rebuild
 
                     return {
                         'enriched_file_path': row[0],
