@@ -2447,149 +2447,6 @@ def classify_studies_with_drug_db(df: pd.DataFrame, therapeutic_area: str) -> pd
 
     return result_df
 
-# ============================================================================
-# AI-ENHANCED DRUG EXTRACTION (Context-Aware Analysis)
-# ============================================================================
-
-def ai_extract_drugs_batch(titles: list, ta_context: str = "") -> dict:
-    """
-    Extract drugs from study titles using AI (detects new molecules not in hardcoded DB).
-
-    Returns: {title: {'drugs': [...], 'moas': [...], 'companies': [...]}}
-    """
-    if not client or not titles:
-        return {}
-
-    # Process in smaller batches to prevent JSON truncation
-    batch_size = 20  # Reduced from 50 to prevent output truncation
-    all_results = {}
-
-    for i in range(0, len(titles), batch_size):
-        batch = titles[i:i+batch_size]
-
-        # Simpler prompt to reduce token usage
-        prompt = f"""Extract drugs from these {len(batch)} oncology titles ({ta_context if ta_context else "oncology"}). Return JSON with index: {{drugs: [], moas: [], companies: []}}.
-
-{chr(10).join([f"{idx}. {title[:120]}" for idx, title in enumerate(batch)])}
-
-Return this exact format:
-{{"0": {{"drugs": ["drug1"], "moas": ["ADC"], "companies": ["Company1"]}}, "1": {{"drugs": [], "moas": [], "companies": []}}}}
-
-If no drugs: empty arrays. Use your pharma knowledge for MOA/company."""
-
-        # Retry logic for JSON parsing errors
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                print(f"[AI EXTRACT] Calling OpenAI for batch {i//batch_size} ({len(batch)} titles)...")
-
-                response = client.responses.create(
-                    model="gpt-5-mini",
-                    input=[{"role": "user", "content": prompt}],
-                    reasoning={"effort": "low"},
-                    text={"verbosity": "low"},
-                    max_output_tokens=3000,
-                    timeout=30  # Add 30 second timeout
-                )
-
-                print(f"[AI EXTRACT] Got response for batch {i//batch_size}, parsing JSON...")
-                result = json.loads(response.output_text)
-
-                # Map back to original titles
-                for idx, data in result.items():
-                    original_title = batch[int(idx)]
-                    all_results[original_title] = data
-
-                break  # Success, exit retry loop
-
-            except json.JSONDecodeError as e:
-                if attempt < max_retries - 1:
-                    wait_time = (2 ** attempt)  # Exponential backoff: 1s, 2s, 4s
-                    print(f"[AI EXTRACT] JSON error in batch {i//batch_size}, retrying in {wait_time}s... (attempt {attempt+1}/{max_retries})")
-                    time.sleep(wait_time)
-                else:
-                    print(f"[AI EXTRACT] JSON parsing failed after {max_retries} retries in batch {i//batch_size}: {e}")
-                    # Fallback: empty results for this batch
-                    for title in batch:
-                        all_results[title] = {'drugs': [], 'moas': [], 'companies': []}
-
-            except Exception as e:
-                print(f"[AI EXTRACT] Error in batch {i//batch_size}: {e}")
-                # Fallback: empty results for this batch
-                for title in batch:
-                    all_results[title] = {'drugs': [], 'moas': [], 'companies': []}
-                break  # Don't retry for non-JSON errors
-
-    return all_results
-
-
-def generate_competitor_table_ai(df: pd.DataFrame, ta_context: str = "") -> pd.DataFrame:
-    """
-    AI-ENHANCED competitor table: Uses AI to extract drugs/MOAs from titles.
-
-    Benefits over hardcoded DB:
-    - Detects new molecules not in database
-    - Uses AI pharma knowledge for MOA/Company
-    - No maintenance of drug CSV needed
-
-    Returns: Real DataFrame with actual Abstract #s (no hallucinations)
-    """
-    if df.empty:
-        return pd.DataFrame()
-
-    # Filter out non-abstracts (educational sessions, etc.)
-    df = df[df['Identifier'].notna() & (df['Identifier'].str.strip() != '')].copy()
-
-    if df.empty:
-        print("[AI COMPETITOR] No abstracts to analyze")
-        return pd.DataFrame()
-
-    print(f"[AI COMPETITOR] Extracting drugs from {len(df)} study titles using AI...")
-
-    # Extract drugs using AI
-    extraction_results = ai_extract_drugs_batch(df['Title'].tolist(), ta_context)
-
-    # Build table with REAL data from CSV
-    results = []
-    for _, row in df.iterrows():
-        title = row['Title']
-        extracted = extraction_results.get(title, {'drugs': [], 'moas': [], 'companies': []})
-
-        drugs = extracted.get('drugs', [])
-        moas = extracted.get('moas', [])
-        companies = extracted.get('companies', [])
-
-        if not drugs:
-            continue  # Skip if no drugs found
-
-        # Exclude EMD portfolio
-        emd_drugs = ['avelumab', 'bavencio', 'tepotinib', 'cetuximab', 'erbitux', 'pimicotinib']
-        filtered_drugs = [d for d in drugs if d.lower() not in emd_drugs]
-
-        if not filtered_drugs:
-            continue  # Skip EMD-only studies
-
-        # Build result entry with REAL CSV data (no hallucinations)
-        results.append({
-            'Drug': ' + '.join(filtered_drugs),
-            'Company': ' + '.join(companies) if companies else 'Unknown',
-            'MOA Class': ' + '.join(moas) if moas else 'Unknown',
-            'Identifier': row['Identifier'],  # REAL from CSV
-            'Title': row['Title'],            # REAL from CSV
-            'Speakers': row.get('Speakers', ''),  # REAL from CSV
-            'Affiliation': row.get('Affiliation', ''),  # REAL from CSV
-            'Study Type': 'Combination' if len(filtered_drugs) > 1 else 'Monotherapy'
-        })
-
-    result_df = pd.DataFrame(results)
-
-    if not result_df.empty:
-        result_df = result_df.sort_values('Drug', ascending=True)
-
-    print(f"[AI COMPETITOR] Generated table with {len(result_df)} competitor studies")
-    return result_df
-
-
 def generate_competitor_table(df: pd.DataFrame, indication_keywords: list = None, focus_moa_classes: list = None, n: int = 200) -> pd.DataFrame:
     """
     LEGACY: Generate competitor drugs table using CSV with MOA/target data.
@@ -2762,10 +2619,9 @@ def generate_drug_moa_ranking(competitor_df: pd.DataFrame, n: int = 20) -> pd.Da
 def generate_emerging_threats_table(df: pd.DataFrame, indication_keywords: list = None, n: int = 20) -> pd.DataFrame:
     """
     Identify emerging threats: novel mechanisms, innovative combinations, early phase signals.
-    Enhanced to use AI-enriched data (phase, biomarkers, novelty) when available.
 
     Args:
-        df: Dataframe to search (enriched or original)
+        df: Dataframe to search
         indication_keywords: Keywords to filter by indication (e.g., ["bladder", "urothelial"])
         n: Max results to return
     """
@@ -2780,13 +2636,6 @@ def generate_emerging_threats_table(df: pd.DataFrame, indication_keywords: list 
     if df.empty:
         print("[EMERGING] No studies left after filtering session titles")
         return pd.DataFrame()
-
-    # Check if we have enriched data with AI metadata
-    has_enrichment = 'is_emerging' in df.columns and 'phase' in df.columns
-    if has_enrichment:
-        print(f"[EMERGING] ✓ Using AI-enriched metadata (phase, biomarkers, novelty)")
-    else:
-        print(f"[EMERGING] Using rule-based drug count approach")
 
     try:
         drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
@@ -2842,37 +2691,14 @@ def generate_emerging_threats_table(df: pd.DataFrame, indication_keywords: list 
             drug_name = generic if generic else commercial
             sample_title = matching.iloc[0]['Title'] if not matching.empty else ""
 
-            # Extract enriched metadata if available
-            if has_enrichment and not matching.empty:
-                first_row = matching.iloc[0]
-                phase = first_row.get('phase', 'Unknown')
-                biomarkers = first_row.get('biomarkers', [])
-                novelty = first_row.get('novelty', [])
-
-                # Format biomarkers and novelty as comma-separated strings
-                biomarkers_str = ', '.join(biomarkers) if isinstance(biomarkers, list) and biomarkers else ''
-                novelty_str = ', '.join(novelty) if isinstance(novelty, list) and novelty else ''
-
-                emerging.append({
-                    'Drug': drug_name,
-                    'Company': company,
-                    'MOA Class': moa_class,
-                    'Phase': phase,
-                    'Biomarkers': biomarkers_str,
-                    'Novelty': novelty_str,
-                    '# Studies': count,
-                    'Sample Title': sample_title[:60] + '...' if len(sample_title) > 60 else sample_title
-                })
-            else:
-                # Fallback: original format without enrichment
-                emerging.append({
-                    'Drug': drug_name,
-                    'Company': company,
-                    'MOA Class': moa_class,
-                    'MOA Target': moa_target,
-                    '# Studies': count,
-                    'Sample Title': sample_title[:80] + '...' if len(sample_title) > 80 else sample_title
-                })
+            emerging.append({
+                'Drug': drug_name,
+                'Company': company,
+                'MOA Class': moa_class,
+                'MOA Target': moa_target,
+                '# Studies': count,
+                'Sample Title': sample_title[:80] + '...' if len(sample_title) > 80 else sample_title
+            })
 
     result_df = pd.DataFrame(emerging)
     if not result_df.empty:
@@ -3241,20 +3067,9 @@ def stream_playbook(playbook_key):
                     # Determine therapeutic area for context
                     therapeutic_area = ta_filters[0] if ta_filters and len(ta_filters) > 0 else "All Therapeutic Areas"
 
-                    # Check lazy cache first
-                    cache_key = f"competitor_{hash(frozenset(drug_filters))}_{hash(frozenset(ta_filters))}_{hash(frozenset(session_filters))}_{hash(frozenset(date_filters))}"
-
-                    if cache_key in button_cache:
-                        print(f"[CACHE] ✓ Loading competitor analysis from cache (instant)")
-                        competitor_table = button_cache[cache_key]
-                    else:
-                        # AI-ENHANCED drug extraction (detects new molecules, uses AI pharma knowledge)
-                        print(f"[AI COMPETITOR] Analyzing {len(filtered_df)} studies with AI-enhanced extraction...")
-                        competitor_table = generate_competitor_table_ai(filtered_df, therapeutic_area)
-
-                        # Cache for future clicks with same filters
-                        button_cache[cache_key] = competitor_table
-                        print(f"[CACHE] ✓ Cached competitor analysis for filter combo")
+                    # Use fast hardcoded drug database (instant)
+                    print(f"[COMPETITOR] Using drug database matcher (instant)...")
+                    competitor_table = classify_studies_with_drug_db(filtered_df, therapeutic_area)
 
                     print(f"[PLAYBOOK] Generated competitor table with {len(competitor_table)} studies")
                     tables_data["competitor_abstracts"] = competitor_table.to_markdown(index=False) if not competitor_table.empty else "No competitor drugs found"
@@ -3285,31 +3100,21 @@ def stream_playbook(playbook_key):
                         try:
                             print(f"[PLAYBOOK] Starting emerging threats analysis on FULL {len(filtered_df)} studies...")
 
-                            # Check if we have AI-enriched data
-                            has_enrichment = 'is_emerging' in filtered_df.columns and 'phase' in filtered_df.columns
+                            # Use keyword matching to identify emerging threats
+                            def is_emerging_threat(row):
+                                title = str(row['Title']).lower()
+                                return any(keyword in title for keyword in [
+                                    'adc', 'antibody-drug conjugate', 'bispecific', 'tce', 'bite',
+                                    'car-t', 'radioligand', 'nectin-4', 'trop-2', 'fgfr',
+                                    '+', ' plus ', ' in combination'
+                                ])
 
-                            if has_enrichment:
-                                print(f"[PLAYBOOK] ✓ Using AI-enriched is_emerging field")
-                                # Use AI classification: is_emerging == True
-                                emerging_threats_base = filtered_df[filtered_df['is_emerging'] == True].copy()
-                                print(f"[PLAYBOOK] AI identified {len(emerging_threats_base)} emerging threats")
-                            else:
-                                print(f"[PLAYBOOK] ⚠ No enrichment available, using rule-based fallback")
-                                # Fallback to keyword matching if enrichment not available
-                                def is_emerging_fallback(row):
-                                    title = str(row['Title']).lower()
-                                    return any(keyword in title for keyword in [
-                                        'adc', 'antibody-drug conjugate', 'bispecific', 'tce', 'bite',
-                                        'car-t', 'radioligand', 'nectin-4', 'trop-2', 'fgfr',
-                                        '+', ' plus ', ' in combination'
-                                    ])
-
-                                emerging_threats_base = filtered_df[filtered_df.apply(is_emerging_fallback, axis=1)].copy()
-                                print(f"[PLAYBOOK] Fallback identified {len(emerging_threats_base)} emerging threats")
+                            emerging_threats_base = filtered_df[filtered_df.apply(is_emerging_threat, axis=1)].copy()
+                            print(f"[PLAYBOOK] Identified {len(emerging_threats_base)} emerging threats")
 
                             if not emerging_threats_base.empty:
-                                # Step 2: Run drug matcher on emerging threats to get MOA data
-                                print(f"[PLAYBOOK] Running drug matcher on {len(emerging_threats_base)} emerging threat studies for MOA enrichment...")
+                                # Run drug matcher on emerging threats to get MOA data
+                                print(f"[PLAYBOOK] Running drug matcher on {len(emerging_threats_base)} emerging threat studies...")
                                 emerging_with_moa = classify_studies_with_drug_db(emerging_threats_base, therapeutic_area)
                                 print(f"[PLAYBOOK] Drug matcher returned {len(emerging_with_moa)} studies with drug/MOA data")
 
@@ -3432,9 +3237,9 @@ def stream_playbook(playbook_key):
                     if competitor_table.empty:
                         print(f"[PLAYBOOK] WARNING: No competitor drugs found in dataset")
 
-                    # Add FULL filtered dataset for AI context (so it can answer questions about MIBC, NMIBC, etc.)
-                    print(f"[PLAYBOOK] Adding full {len(filtered_df)} studies to AI prompt for context...")
-                    full_dataset = filtered_df[['Identifier', 'Title', 'Speakers', 'Affiliation', 'Session']].head(200)  # Limit to 200 to avoid token limits
+                    # Add sample studies for AI context (titles only for speed)
+                    print(f"[PLAYBOOK] Adding {min(50, len(filtered_df))} sample studies for context...")
+                    full_dataset = filtered_df[['Identifier', 'Title']].head(50)  # Just ID + Title, max 50
                     tables_data["full_dataset_context"] = full_dataset.to_markdown(index=False)
 
                 else:
