@@ -26,9 +26,6 @@ from dotenv import load_dotenv
 import hashlib
 import io
 
-# Enrichment cache system (AI-powered title classification)
-from enrichment_cache import EnrichmentCacheManager
-
 # ============================================================================
 # UNICODE SANITIZATION (Windows compatibility)
 # ============================================================================
@@ -110,11 +107,6 @@ CSV_FILE = Path(__file__).parent / "ESMO_2025_FINAL_20250929.csv"
 CHROMA_DB_PATH = "./chroma_conference_db"
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
-# Enrichment cache configuration
-ENABLE_AI_ENRICHMENT = os.environ.get("ENABLE_AI_ENRICHMENT", "false").lower() == "true"
-CACHE_DIR = os.environ.get("CACHE_DIR", "./data")
-DATABASE_URL = os.environ.get("DATABASE_URL")  # Railway Postgres (optional)
-
 # OpenAI client with controlled connection pooling for Railway deployment
 if OPENAI_API_KEY:
     import httpx
@@ -142,8 +134,9 @@ chroma_client = None
 collection = None
 csv_hash_global = None
 df_global = None
-df_enriched_global = None  # AI-enriched dataset (optional, has extra columns)
-enrichment_cache_manager = None  # AI enrichment cache (optional)
+
+# Runtime cache for button results (lazy caching)
+button_cache = {}
 
 # ============================================================================
 # FILTER CONFIGURATIONS
@@ -1398,48 +1391,13 @@ def apply_therapeutic_area_filter(df: pd.DataFrame, ta_filter: str) -> pd.Series
 # MULTI-FILTER LOGIC (Main Filtering Function)
 # ============================================================================
 
-def get_dataset_for_analysis() -> pd.DataFrame:
-    """
-    Get the best available dataset for analysis.
-    Returns enriched data if available, otherwise falls back to original df_global.
-    Checks if background enrichment completed and updates global variable.
-    """
-    global df_enriched_global, enrichment_cache_manager
-
-    # Check if enrichment completed in background
-    if df_enriched_global is None and enrichment_cache_manager is not None:
-        if enrichment_cache_manager.enriched_df is not None and not enrichment_cache_manager.is_building:
-            print("[CACHE] ✓ Background enrichment completed! Loading enriched data...")
-            df_enriched_global = enrichment_cache_manager.enriched_df
-
-            # Add session enrichment
-            s = df_enriched_global['Session'].fillna('').str.lower()
-            df_enriched_global['session_type'] = pd.Series(
-                ['Oral' if 'oral' in x else
-                 'Poster' if 'poster' in x else
-                 'Educational' if 'educational' in x else
-                 'Industry' if 'industry' in x else 'Other'
-                 for x in s],
-                index=df_enriched_global.index
-            )
-            print(f"[CACHE] ✓ Enriched data now active ({len(df_enriched_global)} studies)")
-
-    if df_enriched_global is not None:
-        return df_enriched_global
-    return df_global if df_global is not None else pd.DataFrame()
-
-
 def get_filtered_dataframe_multi(drug_filters: List[str], ta_filters: List[str],
-                                  session_filters: List[str], date_filters: List[str],
-                                  use_enriched: bool = True) -> pd.DataFrame:
+                                  session_filters: List[str], date_filters: List[str]) -> pd.DataFrame:
     """
     Apply multi-selection filters with OR logic.
     Returns filtered DataFrame combining all selected filter combinations.
-
-    Args:
-        use_enriched: If True and enriched data available, use it. Otherwise use df_global.
     """
-    source_df = get_dataset_for_analysis() if use_enriched else df_global
+    source_df = df_global
 
     if source_df is None or source_df.empty:
         return pd.DataFrame()
@@ -2999,70 +2957,6 @@ def export_data():
         headers={'Content-Disposition': f'attachment; filename={filename}'}
     )
 
-@app.route('/api/debug/enrichment')
-def debug_enrichment():
-    """Debug endpoint to view enrichment cache status and sample data."""
-    if not ENABLE_AI_ENRICHMENT or not enrichment_cache_manager:
-        return jsonify({"error": "AI enrichment not enabled"}), 400
-
-    import glob
-
-    # Get cache file info
-    cache_files = glob.glob(os.path.join(CACHE_DIR, "enriched_*.parquet"))
-
-    result = {
-        "cache_dir": CACHE_DIR,
-        "cache_files_found": len(cache_files),
-        "cache_manager_status": {
-            "is_building": enrichment_cache_manager.is_building if enrichment_cache_manager else None,
-            "cache_file": enrichment_cache_manager.cache_file if enrichment_cache_manager else None,
-        }
-    }
-
-    # Check Postgres status
-    if enrichment_cache_manager and enrichment_cache_manager.pg_cache:
-        pg_record = enrichment_cache_manager.pg_cache.get_cache_record(
-            enrichment_cache_manager.csv_hash,
-            enrichment_cache_manager.model_version,
-            enrichment_cache_manager.prompt_version
-        )
-        result["postgres_status"] = pg_record
-
-    # Try to load enriched data
-    if cache_files:
-        latest_cache = sorted(cache_files)[-1]
-        result["latest_cache_file"] = latest_cache
-
-        try:
-            import pandas as pd
-            enriched_df = pd.read_parquet(latest_cache)
-
-            # Get enrichment statistics
-            unknown_therapy = (enriched_df['line_of_therapy'] == 'Unknown').sum() if 'line_of_therapy' in enriched_df.columns else 0
-            total_studies = len(enriched_df)
-            successful = total_studies - unknown_therapy
-
-            result["enrichment_stats"] = {
-                "total_studies": total_studies,
-                "successfully_enriched": successful,
-                "failed_enrichment": unknown_therapy,
-                "success_rate": f"{successful*100/total_studies:.1f}%"
-            }
-
-            # Sample of enriched data
-            if 'line_of_therapy' in enriched_df.columns:
-                enriched_sample = enriched_df[enriched_df['line_of_therapy'] != 'Unknown'].head(5)
-                result["enriched_sample"] = enriched_sample[['Title', 'line_of_therapy', 'phase', 'biomarkers', 'is_emerging']].to_dict('records')
-
-            # Sample of failed enrichment
-            failed_sample = enriched_df[enriched_df['line_of_therapy'] == 'Unknown'].head(5) if 'line_of_therapy' in enriched_df.columns else pd.DataFrame()
-            result["failed_sample"] = failed_sample[['Title', 'Identifier']].to_dict('records') if len(failed_sample) > 0 else []
-
-        except Exception as e:
-            result["error_loading_cache"] = str(e)
-
-    return jsonify(result)
-
 @app.route('/api/conference/info')
 def get_conference_info():
     """Get conference metadata."""
@@ -3104,21 +2998,21 @@ def stream_playbook(playbook_key):
             print(f"[PLAYBOOK] Starting {playbook_key} with filters: drugs={drug_filters}, tas={ta_filters}")
 
             # 1. For COMPETITOR button: Drug filter is for FOCUS, not dataset filtering
-            # Apply TA filters only, use drug filter to guide competitor search
+            # Apply filters to get dataset
             if playbook_key == "competitor":
                 # For competitor intelligence, drug_filters guide which EMD drug's competitors to focus on
                 # TA filters still apply to narrow therapeutic area scope
                 if ta_filters or session_filters or date_filters:
-                    filtered_df = get_filtered_dataframe_multi([], ta_filters, session_filters, date_filters, use_enriched=True)
+                    filtered_df = get_filtered_dataframe_multi([], ta_filters, session_filters, date_filters)
                 else:
-                    filtered_df = get_dataset_for_analysis()
+                    filtered_df = df_global
                 print(f"[PLAYBOOK] Competitor mode: Using dataset with {len(filtered_df)} studies (drug filter used for competitor focus)")
             else:
                 # For other buttons, apply all filters normally
                 if not drug_filters and not ta_filters and not session_filters and not date_filters:
-                    filtered_df = get_dataset_for_analysis()
+                    filtered_df = df_global
                 else:
-                    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters, use_enriched=True)
+                    filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
                 print(f"[PLAYBOOK] Filtered dataset: {len(filtered_df)} studies")
 
             if filtered_df.empty:
@@ -3693,52 +3587,6 @@ else:
     print(f"\n[SUCCESS] Application ready with {len(df_global)} conference studies")
     print(f"[INFO] ChromaDB: {'Initialized' if collection else 'Not available'}")
     print(f"[INFO] OpenAI API: {'Configured' if client else 'Not configured'}")
-
-    # Initialize enrichment cache (optional, for AI-powered title classification)
-    if ENABLE_AI_ENRICHMENT:
-        print(f"[INFO] AI Enrichment: ENABLED (cache dir: {CACHE_DIR})")
-        if DATABASE_URL:
-            print(f"[INFO] Postgres cache backend: ENABLED (multi-instance safe)")
-        else:
-            print(f"[INFO] Postgres cache backend: NOT CONFIGURED (file-only mode)")
-
-        enrichment_cache_manager = EnrichmentCacheManager(
-            csv_path=str(CSV_FILE),
-            cache_dir=CACHE_DIR,
-            model_version="gpt-5-mini",
-            prompt_version="v1",
-            database_url=DATABASE_URL  # Pass Railway Postgres URL
-        )
-
-        # Trigger enrichment of ALL 4,686 studies (non-blocking, async)
-        print(f"[CACHE] Checking for enriched data cache...")
-        enriched_df = enrichment_cache_manager.get_or_build(df_global, ta_filters=[])
-
-        if enriched_df is not None:
-            # Cache exists - load immediately
-            df_enriched_global = enriched_df
-
-            # Add deterministic session enrichment (no LLM needed)
-            print(f"[CACHE] Adding session metadata...")
-            s = df_enriched_global['Session'].fillna('').str.lower()
-            df_enriched_global['session_type'] = pd.Series(
-                ['Oral' if 'oral' in x else
-                 'Poster' if 'poster' in x else
-                 'Educational' if 'educational' in x else
-                 'Industry' if 'industry' in x else 'Other'
-                 for x in s],
-                index=df_enriched_global.index
-            )
-
-            print(f"[CACHE] ✓ Enriched data loaded successfully ({len(enriched_df)} studies)")
-            print(f"[CACHE] ✓ All playbook buttons will use enriched data with AI metadata")
-        else:
-            # No cache - enrichment building in background (non-blocking)
-            print(f"[CACHE] ⏳ Building enriched data in background (60-90s)")
-            print(f"[CACHE] ✓ App starting immediately - buttons will use rule-based approach until enrichment completes")
-            print(f"[CACHE] ✓ Enrichment will auto-load when ready (check logs for completion)")
-    else:
-        print(f"[INFO] AI Enrichment: DISABLED (using fast rule-based approach)")
 
     print("="*80 + "\n")
 
