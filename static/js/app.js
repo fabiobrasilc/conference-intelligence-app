@@ -1507,6 +1507,16 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('[SIDEBAR DEBUG] 🤖 AI Assistant tab shown - hiding filter sidebar');
       document.body.classList.remove('data-tab-active');
       document.body.classList.add('ai-tab-active');
+
+      // Auto-popup data sources warning once per session
+      const hasSeenWarning = sessionStorage.getItem('cosmicDataWarningShown');
+      if (!hasSeenWarning) {
+        setTimeout(() => {
+          const modal = new bootstrap.Modal(document.getElementById('dataWarningModal'));
+          modal.show();
+          sessionStorage.setItem('cosmicDataWarningShown', 'true');
+        }, 300);
+      }
     }
     console.log('[SIDEBAR DEBUG] Body classes:', document.body.className);
   }

@@ -420,6 +420,21 @@ body.ai-tab-active .quick-intel-sidebar:not(.collapsed) ~ .main-content {
   font-size: 18px;
 }
 
+.appbar-data-warning-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px !important;
+  border-radius: 8px;
+  font-size: 13px;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.appbar-data-warning-btn svg {
+  flex-shrink: 0;
+}
+
 /* Utility Classes */
 .text-purple {
   color: var(--brand) !important;
@@ -802,7 +817,7 @@ mark {
 }
 
 .ai-greeting-description {
-  text-align: left;
+  text-align: center;
   background: transparent;
   border-radius: 16px;
   padding: 16px 24px;
@@ -859,9 +874,10 @@ mark {
 }
 
 .greeting-limitations {
-  background: #fff9e6;
+  background: transparent;
   border-radius: 8px;
   padding: 16px;
+  text-align: center;
 }
 
 .limitations-title {
@@ -872,9 +888,11 @@ mark {
 }
 
 .greeting-limitations ul {
-  margin: 0;
-  padding-left: 20px;
+  margin: 0 auto;
+  padding-left: 0;
   list-style: none;
+  display: inline-block;
+  text-align: left;
 }
 
 .greeting-limitations li {
@@ -887,7 +905,7 @@ mark {
 
 .greeting-limitations li::before {
   content: "•";
-  color: #f39c12;
+  color: #8b5cf6;
   position: absolute;
   left: 0;
 }
