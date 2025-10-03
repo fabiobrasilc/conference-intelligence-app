@@ -165,7 +165,10 @@ def load_competitive_landscapes():
 
 def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area: str, n: int = 200) -> pd.DataFrame:
     """
-    Match studies against JSON competitive landscape using keyword-based detection.
+    Match studies against JSON competitive landscape with combination detection + CSV fallback.
+
+    Step 1: Match JSON-defined competitors (with combination detection)
+    Step 2: Match remaining studies against CSV drug database (400+ drugs)
 
     Args:
         df: DataFrame of conference studies
@@ -173,7 +176,7 @@ def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area:
         n: Max results to return
 
     Returns:
-        DataFrame with columns: Drug, Company, MOA, ThreatLevel, Identifier, Title
+        DataFrame with columns: Drug, Company, MOA Class, MOA Target, ThreatLevel, Identifier, Title
     """
     if df.empty:
         return pd.DataFrame()
@@ -184,81 +187,155 @@ def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area:
         print(f"[JSON MATCHER] No competitive landscape loaded for {therapeutic_area}")
         return pd.DataFrame()
 
-    print(f"[JSON MATCHER] Matching studies for {therapeutic_area} using JSON keywords")
+    print(f"[JSON MATCHER] Step 1: Matching studies for {therapeutic_area} using JSON keywords with combination detection")
 
-    results = []
-    processed_identifiers = set()  # Prevent duplicates
+    # STEP 1: Build a map of all JSON-defined drugs with their keywords
+    json_drugs = {}  # drug_name -> {keywords, company, moa, threat_level}
 
-    # Process direct competitors
     for comp in landscape.get("direct_competitors", []):
         drug_name = comp.get("drug", "Unknown")
-        company = comp.get("company", "Unknown")
-        moa = comp.get("moa", "Unknown")
-        threat_level = comp.get("threat_level", "UNKNOWN")
-        keywords = comp.get("keywords", [])
+        json_drugs[drug_name] = {
+            'keywords': comp.get("keywords", []),
+            'company': comp.get("company", "Unknown"),
+            'moa': comp.get("moa", "Unknown"),
+            'threat_level': comp.get("threat_level", "UNKNOWN")
+        }
 
-        if not keywords:
-            continue
-
-        # Build mask for this drug using all keywords
-        mask = pd.Series([False] * len(df), index=df.index)
-        for keyword in keywords:
-            mask = mask | df['Title'].str.contains(keyword, case=False, na=False, regex=False)
-
-        matching_studies = df[mask]
-
-        for _, row in matching_studies.iterrows():
-            identifier = row['Identifier']
-            if identifier in processed_identifiers:
-                continue
-
-            processed_identifiers.add(identifier)
-            results.append({
-                'Drug': drug_name,
-                'Company': company,
-                'MOA Class': moa,
-                'MOA Target': '',  # Not provided in JSON
-                'ThreatLevel': threat_level,
-                'Identifier': identifier,
-                'Title': row['Title'][:80] + '...' if len(row['Title']) > 80 else row['Title']
-            })
-
-    # Process emerging threats
     for threat in landscape.get("emerging_threats", []):
         drug_name = threat.get("drug", "Unknown")
-        company = threat.get("company", "Unknown")
-        moa = threat.get("moa", "Unknown")
-        threat_level = threat.get("threat_level", "EMERGING")
-        keywords = threat.get("keywords", [])
+        json_drugs[drug_name] = {
+            'keywords': threat.get("keywords", []),
+            'company': threat.get("company", "Unknown"),
+            'moa': threat.get("moa", "Unknown"),
+            'threat_level': threat.get("threat_level", "EMERGING")
+        }
 
-        if not keywords:
-            continue
+    # STEP 2: First pass - match ALL studies to ALL JSON drugs (collect candidates)
+    study_drug_matches = {}  # identifier -> [list of drug names that matched]
 
-        # Build mask for this drug using all keywords
-        mask = pd.Series([False] * len(df), index=df.index)
-        for keyword in keywords:
-            mask = mask | df['Title'].str.contains(keyword, case=False, na=False, regex=False)
+    for identifier, row in df.iterrows():
+        title_lower = str(row['Title']).lower()
+        matched_drugs = []
 
-        matching_studies = df[mask]
+        for drug_name, drug_info in json_drugs.items():
+            for keyword in drug_info['keywords']:
+                if keyword.lower() in title_lower:
+                    matched_drugs.append(drug_name)
+                    break  # Stop after first keyword match for this drug
 
-        for _, row in matching_studies.iterrows():
-            identifier = row['Identifier']
-            if identifier in processed_identifiers:
-                continue
+        if matched_drugs:
+            study_drug_matches[row['Identifier']] = matched_drugs
 
+    # STEP 3: Combination detection - if study matches multiple drugs from JSON, it's a combo
+    results = []
+    processed_identifiers = set()
+
+    for identifier, matched_drugs in study_drug_matches.items():
+        row = df[df['Identifier'] == identifier].iloc[0]
+
+        if len(matched_drugs) > 1:
+            # COMBINATION detected
+            combo_name = " + ".join(sorted(matched_drugs))
+            companies = [json_drugs[d]['company'] for d in matched_drugs]
+            company_str = " / ".join(set(companies))
+            moas = [json_drugs[d]['moa'] for d in matched_drugs]
+            moa_str = " + ".join(moas)
+
+            # Threat level: take highest priority (HIGH > MEDIUM > LOW > EMERGING)
+            threat_levels = [json_drugs[d]['threat_level'] for d in matched_drugs]
+            threat_priority = {'HIGH': 1, 'MEDIUM': 2, 'LOW': 3, 'EMERGING': 4, 'UNKNOWN': 5}
+            highest_threat = min(threat_levels, key=lambda x: threat_priority.get(x, 5))
+
+            results.append({
+                'Drug': combo_name,
+                'Company': company_str,
+                'MOA Class': moa_str,
+                'MOA Target': '',
+                'ThreatLevel': highest_threat,
+                'Identifier': identifier,
+                'Title': row['Title'][:80] + '...' if len(row['Title']) > 80 else row['Title'],
+                'Source': 'JSON-Combo'
+            })
             processed_identifiers.add(identifier)
+
+        else:
+            # MONOTHERAPY
+            drug_name = matched_drugs[0]
+            drug_info = json_drugs[drug_name]
+
             results.append({
                 'Drug': drug_name,
-                'Company': company,
-                'MOA Class': moa,
-                'MOA Target': '',  # Not provided in JSON, use empty string
-                'ThreatLevel': threat_level,
+                'Company': drug_info['company'],
+                'MOA Class': drug_info['moa'],
+                'MOA Target': '',
+                'ThreatLevel': drug_info['threat_level'],
                 'Identifier': identifier,
-                'Title': row['Title'][:80] + '...' if len(row['Title']) > 80 else row['Title']
+                'Title': row['Title'][:80] + '...' if len(row['Title']) > 80 else row['Title'],
+                'Source': 'JSON-Mono'
             })
+            processed_identifiers.add(identifier)
+
+    print(f"[JSON MATCHER] Step 1 complete: {len(results)} studies matched ({len(processed_identifiers)} identifiers)")
+
+    # STEP 4: CSV fallback for unmatched studies
+    unmatched_df = df[~df['Identifier'].isin(processed_identifiers)]
+
+    if not unmatched_df.empty:
+        print(f"[CSV FALLBACK] Step 2: Matching {len(unmatched_df)} remaining studies against CSV drug database")
+
+        try:
+            drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
+            drug_db = pd.read_csv(drug_db_path, encoding='utf-8-sig')
+
+            # EMD portfolio drugs to exclude
+            emd_drugs = ['avelumab', 'bavencio', 'tepotinib', 'cetuximab', 'erbitux', 'pimicotinib']
+
+            for _, drug_row in drug_db.iterrows():
+                commercial = str(drug_row['drug_commercial']).strip().lower() if pd.notna(drug_row['drug_commercial']) else ""
+                generic = str(drug_row['drug_generic']).strip().lower() if pd.notna(drug_row['drug_generic']) else ""
+                company = str(drug_row['company']).strip() if pd.notna(drug_row['company']) else "Unknown"
+                moa_class = str(drug_row['moa_class']).strip() if pd.notna(drug_row['moa_class']) else "Unknown"
+                moa_target = str(drug_row['moa_target']).strip() if pd.notna(drug_row['moa_target']) else ""
+
+                if not commercial and not generic:
+                    continue
+
+                # Skip EMD portfolio
+                if generic in emd_drugs or commercial in emd_drugs:
+                    continue
+
+                # Search in unmatched studies
+                mask = pd.Series([False] * len(unmatched_df), index=unmatched_df.index)
+                if commercial:
+                    mask = mask | unmatched_df['Title'].str.contains(commercial, case=False, na=False, regex=False)
+                if generic:
+                    mask = mask | unmatched_df['Title'].str.contains(generic, case=False, na=False, regex=False)
+
+                matching_studies = unmatched_df[mask]
+
+                for _, row in matching_studies.iterrows():
+                    if row['Identifier'] in processed_identifiers:
+                        continue
+
+                    processed_identifiers.add(row['Identifier'])
+                    results.append({
+                        'Drug': generic if generic else commercial,
+                        'Company': company,
+                        'MOA Class': moa_class,
+                        'MOA Target': moa_target,
+                        'ThreatLevel': 'CSV',  # Mark as CSV-sourced
+                        'Identifier': row['Identifier'],
+                        'Title': row['Title'][:80] + '...' if len(row['Title']) > 80 else row['Title'],
+                        'Source': 'CSV-Fallback'
+                    })
+
+            print(f"[CSV FALLBACK] Step 2 complete: {len([r for r in results if r['Source'] == 'CSV-Fallback'])} additional studies matched")
+
+        except Exception as e:
+            print(f"[CSV FALLBACK] ERROR: Could not load Drug_Company_names.csv: {e}")
 
     if not results:
-        print(f"[JSON MATCHER] No matches found for {therapeutic_area}")
+        print(f"[MATCHER] No matches found for {therapeutic_area}")
         return pd.DataFrame()
 
     result_df = pd.DataFrame(results)
@@ -268,16 +345,19 @@ def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area:
     result_df['_study_count'] = result_df['Drug'].map(study_counts)
 
     # Sort by threat level and study count
-    threat_order = {'HIGH': 1, 'MEDIUM': 2, 'LOW': 3, 'EMERGING': 4, 'UNKNOWN': 5}
-    result_df['_threat_sort'] = result_df['ThreatLevel'].map(threat_order).fillna(5)
+    threat_order = {'HIGH': 1, 'MEDIUM': 2, 'LOW': 3, 'EMERGING': 4, 'CSV': 5, 'UNKNOWN': 6}
+    result_df['_threat_sort'] = result_df['ThreatLevel'].map(threat_order).fillna(6)
 
     result_df = result_df.sort_values(['_threat_sort', '_study_count', 'Drug'], ascending=[True, False, True])
     result_df = result_df.head(n)
 
-    # Drop internal sorting columns
-    result_df = result_df.drop(columns=['_study_count', '_threat_sort'])
+    # Drop internal sorting columns and Source column
+    result_df = result_df.drop(columns=['_study_count', '_threat_sort', 'Source'])
 
-    print(f"[JSON MATCHER] Matched {len(result_df)} studies across {result_df['Drug'].nunique()} drugs")
+    json_count = len([r for r in results if r.get('Source', '').startswith('JSON')])
+    csv_count = len([r for r in results if r.get('Source') == 'CSV-Fallback'])
+    print(f"[MATCHER] Final: {len(result_df)} studies across {result_df['Drug'].nunique()} drugs (JSON: {json_count}, CSV: {csv_count})")
+
     return result_df
 
 # ============================================================================
