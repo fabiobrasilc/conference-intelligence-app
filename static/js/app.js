@@ -51,6 +51,9 @@ function enablePlaybookButtons() {
 
 document.addEventListener('DOMContentLoaded', function() {
 
+  // Initialize global tooltips for AI chat tables (dynamic content)
+  initGlobalTooltips();
+
   // ===== Sidebar Toggle with Hover =====
   const filterSidebar = document.getElementById('filterSidebar');
   const sidebarToggle = document.getElementById('sidebarToggle');
@@ -493,7 +496,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const val = row[h] ?? '';
         const displayVal = renderCellContent(val);
         const titleVal = escapeHtml(val.replace(/<mark[^>]*>/g, '').replace(/<\/mark>/g, ''));
-        html += `<td title="${titleVal}">${displayVal}</td>`;
+        html += `<td data-full-text="${titleVal}">${displayVal}</td>`;
       });
       html += '</tr>';
     });
@@ -515,6 +518,100 @@ document.addEventListener('DOMContentLoaded', function() {
       const rows = tableContainer.querySelectorAll('#tableViewport tbody tr');
       rows.forEach(tr => tr.addEventListener('click', () => tr.classList.toggle('expanded')));
     }
+
+    // Add custom tooltip for table cells
+    addCustomTooltips();
+  }
+
+  // Custom tooltip functionality - works for both data tables and AI chat tables
+  function addCustomTooltips() {
+    // Create tooltip element if it doesn't exist
+    let tooltip = document.getElementById('customCellTooltip');
+    if (!tooltip) {
+      tooltip = document.createElement('div');
+      tooltip.id = 'customCellTooltip';
+      tooltip.className = 'custom-cell-tooltip';
+      document.body.appendChild(tooltip);
+    }
+
+    // Add hover listeners to data explorer table cells
+    const cells = tableContainer.querySelectorAll('#dataTable tbody td');
+    cells.forEach(cell => {
+      attachTooltipListeners(cell, tooltip);
+    });
+  }
+
+  // Global tooltip setup for AI chat tables (uses event delegation for dynamic content)
+  function initGlobalTooltips() {
+    // Create tooltip element if it doesn't exist
+    let tooltip = document.getElementById('customCellTooltip');
+    if (!tooltip) {
+      tooltip = document.createElement('div');
+      tooltip.id = 'customCellTooltip';
+      tooltip.className = 'custom-cell-tooltip';
+      document.body.appendChild(tooltip);
+    }
+
+    // Use event delegation for ALL table cells in AI assistant (including entity-table-container and ai-chat-table)
+    document.body.addEventListener('mouseenter', (e) => {
+      // Match both .ai-chat-table and .entity-table-container tables
+      if (e.target.matches('.ai-chat-table tbody td, .entity-table-container table tbody td')) {
+        // Check for data-full-text first, fall back to title attribute
+        const fullText = e.target.getAttribute('data-full-text') || e.target.getAttribute('title');
+        if (fullText && fullText.trim()) {
+          tooltip.textContent = fullText;
+          tooltip.classList.add('show');
+          positionTooltip(e, tooltip);
+        }
+      }
+    }, true);
+
+    document.body.addEventListener('mousemove', (e) => {
+      if (e.target.matches('.ai-chat-table tbody td, .entity-table-container table tbody td') && tooltip.classList.contains('show')) {
+        positionTooltip(e, tooltip);
+      }
+    }, true);
+
+    document.body.addEventListener('mouseleave', (e) => {
+      if (e.target.matches('.ai-chat-table tbody td, .entity-table-container table tbody td')) {
+        tooltip.classList.remove('show');
+      }
+    }, true);
+  }
+
+  function attachTooltipListeners(cell, tooltip) {
+    cell.addEventListener('mouseenter', (e) => {
+      const fullText = cell.getAttribute('data-full-text');
+      if (fullText && fullText.trim()) {
+        tooltip.textContent = fullText;
+        tooltip.classList.add('show');
+        positionTooltip(e, tooltip);
+      }
+    });
+
+    cell.addEventListener('mousemove', (e) => {
+      if (tooltip.classList.contains('show')) {
+        positionTooltip(e, tooltip);
+      }
+    });
+
+    cell.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('show');
+    });
+  }
+
+  function positionTooltip(event, tooltip) {
+    const offset = 15;
+    const x = event.clientX + offset;
+    const y = event.clientY + offset;
+
+    // Ensure tooltip doesn't go off-screen
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const maxX = window.innerWidth - tooltipRect.width - 10;
+    const maxY = window.innerHeight - tooltipRect.height - 10;
+
+    tooltip.style.left = Math.min(x, maxX) + 'px';
+    tooltip.style.top = Math.min(y, maxY) + 'px';
   }
 
   // ===== Table Sorting & Resizing =====
@@ -1066,10 +1163,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!document.getElementById(responseId + '-text')) {
                   contentDiv.insertAdjacentHTML('beforeend', '<div id="' + responseId + '-text" class="mt-3"></div>');
                 }
+
+                // Add spinner below table until AI text starts
+                if (!document.getElementById(responseId + '-spinner')) {
+                  contentDiv.insertAdjacentHTML('beforeend',
+                    '<div id="' + responseId + '-spinner" class="mt-2"><span class="spinner-border spinner-border-sm me-2"></span><span class="text-muted">Analyzing...</span></div>');
+                }
                 chatContainer.scrollTop = chatContainer.scrollHeight;
               } else if (parsed.text) {
                 // Handle regular text events
                 out += parsed.text;
+
+                // Remove spinner when first text arrives
+                const spinnerDiv = document.getElementById(responseId + '-spinner');
+                if (spinnerDiv) {
+                  spinnerDiv.remove();
+                }
 
                 // Check if we have a text div (created after table)
                 const textDiv = document.getElementById(responseId + '-text');
@@ -1203,7 +1312,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="chat-table-container mb-3">
         <h6 class="mb-2">${escapeHtml(title)}</h6>
         <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-          <table class="table table-sm table-striped table-hover">
+          <table class="table table-sm table-striped table-hover ai-chat-table">
             <thead class="table-dark sticky-top">
               <tr>${headers.map(h => `<th style="white-space: nowrap;">${escapeHtml(h)}</th>`).join('')}</tr>
             </thead>
@@ -1213,7 +1322,7 @@ document.addEventListener('DOMContentLoaded', function() {
       html += '<tr>';
       headers.forEach(header => {
         const value = row[header] || '';
-        html += `<td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(value)}">${escapeHtml(value)}</td>`;
+        html += `<td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" data-full-text="${escapeHtml(value)}">${escapeHtml(value)}</td>`;
       });
       html += '</tr>';
     });
@@ -1545,16 +1654,41 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Chat Scope Selector - Apply to chat requests
-  let activeChatScope = { type: 'all', value: null };
+  let activeChatScope = { type: 'none', value: null };  // Start with 'none' to force selection
+
+  // Initially disable chat input until scope is selected
+  const chatInput = document.getElementById('chatInput');
+  chatInput.disabled = true;
+  chatInput.placeholder = 'Please select a Chat Scope above first...';
 
   chatScopeDropdown.addEventListener('change', () => {
     const selected = chatScopeDropdown.value;
     if (selected === 'all') {
       activeChatScope = { type: 'all', value: null };
+      // Show warning for "All conference data"
+      if (confirm('⚠️ Analyzing ALL conference data may take 1-2 minutes. Continue?')) {
+        chatInput.disabled = false;
+        chatInput.placeholder = 'Ask about the conference data...';
+      } else {
+        // User canceled - reset to placeholder
+        chatScopeDropdown.value = '';
+        activeChatScope = { type: 'none', value: null };
+        chatInput.disabled = true;
+        chatInput.placeholder = 'Please select a Chat Scope above first...';
+      }
     } else if (selected.startsWith('drug:')) {
       activeChatScope = { type: 'drug', value: selected.replace('drug:', '') };
+      chatInput.disabled = false;
+      chatInput.placeholder = 'Ask about the conference data...';
     } else if (selected.startsWith('ta:')) {
       activeChatScope = { type: 'ta', value: selected.replace('ta:', '') };
+      chatInput.disabled = false;
+      chatInput.placeholder = 'Ask about the conference data...';
+    } else {
+      // No selection
+      activeChatScope = { type: 'none', value: null };
+      chatInput.disabled = true;
+      chatInput.placeholder = 'Please select a Chat Scope above first...';
     }
   });
 

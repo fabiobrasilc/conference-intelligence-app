@@ -135,6 +135,7 @@ collection = None
 csv_hash_global = None
 df_global = None
 competitive_landscapes = {}  # Will hold loaded JSON competitive landscape data
+abstracts_available = False  # Auto-detected: True if 'Abstract' column exists in dataset
 
 # ============================================================================
 # COMPETITIVE LANDSCAPE JSON LOADING
@@ -1122,7 +1123,7 @@ def file_md5(filepath):
 
 def load_and_process_data():
     """Load ESMO CSV and prepare for analysis."""
-    global df_global, csv_hash_global, chroma_client, collection
+    global df_global, csv_hash_global, chroma_client, collection, abstracts_available
 
     print(f"[STARTUP] Looking for CSV at: {CSV_FILE}")
     print(f"[STARTUP] CSV absolute path: {CSV_FILE.absolute()}")
@@ -1172,6 +1173,21 @@ def load_and_process_data():
 
     csv_hash_global = current_hash
     df_global = df
+
+    # Auto-detect abstract availability
+    abstracts_available = 'Abstract' in df.columns or 'abstract' in df.columns
+    if abstracts_available:
+        abstract_col = 'Abstract' if 'Abstract' in df.columns else 'abstract'
+        # Check if abstracts actually have content (not just empty column)
+        non_empty_abstracts = df[abstract_col].notna() & (df[abstract_col].str.strip() != '')
+        abstracts_count = non_empty_abstracts.sum()
+        if abstracts_count > 0:
+            print(f"[DATA] Full abstracts detected: {abstracts_count}/{len(df)} studies have abstract text")
+        else:
+            abstracts_available = False
+            print(f"[DATA] Abstract column exists but is empty - treating as unavailable")
+    else:
+        print(f"[DATA] Full abstracts not yet available - using titles, authors, and metadata only")
 
     print(f"[DATA] Loaded {len(df)} studies from ESMO 2025")
 
@@ -1706,6 +1722,120 @@ def highlight_search_results(df: pd.DataFrame, keyword: str) -> pd.DataFrame:
 # SMART QUERY CLASSIFICATION (GPT-5-MINI)
 # ============================================================================
 
+def detect_ambiguous_drug_query(user_query: str) -> dict:
+    """
+    Detect ambiguous drug queries that need clarification.
+    Returns clarification response if ambiguous, None otherwise.
+    """
+    query_lower = user_query.lower()
+
+    # Drug abbreviations
+    drug_aliases = {
+        'ev': 'enfortumab vedotin', 'p': 'pembrolizumab', 'pembro': 'pembrolizumab',
+        'nivo': 'nivolumab', 'ipi': 'ipilimumab', 'atezo': 'atezolizumab',
+        'durva': 'durvalumab', 'treme': 'tremelimumab', 'ave': 'avelumab'
+    }
+
+    # Ambiguous patterns: "with" or "and" (without clear combination indicator)
+    ambiguous_patterns = [
+        r'([\w\s-]+?)\s+with\s+([\w\s-]+?)(?:\s|$|,|\?)',
+        r'([\w\s-]+?)\s+and\s+([\w\s-]+?)(?:\s|$|,|\?)',
+    ]
+
+    for pattern in ambiguous_patterns:
+        matches = re.findall(pattern, query_lower)
+        if matches:
+            for match in matches:
+                drug1_raw, drug2_raw = match[0].strip(), match[1].strip()
+
+                # Expand abbreviations if single word
+                drug1 = drug_aliases.get(drug1_raw, drug1_raw) if len(drug1_raw.split()) == 1 else drug1_raw
+                drug2 = drug_aliases.get(drug2_raw, drug2_raw) if len(drug2_raw.split()) == 1 else drug2_raw
+
+                # Skip non-drug words
+                skip_words = ['the', 'and', 'or', 'with', 'plus', 'versus', 'vs', 'day', 'phase', 'line', 'stage', 'new', 'studies', 'about', 'tell', 'me', 'what', 'is', 'coming', 'out', 'on']
+                if drug1_raw in skip_words or drug2_raw in skip_words or len(drug1_raw) < 2 or len(drug2_raw) < 2:
+                    continue
+
+                # Found ambiguous query - return clarification
+                print(f"[AMBIGUOUS QUERY DETECTED] '{drug1}' and '{drug2}' - needs clarification")
+
+                clarification = f"""I found studies mentioning **{drug1}** and **{drug2}**. To give you the most relevant results, please clarify:
+
+**1. Combination therapy only** - Studies where both drugs are used together (e.g., {drug1} + {drug2})
+**2. All studies** - Any study mentioning either drug (broader landscape view)
+**3. Comparison studies** - Head-to-head trials comparing {drug1} vs {drug2}
+
+Please respond with **1**, **2**, or **3**, or rephrase your query."""
+
+                return {
+                    "entity_type": "clarification_needed",
+                    "clarification_question": clarification,
+                    "generate_table": False,
+                    "table_type": None,
+                    "filter_context": {},
+                    "pending_drugs": [drug1, drug2],  # Store for follow-up
+                    "search_terms": []
+                }
+
+    return None
+
+
+def detect_unambiguous_combination(user_query: str) -> dict:
+    """
+    Detect ONLY unambiguous combination queries (+ or "plus").
+    Returns combination classification if detected, None otherwise.
+    """
+    query_lower = user_query.lower()
+
+    # Drug abbreviations
+    drug_aliases = {
+        'ev': 'enfortumab vedotin', 'p': 'pembrolizumab', 'pembro': 'pembrolizumab',
+        'nivo': 'nivolumab', 'ipi': 'ipilimumab', 'atezo': 'atezolizumab',
+        'durva': 'durvalumab', 'treme': 'tremelimumab', 'ave': 'avelumab',
+        'erda': 'erdafitinib', 'saci': 'sacituzumab govitecan', 'sg': 'sacituzumab govitecan'
+    }
+
+    # ONLY unambiguous patterns
+    unambiguous_patterns = [
+        r'([\w\s-]+?)\s*\+\s*([\w\s-]+?)(?:\s|$|,|\?)',  # drug1 + drug2
+        r'([\w\s-]+?)\s+plus\s+([\w\s-]+?)(?:\s|$|,|\?)',  # drug1 plus drug2
+        r'([\w-]+)[/-]([\w-]+)',  # EV/P format
+    ]
+
+    for pattern in unambiguous_patterns:
+        matches = re.findall(pattern, query_lower)
+        if matches:
+            for match in matches:
+                drug1_raw, drug2_raw = match[0].strip(), match[1].strip()
+
+                # Expand abbreviations if single word
+                drug1 = drug_aliases.get(drug1_raw, drug1_raw) if len(drug1_raw.split()) == 1 else drug1_raw
+                drug2 = drug_aliases.get(drug2_raw, drug2_raw) if len(drug2_raw.split()) == 1 else drug2_raw
+
+                # Skip non-drugs
+                skip_words = ['the', 'and', 'or', 'with', 'versus', 'vs', 'day', 'phase', 'line', 'stage']
+                if drug1_raw in skip_words or drug2_raw in skip_words or len(drug1_raw) < 2 or len(drug2_raw) < 2:
+                    continue
+
+                search_terms = [f"{drug1} {drug2}", f"{drug1} + {drug2}", f"{drug1} plus {drug2}"]
+
+                print(f"[COMBINATION DETECTED] '{drug1_raw}' + '{drug2_raw}' → '{drug1} + {drug2}'")
+
+                return {
+                    "entity_type": "drug",
+                    "search_terms": search_terms,
+                    "generate_table": True,
+                    "table_type": "drug_studies",
+                    "filter_context": {"drug": f"{drug1} + {drug2}", "ta": None, "date": None, "session": None},
+                    "top_n": 20,
+                    "is_combination": True,
+                    "clarification_question": None
+                }
+
+    return None
+
+
 def classify_user_query(user_message: str, conversation_history: list = None) -> dict:
     """
     Use GPT-5-mini to classify user query and extract search parameters.
@@ -1759,6 +1889,8 @@ def classify_user_query(user_message: str, conversation_history: list = None) ->
 "What is enfortumab vedotin?" | "Tell me about EV" | "Avelumab data" | "Studies on pembrolizumab" | "Keytruda results"
 → {{"entity_type": "drug", "search_terms": ["enfortumab vedotin", "EV", "enfortumab"], "generate_table": true, "table_type": "drug_studies", "filter_context": {{"drug": "enfortumab vedotin"}}, "top_n": 20}}
 
+NOTE: Drug combinations (EV + P, nivo plus ipi) are handled by pre-classification rules - you won't see them.
+
 **4. DRUG CLASS/MOA QUERIES** (drug_class_ranking table)
 "What is the most common drug class?" | "Show me drug classes" | "ADC vs ICI representation" | "Top MOA classes" | "What mechanisms are being studied?"
 → {{"entity_type": "drug_class", "search_terms": [], "generate_table": true, "table_type": "drug_class_ranking", "filter_context": {{}}, "top_n": 15}}
@@ -1771,9 +1903,20 @@ def classify_user_query(user_message: str, conversation_history: list = None) ->
 "What posters are on day 3?" | "All presentations on Friday" | "Proffered papers in lung cancer" | "When are the oral sessions?" | "Show me symposia"
 → {{"entity_type": "session_type", "search_terms": ["poster"], "generate_table": true, "table_type": "session_list", "filter_context": {{"date": "Day 3"}}, "top_n": 50}}
 
-**7. TREND/ANALYSIS QUERIES** (no table, just AI analysis)
-"What are the latest trends?" | "Summarize immunotherapy data" | "Key takeaways" | "Emerging biomarkers" | "What's new in checkpoint inhibitors?"
-→ {{"entity_type": "general", "search_terms": ["immunotherapy", "checkpoint"], "generate_table": false, "table_type": null, "filter_context": {{}}, "top_n": 15}}
+**7. BIOMARKER/MECHANISM SPECIFIC QUERIES** (session_list table to show all studies)
+"What's new in METex14?" | "Show me FGFR3 studies" | "HER2-positive data" | "PD-L1 biomarker studies" | "KRAS G12C research"
+→ {{"entity_type": "drug", "search_terms": ["MET exon 14", "METex14"], "generate_table": true, "table_type": "session_list", "filter_context": {{}}, "top_n": 50}}
+
+**CRITICAL RULE FOR BIOMARKER/MECHANISM QUERIES**:
+- search_terms should ONLY include the biomarker/mechanism variations (e.g., ["MET exon 14", "METex14"])
+- DO NOT include the therapeutic area (e.g., "NSCLC", "bladder cancer") in search_terms
+- DO NOT include disease stage modifiers (e.g., "metastatic", "advanced") in search_terms
+- User's active filters already handle TA/stage filtering
+- Keep search_terms focused on the SPECIFIC biomarker/mutation only
+
+**8. TREND/ANALYSIS QUERIES** (no table, just AI analysis)
+"What are the latest trends?" | "Summarize immunotherapy data" | "Key takeaways" | "Emerging biomarkers" (too vague)
+→ {{"entity_type": "general", "search_terms": ["immunotherapy"], "generate_table": false, "table_type": null, "filter_context": {{}}, "top_n": 15}}
 
 **8. COMPARATIVE QUERIES** (generate_table: false, AI will analyze)
 "Compare avelumab vs pembrolizumab" | "EV+pembro vs EV alone" | "ADCs vs ICIs" | "Phase 3 vs Phase 2 data"
@@ -1880,6 +2023,31 @@ def apply_filters_from_context(df: pd.DataFrame, filter_context: dict) -> pd.Dat
     return filtered
 
 
+def dataframe_to_custom_html(df: pd.DataFrame) -> str:
+    """Convert dataframe to HTML table with data-full-text attributes for custom tooltips."""
+    if df.empty:
+        return ""
+
+    headers = df.columns.tolist()
+
+    # Build table HTML manually with data-full-text attributes
+    html = '<table class="table table-sm table-striped">\n<thead>\n<tr>'
+    for header in headers:
+        html += f'<th>{header}</th>'
+    html += '</tr>\n</thead>\n<tbody>\n'
+
+    for _, row in df.iterrows():
+        html += '<tr>'
+        for header in headers:
+            value = str(row[header]) if pd.notna(row[header]) else ''
+            # Escape HTML but preserve existing tags (for search highlighting)
+            display_value = value
+            html += f'<td data-full-text="{value}">{display_value}</td>'
+        html += '</tr>\n'
+
+    html += '</tbody>\n</table>'
+    return html
+
 def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
     """Generate appropriate table based on classification."""
 
@@ -1906,7 +2074,7 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
 
         print(f"[AUTHOR SEARCH] Searching for: {search_terms} in {len(filtered_df)} records")
 
-        mask = pd.Series([False] * len(filtered_df))
+        mask = pd.Series([False] * len(filtered_df), index=filtered_df.index)
         for term in search_terms:
             term_mask = filtered_df['Speakers'].str.contains(term, case=False, na=False)
             matches = term_mask.sum()
@@ -1926,7 +2094,7 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
 
         table_html = f"""<div class='entity-table-container'>
 <h6 class='entity-table-title'>📊 Publications by {search_terms[0]} ({len(results)} found)</h6>
-{results.to_html(index=False, classes='table table-sm table-striped', escape=False)}
+{dataframe_to_custom_html(results)}
 </div>"""
         return table_html, results
 
@@ -1952,18 +2120,18 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
 
         table_html = f"""<div class='entity-table-container'>
 <h6 class='entity-table-title'>📊 Top {top_n} Most Active Speakers{context_str}</h6>
-{ranking_df.to_html(index=False, classes='table table-sm table-striped', escape=False)}
+{dataframe_to_custom_html(ranking_df)}
 </div>"""
         return table_html, ranking_df
 
     elif table_type == "drug_studies":
-        # Search for drug in Title column
+        # Simple approach: AI extracts drug names → match against Drug_Company_names.csv → search titles
         if not search_terms:
             return "", pd.DataFrame()
 
-        print(f"[DRUG SEARCH] Searching for: {search_terms} in {len(filtered_df)} records")
+        print(f"[DRUG SEARCH] Raw search terms from AI: {search_terms}")
 
-        # Load drug database to get MOA info
+        # Load drug database
         try:
             drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
             drug_db = pd.read_csv(drug_db_path, encoding='utf-8-sig')
@@ -1971,26 +2139,55 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
             print(f"[DRUG SEARCH] Could not load Drug_Company_names.csv: {e}")
             drug_db = None
 
-        mask = pd.Series([False] * len(filtered_df))
-        for term in search_terms:
-            # Use word boundaries for short acronyms (3 chars or less) to avoid false matches
-            # Example: "BDC" should not match "BDC-4182"
-            if len(term) <= 3 and term.isupper():
-                # For short uppercase acronyms, use word boundaries
-                # Also handle plural forms (e.g., "ADC" matches both "ADC" and "ADCs")
-                pattern = r'\b' + re.escape(term) + r's?\b'
-                term_mask = filtered_df['Title'].str.contains(pattern, case=True, na=False, regex=True)
-            elif len(term) == 4 and term.endswith('s') and term[:3].isupper():
-                # Handle plural acronyms like "ADCs" -> search for "ADC" or "ADCs"
-                singular = term[:-1]  # Remove 's'
-                pattern = r'\b' + re.escape(singular) + r's?\b'
-                term_mask = filtered_df['Title'].str.contains(pattern, case=True, na=False, regex=True)
-            else:
-                # For longer terms or mixed case, use regular case-insensitive search
-                term_mask = filtered_df['Title'].str.contains(term, case=False, na=False)
-            matches = term_mask.sum()
-            print(f"[DRUG SEARCH] Term '{term}' found {matches} matches")
-            mask |= term_mask
+        # Step 1: Match search terms to known drugs in database
+        matched_drugs = []
+        if drug_db is not None:
+            for term in search_terms:
+                term_lower = term.lower().strip()
+                for _, drug_row in drug_db.iterrows():
+                    commercial = str(drug_row['drug_commercial']).lower().strip() if pd.notna(drug_row['drug_commercial']) else ""
+                    generic = str(drug_row['drug_generic']).lower().strip() if pd.notna(drug_row['drug_generic']) else ""
+
+                    # Match if term is in commercial/generic name or vice versa
+                    if (term_lower in commercial or commercial in term_lower or
+                        term_lower in generic or generic in term_lower):
+                        # Use generic name WITHOUT suffix (e.g., "enfortumab vedotin" not "enfortumab vedotin-ejfv")
+                        drug_name = str(drug_row['drug_generic']).strip() if pd.notna(drug_row['drug_generic']) else str(drug_row['drug_commercial']).strip()
+
+                        # Remove suffixes like "-ejfv", "-nxki", etc. (keep base name only)
+                        drug_name = drug_name.split('-')[0].strip()
+
+                        if drug_name not in matched_drugs:
+                            matched_drugs.append(drug_name)
+                            print(f"[DRUG SEARCH] Matched '{term}' → '{drug_name}'")
+                        break
+
+        # If no database matches, use search terms as-is
+        if not matched_drugs:
+            matched_drugs = search_terms
+            print(f"[DRUG SEARCH] No database matches, using raw terms")
+
+        print(f"[DRUG SEARCH] Final drug list: {matched_drugs}")
+
+        # Step 2: If multiple drugs → AND logic (combination), else → OR logic (single drug)
+        if len(matched_drugs) >= 2:
+            print(f"[DRUG SEARCH] Multiple drugs detected → AND logic (all must be present)")
+            mask = pd.Series([True] * len(filtered_df), index=filtered_df.index)
+            for drug in matched_drugs:
+                drug_mask = filtered_df['Title'].str.contains(drug, case=False, na=False)
+                matches = drug_mask.sum()
+                print(f"[DRUG SEARCH] '{drug}' appears in {matches} titles")
+                mask &= drug_mask
+            final_count = mask.sum()
+            print(f"[DRUG SEARCH] Result: {final_count} studies with ALL {len(matched_drugs)} drugs")
+        else:
+            print(f"[DRUG SEARCH] Single drug → OR logic")
+            mask = pd.Series([False] * len(filtered_df), index=filtered_df.index)
+            for drug in matched_drugs:
+                drug_mask = filtered_df['Title'].str.contains(drug, case=False, na=False)
+                matches = drug_mask.sum()
+                print(f"[DRUG SEARCH] '{drug}' found in {matches} titles")
+                mask |= drug_mask
 
         results = filtered_df[mask][['Identifier', 'Title', 'Speakers', 'Affiliation', 'Session', 'Room', 'Date']].head(top_n)
 
@@ -2023,7 +2220,7 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
         table_html = f"""<div class='entity-table-container'>
 <h6 class='entity-table-title'>💊 Studies mentioning {search_terms[0]} ({len(results)} found)</h6>
 <p class='text-muted small' style='margin: 0 0 8px 0;'>MOA: {moa_class} | Target: {moa_target}</p>
-{results.to_html(index=False, classes='table table-sm table-striped', escape=False)}
+{dataframe_to_custom_html(results)}
 </div>"""
         return table_html, results
 
@@ -2039,37 +2236,70 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
         context_str = f" in {filter_ctx.get('ta', 'all areas')}" if filter_ctx.get('ta') else ""
         table_html = f"""<div class='entity-table-container'>
 <h6 class='entity-table-title'>🏥 Top {top_n} Most Active Institutions{context_str}</h6>
-{ranking_df.to_html(index=False, classes='table table-sm table-striped', escape=False)}
+{dataframe_to_custom_html(ranking_df)}
 </div>"""
         return table_html, ranking_df
 
     elif table_type == "drug_class_ranking":
-        # Generate MOA class ranking from drug database
-        print(f"[DRUG CLASS RANKING] Analyzing {len(filtered_df)} studies")
+        # FAST: Use pattern matching for common MOA classes instead of drug database
+        print(f"[DRUG CLASS RANKING] Fast MOA analysis of {len(filtered_df)} studies")
 
-        try:
-            drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
-            drug_db = pd.read_csv(drug_db_path, encoding='utf-8-sig')
-        except Exception as e:
-            print(f"[DRUG CLASS RANKING] Could not load Drug_Company_names.csv: {e}")
-            return "", pd.DataFrame()
+        # Define MOA patterns (most common mechanisms in oncology)
+        moa_patterns = {
+            "ICI (Immune Checkpoint Inhibitor)": [
+                "pembrolizumab", "nivolumab", "atezolizumab", "durvalumab", "avelumab",
+                "ipilimumab", "tremelimumab", "tislelizumab", "toripalimab", "sintilimab",
+                "pd-1", "pd-l1", "ctla-4", "checkpoint", "anti-pd"
+            ],
+            "ADC (Antibody-Drug Conjugate)": [
+                "enfortumab", "sacituzumab", "trastuzumab deruxtecan", "disitamab",
+                "datopotamab", "patritumab", "mirvetuximab", "tisotumab",
+                "antibody-drug", "adc", "conjugate", "vedotin", "deruxtecan", "govitecan"
+            ],
+            "Targeted Therapy - FGFR": [
+                "erdafitinib", "pemigatinib", "futibatinib", "infigratinib", "fgfr"
+            ],
+            "Targeted Therapy - MET": [
+                "tepotinib", "capmatinib", "savolitinib", "crizotinib", "met inhibitor", "met exon"
+            ],
+            "Targeted Therapy - EGFR": [
+                "osimertinib", "erlotinib", "gefitinib", "afatinib", "dacomitinib",
+                "amivantamab", "cetuximab", "panitumumab", "egfr"
+            ],
+            "Targeted Therapy - HER2": [
+                "tucatinib", "neratinib", "lapatinib", "pyrotinib", "her2"
+            ],
+            "Chemotherapy": [
+                "carboplatin", "cisplatin", "gemcitabine", "paclitaxel", "docetaxel",
+                "5-fu", "fluorouracil", "oxaliplatin", "irinotecan", "chemotherapy"
+            ],
+            "Antiangiogenic": [
+                "bevacizumab", "ramucirumab", "lenvatinib", "cabozantinib", "regorafenib",
+                "sorafenib", "sunitinib", "pazopanib", "vegf", "antiangiogenic"
+            ],
+            "PARP Inhibitor": [
+                "olaparib", "niraparib", "rucaparib", "talazoparib", "parp"
+            ],
+            "CDK4/6 Inhibitor": [
+                "palbociclib", "ribociclib", "abemaciclib", "cdk4", "cdk6"
+            ]
+        }
 
-        # Count MOA classes by matching drugs in titles
+        # Count MOA occurrences using vectorized operations
         moa_counts = {}
-        for idx, row in filtered_df.iterrows():
-            title = str(row['Title']).lower()
-            # Check each drug in database
-            for _, drug_row in drug_db.iterrows():
-                commercial = str(drug_row['drug_commercial']).lower() if pd.notna(drug_row['drug_commercial']) else ""
-                generic = str(drug_row['drug_generic']).lower() if pd.notna(drug_row['drug_generic']) else ""
-                moa_class = str(drug_row['moa_class']) if pd.notna(drug_row['moa_class']) else "Unknown"
 
-                if moa_class == "Unknown":
-                    continue
+        for moa_class, patterns in moa_patterns.items():
+            count = 0
+            # Create regex pattern for all drug names in this MOA
+            pattern = '|'.join([re.escape(p) for p in patterns])
 
-                # Check if drug is in title
-                if (commercial and commercial in title) or (generic and generic in title):
-                    moa_counts[moa_class] = moa_counts.get(moa_class, 0) + 1
+            # Count studies mentioning this MOA (vectorized)
+            mask = filtered_df['Title'].str.contains(pattern, case=False, na=False, regex=True)
+            count = mask.sum()
+
+            if count > 0:
+                moa_counts[moa_class] = count
+                print(f"[DRUG CLASS RANKING] {moa_class}: {count} studies")
 
         if not moa_counts:
             no_results_html = f"""<div class='entity-table-container'>
@@ -2090,17 +2320,59 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
 
         table_html = f"""<div class='entity-table-container'>
 <h6 class='entity-table-title'>💊 Top {top_n} Drug Classes by Study Count{context_str}</h6>
-{ranking_df.to_html(index=False, classes='table table-sm table-striped', escape=False)}
+{dataframe_to_custom_html(ranking_df)}
 </div>"""
         return table_html, ranking_df
 
     elif table_type == "session_list":
-        # Filter by session type
+        # Filter by session type or search terms in Title
         if search_terms:
-            mask = pd.Series([False] * len(filtered_df))
+            mask = pd.Series([False] * len(filtered_df), index=filtered_df.index)
+
+            # DEBUG: Let's see what we're searching for
+            print(f"[SESSION_LIST] Searching for terms: {search_terms}")
+
             for term in search_terms:
-                mask |= filtered_df['Session'].str.contains(term, case=False, na=False)
+                # Multiple search strategies to catch ALL variations
+                term_lower = term.lower()
+
+                # Strategy 1: Search across Title, Speakers, and Affiliation (like retrieve_comprehensive_data)
+                term_mask_1 = (
+                    filtered_df['Title'].str.contains(term, case=False, na=False, regex=False) |
+                    filtered_df['Speakers'].str.contains(term, case=False, na=False, regex=False) |
+                    filtered_df['Affiliation'].str.contains(term, case=False, na=False, regex=False)
+                )
+
+                # Strategy 2: Normalized search (remove spaces, hyphens, parentheses) on Title
+                term_normalized = term_lower.replace(" ", "").replace("-", "").replace("exon", "ex")
+                title_normalized = filtered_df['Title'].str.lower().str.replace(" ", "", regex=False).str.replace("-", "", regex=False).str.replace("(", "", regex=False).str.replace(")", "", regex=False)
+                term_mask_2 = title_normalized.str.contains(term_normalized, na=False, regex=False)
+
+                # Strategy 3: MET-specific flexible search
+                # Catches: "METex14", "MET exon 14", "MET Exon 14 Skipping", etc.
+                if "met" in term_lower and ("ex" in term_lower or "exon" in term_lower):
+                    # Search for "metex14" OR "metexon14" anywhere in normalized title
+                    # This catches "(METex14)", "MET exon 14 skipping", etc.
+                    term_mask_3 = (
+                        title_normalized.str.contains("metex14", na=False, regex=False) |
+                        title_normalized.str.contains("metexon14", na=False, regex=False)
+                    )
+                else:
+                    term_mask_3 = pd.Series([False] * len(filtered_df), index=filtered_df.index)
+
+                # Combine all strategies
+                combined_mask = term_mask_1 | term_mask_2 | term_mask_3
+                mask |= combined_mask
+
+                # DEBUG: Show what each term found
+                matches_1 = term_mask_1.sum()
+                matches_2 = term_mask_2.sum()
+                matches_3 = term_mask_3.sum()
+                matches_total = combined_mask.sum()
+                print(f"[SESSION_LIST] Term '{term}': multi-field={matches_1}, normalized={matches_2}, MET-specific={matches_3}, total={matches_total}")
+
             results = filtered_df[mask]
+            print(f"[SESSION_LIST] Total results after all terms: {len(results)}")
         else:
             results = filtered_df
 
@@ -2109,7 +2381,7 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
         context_str = " matching criteria" if filter_ctx else ""
         table_html = f"""<div class='entity-table-container'>
 <h6 class='entity-table-title'>📅 Sessions{context_str} ({len(results)} found)</h6>
-{results.to_html(index=False, classes='table table-sm table-striped', escape=False)}
+{dataframe_to_custom_html(results)}
 </div>"""
         return table_html, results
 
@@ -2771,23 +3043,524 @@ def generate_emerging_threats_table(df: pd.DataFrame, indication_keywords: list 
     return result_df
 
 # ============================================================================
+# INTELLIGENT QUERY ANALYSIS & SYNTHESIS HELPERS
+# ============================================================================
+
+def extract_filter_keywords_from_query(user_query: str) -> list:
+    """
+    Use ultra-fast AI (GPT-5-nano) to extract filter keywords from user query.
+
+    This replaces hardcoded keyword lists and works across ALL therapeutic areas.
+
+    Examples:
+    - "metastatic bladder cancer" → ["metastatic", "advanced"]
+    - "MIBC" → ["muscle invasive", "MIBC", "locally advanced"]
+    - "first-line NSCLC" → ["first-line", "1L", "treatment-naive"]
+    - "HER2+ breast cancer" → ["HER2-positive", "HER2+", "her2"]
+
+    Returns: List of keywords to search in study titles
+    """
+    if not client:
+        print("[FILTER EXTRACTION] OpenAI client not available, skipping AI extraction")
+        return []
+
+    extraction_prompt = f"""Extract filter keywords from this medical query for searching conference abstract TITLES.
+
+User Query: "{user_query}"
+
+Return a JSON list of keywords that should appear in abstract titles to match this query.
+
+**RULES**:
+1. Extract clinical settings: metastatic/advanced, early-stage, MIBC/NMIBC, 1L/2L, adjuvant/neoadjuvant, maintenance
+2. Include common abbreviations and synonyms
+3. Return ONLY keywords that would appear in study TITLES (not general concepts)
+4. Maximum 5 keywords
+5. If query is too general (e.g., "latest trends"), return empty list []
+
+**EXAMPLES**:
+
+Query: "metastatic bladder cancer mechanisms"
+→ ["metastatic", "advanced", "stage IV"]
+
+Query: "MIBC immunotherapy"
+→ ["muscle invasive", "MIBC", "locally advanced"]
+
+Query: "first-line NSCLC"
+→ ["first-line", "1L", "treatment-naive", "frontline"]
+
+Query: "HER2-positive breast cancer"
+→ ["HER2-positive", "HER2+", "her2"]
+
+Query: "METex14 skipping mNSCLC"
+→ ["MET exon 14", "METex14", "MET ex14"]
+
+Query: "neoadjuvant therapy outcomes"
+→ ["neoadjuvant", "pre-surgery", "pre-operative"]
+
+Query: "What are the latest trends?" (too general)
+→ []
+
+Return ONLY a JSON array, no explanation."""
+
+    try:
+        response = client.responses.create(
+            model="gpt-5-nano",  # Ultra-fast extraction using GPT-5-nano
+            input=[{"role": "user", "content": extraction_prompt}],
+            reasoning={"effort": "minimal"},  # Minimal reasoning for simple extraction
+            text={"verbosity": "low"},
+            max_output_tokens=100  # Very short response
+        )
+
+        keywords = json.loads(response.output_text)
+        print(f"[FILTER EXTRACTION] GPT-5-nano extracted {len(keywords)} keywords in {response.usage.total_tokens} tokens")
+        return keywords if isinstance(keywords, list) else []
+
+    except Exception as e:
+        print(f"[FILTER EXTRACTION] Error: {e}")
+        return []
+
+
+def detect_query_intent(user_query: str) -> dict:
+    """
+    Detect query intent to route to appropriate synthesis strategy.
+
+    Returns:
+        {
+            "intent": "comparative" | "synthesis" | "specific_data" | "predictive" | "exploratory",
+            "verbosity": "quick" | "comprehensive",  # Detected from query
+            "entities": [...],  # Extracted entities (drugs, biomarkers, etc)
+            "comparison_type": "efficacy" | "safety" | "biomarkers" | None
+        }
+    """
+    query_lower = user_query.lower()
+
+    # Detect verbosity preference (GPT-5 accepts: "low", "medium", "high")
+    verbosity = "medium"  # Default
+    if any(word in query_lower for word in ["quick", "brief", "summary", "tldr", "short"]):
+        verbosity = "low"
+    elif any(word in query_lower for word in ["comprehensive", "detailed", "in-depth", "thorough", "complete"]):
+        verbosity = "high"
+
+    # Detect intent patterns
+    if any(word in query_lower for word in ["compare", "vs", "versus", "difference between", "how does"]):
+        intent = "comparative"
+    elif any(word in query_lower for word in ["predict", "forecast", "trend", "what will", "next year"]):
+        intent = "predictive"
+    elif any(word in query_lower for word in ["what was the", "what's the", "show me the", "give me the"]):
+        intent = "specific_data"
+    elif any(word in query_lower for word in ["find", "identify", "which studies", "who is"]):
+        intent = "exploratory"
+    else:
+        intent = "synthesis"  # Default: synthesize insights
+
+    return {
+        "intent": intent,
+        "verbosity": verbosity,
+        "entities": [],  # Will be filled by classify_user_query
+        "comparison_type": None  # Will be determined if comparative
+    }
+
+
+def retrieve_comprehensive_data(user_query: str, filtered_df: pd.DataFrame, classification: dict, max_studies: int = None) -> pd.DataFrame:
+    """
+    Retrieve ALL relevant studies based on user query - no random sampling.
+
+    Uses multi-stage filtering:
+    1. Apply user's query filters (from classification)
+    2. Detect clinical setting keywords (metastatic, MIBC, NMIBC, etc.)
+    3. Semantic search if available
+    4. Return ALL matches (or intelligently limited set)
+
+    Args:
+        user_query: User's natural language question
+        filtered_df: Pre-filtered dataframe (by TA, drug, session, date)
+        classification: Query classification from classify_user_query
+        max_studies: Maximum studies to return (None = no limit, use AI reasoning to filter)
+
+    Returns:
+        DataFrame with ALL relevant studies for comprehensive synthesis
+    """
+    print(f"[COMPREHENSIVE RETRIEVAL] Starting with {len(filtered_df)} pre-filtered studies")
+
+    # STEP 1: Use AI to extract SPECIFIC filter keywords (only for sub-filtering, not for main search)
+    # Skip if search_terms already exist from classification (those are more precise!)
+    if not classification.get('search_terms'):
+        filter_keywords = extract_filter_keywords_from_query(user_query)
+
+        # Apply AI-extracted filter keywords if any were found
+        if filter_keywords:
+            print(f"[COMPREHENSIVE RETRIEVAL] AI extracted filter keywords: {filter_keywords}")
+            keyword_mask = pd.Series([False] * len(filtered_df), index=filtered_df.index)
+
+            for keyword in filter_keywords:
+                # IMPROVED: Handle keywords flexibly
+                keyword_normalized = keyword.lower().replace(" ", "").replace("-", "")
+
+                # Search both the keyword as-is AND the normalized version
+                keyword_mask |= (
+                    filtered_df['Title'].str.contains(keyword, case=False, na=False, regex=False) |
+                    filtered_df['Title'].str.lower().str.replace(" ", "").str.replace("-", "").str.replace("(", "").str.replace(")", "").str.contains(keyword_normalized, na=False, regex=False)
+                )
+
+            filtered_by_keywords = filtered_df[keyword_mask]
+            if len(filtered_by_keywords) > 0:
+                print(f"[COMPREHENSIVE RETRIEVAL] Filtered to {len(filtered_by_keywords)} studies matching AI-extracted keywords")
+                filtered_df = filtered_by_keywords
+            else:
+                print(f"[COMPREHENSIVE RETRIEVAL] No studies matched AI keywords, keeping full dataset")
+    else:
+        print(f"[COMPREHENSIVE RETRIEVAL] Using classification search_terms, skipping GPT-5-nano extraction")
+
+    # STEP 2: Extract search terms from classification
+    search_terms = classification.get('search_terms', [])
+
+    if not search_terms:
+        # No specific search terms - return all filtered data (including clinical setting filter)
+        print(f"[COMPREHENSIVE RETRIEVAL] No search terms, using filtered dataset ({len(filtered_df)} studies)")
+        return filtered_df
+
+    # STEP 3: Match search terms to Drug_Company_names.csv and apply AND/OR logic
+    # Skip drug database matching for biomarker/mechanism queries (session_list)
+    table_type = classification.get('table_type')
+
+    if table_type == 'session_list':
+        # For biomarker/mechanism queries, use search terms directly without drug database matching
+        print(f"[COMPREHENSIVE RETRIEVAL] Session list query detected - skipping drug database matching")
+        matched_drugs = search_terms
+    else:
+        # Load drug database for actual drug queries
+        try:
+            drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
+            drug_db = pd.read_csv(drug_db_path, encoding='utf-8-sig')
+        except Exception as e:
+            print(f"[COMPREHENSIVE RETRIEVAL] Could not load Drug_Company_names.csv: {e}")
+            drug_db = None
+
+        # Match search terms to known drugs
+        matched_drugs = []
+        if drug_db is not None:
+            for term in search_terms:
+                if not term:
+                    continue
+                term_lower = term.lower().strip()
+                for _, drug_row in drug_db.iterrows():
+                    commercial = str(drug_row['drug_commercial']).lower().strip() if pd.notna(drug_row['drug_commercial']) else ""
+                    generic = str(drug_row['drug_generic']).lower().strip() if pd.notna(drug_row['drug_generic']) else ""
+
+                    if (term_lower in commercial or commercial in term_lower or
+                        term_lower in generic or generic in term_lower):
+                        drug_name = str(drug_row['drug_generic']).strip() if pd.notna(drug_row['drug_generic']) else str(drug_row['drug_commercial']).strip()
+                        drug_name = drug_name.split('-')[0].strip()  # Remove suffixes
+                        if drug_name not in matched_drugs:
+                            matched_drugs.append(drug_name)
+                            print(f"[COMPREHENSIVE RETRIEVAL] Matched '{term}' -> '{drug_name}'")
+                        break
+
+        # If no matches, use search terms as-is
+        if not matched_drugs:
+            matched_drugs = search_terms
+            print(f"[COMPREHENSIVE RETRIEVAL] No database matches, using raw terms")
+
+    print(f"[COMPREHENSIVE RETRIEVAL] Final drug list: {matched_drugs}")
+
+    # For session_list (biomarkers/mechanisms), always use OR logic (search terms are variations of same thing)
+    # For drug_studies with multiple drugs, use AND logic (drug combinations like "EV + P")
+    if table_type == 'session_list':
+        print(f"[COMPREHENSIVE RETRIEVAL] Session list → OR logic (search term variations)")
+        relevant_mask = pd.Series([False] * len(filtered_df), index=filtered_df.index)
+        for term in matched_drugs:
+            term_mask = (
+                filtered_df['Title'].str.contains(term, case=False, na=False) |
+                filtered_df['Speakers'].str.contains(term, case=False, na=False) |
+                filtered_df['Affiliation'].str.contains(term, case=False, na=False)
+            )
+            relevant_mask |= term_mask  # OR logic
+    elif len(matched_drugs) >= 2:
+        print(f"[COMPREHENSIVE RETRIEVAL] Multiple drugs → AND logic (all must be present)")
+        relevant_mask = pd.Series([True] * len(filtered_df), index=filtered_df.index)
+        for drug in matched_drugs:
+            drug_mask = (
+                filtered_df['Title'].str.contains(drug, case=False, na=False) |
+                filtered_df['Speakers'].str.contains(drug, case=False, na=False) |
+                filtered_df['Affiliation'].str.contains(drug, case=False, na=False)
+            )
+            relevant_mask &= drug_mask  # AND logic
+    else:
+        print(f"[COMPREHENSIVE RETRIEVAL] Single drug → OR logic")
+        relevant_mask = pd.Series([False] * len(filtered_df), index=filtered_df.index)
+        for drug in matched_drugs:
+            drug_mask = (
+                filtered_df['Title'].str.contains(drug, case=False, na=False) |
+                filtered_df['Speakers'].str.contains(drug, case=False, na=False) |
+                filtered_df['Affiliation'].str.contains(drug, case=False, na=False)
+            )
+            relevant_mask |= drug_mask  # OR logic
+
+    relevant_studies = filtered_df[relevant_mask]
+    print(f"[COMPREHENSIVE RETRIEVAL] Found {len(relevant_studies)} studies matching search terms: {search_terms}")
+
+    # Skip semantic expansion for session_list (biomarker) queries - we want exact matches only
+    # If semantic search available and we have few results, expand with related studies
+    if collection and len(relevant_studies) < 10 and table_type != 'session_list':
+        try:
+            results = collection.query(
+                query_texts=[user_query],
+                n_results=min(50, len(filtered_df))
+            )
+
+            if results and results['ids']:
+                result_indices = [int(doc_id.replace('doc_', '')) for doc_id in results['ids'][0]]
+                semantic_results = df_global.iloc[result_indices]
+                semantic_results = semantic_results[semantic_results.index.isin(filtered_df.index)]
+
+                # Combine with search term results
+                combined = pd.concat([relevant_studies, semantic_results]).drop_duplicates()
+                print(f"[COMPREHENSIVE RETRIEVAL] Expanded to {len(combined)} studies using semantic search")
+                relevant_studies = combined
+        except Exception as e:
+            print(f"[COMPREHENSIVE RETRIEVAL] Semantic search failed: {e}")
+
+    # Apply intelligent limiting if needed
+    if max_studies and len(relevant_studies) > max_studies:
+        print(f"[COMPREHENSIVE RETRIEVAL] Limiting to {max_studies} most relevant studies")
+        # Prioritize: Session type (Proffered Paper > Mini Oral > Poster)
+        session_priority = {'Proffered Paper': 1, 'Mini Oral Session': 2, 'Poster': 3, 'ePoster': 4}
+        relevant_studies['_priority'] = relevant_studies['Session'].map(session_priority).fillna(5)
+        relevant_studies = relevant_studies.sort_values('_priority').head(max_studies)
+        relevant_studies = relevant_studies.drop(columns=['_priority'])
+
+    return relevant_studies
+
+
+def build_synthesis_prompt_pre_abstract(user_query: str, relevant_data: pd.DataFrame, classification: dict, verbosity: str = "medium", intent: str = "synthesis") -> str:
+    """
+    Build synthesis prompt for PRE-ABSTRACT state (only titles, authors, affiliations available).
+
+    Focus on EXPECTATIONS based on:
+    - Study titles (what topics/drugs/biomarkers)
+    - Author expertise (who's presenting)
+    - Institution prestige (where research is from)
+    - Session type (oral vs poster, symposia vs educational)
+    """
+
+    # Format study data for AI - handle different table types
+    # Standard columns: Identifier, Title, Speakers, Affiliation, Session, Date, Time
+    # But some tables (drug_class_ranking, author_ranking, etc.) have different structures
+    available_columns = list(relevant_data.columns)
+
+    # Try to get standard columns, fall back to whatever is available
+    desired_columns = ['Identifier', 'Title', 'Speakers', 'Affiliation', 'Session', 'Date', 'Time']
+    columns_to_use = [col for col in desired_columns if col in available_columns]
+
+    if not columns_to_use:
+        # If none of the standard columns exist, use all available columns
+        data_for_synthesis = relevant_data.to_markdown(index=False)
+    else:
+        data_for_synthesis = relevant_data[columns_to_use].to_markdown(index=False)
+
+    if verbosity == "quick":
+        synthesis_instructions = """Provide a CONCISE synthesis (3-5 key bullet points):
+- Main research themes visible from titles
+- Notable institutions/researchers
+- Key drugs/mechanisms mentioned
+- What to expect when full abstracts are released"""
+    else:
+        synthesis_instructions = """Provide a COMPREHENSIVE synthesis organized as:
+
+**1. RESEARCH LANDSCAPE** (what's being presented):
+- Dominant themes from study titles (mechanisms, biomarkers, treatment settings)
+- Drug/therapy focus distribution
+- Clinical development stages visible (Phase 1/2/3, early/late-line)
+
+**2. KEY OPINION LEADER SIGNALS** (who's presenting):
+- Leading institutions and their research focus
+- Notable researcher names and their contributions
+- Geographic distribution of research
+
+**3. WHAT TO EXPECT** (anticipatory analysis):
+- Based on titles and investigators, what data quality/impact is likely?
+- Which presentations are high-priority for medical affairs?
+- What questions remain unanswered (to be clarified when abstracts drop)?
+
+**4. ROLE-SPECIFIC IMPLICATIONS**:
+- **For MSLs**: Key discussion topics and KOL engagement opportunities
+- **For Medical Directors**: Strategic positioning and portfolio implications
+- **For Leadership**: Competitive landscape shifts and investment priorities"""
+
+    prompt = f"""You are a medical affairs research analyst. Full conference abstracts are NOT YET AVAILABLE (release: Oct 13th).
+
+Your task: Synthesize insights from study TITLES, AUTHORS, and SESSION INFO to help medical affairs prepare.
+
+**USER QUESTION**: {user_query}
+
+**AVAILABLE DATA**: Titles, authors, affiliations, session types, dates/times
+**YOUR SCOPE**: {len(relevant_data)} relevant studies
+
+**CRITICAL**: Since abstracts aren't available yet:
+- Focus on WHAT'S BEING STUDIED (from titles)
+- WHO'S PRESENTING (author expertise, institution prestige)
+- WHEN/WHERE (session type indicates data maturity: oral > poster)
+- DO NOT speculate about efficacy, safety, or clinical outcomes
+- DO analyze expected themes, research priorities, and strategic implications
+
+{synthesis_instructions}
+
+**STUDY DATA** ({len(relevant_data)} studies):
+{data_for_synthesis}
+
+Synthesize insights based on the available metadata. Be analytical but acknowledge data limitations."""
+
+    return prompt
+
+
+def build_synthesis_prompt_post_abstract(user_query: str, relevant_data: pd.DataFrame, classification: dict, verbosity: str = "medium", intent: str = "synthesis") -> str:
+    """
+    Build synthesis prompt for POST-ABSTRACT state (full abstract text available).
+
+    Focus on DATA SYNTHESIS:
+    - Efficacy signals across studies
+    - Safety patterns
+    - Biomarker correlations
+    - Treatment paradigm insights
+    """
+
+    # Get abstract column name
+    abstract_col = 'Abstract' if 'Abstract' in relevant_data.columns else 'abstract'
+
+    # Format study data INCLUDING abstracts for AI
+    relevant_with_abstracts = relevant_data[relevant_data[abstract_col].notna() & (relevant_data[abstract_col].str.strip() != '')]
+
+    if len(relevant_with_abstracts) == 0:
+        print("[SYNTHESIS] Warning: No abstracts available for selected studies")
+        return build_synthesis_prompt_pre_abstract(user_query, relevant_data, classification, verbosity)
+
+    # Format for synthesis - include full abstracts
+    # Handle missing columns gracefully
+    formatted_abstracts = []
+    for idx, row in relevant_with_abstracts.iterrows():
+        # Try to get each field, use 'N/A' if missing
+        identifier = row.get('Identifier', row.get('identifier', 'N/A'))
+        title = row.get('Title', row.get('title', 'N/A'))
+        speakers = row.get('Speakers', row.get('speakers', 'N/A'))
+        affiliation = row.get('Affiliation', row.get('affiliation', 'N/A'))
+        session = row.get('Session', row.get('session', 'N/A'))
+        date = row.get('Date', row.get('date', 'N/A'))
+        time = row.get('Time', row.get('time', 'N/A'))
+
+        formatted_abstracts.append(f"""
+**Abstract {identifier}**: {title}
+**Authors**: {speakers} ({affiliation})
+**Session**: {session} | {date} at {time}
+
+**FULL ABSTRACT**:
+{row[abstract_col][:2000]}{"..." if len(str(row[abstract_col])) > 2000 else ""}
+---""")
+
+    abstracts_text = "\n".join(formatted_abstracts[:50])  # Limit to 50 abstracts max to avoid token limits
+
+    if verbosity == "quick":
+        synthesis_instructions = """Provide a CONCISE data synthesis (5-7 bullet points):
+- Key efficacy signals (ORR, PFS ranges across studies)
+- Safety patterns (common AEs, dose-limiting toxicities)
+- Biomarker insights (predictive/prognostic correlations)
+- Consensus vs controversy across studies"""
+    else:
+        synthesis_instructions = """Provide a COMPREHENSIVE data synthesis:
+
+**1. EFFICACY SYNTHESIS** (what the DATA shows):
+- Response rates (ORR, DCR) - ranges and patterns
+- Survival outcomes (PFS, OS) - median values and subgroup variations
+- Treatment settings (1L, 2L+, maintenance) - efficacy by line
+- Consensus: Where do multiple studies agree?
+- Controversy: Where do results diverge?
+
+**2. SAFETY PROFILE** (across all studies):
+- Common adverse events (grade 3+ frequency)
+- Dose-limiting toxicities
+- Treatment discontinuation rates
+- Class effects vs drug-specific signals
+
+**3. BIOMARKER INSIGHTS** (predictive value):
+- Which biomarkers predict response?
+- Biomarker-selected vs unselected populations
+- Cut-point validation across studies
+
+**4. TREATMENT PARADIGM IMPLICATIONS**:
+- Optimal treatment sequencing
+- Combination strategies (what works with what?)
+- Patient selection criteria
+- Clinical practice impact
+
+**5. ROLE-SPECIFIC IMPLICATIONS**:
+- **For MSLs**: Key data talking points for HCP conversations
+- **For Medical Directors**: Positioning vs competitors, evidence gaps
+- **For Leadership**: Portfolio impact, partnership opportunities"""
+
+    prompt = f"""You are a senior medical affairs scientific analyst synthesizing FULL ABSTRACT DATA from ESMO 2025.
+
+**USER QUESTION**: {user_query}
+
+**YOUR TASK**: Synthesize collective insights across {len(relevant_with_abstracts)} abstracts with FULL TEXT.
+
+**CRITICAL INSTRUCTIONS**:
+1. DO NOT list or describe individual abstracts
+2. SYNTHESIZE patterns, trends, and insights ACROSS studies
+3. ALWAYS cite Abstract #s when referencing specific data points
+4. Identify where studies agree (consensus) and disagree (controversy)
+5. Extract quantitative data (ORR, PFS, safety rates) when available
+6. Focus on clinical implications and strategic insights
+
+{synthesis_instructions}
+
+**FULL ABSTRACTS** ({len(relevant_with_abstracts)} studies with complete data):
+{abstracts_text}
+
+Provide evidence-based synthesis grounded in the abstract data above."""
+
+    return prompt
+
+
+def add_role_specific_implications(synthesis_text: str, user_query: str, relevant_data: pd.DataFrame) -> str:
+    """
+    Auto-generate role-specific implications footer.
+    Called after main synthesis to add tactical guidance for different roles.
+    """
+
+    # This would be added to the AI synthesis as a separate section
+    # For now, we'll include it in the main prompt above
+    # Future: Could be a second AI call or template-based
+
+    return synthesis_text  # Placeholder - handled in prompts above
+
+
+# ============================================================================
 # AI STREAMING FUNCTIONS
 # ============================================================================
 
-def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini", reasoning_effort: str = "medium"):
+def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini", reasoning_effort: str = "medium", verbosity: str = "medium"):
     """Stream tokens from OpenAI for SSE."""
     if not client:
         print("[OPENAI] ERROR: Client not initialized")
         yield "data: " + json.dumps({"text": "OpenAI API key not configured."}) + "\n\n"
         return
 
+    # Map our verbosity terms to GPT-5 accepted values
+    verbosity_map = {
+        "quick": "low",
+        "comprehensive": "high",
+        "low": "low",
+        "medium": "medium",
+        "high": "high"
+    }
+    gpt5_verbosity = verbosity_map.get(verbosity, "medium")
+
     try:
-        print(f"[OPENAI] Creating streaming response with model: {model}, reasoning effort: {reasoning_effort}")
+        print(f"[OPENAI] Creating streaming response with model: {model}, reasoning: {reasoning_effort}, verbosity: {gpt5_verbosity}")
         stream = client.responses.create(
             model=model,
             input=[{"role": "user", "content": prompt}],
             reasoning={"effort": reasoning_effort},
-            text={"verbosity": "low"},
+            text={"verbosity": gpt5_verbosity},
             max_output_tokens=6000,  # Increased for comprehensive analysis
             stream=True
         )
@@ -3397,9 +4170,10 @@ Based on the data provided above, write a comprehensive analysis following the f
 @app.route('/api/chat/stream', methods=['POST'])
 def stream_chat_api():
     """
-    Simplified chat streaming endpoint.
+    Enhanced chat streaming endpoint with intelligent synthesis.
 
-    Flow: Get query → Apply filters → Semantic search → Build prompt → Stream response
+    Flow: Get query → Detect intent → Apply filters → Retrieve ALL relevant data →
+          Generate tables if needed → Build synthesis prompt → Stream response
     """
     user_query = request.json.get('message', '').strip()
     conversation_history = request.json.get('conversation_history', [])
@@ -3415,24 +4189,43 @@ def stream_chat_api():
 
     def generate():
         try:
-            # 1. Classify user query to detect entity types and table needs (with conversation context)
-            classification = classify_user_query(user_query, conversation_history)
-            print(f"[QUERY CLASSIFICATION] {classification}")
+            # 1a. Check for UNAMBIGUOUS combinations FIRST (EV + P, nivo plus ipi)
+            combination_override = detect_unambiguous_combination(user_query)
+            if combination_override:
+                classification = combination_override
+                print(f"[COMBINATION OVERRIDE] Unambiguous combination detected, skipping AI")
+                print(f"[QUERY CLASSIFICATION] {classification}")
+            else:
+                # 1b. Check for AMBIGUOUS drug queries (EV and pembro, EV with pembro)
+                ambiguous_check = detect_ambiguous_drug_query(user_query)
+                if ambiguous_check:
+                    classification = ambiguous_check
+                    print(f"[AMBIGUOUS QUERY] Needs clarification")
+                    print(f"[QUERY CLASSIFICATION] {classification}")
+                else:
+                    # 1c. Use AI classification for everything else
+                    classification = classify_user_query(user_query, conversation_history)
+                    print(f"[QUERY CLASSIFICATION] {classification}")
 
-            # 1.5. Handle clarification requests (vague queries)
+            # 1.5. Detect query intent for synthesis routing
+            intent_data = detect_query_intent(user_query)
+            print(f"[INTENT DETECTION] Intent: {intent_data['intent']}, Verbosity: {intent_data['verbosity']}")
+
+            # 2. Handle clarification requests (vague queries)
             if classification.get('entity_type') == 'clarification_needed':
                 clarification_text = classification.get('clarification_question',
                     "Could you please be more specific? For example, you could ask about:\n\n" +
-                    "• Specific researchers (e.g., 'Who is Andrea Necchi?')\n" +
-                    "• Drugs or therapies (e.g., 'Tell me about enfortumab vedotin')\n" +
-                    "• Top rankings (e.g., 'Most active institutions')\n" +
-                    "• Trends or analyses (e.g., 'Latest immunotherapy trends')")
+                    "• **Data synthesis**: 'What's the latest on ADCs in bladder cancer?'\n" +
+                    "• **Comparisons**: 'Compare EV+P vs avelumab maintenance'\n" +
+                    "• **Specific queries**: 'Show me studies on FGFR3 biomarkers'\n" +
+                    "• **Trends**: 'Predict which mechanism will dominate next year'\n\n" +
+                    "You can also specify: '**quick summary**' or '**comprehensive analysis**'")
 
                 yield "data: " + json.dumps({"text": clarification_text}) + "\n\n"
                 yield "data: [DONE]\n\n"
                 return
 
-            # 2. Apply filters to get relevant dataset
+            # 3. Apply filters to get relevant dataset
             filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
 
             if filtered_df.empty:
@@ -3440,130 +4233,71 @@ def stream_chat_api():
                 yield "data: [DONE]\n\n"
                 return
 
-            # 3. Generate entity table if needed
+            # 4. Generate entity table if needed (KEEP THIS - tables are valuable!)
             table_html = ""
             table_data = pd.DataFrame()
 
             if classification.get('generate_table'):
-                table_html, table_data = generate_entity_table(classification, df_global)
+                # IMPORTANT: Pass filtered_df instead of df_global so searches work within the filter
+                table_html, table_data = generate_entity_table(classification, filtered_df)
 
                 if table_html:
-                    # Send table first as a separate event
+                    # Send table FIRST as a separate event
                     yield "data: " + json.dumps({"table": sanitize_unicode_for_windows(table_html)}) + "\n\n"
+                    print(f"[CHAT] Table generated with {len(table_data)} rows")
 
-            # 4. Determine data context for AI response
-            if not table_data.empty:
-                # Use table data as primary context (reduces hallucination)
-                relevant_data = table_data
-                data_source = f"entity table ({len(table_data)} records)"
-            elif table_html and table_data.empty:
-                # Table was generated but returned no results (drug/author not found)
-                # Still do semantic search to provide context for AI response
-                relevant_data = filtered_df.head(20)
+            # 5. NEW: Retrieve ALL relevant data for comprehensive synthesis (no sampling!)
+            # IMPORTANT: Always use retrieve_comprehensive_data for synthesis, not table_data
+            # Table data is capped at top_n (usually 50) for display, but AI needs full dataset
+            relevant_data = retrieve_comprehensive_data(
+                user_query=user_query,
+                filtered_df=filtered_df,
+                classification=classification,
+                max_studies=None  # No limit - let AI handle all relevant data
+            )
+            print(f"[CHAT] Retrieved {len(relevant_data)} relevant studies for synthesis")
 
-                if collection:
-                    try:
-                        results = collection.query(
-                            query_texts=[user_query],
-                            n_results=min(20, len(filtered_df))
-                        )
-
-                        if results and results['ids']:
-                            result_indices = [int(doc_id.replace('doc_', '')) for doc_id in results['ids'][0]]
-                            relevant_data = df_global.iloc[result_indices]
-                            relevant_data = relevant_data[relevant_data.index.isin(filtered_df.index)]
-                    except Exception as e:
-                        print(f"[SEMANTIC SEARCH] Error: {e}")
-
-                data_source = f"semantic search (no exact matches, using related studies)"
+            # 6. Build intelligent synthesis prompt based on abstract availability
+            if abstracts_available:
+                print(f"[CHAT] Building POST-ABSTRACT synthesis prompt")
+                synthesis_prompt = build_synthesis_prompt_post_abstract(
+                    user_query=user_query,
+                    relevant_data=relevant_data,
+                    classification=classification,
+                    verbosity=intent_data['verbosity'],
+                    intent=intent_data['intent']
+                )
             else:
-                # Fall back to semantic search
-                relevant_data = filtered_df.head(20)
+                print(f"[CHAT] Building PRE-ABSTRACT synthesis prompt (titles/authors only)")
+                synthesis_prompt = build_synthesis_prompt_pre_abstract(
+                    user_query=user_query,
+                    relevant_data=relevant_data,
+                    classification=classification,
+                    verbosity=intent_data['verbosity'],
+                    intent=intent_data['intent']
+                )
 
-                if collection:
-                    try:
-                        results = collection.query(
-                            query_texts=[user_query],
-                            n_results=min(20, len(filtered_df))
-                        )
-
-                        if results and results['ids']:
-                            result_indices = [int(doc_id.replace('doc_', '')) for doc_id in results['ids'][0]]
-                            relevant_data = df_global.iloc[result_indices]
-                            relevant_data = relevant_data[relevant_data.index.isin(filtered_df.index)]
-                    except Exception as e:
-                        print(f"[SEMANTIC SEARCH] Error: {e}")
-
-                data_source = f"semantic search ({len(relevant_data)} records)"
-
-            # 5. Build context from relevant data
-            data_context = relevant_data[['Identifier', 'Title', 'Speakers', 'Affiliation']].head(15).to_markdown(index=False)
-
-            # 6. Build prompt with scope context
-            # Build human-readable scope description
-            scope_parts = []
-            if drug_filters:
-                scope_parts.append(f"💊 {', '.join(drug_filters)}")
-            if ta_filters:
-                scope_parts.append(f"🎯 {', '.join(ta_filters)}")
-
-            if scope_parts:
-                active_scope = " • ".join(scope_parts)
-                scope_description = f"**ACTIVE SCOPE**: {active_scope} ({len(filtered_df)} studies)"
-            else:
-                scope_description = f"**ACTIVE SCOPE**: All Conference Data ({len(filtered_df)} studies)"
-
-            ta_context = f"Therapeutic Area: {', '.join(ta_filters) if ta_filters else 'All Therapeutic Areas'}"
-            drug_context = f"Drug Focus: {', '.join(drug_filters) if drug_filters else 'Competitive Landscape'}"
-
-            # Include conversation history for context
-            history_context = ""
-            if conversation_history:
-                recent_history = conversation_history[-4:]  # Last 2 exchanges
-                history_text = "\n".join([f"User: {msg['user']}\nAssistant: {msg['assistant']}" for msg in recent_history])
-                history_context = f"\n\n**CONVERSATION HISTORY**:\n{history_text}"
-
-            # Add table context if generated
-            table_context = ""
+            # Add table context if table was shown
             if classification.get('generate_table'):
                 if not table_data.empty:
-                    table_context = f"\n\n**NOTE**: A data table has been displayed to the user showing {len(table_data)} relevant records. Use this table as your primary source of truth when answering."
+                    table_note = f"\n\n**NOTE**: A data table with {len(table_data)} studies has been shown to the user above. DO NOT repeat the table data. Instead, synthesize insights and patterns from the data."
                 else:
-                    table_context = f"\n\n**NOTE**: The user asked about a specific entity that was not found in the ESMO 2025 dataset. A 'no results' message has been displayed. Explain why this might be the case and suggest alternative searches or related topics."
+                    table_note = f"\n\n**NOTE**: The requested entity was not found. Explain why and suggest alternatives."
+                synthesis_prompt += table_note
 
-            prompt = f"""You are an AI assistant for COSMIC, the Conference Intelligence App for EMD Serono medical affairs. You help analyze ESMO 2025 conference abstracts.
+            print(f"[CHAT] Synthesis prompt length: {len(synthesis_prompt)} chars")
 
-**YOUR ROLE**:
-- Respond naturally and conversationally to user queries
-- For greetings like "Hi" or "Hello", be friendly and briefly introduce your capabilities
-- For data questions, provide insights based on the conference abstracts
-- You have access to {len(filtered_df)} conference studies in the current scope
-
-**USER QUESTION**: {user_query}
-
-{scope_description}
-
-**DATA SOURCE**: {data_source}
-{history_context}{table_context}
-
-**SAMPLE CONFERENCE DATA** (showing {len(relevant_data)} most relevant of {len(filtered_df)} total studies):
-{data_context}
-
-**INSTRUCTIONS**:
-- Respond naturally to the user's question (whether greeting, casual query, or data request)
-- When analyzing conference data, mention the scope size: "Looking at {len(filtered_df)} studies in [scope]..."
-- Always cite Abstract # (Identifier) when referencing specific studies
-- If data doesn't answer the question, acknowledge this and suggest alternatives
-- Consider EMD Serono's portfolio context: avelumab (bladder), tepotinib (NSCLC MET+), cetuximab (CRC/H&N), pimicotinib (TGCT)
-- Be conversational, helpful, and concise
-
-Please respond naturally to the user."""
-
-            # 7. Stream AI response
-            for token_event in stream_openai_tokens(prompt):
+            # 7. Stream AI synthesis response
+            print(f"[CHAT] Starting AI streaming with {intent_data['verbosity']} verbosity")
+            for token_event in stream_openai_tokens(synthesis_prompt, reasoning_effort="medium", verbosity=intent_data['verbosity']):
                 yield token_event
 
+            print(f"[CHAT] Synthesis complete")
+
         except Exception as e:
+            print(f"[CHAT] ERROR: {str(e)}")
+            import traceback
+            traceback.print_exc()
             yield "data: " + json.dumps({"error": f"Chat error: {str(e)}"}) + "\n\n"
             yield "data: [DONE]\n\n"
 
@@ -3591,6 +4325,7 @@ else:
     print(f"[INFO] ChromaDB: {'Initialized' if collection else 'Not available'}")
     print(f"[INFO] OpenAI API: {'Configured' if client else 'Not configured'}")
     print(f"[INFO] Competitive Landscapes: {len([k for k, v in competitive_landscapes.items() if v])} loaded")
+    print(f"[INFO] Abstract Availability: {'ENABLED - Full data synthesis' if abstracts_available else 'DISABLED - Using titles/authors only (until Oct 13th)'}")
 
     print("="*80 + "\n")
 
@@ -3605,7 +4340,7 @@ if __name__ == '__main__':
     # Run Flask app
     app.run(
         host='0.0.0.0',
-        port=5000,
+        port=5001,  # Port 5001 to avoid conflicts with testing on 5000
         debug=False,  # Changed to False for production readiness
         threaded=True
     )

@@ -364,8 +364,31 @@ body.ai-tab-active .quick-intel-sidebar:not(.collapsed) ~ .main-content {
 }
 
 /* Sidebar Toggle Button */
+/* Floating animation for sidebar toggle */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
 .sidebar-toggle {
-  display: none; /* Hidden - use sidebar click instead */
+  display: none; /* Hidden on desktop - only visible on mobile */
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  color: var(--ink);
+  animation: float 2s ease-in-out infinite;
+  transition: transform 0.2s;
+}
+
+.sidebar-toggle:hover {
+  transform: scale(1.1);
+  animation: none;
 }
 
 /* App Bar */
@@ -613,13 +636,11 @@ tbody tr:last-child td:last-child {
 
 tbody tr {
   border-bottom: 1px solid var(--stroke);
-  transition: all 0.15s ease;
-  max-height: 60px;
+  transition: background 0.15s ease;
 }
 
 tbody tr:hover {
   background: var(--bg);
-  max-height: none;
 }
 
 tbody td {
@@ -632,10 +653,41 @@ tbody td {
   max-width: 250px;
 }
 
-tbody tr:hover td {
-  white-space: normal;
-  overflow: visible;
-  max-width: none;
+/* Removed hover expansion - cells stay truncated, full text visible via title tooltip */
+
+/* Custom tooltip for table cells */
+.custom-cell-tooltip {
+  position: fixed;
+  background: var(--card);
+  border: 1.5px solid var(--stroke);
+  border-radius: 8px;
+  padding: 12px 16px;
+  max-width: 400px;
+  font-size: 13px;
+  color: var(--ink);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  pointer-events: none;
+  display: none;
+  word-wrap: break-word;
+  line-height: 1.5;
+}
+
+.custom-cell-tooltip.show {
+  display: block;
+}
+
+/* AI chat tables - no hover expansion, use custom tooltips */
+.ai-chat-table tbody td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-chat-table tbody tr:hover td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Highlighted Search Results */
@@ -1188,6 +1240,17 @@ mark {
   padding: 8px 12px;
   border-bottom: 1px solid var(--stroke);
   color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* Prevent hover expansion on entity tables - use custom tooltip instead */
+.entity-table-container tr:hover td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .entity-table-container tr:hover {
@@ -1288,7 +1351,15 @@ mark {
   }
 
   .sidebar-toggle {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    padding: 8px 12px;
+    background: var(--bg);
+    border: 1.5px solid var(--stroke);
+    border-radius: 8px;
+    margin-right: 12px;
   }
 
   .appbar-title {
