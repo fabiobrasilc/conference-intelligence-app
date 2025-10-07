@@ -2144,20 +2144,36 @@ def generate_entity_table(classification: dict, df: pd.DataFrame) -> tuple:
         if drug_db is not None:
             for term in search_terms:
                 term_lower = term.lower().strip()
+                # Skip empty or very short search terms
+                if not term_lower or len(term_lower) < 3:
+                    continue
+
                 for _, drug_row in drug_db.iterrows():
                     commercial = str(drug_row['drug_commercial']).lower().strip() if pd.notna(drug_row['drug_commercial']) else ""
                     generic = str(drug_row['drug_generic']).lower().strip() if pd.notna(drug_row['drug_generic']) else ""
 
+                    # Skip empty drug names (prevents empty string matching)
+                    if not commercial:
+                        commercial = None
+                    if not generic:
+                        generic = None
+
                     # Match if term is in commercial/generic name or vice versa
-                    if (term_lower in commercial or commercial in term_lower or
-                        term_lower in generic or generic in term_lower):
+                    # BUT: Skip if either string is empty/None to prevent false matches
+                    matched = False
+                    if commercial and (term_lower in commercial or commercial in term_lower):
+                        matched = True
+                    elif generic and (term_lower in generic or generic in term_lower):
+                        matched = True
+
+                    if matched:
                         # Use generic name WITHOUT suffix (e.g., "enfortumab vedotin" not "enfortumab vedotin-ejfv")
                         drug_name = str(drug_row['drug_generic']).strip() if pd.notna(drug_row['drug_generic']) else str(drug_row['drug_commercial']).strip()
 
                         # Remove suffixes like "-ejfv", "-nxki", etc. (keep base name only)
                         drug_name = drug_name.split('-')[0].strip()
 
-                        if drug_name not in matched_drugs:
+                        if drug_name and drug_name not in matched_drugs:
                             matched_drugs.append(drug_name)
                             print(f"[DRUG SEARCH] Matched '{term}' → '{drug_name}'")
                         break
@@ -3240,18 +3256,33 @@ def retrieve_comprehensive_data(user_query: str, filtered_df: pd.DataFrame, clas
         matched_drugs = []
         if drug_db is not None:
             for term in search_terms:
-                if not term:
-                    continue
                 term_lower = term.lower().strip()
+                # Skip empty or very short search terms
+                if not term_lower or len(term_lower) < 3:
+                    continue
+
                 for _, drug_row in drug_db.iterrows():
                     commercial = str(drug_row['drug_commercial']).lower().strip() if pd.notna(drug_row['drug_commercial']) else ""
                     generic = str(drug_row['drug_generic']).lower().strip() if pd.notna(drug_row['drug_generic']) else ""
 
-                    if (term_lower in commercial or commercial in term_lower or
-                        term_lower in generic or generic in term_lower):
+                    # Skip empty drug names (prevents empty string matching)
+                    if not commercial:
+                        commercial = None
+                    if not generic:
+                        generic = None
+
+                    # Match if term is in commercial/generic name or vice versa
+                    # BUT: Skip if either string is empty/None to prevent false matches
+                    matched = False
+                    if commercial and (term_lower in commercial or commercial in term_lower):
+                        matched = True
+                    elif generic and (term_lower in generic or generic in term_lower):
+                        matched = True
+
+                    if matched:
                         drug_name = str(drug_row['drug_generic']).strip() if pd.notna(drug_row['drug_generic']) else str(drug_row['drug_commercial']).strip()
                         drug_name = drug_name.split('-')[0].strip()  # Remove suffixes
-                        if drug_name not in matched_drugs:
+                        if drug_name and drug_name not in matched_drugs:
                             matched_drugs.append(drug_name)
                             print(f"[COMPREHENSIVE RETRIEVAL] Matched '{term}' -> '{drug_name}'")
                         break
