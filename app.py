@@ -27,6 +27,15 @@ import hashlib
 import io
 
 # ============================================================================
+# TIER 1 + TIER 2 IMPORTS (Enhanced Search)
+# ============================================================================
+from entity_resolver import expand_query_entities, resolve_drug_name
+from improved_search import precompute_search_text, smart_search
+from query_intelligence import analyze_query
+from enhanced_search import complete_search_pipeline
+from lean_synthesis import build_lean_synthesis_prompt, estimate_prompt_tokens
+
+# ============================================================================
 # UNICODE SANITIZATION (Windows compatibility)
 # ============================================================================
 
@@ -137,6 +146,12 @@ df_global = None
 competitive_landscapes = {}  # Will hold loaded JSON competitive landscape data
 abstracts_available = False  # Auto-detected: True if 'Abstract' column exists in dataset
 
+# Drug Database Caches (loaded once at startup)
+DRUG_DATABASE = None  # Source DataFrame from CSV
+MOA_DRUG_CACHE = {}  # {"ADC": [56 drugs], "ICI": [44 drugs], ...}
+TARGET_DRUG_CACHE = {}  # {"HER2": [15 drugs], "PD-1": [8 drugs], ...}
+DRUG_ALIAS_MAP = {}  # {"pembro": "pembrolizumab", "ev": "enfortumab vedotin", ...}
+
 # ============================================================================
 # COMPETITIVE LANDSCAPE JSON LOADING
 # ============================================================================
@@ -163,6 +178,175 @@ def load_competitive_landscapes():
             competitive_landscapes[ta_name] = None
 
     return competitive_landscapes
+
+# ============================================================================
+# DRUG DATABASE CACHE LOADING
+# ============================================================================
+
+def load_drug_database_cache():
+    """
+    Load drug database CSV and build lookup caches for fast access.
+
+    Builds three caches:
+    - MOA_DRUG_CACHE: {"ADC": [56 drugs], "ICI": [44 drugs], ...}
+    - TARGET_DRUG_CACHE: {"HER2": [15 drugs], "PD-1": [8 drugs], ...}
+    - DRUG_ALIAS_MAP: {"pembro": "pembrolizumab", "ev": "enfortumab vedotin", ...}
+
+    CSV is the source of truth - easy to update, just restart app.
+    """
+    global DRUG_DATABASE, MOA_DRUG_CACHE, TARGET_DRUG_CACHE, DRUG_ALIAS_MAP
+
+    try:
+        # Load drug database CSV
+        drug_db_path = Path(__file__).parent / "Drug_Company_names_with_MOA.csv"
+        DRUG_DATABASE = pd.read_csv(drug_db_path)
+        print(f"[DRUG_DATABASE] Loaded {len(DRUG_DATABASE)} drugs from database")
+
+        # Build MOA cache
+        MOA_DRUG_CACHE = {}
+        for moa_class in DRUG_DATABASE['moa_class'].dropna().unique():
+            drugs_in_class = DRUG_DATABASE[DRUG_DATABASE['moa_class'] == moa_class]
+            drug_list = []
+
+            for _, row in drugs_in_class.iterrows():
+                # Use generic name if available, otherwise commercial name
+                if pd.notna(row['drug_generic']):
+                    drug_list.append(row['drug_generic'].strip())
+                elif pd.notna(row['drug_commercial']):
+                    drug_list.append(row['drug_commercial'].strip())
+
+            MOA_DRUG_CACHE[moa_class] = drug_list
+
+        print(f"[DRUG_DATABASE] Built MOA cache with {len(MOA_DRUG_CACHE)} classes:")
+        # Show top classes
+        for moa_class in ['ADC', 'ICI', 'TKI', 'Targeted Therapy', 'Bispecific Antibody']:
+            if moa_class in MOA_DRUG_CACHE:
+                print(f"  - {moa_class}: {len(MOA_DRUG_CACHE[moa_class])} drugs")
+
+        # Build TARGET cache (extract common targets from moa_target column)
+        TARGET_DRUG_CACHE = {}
+        common_targets = ['HER2', 'PD-1', 'PD-L1', 'CTLA-4', 'EGFR', 'VEGF', 'FGFR', 'MET', 'TROP2', 'Nectin-4']
+
+        for target in common_targets:
+            drugs_with_target = DRUG_DATABASE[
+                DRUG_DATABASE['moa_target'].str.contains(target, case=False, na=False)
+            ]
+            drug_list = []
+
+            for _, row in drugs_with_target.iterrows():
+                if pd.notna(row['drug_generic']):
+                    drug_list.append(row['drug_generic'].strip())
+                elif pd.notna(row['drug_commercial']):
+                    drug_list.append(row['drug_commercial'].strip())
+
+            if drug_list:  # Only add if we found drugs
+                TARGET_DRUG_CACHE[target] = drug_list
+
+        print(f"[DRUG_DATABASE] Built target cache with {len(TARGET_DRUG_CACHE)} targets")
+
+        # Build ALIAS map (common abbreviations)
+        DRUG_ALIAS_MAP = {
+            # Checkpoint inhibitors
+            "pembro": "pembrolizumab",
+            "keytruda": "pembrolizumab",
+            "nivo": "nivolumab",
+            "opdivo": "nivolumab",
+            "atezo": "atezolizumab",
+            "tecentriq": "atezolizumab",
+            "durva": "durvalumab",
+            "imfinzi": "durvalumab",
+            "avel": "avelumab",
+            "bavencio": "avelumab",
+
+            # ADCs
+            "ev": "enfortumab vedotin",
+            "padcev": "enfortumab vedotin",
+            "sg": "sacituzumab govitecan",
+            "trodelvy": "sacituzumab govitecan",
+            "t-dxd": "trastuzumab deruxtecan",
+            "enhertu": "trastuzumab deruxtecan",
+
+            # Combination abbreviations (for EV+P, etc.)
+            "p": "pembrolizumab",
+            "n": "nivolumab",
+
+            # Other common drugs
+            "erda": "erdafitinib",
+            "balversa": "erdafitinib",
+        }
+
+        print(f"[DRUG_DATABASE] Built alias map with {len(DRUG_ALIAS_MAP)} abbreviations")
+        print(f"[DRUG_DATABASE] All caches ready for fast lookup")
+
+    except Exception as e:
+        print(f"[DRUG_DATABASE] ERROR: Could not load drug database - {e}")
+        print(f"[DRUG_DATABASE] Continuing with empty caches")
+
+
+def expand_search_terms_with_database(search_terms: List[str]) -> List[str]:
+    """
+    Expand search terms using drug database caches.
+
+    Takes AI-extracted search terms and expands MOA classes/targets to actual drug names.
+
+    Args:
+        search_terms: List from classify_user_query() (e.g., ["ADC", "pembrolizumab"])
+
+    Returns:
+        Expanded list with MOA classes replaced by drug names
+
+    Examples:
+        ["ADC"] → [56 ADC drug names]
+        ["pembrolizumab"] → ["pembrolizumab"] (unchanged)
+        ["ICI", "pembrolizumab"] → [44 ICI drugs + "pembrolizumab"]
+        ["HER2-targeted"] → [15 HER2 drugs]
+    """
+    if not search_terms:
+        return []
+
+    expanded = []
+
+    for term in search_terms:
+        term_lower = term.lower().strip()
+        term_added = False
+
+        # Priority 1: Check if it's an alias (most specific - like "ev", "p")
+        if term_lower in DRUG_ALIAS_MAP:
+            expanded.append(DRUG_ALIAS_MAP[term_lower])
+            term_added = True
+
+        # Priority 2: Check if it's a MOA class (exact match - like "ADC", "ICI")
+        if not term_added:
+            for moa_class, drug_list in MOA_DRUG_CACHE.items():
+                if moa_class.lower() == term_lower:
+                    expanded.extend(drug_list)
+                    term_added = True
+                    break
+
+        # Priority 3: Check if it's a target (partial match - like "HER2", "PD-1")
+        # Only match if term is at least 3 chars to avoid false matches like "P" → "PD-1"
+        if not term_added and len(term_lower) >= 3:
+            for target, drug_list in TARGET_DRUG_CACHE.items():
+                if target.lower() == term_lower or target.lower() in term_lower:
+                    expanded.extend(drug_list)
+                    term_added = True
+                    break
+
+        # Priority 4: Keep as-is (already a specific drug name or keyword)
+        if not term_added:
+            expanded.append(term)
+
+    # Deduplicate while preserving order
+    seen = set()
+    result = []
+    for drug in expanded:
+        drug_normalized = drug.lower().strip()
+        if drug_normalized not in seen:
+            seen.add(drug_normalized)
+            result.append(drug)
+
+    return result
+
 
 def match_studies_with_competitive_landscape(df: pd.DataFrame, therapeutic_area: str, n: int = 200) -> pd.DataFrame:
     """
@@ -357,33 +541,41 @@ ESMO_DRUG_FILTERS = {
 }
 
 ESMO_THERAPEUTIC_AREAS = {
-    "All Therapeutic Areas": {"keywords": []},
+    "All Therapeutic Areas": {
+        "keywords": [],
+        "exclude_if_in_title": [],
+        "regex": False
+    },
     "Bladder Cancer": {
-        "keywords": ["bladder", "urothelial", "uroepithelial", "transitional cell", r"\bGU\b", "genitourinary"],
-        "exclusions": ["prostate"],
+        "keywords": ["bladder", "urothelial", "uroepithelial", "transitional cell", r"\bmuc\b", r"\bmibc\b", r"\bnmibc\b"],
+        "exclude_if_in_title": ["renal", "kidney", "prostate", r"\brcc\b", "clear cell", "germ cell", "testicular"],
         "regex": True
     },
     "Renal Cancer": {
-        "keywords": ["renal", "renal cell", r"\bRCC\b"],
+        "keywords": ["renal", "renal cell", r"\brcc\b", "kidney cancer", "clear cell renal"],
+        "exclude_if_in_title": ["bladder", "urothelial", "prostate", "testicular"],
         "regex": True
     },
     "Lung Cancer": {
-        "keywords": ["lung", "non-small cell lung cancer", "non-small-cell lung cancer", "NSCLC",
+        "keywords": ["lung", "non-small cell lung cancer", "non-small-cell lung cancer", "NSCLC", "SCLC", "small cell lung",
                      r"\bMET\b", r"\bALK\b", r"\bEGFR\b", r"\bKRAS\b", r"\bBRAF\b", r"\bRET\b", r"\bROS1\b", r"\bNTRK\b"],
+        "exclude_if_in_title": ["mesothelioma", "thymic", "thymoma"],
         "regex": True
     },
     "Colorectal Cancer": {
-        "keywords": ["colorectal", r"\bCRC\b", "colon", "rectal", "bowel"],
-        "exclusions": ["gastric", "esophageal", "pancreatic", "hepatocellular", r"\bHCC\b"],
+        "keywords": ["colorectal", r"\bcrc\b", "colon", "rectal", "bowel"],
+        "exclude_if_in_title": ["gastric", "esophageal", "pancreatic", "hepatocellular", r"\bhcc\b", "gastroesophageal", "bile duct", "cholangiocarcinoma"],
         "regex": True
     },
     "Head and Neck Cancer": {
-        "keywords": ["head and neck", "head & neck", r"\bH&N\b", r"\bHNSCC\b", r"\bSCCHN\b",
-                     "squamous cell carcinoma of the head", "oral", "pharyngeal", "laryngeal"],
+        "keywords": ["head and neck", "head & neck", r"\bhnscc\b", r"\bscchn\b",
+                     "squamous cell carcinoma of the head", "oral", "pharyngeal", "laryngeal", "oropharyngeal", "nasopharyngeal"],
+        "exclude_if_in_title": ["esophageal", "gastric", "lung", "thyroid", "salivary gland carcinoma"],
         "regex": True
     },
     "TGCT": {
-        "keywords": [r"\bTGCT\b", r"\bPVNS\b", "tenosynovial giant cell tumor", "pigmented villonodular synovitis"],
+        "keywords": [r"\btgct\b", r"\bpvns\b", "tenosynovial giant cell tumor", "pigmented villonodular synovitis"],
+        "exclude_if_in_title": ["testicular", "germ cell tumor", "seminoma", "nonseminoma"],
         "regex": True
     }
 }
@@ -1191,6 +1383,18 @@ def load_and_process_data():
 
     print(f"[DATA] Loaded {len(df)} studies from ESMO 2025")
 
+    # ========================================================================
+    # TIER 1 ENHANCEMENT: Precompute search_text for multi-field search
+    # ========================================================================
+    print(f"[TIER1] Precomputing search_text for multi-field search...")
+    df = precompute_search_text(df)
+    print(f"[TIER1] Search_text precomputed - enhanced search enabled")
+
+    # ========================================================================
+    # DRUG DATABASE: Load and cache MOA/target mappings
+    # ========================================================================
+    load_drug_database_cache()
+
     # Initialize ChromaDB in background (non-blocking)
     import threading
     chroma_thread = threading.Thread(target=initialize_chromadb, args=(df,), daemon=True)
@@ -1268,203 +1472,56 @@ def initialize_chromadb(df):
 # FILTER LOGIC (Therapeutic Area Filters)
 # ============================================================================
 
-def apply_bladder_cancer_filter(df: pd.DataFrame) -> pd.Series:
-    """Apply bladder cancer filter with prostate and RCC exclusion."""
-    keywords = ["bladder", "urothelial", "uroepithelial", "transitional cell", "genitourinary"]
-    acronym = "GU"  # Case-sensitive, word boundary
-    exclusions = ["prostate", " rcc", "renal cell", "clear cell rcc", "ccrcc"]
-
-    mask = pd.Series([False] * len(df), index=df.index)
-
-    # Regular keywords (case-insensitive)
-    for keyword in keywords:
-        title_mask = df["Title"].str.contains(keyword, case=False, na=False, regex=False)
-        theme_mask = df["Theme"].str.contains(keyword, case=False, na=False, regex=False)
-        mask = mask | title_mask | theme_mask
-
-    # Acronym with word boundary (case-sensitive to avoid "giant")
-    pattern = r'\b' + re.escape(acronym) + r'\b'
-    title_mask = df["Title"].str.contains(pattern, case=True, na=False, regex=True)
-    theme_mask = df["Theme"].str.contains(pattern, case=True, na=False, regex=True)
-    mask = mask | title_mask | theme_mask
-
-    # Build theme-has-exclusions mask (prostate OR RCC)
-    theme_has_exclusions = pd.Series([False] * len(df), index=df.index)
-    for exclusion in exclusions:
-        theme_has_exclusions = theme_has_exclusions | df["Theme"].str.contains(exclusion, case=False, na=False, regex=False)
-
-    # Also check title for RCC-specific terms
-    title_has_rcc = df["Title"].str.contains(" rcc|renal cell|clear cell", case=False, na=False, regex=True)
-
-    # Build title-has-bladder mask for smart exclusion
-    title_has_bladder = pd.Series([False] * len(df), index=df.index)
-    for keyword in keywords:
-        title_has_bladder = title_has_bladder | df["Title"].str.contains(keyword, case=False, na=False, regex=False)
-    pattern_gu = r'\b' + re.escape(acronym) + r'\b'
-    title_has_bladder = title_has_bladder | df["Title"].str.contains(pattern_gu, case=True, na=False, regex=True)
-
-    # Logic: (title match AND not RCC) OR (theme match AND no exclusions) OR (theme has exclusions BUT title has bladder)
-    # Exclude if title explicitly mentions RCC
-    mask = (title_has_bladder & ~title_has_rcc) | (mask & ~theme_has_exclusions) | (theme_has_exclusions & title_has_bladder & ~title_has_rcc)
-
-    return mask
-
-def apply_renal_cancer_filter(df: pd.DataFrame) -> pd.Series:
-    """Apply renal cancer filter."""
-    keywords = ["renal", "renal cell"]
-    acronyms = ["RCC"]
-    bladder_keywords = ["bladder", "urothelial", "uroepithelial"]
-
-    mask = pd.Series([False] * len(df), index=df.index)
-    title_has_renal = pd.Series([False] * len(df), index=df.index)
-
-    # Build title and theme masks
-    for keyword in keywords:
-        title_has_renal = title_has_renal | df["Title"].str.contains(keyword, case=False, na=False, regex=False)
-
-    for acronym in acronyms:
-        pattern = r'\b' + re.escape(acronym) + r'\b'
-        title_has_renal = title_has_renal | df["Title"].str.contains(pattern, case=False, na=False, regex=True)
-
-    theme_has_renal = pd.Series([False] * len(df), index=df.index)
-    for keyword in keywords:
-        theme_has_renal = theme_has_renal | df["Theme"].str.contains(keyword, case=False, na=False, regex=False)
-
-    for acronym in acronyms:
-        pattern = r'\b' + re.escape(acronym) + r'\b'
-        theme_has_renal = theme_has_renal | df["Theme"].str.contains(pattern, case=False, na=False, regex=True)
-
-    # Check if theme contains bladder keywords
-    theme_has_bladder = pd.Series([False] * len(df), index=df.index)
-    for bladder_kw in bladder_keywords:
-        theme_has_bladder = theme_has_bladder | df["Theme"].str.contains(bladder_kw, case=False, na=False, regex=False)
-
-    # Logic: title match OR (theme match AND no bladder in theme)
-    mask = title_has_renal | (theme_has_renal & ~theme_has_bladder)
-    return mask
-
-def apply_lung_cancer_filter(df: pd.DataFrame) -> pd.Series:
-    """Apply lung cancer filter."""
-    keywords = ["lung", "non-small cell lung cancer", "non-small-cell lung cancer"]
-    acronyms = ["NSCLC", "MET", "ALK", "EGFR", "KRAS", "BRAF", "RET", "ROS1", "NTRK"]  # All with word boundaries
-
-    mask = pd.Series([False] * len(df), index=df.index)
-
-    for keyword in keywords:
-        title_mask = df["Title"].str.contains(keyword, case=False, na=False, regex=False)
-        theme_mask = df["Theme"].str.contains(keyword, case=False, na=False, regex=False)
-        mask = mask | title_mask | theme_mask
-
-    for acronym in acronyms:
-        # Use word boundaries and case-sensitivity for acronyms to prevent false matches
-        pattern = r'\b' + re.escape(acronym) + r'\b'
-        title_mask = df["Title"].str.contains(pattern, case=True, na=False, regex=True)
-        theme_mask = df["Theme"].str.contains(pattern, case=True, na=False, regex=True)
-        mask = mask | title_mask | theme_mask
-
-    return mask
-
-def apply_colorectal_cancer_filter(df: pd.DataFrame) -> pd.Series:
-    """Apply colorectal cancer filter."""
-    keywords = ["colorectal", "colon", "rectal", "bowel"]
-    acronyms = ["CRC"]
-    exclusions = ["gastric", "stomach", "esophageal", "esophagus", "pancreatic", "pancreas",
-                  "hepatocellular", "liver cancer", "biliary", "cholangiocarcinoma"]
-    exclusion_acronyms = ["HCC", "GEJ"]
-
-    mask = pd.Series([False] * len(df), index=df.index)
-
-    for keyword in keywords:
-        title_mask = df["Title"].str.contains(keyword, case=False, na=False, regex=False)
-        theme_mask = df["Theme"].str.contains(keyword, case=False, na=False, regex=False)
-        mask = mask | title_mask | theme_mask
-
-    for acronym in acronyms:
-        pattern = r'\b' + re.escape(acronym) + r'\b'
-        title_mask = df["Title"].str.contains(pattern, case=False, na=False, regex=True)
-        theme_mask = df["Theme"].str.contains(pattern, case=False, na=False, regex=True)
-        mask = mask | title_mask | theme_mask
-
-    # Build title-has-CRC mask for smart exclusion
-    title_has_crc = pd.Series([False] * len(df), index=df.index)
-    for keyword in keywords:
-        title_has_crc = title_has_crc | df["Title"].str.contains(keyword, case=False, na=False, regex=False)
-    for acronym in acronyms:
-        pattern = r'\b' + re.escape(acronym) + r'\b'
-        title_has_crc = title_has_crc | df["Title"].str.contains(pattern, case=False, na=False, regex=True)
-
-    # Exclude other GI cancers unless title has CRC terms
-    for exclusion in exclusions:
-        exclusion_mask = df["Title"].str.contains(exclusion, case=False, na=False, regex=False) | \
-                        df["Theme"].str.contains(exclusion, case=False, na=False, regex=False)
-        mask = mask & ~(exclusion_mask & ~title_has_crc)
-
-    for exclusion_acronym in exclusion_acronyms:
-        pattern = r'\b' + re.escape(exclusion_acronym) + r'\b'
-        exclusion_mask = df["Title"].str.contains(pattern, case=False, na=False, regex=True) | \
-                        df["Theme"].str.contains(pattern, case=False, na=False, regex=True)
-        mask = mask & ~(exclusion_mask & ~title_has_crc)
-
-    return mask
-
-def apply_head_neck_cancer_filter(df: pd.DataFrame) -> pd.Series:
-    """Apply head and neck cancer filter."""
-    keywords = ["head and neck", "head & neck", "squamous cell carcinoma of the head", "oral", "pharyngeal", "laryngeal"]
-    acronyms = ["H&N", "HNSCC", "SCCHN"]
-
-    mask = pd.Series([False] * len(df), index=df.index)
-
-    for keyword in keywords:
-        title_mask = df["Title"].str.contains(keyword, case=False, na=False, regex=False)
-        theme_mask = df["Theme"].str.contains(keyword, case=False, na=False, regex=False)
-        mask = mask | title_mask | theme_mask
-
-    for acronym in acronyms:
-        pattern = r'\b' + re.escape(acronym) + r'\b'
-        title_mask = df["Title"].str.contains(pattern, case=False, na=False, regex=True)
-        theme_mask = df["Theme"].str.contains(pattern, case=False, na=False, regex=True)
-        mask = mask | title_mask | theme_mask
-
-    return mask
-
-def apply_tgct_filter(df: pd.DataFrame) -> pd.Series:
-    """Apply TGCT filter."""
-    keywords = ["tenosynovial giant cell tumor", "pigmented villonodular synovitis"]
-    acronyms = ["TGCT", "PVNS"]
-
-    mask = pd.Series([False] * len(df), index=df.index)
-
-    for keyword in keywords:
-        title_mask = df["Title"].str.contains(keyword, case=False, na=False, regex=False)
-        theme_mask = df["Theme"].str.contains(keyword, case=False, na=False, regex=False)
-        mask = mask | title_mask | theme_mask
-
-    for acronym in acronyms:
-        pattern = r'\b' + re.escape(acronym) + r'\b'
-        title_mask = df["Title"].str.contains(pattern, case=False, na=False, regex=True)
-        theme_mask = df["Theme"].str.contains(pattern, case=False, na=False, regex=True)
-        mask = mask | title_mask | theme_mask
-
-    return mask
-
 def apply_therapeutic_area_filter(df: pd.DataFrame, ta_filter: str) -> pd.Series:
-    """Apply therapeutic area filter by name."""
+    """
+    Apply smart therapeutic area filter with multi-field search and Title-based exclusions.
+
+    Strategy:
+    1. Search for TA keywords across ALL fields (catches edge cases like "mUC", theme mentions)
+    2. If Title explicitly contains EXCLUDED term → Remove it (Title wins in conflicts)
+    3. This handles: Theme says "GU" but Title says "renal cell" → Exclude
+
+    Args:
+        df: DataFrame to filter
+        ta_filter: TA name from ESMO_THERAPEUTIC_AREAS
+
+    Returns:
+        Boolean mask for matching studies
+    """
     if ta_filter == "All Therapeutic Areas":
         return pd.Series([True] * len(df), index=df.index)
-    elif ta_filter == "Bladder Cancer":
-        return apply_bladder_cancer_filter(df)
-    elif ta_filter == "Renal Cancer":
-        return apply_renal_cancer_filter(df)
-    elif ta_filter == "Lung Cancer":
-        return apply_lung_cancer_filter(df)
-    elif ta_filter == "Colorectal Cancer":
-        return apply_colorectal_cancer_filter(df)
-    elif ta_filter == "Head and Neck Cancer":
-        return apply_head_neck_cancer_filter(df)
-    elif ta_filter == "TGCT":
-        return apply_tgct_filter(df)
-    else:
+
+    # Get TA configuration
+    ta_config = ESMO_THERAPEUTIC_AREAS.get(ta_filter, {})
+    keywords = ta_config.get("keywords", [])
+    exclude_if_in_title = ta_config.get("exclude_if_in_title", [])
+    use_regex = ta_config.get("regex", False)
+
+    if not keywords:
         return pd.Series([True] * len(df), index=df.index)
+
+    # Step 1: Broad multi-field search for TA keywords (using search_text_normalized)
+    include_mask = pd.Series([False] * len(df), index=df.index)
+
+    for keyword in keywords:
+        if use_regex:
+            include_mask |= df['search_text_normalized'].str.contains(keyword, case=False, na=False, regex=True)
+        else:
+            include_mask |= df['search_text_normalized'].str.contains(keyword, case=False, na=False, regex=False)
+
+    # Step 2: Explicit exclusion based on Title (Title wins in conflicts)
+    exclude_mask = pd.Series([False] * len(df), index=df.index)
+
+    for exclude_term in exclude_if_in_title:
+        if use_regex:
+            exclude_mask |= df['Title'].str.contains(exclude_term, case=False, na=False, regex=True)
+        else:
+            exclude_mask |= df['Title'].str.contains(exclude_term, case=False, na=False, regex=False)
+
+    # Step 3: Final mask = include AND NOT exclude
+    final_mask = include_mask & ~exclude_mask
+
+    return final_mask
 
 # ============================================================================
 # MULTI-FILTER LOGIC (Main Filtering Function)
@@ -1834,6 +1891,106 @@ def detect_unambiguous_combination(user_query: str) -> dict:
                 }
 
     return None
+
+
+def detect_competitor_query(user_message: str, ta_filters: Optional[list] = None) -> Optional[List[str]]:
+    """
+    AI-powered competitor detection using drug database context.
+
+    Detects queries like "show me competitor data" and determines which drugs
+    are competitors to EMD Serono's avelumab based on indication and MOA.
+
+    Args:
+        user_message: User's query
+        ta_filters: Active therapeutic area filters (e.g., ["bladder"])
+
+    Returns:
+        List of competitor drug names, or None if not a competitor query
+    """
+    # Quick check: does query mention "competitor" or "competition"?
+    query_lower = user_message.lower()
+    if "competitor" not in query_lower and "competition" not in query_lower and "competitive" not in query_lower:
+        return None
+
+    # Build TA context
+    ta_context = ", ".join(ta_filters) if ta_filters else "bladder cancer (primary indication)"
+
+    # Get available MOA classes from cache
+    moa_summary = []
+    for moa_class in ['ICI', 'ADC', 'TKI', 'Bispecific Antibody', 'Targeted Therapy']:
+        if moa_class in MOA_DRUG_CACHE:
+            moa_summary.append(f"- {moa_class}: {len(MOA_DRUG_CACHE[moa_class])} drugs")
+
+    prompt = f"""You are analyzing a competitor intelligence query for EMD Serono's medical affairs team.
+
+**COMPANY CONTEXT**:
+- User company: EMD Serono (Merck KGaA/Pfizer)
+- Key product: Avelumab (Bavencio)
+- Drug class: PD-L1 checkpoint inhibitor (ICI)
+- Primary indication: First-line maintenance metastatic urothelial/bladder cancer
+- Current therapeutic area filter: {ta_context}
+
+**DRUG DATABASE AVAILABLE**:
+{chr(10).join(moa_summary)}
+
+**USER QUERY**: "{user_message}"
+
+**TASK**: Determine which drugs are COMPETITORS to avelumab in this context.
+
+**REASONING**:
+1. Avelumab is an ICI (checkpoint inhibitor) for bladder cancer
+2. Direct competitors = other ICIs approved/studied in bladder cancer
+3. Example competitors: pembrolizumab (Keytruda), nivolumab (Opdivo), atezolizumab (Tecentriq), durvalumab (Imfinzi)
+4. May also include ADCs if they compete for same patient population (e.g., enfortumab vedotin)
+5. EXCLUDE avelumab itself (don't show own product data)
+
+**RETURN JSON**:
+{{
+  "is_competitor_query": true/false,
+  "user_product": "avelumab",
+  "competitor_drugs": ["drug1", "drug2", ...],
+  "rationale": "brief 1-sentence explanation"
+}}
+
+**EXAMPLES**:
+Query: "Show me competitor data" (bladder filter active)
+Response: {{"is_competitor_query": true, "user_product": "avelumab", "competitor_drugs": ["pembrolizumab", "nivolumab", "atezolizumab", "durvalumab"], "rationale": "Other ICIs competing in 1L maintenance bladder cancer"}}
+
+Query: "Compare our data to competitors" (bladder filter)
+Response: {{"is_competitor_query": true, "user_product": "avelumab", "competitor_drugs": ["pembrolizumab", "nivolumab", "atezolizumab", "durvalumab", "enfortumab vedotin"], "rationale": "ICIs and leading ADC competing for same patient population"}}
+"""
+
+    try:
+        response = client.responses.create(
+            model="gpt-4o-mini",
+            input=[{"role": "user", "content": prompt}],
+            text={"verbosity": "medium"},
+            max_output_tokens=300
+        )
+
+        output_text = response.output_text
+        print(f"[COMPETITOR DETECTION DEBUG] Raw AI response: {output_text[:500]}")
+
+        # Strip markdown code blocks if present
+        if output_text.startswith("```json"):
+            output_text = output_text.replace("```json", "").replace("```", "").strip()
+        elif output_text.startswith("```"):
+            output_text = output_text.replace("```", "").strip()
+
+        result = json.loads(output_text)
+
+        if result.get("is_competitor_query"):
+            competitor_drugs = result.get("competitor_drugs", [])
+            print(f"[COMPETITOR DETECTION] Identified {len(competitor_drugs)} competitors: {competitor_drugs}")
+            print(f"[COMPETITOR DETECTION] Rationale: {result.get('rationale')}")
+            return competitor_drugs
+
+        return None
+
+    except Exception as e:
+        print(f"[COMPETITOR DETECTION ERROR] {e}")
+        print(f"[COMPETITOR DETECTION DEBUG] Failed to parse AI response")
+        return None
 
 
 def classify_user_query(user_message: str, conversation_history: list = None) -> dict:
@@ -3230,6 +3387,14 @@ def retrieve_comprehensive_data(user_query: str, filtered_df: pd.DataFrame, clas
     # STEP 2: Extract search terms from classification
     search_terms = classification.get('search_terms', [])
 
+    # STEP 2.5: Expand search terms using drug database caches (ADC → 56 drugs, ICI → 44 drugs, etc.)
+    if search_terms:
+        original_count = len(search_terms)
+        search_terms = expand_search_terms_with_database(search_terms)
+        if len(search_terms) != original_count:
+            print(f"[DRUG DATABASE] Expanded {original_count} search terms → {len(search_terms)} drugs")
+            print(f"[DRUG DATABASE] Sample expanded terms: {search_terms[:5]}")
+
     if not search_terms:
         # No specific search terms - return all filtered data (including clinical setting filter)
         print(f"[COMPREHENSIVE RETRIEVAL] No search terms, using filtered dataset ({len(filtered_df)} studies)")
@@ -4242,6 +4407,17 @@ def stream_chat_api():
             intent_data = detect_query_intent(user_query)
             print(f"[INTENT DETECTION] Intent: {intent_data['intent']}, Verbosity: {intent_data['verbosity']}")
 
+            # 1.6. Check for competitor intelligence query
+            competitor_drugs = detect_competitor_query(user_query, ta_filters)
+            if competitor_drugs:
+                # Override classification search_terms with competitor drugs
+                print(f"[COMPETITOR INTELLIGENCE] Detected competitor query")
+                print(f"[COMPETITOR INTELLIGENCE] Searching for: {competitor_drugs}")
+                classification['search_terms'] = competitor_drugs
+                classification['entity_type'] = 'drug'
+                classification['generate_table'] = True
+                classification['table_type'] = 'drug_studies'
+
             # 2. Handle clarification requests (vague queries)
             if classification.get('entity_type') == 'clarification_needed':
                 clarification_text = classification.get('clarification_question',
@@ -4333,6 +4509,176 @@ def stream_chat_api():
             yield "data: [DONE]\n\n"
 
     return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
+
+
+# ============================================================================
+# ENHANCED CHAT ENDPOINT (TIER 1 + TIER 2)
+# ============================================================================
+
+@app.route('/api/chat/enhanced', methods=['POST'])
+def stream_chat_api_enhanced():
+    """
+    Enhanced chat endpoint using Tier 1 + Tier 2 search intelligence.
+
+    Improvements over original:
+    - Entity resolver for automatic drug/institution normalization
+    - Query intelligence for intent detection
+    - Multi-field search (Title, Session, Theme, Speakers, Affiliation, etc.)
+    - Lean synthesis prompts (80% fewer tokens)
+    - Dynamic verbosity based on query complexity
+    - Comprehensive debug logging
+
+    Usage: Change frontend to call '/api/chat/enhanced' instead of '/api/chat/stream'
+    """
+    user_query = request.json.get('message', '').strip()
+    conversation_history = request.json.get('conversation_history', [])
+
+    # Get filter parameters
+    drug_filters = request.json.get('drug_filters', [])
+    ta_filters = request.json.get('ta_filters', [])
+    session_filters = request.json.get('session_filters', [])
+    date_filters = request.json.get('date_filters', [])
+
+    if not user_query:
+        return jsonify({"error": "No message provided"}), 400
+
+    def generate():
+        try:
+            print(f"\n{'='*70}")
+            print(f"[ENHANCED CHAT] User query: {user_query}")
+            print(f"[ENHANCED CHAT] TA filters: {ta_filters}")
+            print(f"{'='*70}\n")
+
+            # 0. Check for competitor intelligence query
+            competitor_drugs = detect_competitor_query(user_query, ta_filters)
+            if competitor_drugs:
+                # Override user query to search for specific competitors
+                original_query = user_query
+                user_query_modified = f"Studies on {', '.join(competitor_drugs[:3])} and other competitors"
+                print(f"[COMPETITOR OVERRIDE] Original query: {original_query}")
+                print(f"[COMPETITOR OVERRIDE] Modified to search: {competitor_drugs}")
+
+            # 1. Apply existing filters to get base dataset
+            filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
+
+            if filtered_df.empty:
+                yield "data: " + json.dumps({"text": "No data matches your current filters. Please adjust filters and try again."}) + "\n\n"
+                yield "data: [DONE]\n\n"
+                return
+
+            print(f"[ENHANCED CHAT] Filtered dataset: {len(filtered_df)} rows")
+
+            # 2. Convert TA filters to keywords for smart_search
+            ta_keywords = []
+            if 'Bladder Cancer' in ta_filters:
+                ta_keywords.extend(['bladder', 'urothelial'])
+            if 'Lung Cancer' in ta_filters:
+                ta_keywords.extend(['lung', 'nsclc', 'sclc'])
+            if 'Colorectal Cancer' in ta_filters:
+                ta_keywords.extend(['colorectal', 'colon', 'rectal'])
+            if 'Head and Neck Cancer' in ta_filters:
+                ta_keywords.extend(['head and neck', 'hnsc', 'hnscc'])
+
+            # Get current date for temporal filtering
+            current_date = datetime.now().strftime("%m/%d/%Y")
+
+            # 3. Run enhanced search pipeline
+            response_data = complete_search_pipeline(
+                df=filtered_df,
+                user_query=user_query,
+                ta_keywords=ta_keywords if ta_keywords else None,
+                current_date=current_date,
+                debug=True  # Enable debug logging
+            )
+
+            print(f"[ENHANCED CHAT] Pipeline response type: {response_data.get('type')}")
+            print(f"[ENHANCED CHAT] Results count: {len(response_data.get('table', []))}")
+
+            # 4. Handle clarification needed
+            if response_data.get('status') == 'clarification_needed':
+                clarification_text = response_data['question']
+                yield "data: " + json.dumps({"text": clarification_text}) + "\n\n"
+                yield "data: [DONE]\n\n"
+                return
+
+            # 5. Handle factual responses (no AI needed)
+            if response_data.get('type') == 'factual_answer':
+                answer_text = response_data.get('answer', '')
+                yield "data: " + json.dumps({"text": answer_text}) + "\n\n"
+
+                # Send table if available
+                results_table = response_data.get('table')
+                if results_table is not None and not results_table.empty:
+                    table_html = results_table.to_html(classes='table table-striped', index=False, escape=False)
+                    yield "data: " + json.dumps({"table": sanitize_unicode_for_windows(table_html)}) + "\n\n"
+
+                yield "data: [DONE]\n\n"
+                return
+
+            # 6. Handle list responses (with optional AI synthesis)
+            if response_data.get('type') == 'list_filtered':
+                answer_text = response_data.get('answer', '')
+                yield "data: " + json.dumps({"text": answer_text}) + "\n\n"
+
+                # Send table
+                results_table = response_data.get('table')
+                if results_table is not None and not results_table.empty:
+                    table_html = results_table.to_html(classes='table table-striped', index=False, escape=False)
+                    yield "data: " + json.dumps({"table": sanitize_unicode_for_windows(table_html)}) + "\n\n"
+
+                yield "data: [DONE]\n\n"
+                return
+
+            # 7. Handle AI synthesis (complex queries)
+            if response_data.get('type') in ['ai_synthesis', 'comparison']:
+                results_table = response_data.get('table', pd.DataFrame())
+
+                # Send table first if available
+                if not results_table.empty:
+                    table_html = results_table.to_html(classes='table table-striped', index=False, escape=False)
+                    yield "data: " + json.dumps({"table": sanitize_unicode_for_windows(table_html)}) + "\n\n"
+                    print(f"[ENHANCED CHAT] Table sent with {len(results_table)} rows")
+
+                # Get synthesis prompt
+                synthesis_prompt = response_data.get('prompt')
+
+                if synthesis_prompt:
+                    print(f"[ENHANCED CHAT] Streaming AI synthesis...")
+                    print(f"[ENHANCED CHAT] Prompt tokens: {response_data.get('prompt_tokens', 'unknown')}")
+
+                    # Determine reasoning effort
+                    verbosity = response_data.get('verbosity', 'medium')
+                    reasoning_effort = {
+                        'minimal': 'low',
+                        'quick': 'low',
+                        'medium': 'medium',
+                        'detailed': 'medium'
+                    }.get(verbosity, 'medium')
+
+                    # Stream AI response
+                    for token_event in stream_openai_tokens(synthesis_prompt, reasoning_effort=reasoning_effort):
+                        yield token_event
+
+                    print(f"[ENHANCED CHAT] AI streaming completed")
+                else:
+                    yield "data: " + json.dumps({"text": "No studies found matching your criteria."}) + "\n\n"
+
+                yield "data: [DONE]\n\n"
+                return
+
+            # Fallback
+            yield "data: " + json.dumps({"text": "I couldn't process your request. Please try rephrasing."}) + "\n\n"
+            yield "data: [DONE]\n\n"
+
+        except Exception as e:
+            print(f"[ENHANCED CHAT] ERROR: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            yield "data: " + json.dumps({"error": f"Chat error: {str(e)}"}) + "\n\n"
+            yield "data: [DONE]\n\n"
+
+    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
+
 
 # ============================================================================
 # APPLICATION STARTUP
