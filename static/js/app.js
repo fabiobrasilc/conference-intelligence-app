@@ -1689,38 +1689,45 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initially disable chat input until scope is selected
   const chatInput = document.getElementById('chatInput');
   chatInput.disabled = true;
-  chatInput.placeholder = 'Select the scope of the conversation here';
+  chatInput.placeholder = 'Select scope above to start typing';
 
   chatScopeDropdown.addEventListener('change', () => {
     const selected = chatScopeDropdown.value;
     if (selected === 'all') {
       // Show styled modal warning for "All conference data"
       const scopeWarningModal = new bootstrap.Modal(document.getElementById('chatScopeWarningModal'));
-      scopeWarningModal.show();
+      const modalElement = document.getElementById('chatScopeWarningModal');
+      const confirmBtn = document.getElementById('confirmScopeWarning');
+
+      let userConfirmed = false;  // Track if user clicked "Continue"
 
       // Handle "Continue with All Data" button
-      const confirmBtn = document.getElementById('confirmScopeWarning');
       const handleConfirm = () => {
+        userConfirmed = true;
         activeChatScope = { type: 'all', value: null };
         chatInput.disabled = false;
         chatInput.placeholder = 'Ask about the conference data...';
         scopeWarningModal.hide();
-        confirmBtn.removeEventListener('click', handleConfirm);
       };
 
       // Handle modal close (user clicked "Go Back" or X button)
-      const modalElement = document.getElementById('chatScopeWarningModal');
       const handleCancel = () => {
-        chatScopeDropdown.value = '';
-        activeChatScope = { type: 'none', value: null };
-        chatInput.disabled = true;
-        chatInput.placeholder = 'Select the scope of the conversation here';
+        // Only reset if user DIDN'T click "Continue"
+        if (!userConfirmed) {
+          chatScopeDropdown.value = '';
+          activeChatScope = { type: 'none', value: null };
+          chatInput.disabled = true;
+          chatInput.placeholder = 'Select scope above to start typing';
+        }
+        // Clean up event listeners
         modalElement.removeEventListener('hidden.bs.modal', handleCancel);
         confirmBtn.removeEventListener('click', handleConfirm);
       };
 
       confirmBtn.addEventListener('click', handleConfirm);
       modalElement.addEventListener('hidden.bs.modal', handleCancel);
+
+      scopeWarningModal.show();
 
     } else if (selected.startsWith('drug:')) {
       activeChatScope = { type: 'drug', value: selected.replace('drug:', '') };
@@ -1734,7 +1741,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // No selection
       activeChatScope = { type: 'none', value: null };
       chatInput.disabled = true;
-      chatInput.placeholder = 'Select the scope of the conversation here';
+      chatInput.placeholder = 'Select scope above to start typing';
     }
   });
 
