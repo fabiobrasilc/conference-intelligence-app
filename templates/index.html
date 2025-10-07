@@ -266,6 +266,7 @@
                 <div class="chat-scope-selector">
                   <label for="chatScopeDropdown">🔍 Scope:</label>
                   <select id="chatScopeDropdown" class="chat-scope-dropdown">
+                    <option value="">Select the scope of the conversation here</option>
                     <option value="all">All Conference Data (4,686 studies)</option>
                     <option value="ta:Bladder Cancer">Bladder Cancer</option>
                     <option value="ta:Renal Cancer">Renal Cancer</option>
@@ -392,6 +393,59 @@
           </div>
           <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 16px 24px;">
             <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="border-radius: 8px;">I Understand</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Scope Warning Modal -->
+    <div class="modal fade" id="chatScopeWarningModal" tabindex="-1" aria-labelledby="chatScopeWarningLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.12);">
+          <div class="modal-header" style="border-bottom: 1px solid #e9ecef; padding: 20px 24px; background-color: #fff3cd;">
+            <h5 class="modal-title fw-bold" id="chatScopeWarningLabel">
+              ⚠️ All Conference Data Scope
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" style="padding: 24px;">
+            <div style="margin-bottom: 20px; padding: 16px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px;">
+              <p style="margin: 0; font-size: 15px; line-height: 1.6;">
+                <strong>Setting the scope to the entire conference data of 4,686 sessions/studies may result in longer wait times for AI to respond.</strong>
+              </p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <h6 class="fw-bold">💡 Best Practice</h6>
+              <p style="font-size: 14px; margin-bottom: 12px;">
+                If you're interested in a specific therapeutic area, make sure to <strong>either select that TA from the scope dropdown</strong> or <strong>indicate the TA in your prompt</strong> to narrow the scope and speed up AI output.
+              </p>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+              <h6 class="fw-bold" style="color: #dc3545;">❌ Don't:</h6>
+              <div style="padding: 12px; background-color: #f8d7da; border-left: 3px solid #dc3545; border-radius: 6px; font-family: monospace; font-size: 13px; color: #721c24;">
+                "Tell me about immune checkpoint inhibitors"
+              </div>
+              <p style="font-size: 13px; color: #666; margin: 8px 0 0 0; font-style: italic;">
+                → This will search all 4,686 studies and may take 1-2 minutes
+              </p>
+            </div>
+
+            <div>
+              <h6 class="fw-bold" style="color: #28a745;">✅ Do:</h6>
+              <div style="padding: 12px; background-color: #d4edda; border-left: 3px solid #28a745; border-radius: 6px; font-family: monospace; font-size: 13px; color: #155724;">
+                "Tell me about immune checkpoint inhibitors in glioblastoma"
+              </div>
+              <p style="font-size: 13px; color: #666; margin: 8px 0 0 0; font-style: italic;">
+                → AI will narrow the scope automatically and respond faster
+              </p>
+            </div>
+
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 16px 24px; display: flex; justify-content: space-between;">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px;">Go Back</button>
+            <button type="button" class="btn btn-warning" id="confirmScopeWarning" style="border-radius: 8px;">Continue with All Data</button>
           </div>
         </div>
       </div>

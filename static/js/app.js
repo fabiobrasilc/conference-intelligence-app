@@ -1048,13 +1048,25 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ===== Chat (placeholder) =====
-  if (sendChatBtn) sendChatBtn.addEventListener('click', handleChat);
+  let isChatStreaming = false;  // Track if chat is currently streaming
+
+  if (sendChatBtn) {
+    sendChatBtn.addEventListener('click', () => {
+      // Only allow sending if not currently streaming
+      if (!isChatStreaming) {
+        handleChat();
+      }
+    });
+  }
   if (userInput) {
     // Handle Enter key for textarea: Enter sends, Shift+Enter adds newline
     userInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        handleChat();
+        // Only send if not currently streaming
+        if (!isChatStreaming) {
+          handleChat();
+        }
       }
     });
 
@@ -1067,10 +1079,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
   async function handleChat(){
     const message = userInput.value.trim();
-    if (!message) return;
+    if (!message || isChatStreaming) return;  // Prevent sending if already streaming
     userInput.value = '';
 
-    // Disable buttons during chat streaming
+    // Set streaming state and disable send button
+    isChatStreaming = true;
+    sendChatBtn.disabled = true;
+    sendChatBtn.style.opacity = '0.5';
+    sendChatBtn.style.cursor = 'not-allowed';
+
+    // Disable playbook buttons during chat streaming
     disablePlaybookButtons();
 
     // Hide greeting on first message
@@ -1210,6 +1228,12 @@ document.addEventListener('DOMContentLoaded', function() {
       // Re-enable buttons after chat completes
       enablePlaybookButtons();
 
+      // Re-enable send button and reset streaming state
+      isChatStreaming = false;
+      sendChatBtn.disabled = false;
+      sendChatBtn.style.opacity = '1';
+      sendChatBtn.style.cursor = 'pointer';
+
     } catch (error) {
       console.error('Chat error:', error);
       appendToChat(`
@@ -1218,6 +1242,12 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>`);
       // Re-enable buttons on error
       enablePlaybookButtons();
+
+      // Re-enable send button and reset streaming state
+      isChatStreaming = false;
+      sendChatBtn.disabled = false;
+      sendChatBtn.style.opacity = '1';
+      sendChatBtn.style.cursor = 'pointer';
     }
   }
 
@@ -1659,23 +1689,39 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initially disable chat input until scope is selected
   const chatInput = document.getElementById('chatInput');
   chatInput.disabled = true;
-  chatInput.placeholder = 'Please select a Chat Scope above first...';
+  chatInput.placeholder = 'Select the scope of the conversation here';
 
   chatScopeDropdown.addEventListener('change', () => {
     const selected = chatScopeDropdown.value;
     if (selected === 'all') {
-      activeChatScope = { type: 'all', value: null };
-      // Show warning for "All conference data"
-      if (confirm('⚠️ Analyzing ALL conference data may take 1-2 minutes. Continue?')) {
+      // Show styled modal warning for "All conference data"
+      const scopeWarningModal = new bootstrap.Modal(document.getElementById('chatScopeWarningModal'));
+      scopeWarningModal.show();
+
+      // Handle "Continue with All Data" button
+      const confirmBtn = document.getElementById('confirmScopeWarning');
+      const handleConfirm = () => {
+        activeChatScope = { type: 'all', value: null };
         chatInput.disabled = false;
         chatInput.placeholder = 'Ask about the conference data...';
-      } else {
-        // User canceled - reset to placeholder
+        scopeWarningModal.hide();
+        confirmBtn.removeEventListener('click', handleConfirm);
+      };
+
+      // Handle modal close (user clicked "Go Back" or X button)
+      const modalElement = document.getElementById('chatScopeWarningModal');
+      const handleCancel = () => {
         chatScopeDropdown.value = '';
         activeChatScope = { type: 'none', value: null };
         chatInput.disabled = true;
-        chatInput.placeholder = 'Please select a Chat Scope above first...';
-      }
+        chatInput.placeholder = 'Select the scope of the conversation here';
+        modalElement.removeEventListener('hidden.bs.modal', handleCancel);
+        confirmBtn.removeEventListener('click', handleConfirm);
+      };
+
+      confirmBtn.addEventListener('click', handleConfirm);
+      modalElement.addEventListener('hidden.bs.modal', handleCancel);
+
     } else if (selected.startsWith('drug:')) {
       activeChatScope = { type: 'drug', value: selected.replace('drug:', '') };
       chatInput.disabled = false;
@@ -1688,7 +1734,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // No selection
       activeChatScope = { type: 'none', value: null };
       chatInput.disabled = true;
-      chatInput.placeholder = 'Please select a Chat Scope above first...';
+      chatInput.placeholder = 'Select the scope of the conversation here';
     }
   });
 
