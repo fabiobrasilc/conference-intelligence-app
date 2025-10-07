@@ -153,6 +153,51 @@ TARGET_DRUG_CACHE = {}  # {"HER2": [15 drugs], "PD-1": [8 drugs], ...}
 DRUG_ALIAS_MAP = {}  # {"pembro": "pembrolizumab", "ev": "enfortumab vedotin", ...}
 
 # ============================================================================
+# SYSTEM PROMPT FOR AI SYNTHESIS
+# ============================================================================
+
+MEDICAL_AFFAIRS_SYSTEM_PROMPT = """You are an expert medical affairs intelligence analyst for a pharmaceutical company.
+
+**YOUR ROLE**:
+- Synthesize conference data for medical affairs teams (MSLs, Medical Directors, Leadership)
+- Focus on strategic insights: competitive landscape, KOL signals, research trends
+- Cite specific studies using their Identifier (e.g., "LBA2", "628TiP")
+
+**TONE & STYLE**:
+- Professional, concise, actionable
+- Use pharmaceutical industry terminology appropriately
+- Be direct - no preamble or filler
+
+**BREVITY RULES** (CRITICAL):
+- 0 results found → 1-2 sentences max ("Not found at this conference. [Brief context if helpful]")
+- 1 result found → 2-4 sentences (what it is, who's presenting, why it matters)
+- 2-5 results → 1 short paragraph + bullet list of key studies
+- 6+ results → Full synthesis (themes, notable studies, strategic implications)
+
+**WHEN TO BE BRIEF**:
+- User asks about obscure/absent drugs → Short answer, no speculation
+- Simple factual queries (e.g., "What is X?") → Direct answer, 2-3 sentences
+- No data found → Acknowledge briefly, suggest alternatives if relevant
+
+**WHEN TO BE COMPREHENSIVE**:
+- Multiple studies with strategic implications
+- Competitive landscape questions
+- Thematic analysis requests
+- KOL/institution mapping
+
+**NEVER**:
+- Speculate on efficacy/safety without data
+- Generate long responses when data is sparse
+- Add unnecessary background/disclaimers when answer is straightforward
+- Waste tokens on meta-commentary
+
+**ALWAYS**:
+- Cite study Identifiers when referencing specific presentations
+- Acknowledge when abstracts are not yet available (pre-Oct 13)
+- Focus on what CAN be inferred from titles, speakers, institutions
+- Be helpful but efficient with token usage"""
+
+# ============================================================================
 # COMPETITIVE LANDSCAPE JSON LOADING
 # ============================================================================
 
@@ -1834,6 +1879,81 @@ Please respond with **1**, **2**, or **3**, or rephrase your query."""
                     "pending_drugs": [drug1, drug2],  # Store for follow-up
                     "search_terms": []
                 }
+
+    return None
+
+
+def detect_meta_query(user_query: str) -> Optional[str]:
+    """
+    Detect meta/conversational queries and provide natural responses.
+
+    These are queries ABOUT the app itself, not searches for conference data.
+    Handle them conversationally without triggering data search pipeline.
+
+    Args:
+        user_query: User's question
+
+    Returns:
+        Natural response string if meta query, None if data query
+    """
+    query_lower = user_query.lower().strip()
+
+    # Capability questions
+    capability_patterns = [
+        (r"what (can you|are you able to|do you) do",
+         "I help medical affairs teams explore ESMO 2025 conference data. I can:\n\n"
+         "**Search & Filter:**\n"
+         "- Find studies by drug, therapeutic area, investigator, or institution\n"
+         "- Filter by date, session type, or presentation format\n\n"
+         "**Analysis:**\n"
+         "- Summarize research themes and trends\n"
+         "- Identify key opinion leaders and institutions\n"
+         "- Compare competitive data\n"
+         "- Highlight strategic studies for medical affairs\n\n"
+         "Try asking: *\"Show me pembrolizumab bladder cancer studies\"* or *\"What's happening on October 18th?\"*"),
+
+        (r"what (kind|type|sort)s? of (questions|queries) (can|should) (i|we) ask",
+         "You can ask me about:\n\n"
+         "**Drug/Treatment Searches:**\n"
+         "- \"What studies feature enfortumab vedotin?\"\n"
+         "- \"Show me ADC studies\"\n"
+         "- \"Tell me about TROP2-targeted therapies\"\n\n"
+         "**KOL & Institution:**\n"
+         "- \"Which studies is Giuseppe Curigliano presenting?\"\n"
+         "- \"Show me Memorial Sloan Kettering presentations\"\n\n"
+         "**Thematic Analysis:**\n"
+         "- \"Summarize checkpoint inhibitor combinations\"\n"
+         "- \"What are the trends in bladder cancer?\"\n\n"
+         "**Logistics:**\n"
+         "- \"What bladder sessions are on 10/18?\"\n"
+         "- \"What time is KEYNOTE-905?\""),
+
+        (r"how (do|does) (this|it|you) work",
+         "I search through ESMO 2025 conference data (4,686 studies) to find relevant presentations based on your query.\n\n"
+         "**Behind the scenes:**\n"
+         "1. I analyze your question to understand what you're looking for\n"
+         "2. I expand drug abbreviations (e.g., \"EV\" → enfortumab vedotin)\n"
+         "3. I search across titles, speakers, institutions, and themes\n"
+         "4. I synthesize findings into strategic insights for medical affairs\n\n"
+         "Full abstracts will be available October 13th - until then, I analyze titles and presenter data."),
+
+        (r"who (made|created|built) (you|this)",
+         "I'm a medical affairs intelligence tool built for analyzing ESMO 2025 conference data. "
+         "I combine AI synthesis with conference program data to help teams identify strategic insights, "
+         "track competitors, and engage with key opinion leaders."),
+
+        (r"^(hi|hello|hey)(\s|!|\?|$)",
+         "Hi! I'm your ESMO 2025 conference intelligence assistant. "
+         "Ask me about specific drugs, therapeutic areas, investigators, or let me analyze trends for you. "
+         "What would you like to explore?"),
+
+        (r"^(thank|thanks|thx)",
+         "You're welcome! Let me know if you need anything else from the ESMO 2025 data."),
+    ]
+
+    for pattern, response in capability_patterns:
+        if re.search(pattern, query_lower):
+            return response
 
     return None
 
@@ -3733,8 +3853,17 @@ def add_role_specific_implications(synthesis_text: str, user_query: str, relevan
 # AI STREAMING FUNCTIONS
 # ============================================================================
 
-def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini", reasoning_effort: str = "medium", verbosity: str = "medium"):
-    """Stream tokens from OpenAI for SSE."""
+def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini", reasoning_effort: str = "medium", verbosity: str = "medium", system_prompt: str = None):
+    """
+    Stream tokens from OpenAI for SSE.
+
+    Args:
+        prompt: User prompt/query
+        model: Model to use
+        reasoning_effort: "low", "medium", or "high"
+        verbosity: "low", "medium", or "high"
+        system_prompt: Optional system prompt (defaults to MEDICAL_AFFAIRS_SYSTEM_PROMPT)
+    """
     if not client:
         print("[OPENAI] ERROR: Client not initialized")
         yield "data: " + json.dumps({"text": "OpenAI API key not configured."}) + "\n\n"
@@ -3750,11 +3879,23 @@ def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini", reasoning_effor
     }
     gpt5_verbosity = verbosity_map.get(verbosity, "medium")
 
+    # Use default system prompt if not provided
+    if system_prompt is None:
+        system_prompt = MEDICAL_AFFAIRS_SYSTEM_PROMPT
+
     try:
         print(f"[OPENAI] Creating streaming response with model: {model}, reasoning: {reasoning_effort}, verbosity: {gpt5_verbosity}")
+        print(f"[OPENAI] System prompt: {len(system_prompt)} chars")
+
+        # Build messages with system prompt
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt}
+        ]
+
         stream = client.responses.create(
             model=model,
-            input=[{"role": "user", "content": prompt}],
+            input=messages,
             reasoning={"effort": reasoning_effort},
             text={"verbosity": gpt5_verbosity},
             max_output_tokens=6000,  # Increased for comprehensive analysis
@@ -4549,7 +4690,15 @@ def stream_chat_api_enhanced():
             print(f"[ENHANCED CHAT] TA filters: {ta_filters}")
             print(f"{'='*70}\n")
 
-            # 0. Check for competitor intelligence query
+            # 0. Check for meta/conversational queries (handle naturally without data search)
+            meta_response = detect_meta_query(user_query)
+            if meta_response:
+                print(f"[META QUERY] Detected conversational query, responding naturally")
+                yield "data: " + json.dumps({"text": meta_response}) + "\n\n"
+                yield "data: [DONE]\n\n"
+                return
+
+            # 1. Check for competitor intelligence query
             competitor_drugs = detect_competitor_query(user_query, ta_filters)
             if competitor_drugs:
                 # Override user query to search for specific competitors
@@ -4629,7 +4778,14 @@ def stream_chat_api_enhanced():
                 yield "data: [DONE]\n\n"
                 return
 
-            # 7. Handle AI synthesis (complex queries)
+            # 7. Handle no results
+            if response_data.get('type') == 'no_results':
+                answer_text = response_data.get('answer', 'No studies found matching your criteria.')
+                yield "data: " + json.dumps({"text": answer_text}) + "\n\n"
+                yield "data: [DONE]\n\n"
+                return
+
+            # 8. Handle AI synthesis (complex queries)
             if response_data.get('type') in ['ai_synthesis', 'comparison']:
                 results_table = response_data.get('table', pd.DataFrame())
 

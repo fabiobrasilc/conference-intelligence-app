@@ -135,6 +135,15 @@ def build_lean_synthesis_prompt(
     """
     # Get statistics
     stats = get_study_statistics(results_df)
+    result_count = len(results_df)
+
+    # ========================================================================
+    # BREVITY GUARD: Override verbosity for sparse results (token efficiency)
+    # ========================================================================
+    if result_count == 1:
+        verbosity = "minimal"  # Force brief response for single result
+    elif result_count <= 3:
+        verbosity = "quick"  # Force concise response for 2-3 results
 
     # Format compact study list
     compact_studies = format_compact_study_list(
@@ -159,8 +168,15 @@ def build_lean_synthesis_prompt(
 
     assumption_text = "\n".join(f"- {a}" for a in assumptions) if assumptions else "None"
 
-    # Verbosity-specific instructions
-    if verbosity == "quick":
+    # Verbosity-specific instructions (including new "minimal" tier)
+    if verbosity == "minimal":
+        synthesis_instructions = """Provide a MINIMAL response (2-4 sentences max):
+- What is this drug/study? (1 sentence)
+- Who's presenting and why it matters (1 sentence)
+- Strategic relevance if any (1 sentence, optional)
+
+CRITICAL: Keep response under 100 words. No speculation, just factual."""
+    elif verbosity == "quick":
         synthesis_instructions = """Provide a CONCISE synthesis (3-5 bullet points):
 - Main research themes from titles
 - Notable studies or patterns

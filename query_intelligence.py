@@ -37,6 +37,13 @@ def classify_query_intent(query: str, resolved_entities: dict) -> dict:
     """
     query_lower = query.lower()
 
+    # Check for explicit user verbosity requests (highest priority)
+    user_verbosity = None
+    if re.search(r'\b(concise|brief|short|quick)\b', query_lower):
+        user_verbosity = "quick"
+    elif re.search(r'\b(comprehensive|detailed|in-depth|thorough|full)\b', query_lower):
+        user_verbosity = "detailed"
+
     # Factual lookup patterns (specific field questions)
     factual_patterns = [
         r"what (room|time|date|session)",
@@ -81,7 +88,7 @@ def classify_query_intent(query: str, resolved_entities: dict) -> dict:
         if re.search(pattern, query_lower):
             return {
                 "intent": "factual_lookup",
-                "verbosity": "minimal",
+                "verbosity": user_verbosity or "minimal",
                 "expected_result_count": 1,
                 "requires_ai": False  # Can answer directly
             }
@@ -90,7 +97,7 @@ def classify_query_intent(query: str, resolved_entities: dict) -> dict:
         if re.search(pattern, query_lower):
             return {
                 "intent": "list_filtered",
-                "verbosity": "quick",
+                "verbosity": user_verbosity or "quick",
                 "expected_result_count": "multiple",
                 "requires_ai": True  # AI gives brief summary
             }
@@ -99,7 +106,7 @@ def classify_query_intent(query: str, resolved_entities: dict) -> dict:
         if re.search(pattern, query_lower):
             return {
                 "intent": "comparison",
-                "verbosity": "medium",
+                "verbosity": user_verbosity or "medium",
                 "expected_result_count": 2,
                 "requires_ai": True
             }
@@ -108,7 +115,7 @@ def classify_query_intent(query: str, resolved_entities: dict) -> dict:
         if re.search(pattern, query_lower):
             return {
                 "intent": "synthesis",
-                "verbosity": "detailed",
+                "verbosity": user_verbosity or "detailed",
                 "expected_result_count": "multiple",
                 "requires_ai": True
             }
@@ -117,7 +124,7 @@ def classify_query_intent(query: str, resolved_entities: dict) -> dict:
     if resolved_entities.get('drugs') or resolved_entities.get('institutions'):
         return {
             "intent": "synthesis",
-            "verbosity": "medium",
+            "verbosity": user_verbosity or "medium",
             "expected_result_count": "multiple",
             "requires_ai": True
         }
@@ -125,7 +132,7 @@ def classify_query_intent(query: str, resolved_entities: dict) -> dict:
     # Fallback
     return {
         "intent": "list_filtered",
-        "verbosity": "quick",
+        "verbosity": user_verbosity or "quick",
         "expected_result_count": "multiple",
         "requires_ai": True
     }
