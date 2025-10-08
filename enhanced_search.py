@@ -140,6 +140,29 @@ def enhanced_search(
             "resolved": resolved
         }
 
+    # Step 3.5: Vague query guard - prevent returning all studies for empty searches
+    has_entities = (resolved['drugs'] or resolved['institutions'] or resolved['ta_keywords'] or analysis['trial_names'])
+    has_specific_intent = analysis['target_field'] is not None  # User asking for specific field (room, time, etc.)
+
+    # If query is too vague (no entities, no specific intent, not a date query), ask for clarification
+    if not has_entities and not has_specific_intent and not analysis['temporal_filter']:
+        # Check if query is just a common word that shouldn't trigger full search
+        vague_words = ['test', 'testing', 'hello', 'help', 'search', 'find', 'show', 'tell', 'what', 'how', 'why']
+        query_words = user_query.lower().strip().split()
+
+        if len(query_words) <= 2 and any(word in vague_words for word in query_words):
+            if debug:
+                logger.warning("\n[VAGUE QUERY DETECTED]")
+                logger.warning(f"  Query too generic: '{user_query}'")
+                logger.warning(f"  Asking for more specific input")
+
+            return pd.DataFrame(), {
+                "needs_clarification": True,
+                "clarification_question": "Could you be more specific? Try asking about a drug, therapeutic area, investigator, institution, or session date.\n\nExamples: *\"Show me pembrolizumab studies\"*, *\"What's on October 18th?\"*, *\"Bladder cancer ADCs\"*",
+                "analysis": analysis,
+                "resolved": resolved
+            }
+
     # Step 4: Multi-Field Search
     if debug:
         logger.info("\n[STEP 3] Multi-Field Search")
