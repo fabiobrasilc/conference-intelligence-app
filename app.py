@@ -1898,62 +1898,69 @@ def detect_meta_query(user_query: str) -> Optional[str]:
     """
     query_lower = user_query.lower().strip()
 
-    # Capability questions
-    capability_patterns = [
-        (r"what (can you|are you able to|do you) do",
-         "I help medical affairs teams explore ESMO 2025 conference data. I can:\n\n"
-         "**Search & Filter:**\n"
-         "- Find studies by drug, therapeutic area, investigator, or institution\n"
-         "- Filter by date, session type, or presentation format\n\n"
-         "**Analysis:**\n"
-         "- Summarize research themes and trends\n"
-         "- Identify key opinion leaders and institutions\n"
-         "- Compare competitive data\n"
-         "- Highlight strategic studies for medical affairs\n\n"
-         "Try asking: *\"Show me pembrolizumab bladder cancer studies\"* or *\"What's happening on October 18th?\"*"),
+    # Quick greetings (exact match, highest priority)
+    if re.match(r"^(hi|hello|hey)(\s|!|\?|$)", query_lower):
+        return ("Hi! I'm your ESMO 2025 conference intelligence assistant. "
+                "Ask me about specific drugs, therapeutic areas, investigators, or let me analyze trends for you. "
+                "What would you like to explore?")
 
-        (r"what (kind|type|sort)s? of (questions|queries) (can|should) (i|we) ask",
-         "You can ask me about:\n\n"
-         "**Drug/Treatment Searches:**\n"
-         "- \"What studies feature enfortumab vedotin?\"\n"
-         "- \"Show me ADC studies\"\n"
-         "- \"Tell me about TROP2-targeted therapies\"\n\n"
-         "**KOL & Institution:**\n"
-         "- \"Which studies is Giuseppe Curigliano presenting?\"\n"
-         "- \"Show me Memorial Sloan Kettering presentations\"\n\n"
-         "**Thematic Analysis:**\n"
-         "- \"Summarize checkpoint inhibitor combinations\"\n"
-         "- \"What are the trends in bladder cancer?\"\n\n"
-         "**Logistics:**\n"
-         "- \"What bladder sessions are on 10/18?\"\n"
-         "- \"What time is KEYNOTE-905?\""),
+    if re.match(r"^(thank|thanks|thx)", query_lower):
+        return "You're welcome! Let me know if you need anything else from the ESMO 2025 data."
 
-        (r"how (do|does) (this|it|you) work",
-         "I search through ESMO 2025 conference data (4,686 studies) to find relevant presentations based on your query.\n\n"
-         "**Behind the scenes:**\n"
-         "1. I analyze your question to understand what you're looking for\n"
-         "2. I expand drug abbreviations (e.g., \"EV\" → enfortumab vedotin)\n"
-         "3. I search across titles, speakers, institutions, and themes\n"
-         "4. I synthesize findings into strategic insights for medical affairs\n\n"
-         "Full abstracts will be available October 13th - until then, I analyze titles and presenter data."),
+    # Meta-query detection: Use keyword-based instead of exact regex
+    # (more flexible, catches variations like "What are your capabilities?")
 
-        (r"who (made|created|built) (you|this)",
-         "I'm a medical affairs intelligence tool built for analyzing ESMO 2025 conference data. "
-         "I combine AI synthesis with conference program data to help teams identify strategic insights, "
-         "track competitors, and engage with key opinion leaders."),
+    # Capability keywords (broad, catches many variations)
+    capability_keywords = ["capability", "capabilities", "can you", "able to", "what do you", "what are you", "tell me what", "what can"]
+    question_keywords = ["what questions", "what can i ask", "what should i ask", "what type", "what kind", "example"]
+    how_keywords = ["how do you work", "how does this work", "how does it work", "explain how", "how you work"]
+    about_keywords = ["who made", "who created", "who built", "what is this", "who are you"]
 
-        (r"^(hi|hello|hey)(\s|!|\?|$)",
-         "Hi! I'm your ESMO 2025 conference intelligence assistant. "
-         "Ask me about specific drugs, therapeutic areas, investigators, or let me analyze trends for you. "
-         "What would you like to explore?"),
+    # Check if query is asking about capabilities
+    if any(kw in query_lower for kw in capability_keywords):
+        return ("I help medical affairs teams explore ESMO 2025 conference data. I can:\n\n"
+                "**Search & Filter:**\n"
+                "- Find studies by drug, therapeutic area, investigator, or institution\n"
+                "- Filter by date, session type, or presentation format\n\n"
+                "**Analysis:**\n"
+                "- Summarize research themes and trends\n"
+                "- Identify key opinion leaders and institutions\n"
+                "- Compare competitive data\n"
+                "- Highlight strategic studies for medical affairs\n\n"
+                "Try asking: *\"Show me pembrolizumab bladder cancer studies\"* or *\"What's happening on October 18th?\"*")
 
-        (r"^(thank|thanks|thx)",
-         "You're welcome! Let me know if you need anything else from the ESMO 2025 data."),
-    ]
+    # Check if query is asking what to ask
+    if any(kw in query_lower for kw in question_keywords):
+        return ("You can ask me about:\n\n"
+                "**Drug/Treatment Searches:**\n"
+                "- \"What studies feature enfortumab vedotin?\"\n"
+                "- \"Show me ADC studies\"\n"
+                "- \"Tell me about TROP2-targeted therapies\"\n\n"
+                "**KOL & Institution:**\n"
+                "- \"Which studies is Giuseppe Curigliano presenting?\"\n"
+                "- \"Show me Memorial Sloan Kettering presentations\"\n\n"
+                "**Thematic Analysis:**\n"
+                "- \"Summarize checkpoint inhibitor combinations\"\n"
+                "- \"What are the trends in bladder cancer?\"\n\n"
+                "**Logistics:**\n"
+                "- \"What bladder sessions are on 10/18?\"\n"
+                "- \"What time is KEYNOTE-905?\"")
 
-    for pattern, response in capability_patterns:
-        if re.search(pattern, query_lower):
-            return response
+    # Check if query is asking how it works
+    if any(kw in query_lower for kw in how_keywords):
+        return ("I search through ESMO 2025 conference data (4,686 studies) to find relevant presentations based on your query.\n\n"
+                "**Behind the scenes:**\n"
+                "1. I analyze your question to understand what you're looking for\n"
+                "2. I expand drug abbreviations (e.g., \"EV\" → enfortumab vedotin)\n"
+                "3. I search across titles, speakers, institutions, and themes\n"
+                "4. I synthesize findings into strategic insights for medical affairs\n\n"
+                "Full abstracts will be available October 13th - until then, I analyze titles and presenter data.")
+
+    # Check if query is asking about origin
+    if any(kw in query_lower for kw in about_keywords):
+        return ("I'm a medical affairs intelligence tool built for analyzing ESMO 2025 conference data. "
+                "I combine AI synthesis with conference program data to help teams identify strategic insights, "
+                "track competitors, and engage with key opinion leaders.")
 
     return None
 
