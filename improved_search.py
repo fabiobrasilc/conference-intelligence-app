@@ -16,13 +16,15 @@ import pandas as pd
 import re
 from typing import List, Dict, Optional, Tuple
 from functools import lru_cache
-from entity_resolver import (
-    expand_query_entities,
-    build_drug_regex,
-    resolve_drug_name,
-    resolve_institution,
-    get_drug_search_patterns
-)
+
+# Legacy entity_resolver imports removed - only used by smart_search() which is archived
+# from entity_resolver import (
+#     expand_query_entities,
+#     build_drug_regex,
+#     resolve_drug_name,
+#     resolve_institution,
+#     get_drug_search_patterns
+# )
 
 try:
     from rapidfuzz import fuzz

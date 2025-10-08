@@ -1,0 +1,418 @@
+Traceback (most recent call last):
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 284, in main
+    result = run_test_query(scenario, df, i)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 189, in run_test_query
+    print(f"  Found: {found_themes} \u2713")
+  File "C:\Users\m337928\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 68: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 284, in main
+    result = run_test_query(scenario, df, i)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 154, in run_test_query
+    print(f"  Expected count: {expected} \u2192 {match}")
+  File "C:\Users\m337928\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 21: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 284, in main
+    result = run_test_query(scenario, df, i)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 189, in run_test_query
+    print(f"  Found: {found_themes} \u2713")
+  File "C:\Users\m337928\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 37: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 284, in main
+    result = run_test_query(scenario, df, i)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 189, in run_test_query
+    print(f"  Found: {found_themes} \u2713")
+  File "C:\Users\m337928\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 57: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 284, in main
+    result = run_test_query(scenario, df, i)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 189, in run_test_query
+    print(f"  Found: {found_themes} \u2713")
+  File "C:\Users\m337928\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 61: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 284, in main
+    result = run_test_query(scenario, df, i)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 189, in run_test_query
+    print(f"  Found: {found_themes} \u2713")
+  File "C:\Users\m337928\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 84: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 284, in main
+    result = run_test_query(scenario, df, i)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 189, in run_test_query
+    print(f"  Found: {found_themes} \u2713")
+  File "C:\Users\m337928\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 284, in main
+    result = run_test_query(scenario, df, i)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 189, in run_test_query
+    print(f"  Found: {found_themes} \u2713")
+  File "C:\Users\m337928\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 54: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 284, in main
+    result = run_test_query(scenario, df, i)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 189, in run_test_query
+    print(f"  Found: {found_themes} \u2713")
+  File "C:\Users\m337928\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 51: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 284, in main
+    result = run_test_query(scenario, df, i)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 247, in run_test_query
+    print(f"  {result}")
+  File "C:\Users\m337928\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 284, in main
+    result = run_test_query(scenario, df, i)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 189, in run_test_query
+    print(f"  Found: {found_themes} \u2713")
+  File "C:\Users\m337928\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 71: character maps to <undefined>
+================================================================================
+REALISTIC QUERY TEST SUITE
+Testing Enhanced Search with MSL/Medical Director/Leadership Queries
+================================================================================
+
+[SETUP] Loading ESMO data...
+[OK] Loaded 4686 studies
+[SETUP] Precomputing search_text...
+[OK] Search text ready
+
+================================================================================
+TEST 1: MSL Query
+================================================================================
+Query: "What are the latest pembrolizumab combination studies in bladder cancer?"
+Context: MSL needs to prepare for KOL meeting - wants current pembro combo data
+TA Filters: ['bladder', 'urothelial']
+================================================================================
+
+[RESULTS ANALYSIS]
+  Response type: list_filtered
+  Studies found: 154
+
+[TABLE PREVIEW - Top 5 Results]
+--------------------------------------------------------------------------------
+  3070MO: Phase 1 study of LY3866288, a potent, highly isoform-selective FGFR3 inhibitor in FGFR3-altered adva...
+  LBA110: A blinded, exploratory phase 2 trial of nivolumab and the GDF-15 neutralizing antibody visugromab or...
+  LBA112: Neoadjuvant gemcitabine intravesical system (TAR-200) + cetrelimab (CET) or CET alone in patients (p...
+  nan: Invited Discussant...
+  nan: Invited Discussant...
+  ... and 149 more studies
+--------------------------------------------------------------------------------
+
+[THEME VALIDATION]
+  Expected themes: ['pembrolizumab', 'combination', 'biomarkers', 'efficacy']
+
+[ERROR] Test 1 failed: 'charmap' codec can't encode character '\u2713' in position 68: character maps to <undefined>
+
+================================================================================
+TEST 2: MSL Query
+================================================================================
+Query: "Show me all EV + P studies"
+Context: MSL asked about EV-302 regimen - needs all combination data
+TA Filters: ['bladder', 'urothelial']
+================================================================================
+
+[RESULTS ANALYSIS]
+  Response type: list_filtered
+  Studies found: 10
+
+[ERROR] Test 2 failed: 'charmap' codec can't encode character '\u2192' in position 21: character maps to <undefined>
+
+================================================================================
+TEST 3: MSL Query
+================================================================================
+Query: "Which institutions are presenting on avelumab maintenance?"
+Context: MSL wants to identify KOLs for avelumab
+TA Filters: ['bladder', 'urothelial']
+================================================================================
+
+[RESULTS ANALYSIS]
+  Response type: list_filtered
+  Studies found: 154
+
+[TABLE PREVIEW - Top 5 Results]
+--------------------------------------------------------------------------------
+  3070MO: Phase 1 study of LY3866288, a potent, highly isoform-selective FGFR3 inhibitor in FGFR3-altered adva...
+  LBA110: A blinded, exploratory phase 2 trial of nivolumab and the GDF-15 neutralizing antibody visugromab or...
+  LBA112: Neoadjuvant gemcitabine intravesical system (TAR-200) + cetrelimab (CET) or CET alone in patients (p...
+  nan: Invited Discussant...
+  nan: Invited Discussant...
+  ... and 149 more studies
+--------------------------------------------------------------------------------
+
+[THEME VALIDATION]
+  Expected themes: ['avelumab', 'maintenance', 'institutions']
+
+[ERROR] Test 3 failed: 'charmap' codec can't encode character '\u2713' in position 37: character maps to <undefined>
+
+================================================================================
+TEST 4: Medical Director Query
+================================================================================
+Query: "Compare the ADC landscape in bladder cancer"
+Context: Med Director needs competitive ADC intelligence
+TA Filters: ['bladder', 'urothelial']
+================================================================================
+
+[RESULTS ANALYSIS]
+  Response type: ai_synthesis
+  Studies found: 18
+
+[TABLE PREVIEW - Top 5 Results]
+--------------------------------------------------------------------------------
+  3111eP: Real-world (RW) use of enfortumab vedotin (EV) in patients (pts) with locally advanced or metastatic...
+  3083P: JAVELIN Bladder Medley phase 2 trial of avelumab + sacituzumab govitecan (Ave + SG) vs avelumab mono...
+  LBA2: Perioperative (periop) enfortumab vedotin (EV) plus pembrolizumab (pembro) in participants (pts) wit...
+  3094P: Validation of Prognostic Scores for Advanced Urothelial Cancer (aUC) for Enfortumab Vedotin/Pembroli...
+  3089P: Clinical outcomes with enfortumab vedotin and pembrolizumab in metastatic urothelial carcinoma and d...
+  ... and 13 more studies
+--------------------------------------------------------------------------------
+
+[THEME VALIDATION]
+  Expected themes: ['ADC', 'enfortumab vedotin', 'sacituzumab govitecan', 'competition']
+
+[ERROR] Test 4 failed: 'charmap' codec can't encode character '\u2713' in position 57: character maps to <undefined>
+
+================================================================================
+TEST 5: Medical Director Query
+================================================================================
+Query: "What are the biomarker-driven studies in bladder cancer?"
+Context: Med Director assessing precision medicine trends
+TA Filters: ['bladder', 'urothelial']
+================================================================================
+
+[RESULTS ANALYSIS]
+  Response type: list_filtered
+  Studies found: 154
+
+[TABLE PREVIEW - Top 5 Results]
+--------------------------------------------------------------------------------
+  3070MO: Phase 1 study of LY3866288, a potent, highly isoform-selective FGFR3 inhibitor in FGFR3-altered adva...
+  LBA110: A blinded, exploratory phase 2 trial of nivolumab and the GDF-15 neutralizing antibody visugromab or...
+  LBA112: Neoadjuvant gemcitabine intravesical system (TAR-200) + cetrelimab (CET) or CET alone in patients (p...
+  nan: Invited Discussant...
+  nan: Invited Discussant...
+  ... and 149 more studies
+--------------------------------------------------------------------------------
+
+[THEME VALIDATION]
+  Expected themes: ['biomarker', 'FGFR3', 'PD-L1', 'NECTIN-4', 'HER2']
+
+[ERROR] Test 5 failed: 'charmap' codec can't encode character '\u2713' in position 61: character maps to <undefined>
+
+================================================================================
+TEST 6: Medical Director Query
+================================================================================
+Query: "Summarize the checkpoint inhibitor data"
+Context: Med Director needs ICI landscape overview
+TA Filters: ['bladder', 'urothelial']
+================================================================================
+
+[RESULTS ANALYSIS]
+  Response type: ai_synthesis
+  Studies found: 154
+
+[TABLE PREVIEW - Top 5 Results]
+--------------------------------------------------------------------------------
+  3070MO: Phase 1 study of LY3866288, a potent, highly isoform-selective FGFR3 inhibitor in FGFR3-altered adva...
+  LBA110: A blinded, exploratory phase 2 trial of nivolumab and the GDF-15 neutralizing antibody visugromab or...
+  LBA112: Neoadjuvant gemcitabine intravesical system (TAR-200) + cetrelimab (CET) or CET alone in patients (p...
+  nan: Invited Discussant...
+  nan: Invited Discussant...
+  ... and 149 more studies
+--------------------------------------------------------------------------------
+
+[THEME VALIDATION]
+  Expected themes: ['checkpoint', 'pembrolizumab', 'nivolumab', 'atezolizumab', 'durvalumab']
+
+[ERROR] Test 6 failed: 'charmap' codec can't encode character '\u2713' in position 84: character maps to <undefined>
+
+================================================================================
+TEST 7: Leadership Query
+================================================================================
+Query: "What are the emerging mechanisms in bladder cancer?"
+Context: Leadership evaluating novel MOAs for investment
+TA Filters: ['bladder', 'urothelial']
+================================================================================
+
+[RESULTS ANALYSIS]
+  Response type: list_filtered
+  Studies found: 154
+
+[TABLE PREVIEW - Top 5 Results]
+--------------------------------------------------------------------------------
+  3070MO: Phase 1 study of LY3866288, a potent, highly isoform-selective FGFR3 inhibitor in FGFR3-altered adva...
+  LBA110: A blinded, exploratory phase 2 trial of nivolumab and the GDF-15 neutralizing antibody visugromab or...
+  LBA112: Neoadjuvant gemcitabine intravesical system (TAR-200) + cetrelimab (CET) or CET alone in patients (p...
+  nan: Invited Discussant...
+  nan: Invited Discussant...
+  ... and 149 more studies
+--------------------------------------------------------------------------------
+
+[THEME VALIDATION]
+  Expected themes: ['novel', 'mechanism', 'target', 'early phase']
+
+[ERROR] Test 7 failed: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+
+================================================================================
+TEST 8: Leadership Query
+================================================================================
+Query: "Which studies focus on perioperative treatment?"
+Context: Leadership assessing neoadjuvant/adjuvant opportunity
+TA Filters: ['bladder', 'urothelial']
+================================================================================
+
+[RESULTS ANALYSIS]
+  Response type: list_filtered
+  Studies found: 154
+
+[TABLE PREVIEW - Top 5 Results]
+--------------------------------------------------------------------------------
+  3070MO: Phase 1 study of LY3866288, a potent, highly isoform-selective FGFR3 inhibitor in FGFR3-altered adva...
+  LBA110: A blinded, exploratory phase 2 trial of nivolumab and the GDF-15 neutralizing antibody visugromab or...
+  LBA112: Neoadjuvant gemcitabine intravesical system (TAR-200) + cetrelimab (CET) or CET alone in patients (p...
+  nan: Invited Discussant...
+  nan: Invited Discussant...
+  ... and 149 more studies
+--------------------------------------------------------------------------------
+
+[THEME VALIDATION]
+  Expected themes: ['perioperative', 'neoadjuvant', 'adjuvant', 'surgery']
+
+[ERROR] Test 8 failed: 'charmap' codec can't encode character '\u2713' in position 54: character maps to <undefined>
+
+================================================================================
+TEST 9: Leadership Query
+================================================================================
+Query: "Show me the real-world evidence presentations"
+Context: Leadership wants RWE to support market access
+TA Filters: ['bladder', 'urothelial']
+================================================================================
+
+[RESULTS ANALYSIS]
+  Response type: list_filtered
+  Studies found: 154
+
+[TABLE PREVIEW - Top 5 Results]
+--------------------------------------------------------------------------------
+  3070MO: Phase 1 study of LY3866288, a potent, highly isoform-selective FGFR3 inhibitor in FGFR3-altered adva...
+  LBA110: A blinded, exploratory phase 2 trial of nivolumab and the GDF-15 neutralizing antibody visugromab or...
+  LBA112: Neoadjuvant gemcitabine intravesical system (TAR-200) + cetrelimab (CET) or CET alone in patients (p...
+  nan: Invited Discussant...
+  nan: Invited Discussant...
+  ... and 149 more studies
+--------------------------------------------------------------------------------
+
+[THEME VALIDATION]
+  Expected themes: ['real-world', 'RWE', 'effectiveness', 'safety']
+
+[ERROR] Test 9 failed: 'charmap' codec can't encode character '\u2713' in position 51: character maps to <undefined>
+
+================================================================================
+TEST 10: MSL Query
+================================================================================
+Query: "What room is the EV-302 presentation?"
+Context: Factual lookup - should return direct answer without AI
+TA Filters: None
+================================================================================
+
+[RESULTS ANALYSIS]
+  Response type: factual_answer_multiple
+  Studies found: 8
+
+[TABLE PREVIEW - Top 5 Results]
+--------------------------------------------------------------------------------
+  3111eP: Real-world (RW) use of enfortumab vedotin (EV) in patients (pts) with locally advanced or metastatic...
+  LBA2: Perioperative (periop) enfortumab vedotin (EV) plus pembrolizumab (pembro) in participants (pts) wit...
+  3095P: ERBB2 mutations as potential predictors of poor outcomes in patients (pts) treated with enfortumab v...
+  3108P: Inflammatory biomarker panel predicting grade >=2 neurotoxicity in Enfortumab Vedotin (EV) treated p...
+  3073P: Enfortumab Vedotin (EV) + Pembrolizumab (P) in Previously Untreated Locally Advanced or Metastatic U...
+  ... and 3 more studies
+--------------------------------------------------------------------------------
+
+[VALIDATION]
+
+[ERROR] Test 10 failed: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+
+================================================================================
+TEST 11: Medical Director Query
+================================================================================
+Query: "Compare pembrolizumab versus atezolizumab in 1L bladder"
+Context: Head-to-head comparison query
+TA Filters: ['bladder', 'urothelial']
+================================================================================
+
+[RESULTS ANALYSIS]
+  Response type: ai_synthesis
+  Studies found: 154
+
+[TABLE PREVIEW - Top 5 Results]
+--------------------------------------------------------------------------------
+  3070MO: Phase 1 study of LY3866288, a potent, highly isoform-selective FGFR3 inhibitor in FGFR3-altered adva...
+  LBA110: A blinded, exploratory phase 2 trial of nivolumab and the GDF-15 neutralizing antibody visugromab or...
+  LBA112: Neoadjuvant gemcitabine intravesical system (TAR-200) + cetrelimab (CET) or CET alone in patients (p...
+  nan: Invited Discussant...
+  nan: Invited Discussant...
+  ... and 149 more studies
+--------------------------------------------------------------------------------
+
+[THEME VALIDATION]
+  Expected themes: ['pembrolizumab', 'atezolizumab', 'first-line', 'comparison']
+
+[ERROR] Test 11 failed: 'charmap' codec can't encode character '\u2713' in position 71: character maps to <undefined>
+
+
+================================================================================
+TEST SUMMARY
+================================================================================
+
+MSL Queries: 0/4 passed
+Traceback (most recent call last):
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 337, in <module>
+    main()
+  File "C:\Users\m337928\OneDrive - MerckGroup\Documents\Python Projects\conference_intelligence_app\test_realistic_queries.py", line 320, in main
+    print(f"  {status} {query_short} \u2192 {r['result_count']} results")
+  File "C:\Users\m337928\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2717' in position 2: character maps to <undefined>

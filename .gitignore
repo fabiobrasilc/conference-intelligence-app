@@ -13,6 +13,14 @@ chroma_conference_db/
 data/
 *.parquet
 
+# Cleanup archives
+_cleanup_archive_*/
+
+# Log files
+*.log
+debug_*.log
+server*.log
+
 # IDE
 .vscode/
 .idea/
