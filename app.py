@@ -4843,6 +4843,92 @@ def stream_chat_api_enhanced():
     return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
 
 
+@app.route('/api/chat/ai-first', methods=['POST'])
+def stream_chat_ai_first():
+    """
+    AI-First chat endpoint - Clean refactor aligned with The Bible.
+
+    Philosophy: LET THE AI BE THE INTELLIGENCE
+    - NO drug expansion (AI knows drugs naturally via GPT-5 training)
+    - NO intent classification (AI understands naturally)
+    - NO rigid routing logic (AI reasons about the query)
+    - Minimal hardcoding: UI filters + basic search + AI
+
+    Code reduction: ~1,500 lines → ~200 lines
+    """
+    # Import the new AI-first module
+    import sys
+    from pathlib import Path
+    ai_first_path = Path(__file__).parent / 'ai_first_refactor'
+    if str(ai_first_path) not in sys.path:
+        sys.path.insert(0, str(ai_first_path))
+
+    from ai_assistant import handle_chat_query
+
+    user_query = request.json.get('message', '').strip()
+
+    # Get filter parameters
+    drug_filters = request.json.get('drug_filters', [])
+    ta_filters = request.json.get('ta_filters', [])
+    session_filters = request.json.get('session_filters', [])
+    date_filters = request.json.get('date_filters', [])
+
+    if not user_query:
+        return jsonify({"error": "No message provided"}), 400
+
+    def generate():
+        try:
+            print(f"\n{'='*70}")
+            print(f"[AI-FIRST] User query: {user_query}")
+            print(f"[AI-FIRST] Filters - TA: {ta_filters}, Drug: {drug_filters}, Date: {date_filters}")
+            print(f"{'='*70}\n")
+
+            # 1. Apply UI filters to get base dataset
+            filtered_df = get_filtered_dataframe_multi(drug_filters, ta_filters, session_filters, date_filters)
+
+            if filtered_df.empty:
+                yield "data: " + json.dumps({"text": "No data matches your current filters. Please adjust filters and try again."}) + "\n\n"
+                yield "data: [DONE]\n\n"
+                return
+
+            print(f"[AI-FIRST] Filtered dataset: {len(filtered_df)} studies")
+
+            # 2. Call AI-first handler
+            active_filters = {
+                'drug': drug_filters,
+                'ta': ta_filters,
+                'session': session_filters,
+                'date': date_filters
+            }
+
+            result = handle_chat_query(filtered_df, user_query, active_filters)
+
+            print(f"[AI-FIRST] AI processing complete, streaming response...")
+
+            # 3. Send table data first (if frontend needs it)
+            table_df = result['filtered_data']
+            if not table_df.empty and len(table_df) <= 500:
+                table_data = table_df.to_dict('records')
+                yield "data: " + json.dumps({"table": table_data}) + "\n\n"
+                print(f"[AI-FIRST] Sent table with {len(table_data)} rows")
+
+            # 4. Stream AI response tokens
+            for token in result['response_stream']:
+                yield "data: " + json.dumps({"text": token}) + "\n\n"
+
+            yield "data: [DONE]\n\n"
+            print(f"[AI-FIRST] Streaming completed")
+
+        except Exception as e:
+            print(f"[AI-FIRST] ERROR: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            yield "data: " + json.dumps({"error": f"AI-First error: {str(e)}"}) + "\n\n"
+            yield "data: [DONE]\n\n"
+
+    return Response(stream_with_heartbeat(generate()), mimetype='text/event-stream', headers=SSE_HEADERS)
+
+
 # ============================================================================
 # APPLICATION STARTUP
 # ============================================================================

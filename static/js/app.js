@@ -1123,8 +1123,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const drugFilters = activeChatScope.type === 'drug' ? [activeChatScope.value] : [];
       const taFilters = activeChatScope.type === 'ta' ? [activeChatScope.value] : [];
 
-      // Call enhanced streaming chat API with conversation history
-      const response = await fetch('/api/chat/enhanced', {
+      // Call AI-first streaming chat API (clean refactor - no drug expansion, AI handles naturally)
+      const response = await fetch('/api/chat/ai-first', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
