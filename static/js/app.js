@@ -1123,8 +1123,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const drugFilters = activeChatScope.type === 'drug' ? [activeChatScope.value] : [];
       const taFilters = activeChatScope.type === 'ta' ? [activeChatScope.value] : [];
 
-      // Call streaming chat API with conversation history
-      const response = await fetch('/api/chat/stream', {
+      // Call enhanced streaming chat API with conversation history
+      const response = await fetch('/api/chat/enhanced', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
