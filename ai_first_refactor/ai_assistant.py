@@ -59,8 +59,11 @@ def handle_chat_query(
     print(f"\n[STEP 1] AI interpreting query...")
     interpretation = extract_search_keywords_from_ai(user_query, len(df), active_filters)
 
-    # Check if this is a greeting/casual query
-    if interpretation.get('response_type') == 'greeting':
+    # Check response type
+    response_type = interpretation.get('response_type')
+
+    # Handle greeting
+    if response_type == 'greeting':
         print(f"[STEP 1] AI detected greeting - responding conversationally")
         greeting_message = interpretation.get('message', 'How can I help you today?')
 
@@ -69,8 +72,22 @@ def handle_chat_query(
 
         return {
             'type': 'ai_response',
-            'filtered_data': pd.DataFrame(),  # No table for greetings
+            'filtered_data': pd.DataFrame(),
             'response_stream': greeting_generator()
+        }
+
+    # Handle error
+    if response_type == 'error':
+        print(f"[STEP 1] AI extraction error - returning error message")
+        error_message = interpretation.get('message', 'Sorry, I encountered an error. Please try again.')
+
+        def error_generator():
+            yield error_message
+
+        return {
+            'type': 'ai_response',
+            'filtered_data': pd.DataFrame(),
+            'response_stream': error_generator()
         }
 
     # Data query - extract keywords from interpretation
@@ -154,10 +171,15 @@ Return: {{"response_type": "search", "drugs": [...], "drug_classes": [...], "the
 - Drug abbreviations: "EV" = enfortumab vedotin, "P" = pembrolizumab, "Nivo" = nivolumab
 - Drug classes: "ADC" = antibody-drug conjugates, "ICI" = immune checkpoint inhibitors
 - For combinations (like "EV + P"), provide BOTH drug names
+- **IMPORTANT**: Do NOT extract therapeutic_areas, drug_classes, or search_terms that are already in the active filters above - the dataset is already filtered by those
+- Focus on extracting NEW information from the query (drugs, dates, institutions, speakers)
 
 Return ONLY valid JSON, no other text."""
 
-    user_prompt = f"""Interpret this query: "{user_query}"
+    # Combine system and user prompts into single input string for Responses API
+    combined_prompt = f"""{system_prompt}
+
+USER QUERY: "{user_query}"
 
 Examples:
 
@@ -169,57 +191,66 @@ Examples:
 
 "ADC data in breast cancer" → {{"response_type": "search", "drugs": [], "drug_classes": ["antibody-drug conjugate", "ADC"], "therapeutic_areas": ["breast cancer"], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
-Now interpret the user query. Return ONLY valid JSON."""
-
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_prompt}
-    ]
+Now interpret the user query above. Return ONLY valid JSON."""
 
     try:
+        # Use Responses API (input is a string, not messages array)
+        print(f"[AI EXTRACTION] Calling GPT-5 API...")
         response = client.responses.create(
             model="gpt-5-mini",
-            input=messages,
-            reasoning={"effort": "high"},
-            text={"verbosity": "low"},  # We just want JSON output
-            max_output_tokens=1000,
-            stream=True
+            input=combined_prompt,  # Single string, not array of messages
+            reasoning={"effort": "low"},  # Use low for simple keyword extraction
+            text={"verbosity": "low"},
+            max_output_tokens=1000
         )
 
-        # Extract the JSON response
-        response_text = ""
-        event_count = 0
-        for event in response:
-            event_count += 1
-            if event.type == "response.output_text.delta":
-                response_text += event.delta
-            elif event.type == "response.done":
-                print(f"[AI EXTRACTION] Stream done after {event_count} events")
-                break
-            elif event.type == "response.incomplete":
-                print(f"[AI EXTRACTION WARNING] Stream incomplete after {event_count} events - may indicate API issue")
-                # Continue anyway, might have partial data
+        # Check response status and error
+        print(f"[AI EXTRACTION] Response status: {response.status}")
+        print(f"[AI EXTRACTION] Response error: {response.error}")
+        print(f"[AI EXTRACTION] Response incomplete_details: {response.incomplete_details}")
 
-        print(f"[AI EXTRACTION] Extracted {len(response_text)} chars from {event_count} events")
+        # Check output structure
+        if hasattr(response, 'output'):
+            print(f"[AI EXTRACTION] Output object: {response.output}")
+            if response.output:
+                print(f"[AI EXTRACTION] Output type: {type(response.output)}")
+                print(f"[AI EXTRACTION] Output dir: {dir(response.output)}")
+
+        # Get response text directly (non-streaming)
+        response_text = response.output_text if hasattr(response, 'output_text') else ""
+        print(f"[AI EXTRACTION] output_text length: {len(response_text)} chars")
+
+        if response_text:
+            print(f"[AI EXTRACTION] output_text preview: {response_text[:200]}")
+
+        # Check if we got empty response
+        if not response_text.strip():
+            print(f"[AI EXTRACTION ERROR] API returned empty response - retrying with simpler prompt")
+            # Return error indicator
+            return {
+                'response_type': 'error',
+                'message': 'Sorry, I had trouble understanding your query. Could you try rephrasing it? For example: "Show me EV + P studies" or "What studies are about pembrolizumab?"'
+            }
 
         # Parse JSON
         keywords = json.loads(response_text.strip())
 
         return keywords
 
+    except json.JSONDecodeError as e:
+        print(f"[AI EXTRACTION ERROR] Invalid JSON from API: {e}")
+        print(f"[AI EXTRACTION ERROR] Response text was: {response_text[:200]}")
+        return {
+            'response_type': 'error',
+            'message': 'Sorry, I had trouble processing your request. Could you try rephrasing your question more simply?'
+        }
     except Exception as e:
         print(f"[AI EXTRACTION ERROR] {e}")
         import traceback
         traceback.print_exc()
-        # Fallback: return empty keywords
         return {
-            'drugs': [],
-            'drug_classes': [],
-            'therapeutic_areas': [],
-            'institutions': [],
-            'dates': [],
-            'speakers': [],
-            'search_terms': []
+            'response_type': 'error',
+            'message': 'Sorry, I encountered an error. Please try again.'
         }
 
 
