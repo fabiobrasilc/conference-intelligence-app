@@ -11,8 +11,7 @@ Clean, maintainable, ~2000 lines.
 
 from flask import Flask, render_template, request, jsonify, Response
 import pandas as pd
-import chromadb
-from chromadb.utils import embedding_functions
+# ChromaDB removed - not used by AI-first architecture
 from openai import OpenAI
 from pathlib import Path
 import re
@@ -113,7 +112,6 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "a_strong_fallback_secret_ke
 # ============================================================================
 
 CSV_FILE = Path(__file__).parent / "ESMO_2025_FINAL_20250929.csv"
-CHROMA_DB_PATH = "./chroma_conference_db"
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 # OpenAI client with controlled connection pooling for Railway deployment
@@ -139,8 +137,6 @@ else:
 # GLOBAL VARIABLES
 # ============================================================================
 
-chroma_client = None
-collection = None
 csv_hash_global = None
 df_global = None
 competitive_landscapes = {}  # Will hold loaded JSON competitive landscape data
@@ -1360,7 +1356,7 @@ def file_md5(filepath):
 
 def load_and_process_data():
     """Load ESMO CSV and prepare for analysis."""
-    global df_global, csv_hash_global, chroma_client, collection, abstracts_available
+    global df_global, csv_hash_global, abstracts_available
 
     print(f"[STARTUP] Looking for CSV at: {CSV_FILE}")
     print(f"[STARTUP] CSV absolute path: {CSV_FILE.absolute()}")
@@ -1429,89 +1425,18 @@ def load_and_process_data():
     print(f"[DATA] Loaded {len(df)} studies from ESMO 2025")
 
     # ========================================================================
-    # TIER 1 ENHANCEMENT: Precompute search_text for multi-field search
+    # PRECOMPUTE SEARCH TEXT: Multi-field search optimization
     # ========================================================================
-    print(f"[TIER1] Precomputing search_text for multi-field search...")
+    print(f"[DATA] Precomputing search_text for multi-field search...")
     df = precompute_search_text(df)
-    print(f"[TIER1] Search_text precomputed - enhanced search enabled")
+    print(f"[DATA] Search_text precomputed - ready for filtering")
 
     # ========================================================================
     # DRUG DATABASE: Load and cache MOA/target mappings
     # ========================================================================
     load_drug_database_cache()
 
-    # Initialize ChromaDB in background (non-blocking)
-    import threading
-    chroma_thread = threading.Thread(target=initialize_chromadb, args=(df,), daemon=True)
-    chroma_thread.start()
-    print(f"[CHROMADB] Initializing in background (non-blocking)...")
-
     return df
-
-def initialize_chromadb(df):
-    """Initialize ChromaDB with conference data for semantic search."""
-    global chroma_client, collection
-
-    try:
-        chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
-
-        # Use OpenAI embeddings if available, else default
-        if OPENAI_API_KEY:
-            ef = embedding_functions.OpenAIEmbeddingFunction(
-                api_key=OPENAI_API_KEY,
-                model_name="text-embedding-3-small"
-            )
-        else:
-            ef = embedding_functions.DefaultEmbeddingFunction()
-
-        collection_name = f"esmo_2025_{csv_hash_global[:8]}"
-
-        # Check if collection already exists
-        try:
-            collection = chroma_client.get_collection(name=collection_name, embedding_function=ef)
-            print(f"[CHROMA] Using existing collection: {collection_name}")
-        except:
-            # Create new collection
-            collection = chroma_client.create_collection(
-                name=collection_name,
-                embedding_function=ef,
-                metadata={"description": "ESMO 2025 Conference Abstracts"}
-            )
-
-            # Add documents to collection
-            documents = []
-            metadatas = []
-            ids = []
-
-            for idx, row in df.iterrows():
-                doc_text = f"{row['Title']} {row['Speakers']} {row['Affiliation']} {row['Theme']}"
-                documents.append(doc_text)
-                metadatas.append({
-                    "identifier": str(row['Identifier']),
-                    "speaker": str(row['Speakers']),
-                    "affiliation": str(row['Affiliation'])
-                })
-                ids.append(f"doc_{idx}")
-
-            # Add in batches
-            batch_size = 500
-            for i in range(0, len(documents), batch_size):
-                batch_docs = documents[i:i+batch_size]
-                batch_meta = metadatas[i:i+batch_size]
-                batch_ids = ids[i:i+batch_size]
-
-                collection.add(
-                    documents=batch_docs,
-                    metadatas=batch_meta,
-                    ids=batch_ids
-                )
-
-            print(f"[CHROMA] Created collection with {len(documents)} documents")
-
-    except Exception as e:
-        print(f"[CHROMA] Error initializing: {e}")
-        chroma_client = None
-        collection = None
 
 # ============================================================================
 # FILTER LOGIC (Therapeutic Area Filters)
@@ -4581,9 +4506,13 @@ def stream_chat_ai_first():
             # 3. Send table data first (if frontend needs it)
             table_df = result['filtered_data']
             if not table_df.empty and len(table_df) <= 500:
-                table_data = table_df.to_dict('records')
-                yield "data: " + json.dumps({"table": table_data}) + "\n\n"
-                print(f"[AI-FIRST] Sent table with {len(table_data)} rows")
+                # Format table as HTML for frontend
+                table_html = f"""<div class='entity-table-container'>
+<h6 class='entity-table-title'>📊 Filtered Results ({len(table_df)} studies)</h6>
+{dataframe_to_custom_html(table_df)}
+</div>"""
+                yield "data: " + json.dumps({"table": table_html}) + "\n\n"
+                print(f"[AI-FIRST] Sent table with {len(table_df)} rows")
 
             # 4. Stream AI response tokens
             for token in result['response_stream']:
@@ -4621,7 +4550,6 @@ if df_global is None:
     print("[ERROR] Expected location:", CSV_FILE.absolute())
 else:
     print(f"\n[SUCCESS] Application ready with {len(df_global)} conference studies")
-    print(f"[INFO] ChromaDB: {'Initialized' if collection else 'Not available'}")
     print(f"[INFO] OpenAI API: {'Configured' if client else 'Not configured'}")
     print(f"[INFO] Competitive Landscapes: {len([k for k, v in competitive_landscapes.items() if v])} loaded")
     print(f"[INFO] Abstract Availability: {'ENABLED - Full data synthesis' if abstracts_available else 'DISABLED - Using titles/authors only (until Oct 13th)'}")

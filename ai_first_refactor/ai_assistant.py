@@ -55,13 +55,29 @@ def handle_chat_query(
     print(f"[AI-FIRST] Starting dataset: {len(df)} studies")
     print(f"{'='*70}")
 
-    # STEP 1: AI interprets query and generates search keywords
-    print(f"\n[STEP 1] AI interpreting query and generating keywords...")
-    keywords = extract_search_keywords_from_ai(user_query)
+    # STEP 1: AI interprets query and decides response strategy
+    print(f"\n[STEP 1] AI interpreting query...")
+    interpretation = extract_search_keywords_from_ai(user_query, len(df), active_filters)
 
+    # Check if this is a greeting/casual query
+    if interpretation.get('response_type') == 'greeting':
+        print(f"[STEP 1] AI detected greeting - responding conversationally")
+        greeting_message = interpretation.get('message', 'How can I help you today?')
+
+        def greeting_generator():
+            yield greeting_message
+
+        return {
+            'type': 'ai_response',
+            'filtered_data': pd.DataFrame(),  # No table for greetings
+            'response_stream': greeting_generator()
+        }
+
+    # Data query - extract keywords from interpretation
+    keywords = interpretation
     print(f"[STEP 1] AI-generated keywords:")
     for key, values in keywords.items():
-        if values:
+        if values and key != 'response_type':
             print(f"  {key}: {values}")
 
     # STEP 2: Filter DataFrame using AI-generated keywords
@@ -91,68 +107,69 @@ def handle_chat_query(
     }
 
 
-def extract_search_keywords_from_ai(user_query: str) -> Dict[str, List[str]]:
+def extract_search_keywords_from_ai(user_query: str, dataset_size: int, active_filters: Dict) -> Dict[str, Any]:
     """
-    STEP 1: AI interprets query and generates search keywords.
+    STEP 1: AI interprets query and decides response strategy.
 
-    The AI uses its pharmaceutical knowledge to:
-    - Understand abbreviations (EV = enfortumab vedotin)
-    - Identify drug classes (ADC = antibody-drug conjugates)
-    - Extract dates, institutions, therapeutic areas, etc.
+    The AI determines:
+    1. Is this a greeting/casual query? → Return direct response
+    2. Is this a data query? → Extract search keywords
 
     Args:
         user_query: User's raw question
+        dataset_size: Number of studies currently visible
+        active_filters: Active UI filters for context
 
     Returns:
-        Dict with search keywords:
-        {
-            'drugs': ['enfortumab vedotin', 'pembrolizumab'],
-            'drug_classes': ['ADC'],
-            'therapeutic_areas': ['bladder cancer', 'urothelial'],
-            'institutions': ['MD Anderson'],
-            'dates': ['10/19'],
-            'search_terms': ['combination']  # other relevant terms
-        }
+        Dict with either:
+        - {"response_type": "greeting", "message": "Hi! I can help..."} for casual queries
+        - {"response_type": "search", "drugs": [...], "dates": [...], ...} for data queries
     """
 
     client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
-    system_prompt = """You are a pharmaceutical keyword extraction expert.
+    # Build filter context
+    filter_parts = []
+    if active_filters.get('ta'):
+        filter_parts.append(f"{', '.join(active_filters['ta'])}")
+    if active_filters.get('drug'):
+        filter_parts.append(f"{', '.join(active_filters['drug'])}")
+    filter_context = " about " + " and ".join(filter_parts) if filter_parts else ""
 
-Your task: Extract search keywords from user queries for filtering a medical conference database.
+    system_prompt = f"""You are a pharmaceutical query interpreter for a conference intelligence system.
 
-**Your pharmaceutical knowledge:**
+**Context:** User is viewing {dataset_size} studies{filter_context} from ESMO 2025.
+
+**Your task:** Interpret the user's intent and provide appropriate response.
+
+**Option 1 - Casual/Greeting Query** (Hi, Hello, Thanks, How are you, etc.):
+Return: {{"response_type": "greeting", "message": "your friendly conversational response"}}
+- Acknowledge the greeting naturally
+- Mention the {dataset_size} studies{filter_context} they're viewing
+- Offer to help: "What would you like to know?"
+
+**Option 2 - Data Query** (asking about studies, drugs, therapeutic areas, etc.):
+Return: {{"response_type": "search", "drugs": [...], "drug_classes": [...], "therapeutic_areas": [...], "institutions": [...], "dates": [...], "speakers": [...], "search_terms": [...]}}
+- Use your pharmaceutical knowledge to extract keywords
 - Drug abbreviations: "EV" = enfortumab vedotin, "P" = pembrolizumab, "Nivo" = nivolumab
-- Drug classes: "ADC" = antibody-drug conjugates, "ICI" = immune checkpoint inhibitors, "TKI" = tyrosine kinase inhibitors
-- For combination queries (like "EV + P"), provide BOTH drug names
-- Be specific with full generic names
+- Drug classes: "ADC" = antibody-drug conjugates, "ICI" = immune checkpoint inhibitors
+- For combinations (like "EV + P"), provide BOTH drug names
 
-**Output Format:**
-Return ONLY valid JSON with this exact structure (no other text):
-{
-    "drugs": ["list of specific drug names"],
-    "drug_classes": ["list of drug classes like ADC, ICI, TKI"],
-    "therapeutic_areas": ["list of cancer types or disease areas"],
-    "institutions": ["list of specific institutions or hospitals"],
-    "dates": ["list of dates in MM/DD format"],
-    "speakers": ["list of speaker/author names"],
-    "search_terms": ["other relevant keywords"]
-}"""
+Return ONLY valid JSON, no other text."""
 
-    user_prompt = f"""Extract keywords from this query: "{user_query}"
+    user_prompt = f"""Interpret this query: "{user_query}"
 
-Examples for reference:
+Examples:
 
-Query: "EV + P data updates"
-{{"drugs": ["enfortumab vedotin", "pembrolizumab"], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": ["combination"]}}
+"Hello!" → {{"response_type": "greeting", "message": "Hi! I can help you explore the {dataset_size} studies{filter_context}. What would you like to know?"}}
 
-Query: "Show me ADC studies in breast cancer"
-{{"drugs": [], "drug_classes": ["antibody-drug conjugate", "ADC"], "therapeutic_areas": ["breast cancer"], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
+"Thanks!" → {{"response_type": "greeting", "message": "You're welcome! Let me know if you need anything else."}}
 
-Query: "What's MD Anderson presenting on 10/19?"
-{{"drugs": [], "drug_classes": [], "therapeutic_areas": [], "institutions": ["MD Anderson", "MD Anderson Cancer Center"], "dates": ["10/19"], "speakers": [], "search_terms": []}}
+"EV + P studies" → {{"response_type": "search", "drugs": ["enfortumab vedotin", "pembrolizumab"], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
-Now extract keywords for the user query. Return ONLY valid JSON."""
+"ADC data in breast cancer" → {{"response_type": "search", "drugs": [], "drug_classes": ["antibody-drug conjugate", "ADC"], "therapeutic_areas": ["breast cancer"], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
+
+Now interpret the user query. Return ONLY valid JSON."""
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -396,10 +413,16 @@ def analyze_filtered_results_with_ai(
 3. Erbitux (cetuximab) - EGFR inhibitor for CRC/H&N
 
 **Response Structure (CRITICAL):**
-1. START by confirming what you understood in a natural way
-   Example: "I found 6 studies on **10/18** about **nivolumab** in **renal cell carcinoma**."
-   Or: "I found 11 studies about the **enfortumab vedotin + pembrolizumab** combination."
-2. THEN provide your analysis
+1. If the original query is a casual greeting (Hi, Hello, Thanks, etc.):
+   - Respond conversationally
+   - Mention the number of studies available and what therapeutic area they cover
+   - Offer to help: "What would you like to know?"
+   - DO NOT analyze all the studies
+
+2. If the original query is a data question:
+   - START by confirming what you understood
+     Example: "I found 6 studies on **10/18** about **nivolumab** in **renal cell carcinoma**."
+   - THEN provide your analysis
 
 **Guidelines:**
 - You are receiving FILTERED data (these specific studies matched the user's intent)
