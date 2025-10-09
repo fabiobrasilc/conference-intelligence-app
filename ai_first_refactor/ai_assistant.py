@@ -28,19 +28,21 @@ import json
 def handle_chat_query(
     df: pd.DataFrame,
     user_query: str,
-    active_filters: Dict[str, List[str]]
+    active_filters: Dict[str, List[str]],
+    conversation_history: List[Dict[str, str]] = None
 ) -> Dict[str, Any]:
     """
     Main chat handler - Two-step AI-first approach.
 
-    Step 1: AI interprets query and generates search keywords
+    Step 1: AI interprets query and generates search keywords (with conversation context)
     Step 2: Filter DataFrame using keywords
-    Step 3: AI analyzes filtered results
+    Step 3: AI analyzes filtered results (with conversation context)
 
     Args:
         df: Full conference dataset (already filtered by UI filters)
         user_query: Raw user question
         active_filters: Dict of active UI filters
+        conversation_history: List of {user: str, assistant: str} from previous exchanges
 
     Returns:
         {
@@ -50,14 +52,18 @@ def handle_chat_query(
         }
     """
 
+    if conversation_history is None:
+        conversation_history = []
+
     print(f"\n{'='*70}")
     print(f"[AI-FIRST] User query: {user_query}")
     print(f"[AI-FIRST] Starting dataset: {len(df)} studies")
+    print(f"[AI-FIRST] Conversation history: {len(conversation_history)} previous exchanges")
     print(f"{'='*70}")
 
     # STEP 1: AI interprets query and decides response strategy
     print(f"\n[STEP 1] AI interpreting query...")
-    interpretation = extract_search_keywords_from_ai(user_query, len(df), active_filters)
+    interpretation = extract_search_keywords_from_ai(user_query, len(df), active_filters, conversation_history)
 
     # Check response type
     response_type = interpretation.get('response_type')
@@ -124,24 +130,34 @@ def handle_chat_query(
     }
 
 
-def extract_search_keywords_from_ai(user_query: str, dataset_size: int, active_filters: Dict) -> Dict[str, Any]:
+def extract_search_keywords_from_ai(
+    user_query: str,
+    dataset_size: int,
+    active_filters: Dict,
+    conversation_history: List[Dict[str, str]] = None
+) -> Dict[str, Any]:
     """
     STEP 1: AI interprets query and decides response strategy.
 
     The AI determines:
     1. Is this a greeting/casual query? → Return direct response
     2. Is this a data query? → Extract search keywords
+    3. Is this a follow-up question? → Use conversation context
 
     Args:
         user_query: User's raw question
         dataset_size: Number of studies currently visible
         active_filters: Active UI filters for context
+        conversation_history: Previous user/assistant exchanges for context
 
     Returns:
         Dict with either:
         - {"response_type": "greeting", "message": "Hi! I can help..."} for casual queries
         - {"response_type": "search", "drugs": [...], "dates": [...], ...} for data queries
     """
+
+    if conversation_history is None:
+        conversation_history = []
 
     client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
@@ -152,6 +168,15 @@ def extract_search_keywords_from_ai(user_query: str, dataset_size: int, active_f
     if active_filters.get('drug'):
         filter_parts.append(f"{', '.join(active_filters['drug'])}")
     filter_context = " about " + " and ".join(filter_parts) if filter_parts else ""
+
+    # Build conversation context
+    history_context = ""
+    if conversation_history:
+        history_context = "\n\n**CONVERSATION HISTORY (for context):**\n"
+        for i, exchange in enumerate(conversation_history[-5:], 1):  # Last 5 exchanges
+            history_context += f"\nExchange {i}:\n"
+            history_context += f"User: {exchange.get('user', '')}\n"
+            history_context += f"Assistant: {exchange.get('assistant', '')[:200]}...\n"  # Truncate long responses
 
     system_prompt = f"""You are a pharmaceutical query interpreter for a conference intelligence system.
 
@@ -177,7 +202,7 @@ Return: {{"response_type": "search", "drugs": [...], "drug_classes": [...], "the
 Return ONLY valid JSON, no other text."""
 
     # Combine system and user prompts into single input string for Responses API
-    combined_prompt = f"""{system_prompt}
+    combined_prompt = f"""{system_prompt}{history_context}
 
 USER QUERY: "{user_query}"
 

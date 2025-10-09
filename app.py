@@ -4470,6 +4470,7 @@ def stream_chat_ai_first():
     ta_filters = request.json.get('ta_filters', [])
     session_filters = request.json.get('session_filters', [])
     date_filters = request.json.get('date_filters', [])
+    conversation_history = request.json.get('conversation_history', [])
 
     if not user_query:
         return jsonify({"error": "No message provided"}), 400
@@ -4479,6 +4480,7 @@ def stream_chat_ai_first():
             print(f"\n{'='*70}")
             print(f"[AI-FIRST] User query: {user_query}")
             print(f"[AI-FIRST] Filters - TA: {ta_filters}, Drug: {drug_filters}, Date: {date_filters}")
+            print(f"[AI-FIRST] History: {len(conversation_history)} previous exchanges")
             print(f"{'='*70}\n")
 
             # 1. Apply UI filters to get base dataset
@@ -4491,7 +4493,7 @@ def stream_chat_ai_first():
 
             print(f"[AI-FIRST] Filtered dataset: {len(filtered_df)} studies")
 
-            # 2. Call AI-first handler
+            # 2. Call AI-first handler with conversation history
             active_filters = {
                 'drug': drug_filters,
                 'ta': ta_filters,
@@ -4499,7 +4501,7 @@ def stream_chat_ai_first():
                 'date': date_filters
             }
 
-            result = handle_chat_query(filtered_df, user_query, active_filters)
+            result = handle_chat_query(filtered_df, user_query, active_filters, conversation_history)
 
             print(f"[AI-FIRST] AI processing complete, streaming response...")
 

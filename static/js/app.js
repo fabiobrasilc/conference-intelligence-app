@@ -1220,9 +1220,10 @@ document.addEventListener('DOMContentLoaded', function() {
       // Add conversation pair to history (backend expects {user: ..., assistant: ...} format)
       conversationHistory.push({ user: userMessage, assistant: out });
 
-      // Limit conversation history to last 5 exchanges (10 messages total: 5 user + 5 AI)
-      if (conversationHistory.length > 5) {
-        conversationHistory = conversationHistory.slice(-5);
+      // Limit conversation history to last 15 exchanges (30 messages total: 15 user + 15 AI)
+      // This allows deep multi-turn conversations without degrading performance
+      if (conversationHistory.length > 15) {
+        conversationHistory = conversationHistory.slice(-15);
       }
 
       // Re-enable buttons after chat completes
