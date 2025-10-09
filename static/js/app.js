@@ -1123,6 +1123,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const drugFilters = activeChatScope.type === 'drug' ? [activeChatScope.value] : [];
       const taFilters = activeChatScope.type === 'ta' ? [activeChatScope.value] : [];
 
+      // Get thinking mode from dropdown
+      const thinkingModeDropdown = document.getElementById('thinkingModeDropdown');
+      const thinkingMode = thinkingModeDropdown ? thinkingModeDropdown.value : 'auto';
+
       // Call AI-first streaming chat API (clean refactor - no drug expansion, AI handles naturally)
       const response = await fetch('/api/chat/ai-first', {
         method: 'POST',
@@ -1133,7 +1137,8 @@ document.addEventListener('DOMContentLoaded', function() {
           ta_filters: taFilters,
           session_filters: [],
           date_filters: [],
-          conversation_history: conversationHistory
+          conversation_history: conversationHistory,
+          thinking_mode: thinkingMode  // Pass thinking mode to backend
         })
       });
 

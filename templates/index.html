@@ -275,6 +275,16 @@
                     <option value="ta:Head and Neck Cancer">Head & Neck Cancer</option>
                     <option value="ta:TGCT">TGCT</option>
                   </select>
+
+                  <!-- Thinking Mode Selector -->
+                  <label for="thinkingModeDropdown" style="margin-left: 15px;">🧠 AI Thinking:</label>
+                  <select id="thinkingModeDropdown" class="chat-scope-dropdown" title="Control AI reasoning depth and response detail">
+                    <option value="auto" selected>Auto (Recommended)</option>
+                    <option value="quick">⚡ Quick - Fast, concise answers</option>
+                    <option value="normal">⚙️ Normal - Balanced</option>
+                    <option value="deep">🔬 Deep - Comprehensive analysis</option>
+                  </select>
+
                   <button class="download-chat-btn" id="downloadChatBtn" title="Download conversation">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>

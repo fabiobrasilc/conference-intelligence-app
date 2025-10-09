@@ -4471,6 +4471,7 @@ def stream_chat_ai_first():
     session_filters = request.json.get('session_filters', [])
     date_filters = request.json.get('date_filters', [])
     conversation_history = request.json.get('conversation_history', [])
+    thinking_mode = request.json.get('thinking_mode', 'auto')  # auto, quick, normal, or deep
 
     if not user_query:
         return jsonify({"error": "No message provided"}), 400
@@ -4501,7 +4502,7 @@ def stream_chat_ai_first():
                 'date': date_filters
             }
 
-            result = handle_chat_query(filtered_df, user_query, active_filters, conversation_history)
+            result = handle_chat_query(filtered_df, user_query, active_filters, conversation_history, thinking_mode)
 
             print(f"[AI-FIRST] AI processing complete, streaming response...")
 

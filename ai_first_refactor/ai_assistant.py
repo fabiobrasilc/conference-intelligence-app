@@ -29,7 +29,8 @@ def handle_chat_query(
     df: pd.DataFrame,
     user_query: str,
     active_filters: Dict[str, List[str]],
-    conversation_history: List[Dict[str, str]] = None
+    conversation_history: List[Dict[str, str]] = None,
+    thinking_mode: str = "auto"
 ) -> Dict[str, Any]:
     """
     Main chat handler - Two-step AI-first approach.
@@ -43,6 +44,7 @@ def handle_chat_query(
         user_query: Raw user question
         active_filters: Dict of active UI filters
         conversation_history: List of {user: str, assistant: str} from previous exchanges
+        thinking_mode: "auto" (default), "quick", "normal", or "deep"
 
     Returns:
         {
@@ -119,8 +121,10 @@ def handle_chat_query(
         user_query=user_query,
         filtered_df=filtered_df,
         original_count=len(df),
-        filters=active_filters,
-        extracted_keywords=keywords  # Pass keywords for transparency
+        active_filters=active_filters,  # Pass active filters so analyzer knows what's filtered
+        extracted_keywords=keywords,  # Pass keywords for transparency
+        thinking_mode=thinking_mode,  # Pass thinking mode to analyzer
+        conversation_history=conversation_history  # Pass history for context
     )
 
     return {
@@ -252,8 +256,8 @@ Now interpret the user query above. Return ONLY valid JSON."""
         response = client.responses.create(
             model="gpt-5-mini",
             input=combined_prompt,  # Single string, not array of messages
-            reasoning={"effort": "low"},  # Use low for simple keyword extraction
-            text={"verbosity": "low"},
+            reasoning={"effort": "medium"},  # MEDIUM: Balanced - keyword extraction doesn't need high reasoning
+            text={"verbosity": "low"},  # LOW: Output is just JSON keywords
             max_output_tokens=1000
         )
 
@@ -444,8 +448,10 @@ def analyze_filtered_results_with_ai(
     user_query: str,
     filtered_df: pd.DataFrame,
     original_count: int,
-    filters: Dict[str, List[str]],
-    extracted_keywords: Dict[str, List[str]] = None
+    active_filters: Dict[str, List[str]],
+    extracted_keywords: Dict[str, List[str]] = None,
+    thinking_mode: str = "auto",
+    conversation_history: List[Dict[str, str]] = None
 ) -> Generator[str, None, None]:
     """
     STEP 3: AI analyzes filtered results and generates response.
@@ -456,14 +462,52 @@ def analyze_filtered_results_with_ai(
         user_query: Original user question
         filtered_df: Filtered dataset (result of keyword search)
         original_count: Original dataset size before filtering
-        filters: Active UI filters
+        active_filters: Active UI filters (so AI knows context)
         extracted_keywords: Keywords extracted by AI in Step 1 (for transparency)
+        thinking_mode: "auto", "quick", "normal", or "deep"
+        conversation_history: Previous exchanges for context
 
     Yields:
         Response tokens for streaming
     """
 
     client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
+    # AUTO-SCALE thinking mode based on query and result count
+    if thinking_mode == "auto":
+        result_count = len(filtered_df)
+        query_lower = user_query.lower()
+
+        # Auto-detect thinking level
+        deep_keywords = ['strategy', 'strategic', 'competitive', 'landscape', 'compare', 'comparison', 'analyze', 'analysis', 'insight']
+        quick_keywords = ['when', 'what time', 'who', 'which speaker', 'how many', 'list']
+
+        if any(kw in query_lower for kw in deep_keywords) or result_count > 30:
+            reasoning_effort = "high"
+            verbosity = "high"
+            print(f"[AUTO-SCALE] Deep thinking mode (query complexity or {result_count} results)")
+        elif any(kw in query_lower for kw in quick_keywords) and result_count <= 10:
+            reasoning_effort = "low"
+            verbosity = "low"
+            print(f"[AUTO-SCALE] Quick mode (simple query, {result_count} results)")
+        else:
+            reasoning_effort = "medium"
+            verbosity = "medium"
+            print(f"[AUTO-SCALE] Normal mode (balanced, {result_count} results)")
+
+    # Manual override modes
+    elif thinking_mode == "quick":
+        reasoning_effort = "low"
+        verbosity = "low"
+        print(f"[MANUAL] Quick mode selected")
+    elif thinking_mode == "deep":
+        reasoning_effort = "high"
+        verbosity = "high"
+        print(f"[MANUAL] Deep thinking mode selected")
+    else:  # "normal" or default
+        reasoning_effort = "medium"
+        verbosity = "medium"
+        print(f"[MANUAL] Normal mode selected")
 
     # Format filtered data
     essential_cols = ['Identifier', 'Title', 'Speakers', 'Affiliation', 'Date', 'Time', 'Session', 'Theme']
@@ -488,31 +532,50 @@ def analyze_filtered_results_with_ai(
 
     interpretation_summary = " ".join(interpretation_parts) if interpretation_parts else "matching your query"
 
+    # Build active filter context for system prompt
+    filter_context_parts = []
+    if active_filters.get('ta'):
+        filter_context_parts.append(f"**Therapeutic Area Filter:** {', '.join(active_filters['ta'])}")
+    if active_filters.get('drug'):
+        filter_context_parts.append(f"**Drug Filter:** {', '.join(active_filters['drug'])}")
+    filter_context_str = "\n".join(filter_context_parts) if filter_context_parts else "No active filters"
+
+    # Build conversation history context
+    history_context = ""
+    if conversation_history and len(conversation_history) > 0:
+        history_context = "\n\n**CONVERSATION HISTORY (for context):**\n"
+        for i, exchange in enumerate(conversation_history[-3:], 1):  # Last 3 exchanges for analyzer
+            history_context += f"\nExchange {i}:\n"
+            history_context += f"User: {exchange.get('user', '')}\n"
+            history_context += f"Assistant: {exchange.get('assistant', '')[:150]}...\n"
+
     # Build system prompt
-    system_prompt = """You are an AI medical affairs intelligence assistant for EMD Serono (Merck KGaA).
+    system_prompt = f"""You are an AI medical affairs intelligence assistant for EMD Serono (Merck KGaA).
+
+**ACTIVE FILTERS (USER'S VIEW):**
+{filter_context_str}
+
+**Important:** The user has these filters active in their UI. They are viewing a FILTERED subset of the conference data based on these selections.
 
 **Company Assets:**
 1. Bavencio (avelumab) - PD-L1 inhibitor for bladder cancer
-2. Tepmetko (tepotinib) - MET inhibitor for NSCLC
+2. Tepmetko (tepotinib) - MET inhibitor for NSCLC with MET alterations
 3. Erbitux (cetuximab) - EGFR inhibitor for CRC/H&N
 
-**Response Structure (CRITICAL):**
-1. If the original query is a casual greeting (Hi, Hello, Thanks, etc.):
-   - Respond conversationally
-   - Mention the number of studies available and what therapeutic area they cover
-   - Offer to help: "What would you like to know?"
-   - DO NOT analyze all the studies
+**Core Principles:**
+- You are receiving FILTERED data - these specific studies matched the user's intent
+- START by confirming what you understood before diving into analysis
+- Always cite study Identifiers when referencing specific presentations
+- End with clarifying questions or follow-up suggestions to continue the conversation
+- Be helpful and conversational - the user can't access full abstracts or search the web through you
 
-2. If the original query is a data question:
-   - START by confirming what you understood
-     Example: "I found 6 studies on **10/18** about **nivolumab** in **renal cell carcinoma**."
-   - THEN provide your analysis
-
-**Guidelines:**
-- You are receiving FILTERED data (these specific studies matched the user's intent)
-- Always cite study Identifiers when referencing presentations
-- Be concise but informative
-- If results seem surprisingly small/large, acknowledge it"""
+**Natural Intelligence:**
+- Interpret the user's query intent naturally - don't be overly rigid
+- If they're asking a simple factual question (when/who/how many), be concise
+- If they want strategic insights or analysis, provide depth
+- Adapt your response style to what they're really asking for
+- If results seem surprisingly small/large, acknowledge it and offer to refine
+{history_context}"""
 
     user_message = f"""**Original Query:** {user_query}
 
@@ -536,8 +599,8 @@ Please analyze these {len(filtered_df)} studies. Start by confirming what you un
         stream = client.responses.create(
             model="gpt-5-mini",
             input=messages,
-            reasoning={"effort": "medium"},
-            text={"verbosity": "medium"},
+            reasoning={"effort": reasoning_effort},  # Dynamic based on thinking_mode
+            text={"verbosity": verbosity},  # Dynamic based on thinking_mode
             max_output_tokens=4000,
             stream=True
         )
