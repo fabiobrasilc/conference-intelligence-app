@@ -180,9 +180,10 @@ def extract_search_keywords_from_ai(
 
     system_prompt = f"""You are a pharmaceutical query interpreter for a conference intelligence system.
 
-**Context:** User is viewing {dataset_size} studies{filter_context} from ESMO 2025.
-
-**Your task:** Interpret the user's intent and provide appropriate response.
+**CONTEXT:**
+- User is viewing {dataset_size} studies{filter_context} from ESMO 2025
+- The dataset is already pre-filtered by UI filters (if any)
+- Your job: Extract ONLY the minimal keyword set needed to retrieve what the user asked for
 
 **Option 1 - Casual/Greeting Query** (Hi, Hello, Thanks, How are you, etc.):
 Return: {{"response_type": "greeting", "message": "your friendly conversational response"}}
@@ -190,14 +191,34 @@ Return: {{"response_type": "greeting", "message": "your friendly conversational 
 - Mention the {dataset_size} studies{filter_context} they're viewing
 - Offer to help: "What would you like to know?"
 
-**Option 2 - Data Query** (asking about studies, drugs, therapeutic areas, etc.):
+**Option 2 - Data Query** - Apply DECISION PRIORITY:
+
+**DECISION PRIORITY (CRITICAL):**
+1) If user mentions a MOLECULAR ENTITY (mutation/alteration/pathway/biomarker), that becomes the PRIMARY filter
+   - Examples: "METex14", "MET exon 14 skipping", "EGFR L858R", "HER2-low", "PD-L1 ≥50%", "KRAS G12C"
+   - When molecular entity is present, DO NOT infer or add drug filters unless user explicitly asks for drugs
+   - Put molecular entities in search_terms, NOT drug_classes
+
+2) If user mentions DRUG ABBREVIATIONS, expand them to full names:
+   - "EV" → enfortumab vedotin
+   - "P" / "pembro" → pembrolizumab
+   - "Nivo" → nivolumab
+   - "Atezo" → atezolizumab
+   - For combinations (like "EV + P"), provide BOTH drug names
+
+3) Only extract DRUGS if:
+   - User explicitly mentions them (name or abbreviation), OR
+   - User asks for drug comparisons
+
+4) Prefer RECALL over PRECISION on first pass
+   - Be conservative with constraints
+   - Don't add filters the user didn't ask for
+   - User can refine later if needed
+
+5) Do NOT extract therapeutic_areas or drug_classes that are already in active filters above
+
+**Output Format:**
 Return: {{"response_type": "search", "drugs": [...], "drug_classes": [...], "therapeutic_areas": [...], "institutions": [...], "dates": [...], "speakers": [...], "search_terms": [...]}}
-- Use your pharmaceutical knowledge to extract keywords
-- Drug abbreviations: "EV" = enfortumab vedotin, "P" = pembrolizumab, "Nivo" = nivolumab
-- Drug classes: "ADC" = antibody-drug conjugates, "ICI" = immune checkpoint inhibitors
-- For combinations (like "EV + P"), provide BOTH drug names
-- **IMPORTANT**: Do NOT extract therapeutic_areas, drug_classes, or search_terms that are already in the active filters above - the dataset is already filtered by those
-- Focus on extracting NEW information from the query (drugs, dates, institutions, speakers)
 
 Return ONLY valid JSON, no other text."""
 
@@ -206,15 +227,22 @@ Return ONLY valid JSON, no other text."""
 
 USER QUERY: "{user_query}"
 
-Examples:
+**Examples demonstrating DECISION PRIORITY:**
 
+Greeting:
 "Hello!" → {{"response_type": "greeting", "message": "Hi! I can help you explore the {dataset_size} studies{filter_context}. What would you like to know?"}}
 
-"Thanks!" → {{"response_type": "greeting", "message": "You're welcome! Let me know if you need anything else."}}
-
+Drug abbreviation expansion:
 "EV + P studies" → {{"response_type": "search", "drugs": ["enfortumab vedotin", "pembrolizumab"], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
-"ADC data in breast cancer" → {{"response_type": "search", "drugs": [], "drug_classes": ["antibody-drug conjugate", "ADC"], "therapeutic_areas": ["breast cancer"], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
+Molecular entity (PRIMARY filter - don't add drugs):
+"METex14 skipping studies" → {{"response_type": "search", "drugs": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": ["METex14", "MET exon 14 skipping", "MET exon14 skipping"]}}
+
+Molecular entity + explicit drug:
+"capmatinib in METex14" → {{"response_type": "search", "drugs": ["capmatinib"], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": ["METex14", "MET exon 14"]}}
+
+Drug class (only when explicitly asked):
+"ADC studies in breast cancer" → {{"response_type": "search", "drugs": [], "drug_classes": ["antibody-drug conjugate", "ADC"], "therapeutic_areas": ["breast cancer"], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
 Now interpret the user query above. Return ONLY valid JSON."""
 
