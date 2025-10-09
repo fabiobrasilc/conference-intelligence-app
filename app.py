@@ -4509,13 +4509,17 @@ def stream_chat_ai_first():
             # 3. Send table data first (if frontend needs it)
             table_df = result['filtered_data']
             if not table_df.empty and len(table_df) <= 500:
+                # Remove internal search columns before displaying
+                display_cols = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier', 'Room', 'Date', 'Time', 'Session', 'Theme']
+                table_df_display = table_df[[col for col in display_cols if col in table_df.columns]]
+
                 # Format table as HTML for frontend
                 table_html = f"""<div class='entity-table-container'>
-<h6 class='entity-table-title'>📊 Filtered Results ({len(table_df)} studies)</h6>
-{dataframe_to_custom_html(table_df)}
+<h6 class='entity-table-title'>📊 Filtered Results ({len(table_df_display)} studies)</h6>
+{dataframe_to_custom_html(table_df_display)}
 </div>"""
                 yield "data: " + json.dumps({"table": table_html}) + "\n\n"
-                print(f"[AI-FIRST] Sent table with {len(table_df)} rows")
+                print(f"[AI-FIRST] Sent table with {len(table_df_display)} rows")
 
             # 4. Stream AI response tokens
             for token in result['response_stream']:
