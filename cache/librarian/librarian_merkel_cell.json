@@ -1,0 +1,46 @@
+[
+  {
+    "row_id": "LBA56",
+    "regimen": "Surgically Treated Adjuvant Merkel Cell Carcinoma with Pembrolizumab",
+    "drugs": [
+      "pembrolizumab"
+    ],
+    "modality": [
+      "IO",
+      "Adjuvant"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Phase 3",
+    "trial_id": "EA6174",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1669P",
+    "population": "Other",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1670P",
+    "population": "Other",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1739eTiP",
+    "regimen": "Chemio-immunotherapy in naive advanced Merkel cell carcinoma",
+    "modality": [
+      "IO",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "PANDORA",
+    "drugs": [],
+    "biomarkers": []
+  }
+]

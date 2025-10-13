@@ -1,0 +1,1396 @@
+[
+  {
+    "row_id": "3070MO",
+    "regimen": "LY3866288",
+    "drugs": [
+      "LY3866288"
+    ],
+    "biomarkers": [
+      "FGFR3"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "FORAGER-1"
+  },
+  {
+    "row_id": "LBA110",
+    "regimen": "nivolumab + visugromab",
+    "drugs": [
+      "nivolumab",
+      "visugromab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "MIBC",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA112",
+    "regimen": "gemcitabine intravesical system (TAR-200) + cetrelimab",
+    "drugs": [
+      "gemcitabine",
+      "cetrelimab"
+    ],
+    "modality": [
+      "Intravesical"
+    ],
+    "population": "MIBC",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "SunRISe-4",
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_70",
+    "regimen": "platinum-based chemotherapy → avelumab maintenance",
+    "drugs": [
+      "platinum-based chemotherapy",
+      "avelumab"
+    ],
+    "modality": [
+      "Chemotherapy",
+      "Maintenance"
+    ],
+    "population": "Other",
+    "line": "Maintenance",
+    "phase": "Phase 2",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3071MO",
+    "regimen": "Disitamab Vedotin + Tislelizumab",
+    "drugs": [
+      "Disitamab Vedotin",
+      "Tislelizumab",
+      "disitamab vedotin",
+      "tislelizumab"
+    ],
+    "modality": [
+      "ADC",
+      "IO"
+    ],
+    "population": "UTUC",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "DISTINCT-I",
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA108",
+    "regimen": "durvalumab + BCG",
+    "drugs": [
+      "durvalumab",
+      "BCG"
+    ],
+    "modality": [
+      "IO",
+      "Intravesical"
+    ],
+    "population": "NMIBC",
+    "line": "Not specified",
+    "phase": "Phase 3",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3068O",
+    "regimen": "nivolumab vs placebo",
+    "drugs": [
+      "nivolumab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "MIBC",
+    "line": "Adjuvant",
+    "phase": "Approved",
+    "trial_id": "CheckMate 274",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3069MO",
+    "regimen": "durvalumab + neoadjuvant chemotherapy",
+    "drugs": [
+      "durvalumab"
+    ],
+    "modality": [
+      "IO",
+      "Chemotherapy"
+    ],
+    "population": "MIBC",
+    "line": "Perioperative",
+    "phase": "Not specified",
+    "trial_id": "NIAGARA",
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA107",
+    "regimen": "atezolizumab + BCG",
+    "drugs": [
+      "atezolizumab",
+      "BCG"
+    ],
+    "modality": [
+      "IO",
+      "Intravesical"
+    ],
+    "population": "NMIBC",
+    "line": "Not specified",
+    "phase": "Phase 3",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3072MO",
+    "regimen": "Datopotamab deruxtecan + rilvegostomig",
+    "drugs": [
+      "Datopotamab deruxtecan",
+      "rilvegostomig"
+    ],
+    "modality": [
+      "ADC",
+      "IO"
+    ],
+    "population": "mUC",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "TROPION-PanTumor",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3091P",
+    "regimen": "Artificial Intelligence Predicts",
+    "drugs": [],
+    "modality": [],
+    "population": "MIBC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3111eP",
+    "regimen": "enfortumab vedotin",
+    "drugs": [
+      "enfortumab vedotin"
+    ],
+    "population": "mUC",
+    "phase": "Not specified",
+    "trial_id": "3111eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3083P",
+    "regimen": "avelumab + sacituzumab govitecan",
+    "drugs": [
+      "avelumab",
+      "sacituzumab govitecan"
+    ],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "3083P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3085P",
+    "regimen": "tislelizumab combined with disitamab vedotin",
+    "drugs": [
+      "tislelizumab",
+      "disitamab vedotin"
+    ],
+    "population": "Other",
+    "phase": "Phase 2",
+    "trial_id": "3085P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA2",
+    "regimen": "enfortumab vedotin + pembrolizumab",
+    "drugs": [
+      "enfortumab vedotin",
+      "pembrolizumab",
+      "cisplatin"
+    ],
+    "population": "MIBC",
+    "line": "Perioperative",
+    "phase": "Not specified",
+    "trial_id": "LBA2",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3084P",
+    "regimen": "Durvalumab +/- tremelimumab + ddMVAC",
+    "drugs": [
+      "Durvalumab",
+      "tremelimumab",
+      "ddMVAC",
+      "durvalumab"
+    ],
+    "population": "MIBC",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "3084P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3121eP",
+    "regimen": "Durvalumab plus Platin-based Chemotherapy",
+    "drugs": [
+      "Durvalumab",
+      "durvalumab"
+    ],
+    "population": "MIBC",
+    "line": "Perioperative",
+    "phase": "Not specified",
+    "trial_id": "3121eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3089P",
+    "regimen": "enfortumab vedotin and pembrolizumab",
+    "drugs": [
+      "enfortumab vedotin",
+      "pembrolizumab"
+    ],
+    "population": "mUC",
+    "phase": "Not specified",
+    "trial_id": "3089P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3102P",
+    "regimen": "enfortumab vedotin and pembrolizumab",
+    "drugs": [
+      "enfortumab vedotin",
+      "pembrolizumab"
+    ],
+    "biomarkers": [
+      "FGFR3",
+      "ERBB2",
+      "HER2"
+    ],
+    "population": "mUC",
+    "phase": "Not specified",
+    "trial_id": "3102P"
+  },
+  {
+    "row_id": "3098P",
+    "regimen": "Fexagratinib",
+    "drugs": [
+      "Fexagratinib"
+    ],
+    "biomarkers": [
+      "FGFR3"
+    ],
+    "population": "mUC",
+    "phase": "Not specified",
+    "trial_id": "3098P"
+  },
+  {
+    "row_id": "3095P",
+    "regimen": "enfortumab vedotin",
+    "drugs": [
+      "enfortumab vedotin"
+    ],
+    "biomarkers": [
+      "ERBB2",
+      "Nectin-4",
+      "HER2"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "3095P"
+  },
+  {
+    "row_id": "3088P",
+    "regimen": "TAR-200",
+    "drugs": [
+      "TAR-200",
+      "cisplatin"
+    ],
+    "population": "NMIBC",
+    "phase": "Phase 2b",
+    "trial_id": "3088P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3076P",
+    "regimen": "RC48-ADC combined with tislelizumab",
+    "drugs": [
+      "RC48-ADC",
+      "tislelizumab",
+      "disitamab vedotin"
+    ],
+    "biomarkers": [
+      "HER2"
+    ],
+    "population": "MIBC",
+    "line": "Neoadjuvant",
+    "phase": "Phase Ib/II",
+    "trial_id": "3076P"
+  },
+  {
+    "row_id": "3119eP",
+    "regimen": "Bacillus Calmette-Guerin",
+    "drugs": [
+      "BCG"
+    ],
+    "population": "NMIBC",
+    "phase": "Not specified",
+    "trial_id": "3119eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3093P",
+    "regimen": "Sacituzumab Govitecan alone and with pembrolizumab",
+    "drugs": [
+      "Sacituzumab Govitecan",
+      "pembrolizumab",
+      "sacituzumab govitecan"
+    ],
+    "population": "MIBC",
+    "phase": "Not specified",
+    "trial_id": "3093P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3134eTiP",
+    "regimen": "neoadjuvant Systemic Therapies",
+    "drugs": [],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "3134eTiP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3096P",
+    "regimen": "Immunotherapy",
+    "drugs": [],
+    "population": "mUC",
+    "phase": "Not specified",
+    "trial_id": "3096P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3108P",
+    "regimen": "Enfortumab Vedotin",
+    "drugs": [
+      "enfortumab vedotin"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "3108P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3112eP",
+    "regimen": "enfortumab vedotin",
+    "drugs": [
+      "enfortumab vedotin"
+    ],
+    "population": "mUC",
+    "phase": "Not specified",
+    "trial_id": "EVOLUTE",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3078P",
+    "regimen": "sasanlimab + Bacillus Calmette-Guerin",
+    "drugs": [
+      "sasanlimab",
+      "Bacillus Calmette-Guerin"
+    ],
+    "population": "MIBC",
+    "line": "1L",
+    "phase": "Phase 3",
+    "trial_id": "CREST",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3128eP",
+    "regimen": "Neoadjuvant Chemo-Immunotherapy",
+    "biomarkers": [
+      "PD-L1"
+    ],
+    "population": "MIBC",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "AURA",
+    "drugs": []
+  },
+  {
+    "row_id": "3075P",
+    "regimen": "Adjuvant Therapy",
+    "population": "UTUC",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "CURATE-UTUC",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "3099P",
+    "regimen": "BCG",
+    "population": "NMIBC",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "3116eP",
+    "regimen": "advanced urothelial carcinoma",
+    "population": "MIBC",
+    "phase": "Not specified",
+    "trial_id": "JAV",
+    "drugs": [
+      "avelumab"
+    ],
+    "biomarkers": []
+  },
+  {
+    "row_id": "3073P",
+    "regimen": "enfortumab vedotin + pembrolizumab",
+    "drugs": [
+      "enfortumab vedotin",
+      "pembrolizumab"
+    ],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3087P",
+    "regimen": "enfortumab vedotin + pembrolizumab",
+    "drugs": [
+      "enfortumab vedotin",
+      "pembrolizumab"
+    ],
+    "biomarkers": [
+      "NECTIN4",
+      "Nectin-4"
+    ],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "3090P",
+    "regimen": "enfortumab vedotin",
+    "drugs": [
+      "enfortumab vedotin"
+    ],
+    "biomarkers": [
+      "NECTIN4",
+      "Nectin-4"
+    ],
+    "population": "mUC",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "3082P",
+    "regimen": "Spatial Transcriptomics",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "SOGUG-AUREA",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "3126eP",
+    "regimen": "PET-CT",
+    "population": "MIBC",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "3092P",
+    "regimen": "erdafitinib",
+    "drugs": [
+      "erdafitinib"
+    ],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Phase 3",
+    "trial_id": "THOR",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3135eTiP",
+    "regimen": "intismeran autogene + Bacillus Calmette-Guerin",
+    "drugs": [
+      "intismeran autogene",
+      "Bacillus Calmette-Guerin"
+    ],
+    "population": "NMIBC",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "INTerpath-011",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3120eP",
+    "regimen": "Antibody-Drug Conjugates",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_907",
+    "regimen": "adjuvant therapy",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_990",
+    "regimen": "Not specified",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_1120",
+    "regimen": "frontline therapy",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_1224",
+    "regimen": "trimodality therapy",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_1240",
+    "regimen": "neoadjuvant therapy",
+    "population": "MIBC",
+    "phase": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "3109eP",
+    "regimen": "avelumab first-line maintenance",
+    "drugs": [
+      "avelumab"
+    ],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3122eP",
+    "regimen": "platinum-based treatment",
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "3106P",
+    "regimen": "perioperative chemo-immunotherapy with Durvalumab",
+    "drugs": [
+      "Durvalumab",
+      "durvalumab"
+    ],
+    "population": "MIBC",
+    "line": "Perioperative",
+    "phase": "Phase 2",
+    "trial_id": "SAKK 06/17",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3107P",
+    "regimen": "intravesical recombinant BCG followed by perioperative chemo-immunotherapy",
+    "population": "MIBC",
+    "line": "Perioperative",
+    "phase": "Not specified",
+    "trial_id": "SAKK 06/19",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "3100P",
+    "regimen": "Enfortumab Vedotin Plus Pembrolizumab Therapy",
+    "drugs": [
+      "enfortumab vedotin",
+      "pembrolizumab"
+    ],
+    "biomarkers": [
+      "NECTIN-4",
+      "Nectin-4"
+    ],
+    "population": "mUC",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "3129eP",
+    "regimen": "neoadjuvant chemotherapy",
+    "population": "MIBC",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "3097P",
+    "regimen": "AI Prediction Model",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "3127eP",
+    "regimen": "Bulumtatug Fuvedotin combined with Toripalimab",
+    "drugs": [
+      "Bulumtatug Fuvedotin",
+      "Toripalimab",
+      "toripalimab"
+    ],
+    "population": "mUC",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": [
+      "Nectin-4"
+    ]
+  },
+  {
+    "row_id": "3077P",
+    "regimen": "Enfortumab vedotin with pembrolizumab",
+    "drugs": [
+      "enfortumab vedotin",
+      "pembrolizumab"
+    ],
+    "population": "mUC",
+    "phase": "Not specified",
+    "trial_id": "UNITE",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3105P",
+    "regimen": "Sex-Associated Outcomes in Enfortumab Vedotin-Treated",
+    "drugs": [
+      "enfortumab vedotin"
+    ],
+    "population": "mUC",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": [
+      "Nectin-4"
+    ]
+  },
+  {
+    "row_id": "3074P",
+    "regimen": "enfortumab vedotin with or without pembrolizumab",
+    "drugs": [
+      "enfortumab vedotin",
+      "pembrolizumab",
+      "cisplatin"
+    ],
+    "population": "MIBC",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "EV-103 Cohort K",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3115eP",
+    "regimen": "avelumab, pembrolizumab or enfortumab vedotin",
+    "drugs": [
+      "avelumab",
+      "pembrolizumab",
+      "enfortumab vedotin"
+    ],
+    "population": "mUC",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3079P",
+    "regimen": "Disitamab Vedotin plus BCG",
+    "drugs": [
+      "Disitamab Vedotin",
+      "BCG",
+      "disitamab vedotin"
+    ],
+    "biomarkers": [
+      "HER2"
+    ],
+    "population": "NMIBC",
+    "phase": "Phase 2",
+    "trial_id": "Formula-01"
+  },
+  {
+    "row_id": "3086P",
+    "regimen": "Organ-Preserving Therapy",
+    "population": "MIBC",
+    "phase": "Phase 2",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "3103P",
+    "regimen": "Chemotherapy plus Toripalimab as Neoadjuvant Therapy",
+    "drugs": [
+      "Toripalimab",
+      "toripalimab"
+    ],
+    "population": "UTUC",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "WUTSUP-01",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3081P",
+    "regimen": "Bladder Preservation Therapy in Combination with Atezolizumab and Radiation therapy",
+    "drugs": [
+      "Atezolizumab",
+      "atezolizumab"
+    ],
+    "population": "MIBC",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3114eP",
+    "regimen": "Disitamab Vedotin Plus Toripalimab Treatment",
+    "drugs": [
+      "Disitamab Vedotin",
+      "Toripalimab",
+      "disitamab vedotin",
+      "toripalimab"
+    ],
+    "biomarkers": [
+      "HER-2"
+    ],
+    "population": "MIBC",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "3110eP",
+    "regimen": "ctDNA-Guided Atezolizumab Adjuvant Therapy",
+    "drugs": [
+      "Atezolizumab",
+      "atezolizumab"
+    ],
+    "population": "MIBC",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3104P",
+    "regimen": "First-line therapy",
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "NCDB Analysis",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "967P",
+    "regimen": "Nectin-4-targeting antibody-drug conjugate CRB-701",
+    "drugs": [
+      "CRB-701",
+      "SYS6002"
+    ],
+    "population": "Other",
+    "phase": "Phase 1/2",
+    "trial_id": "SYS6002",
+    "biomarkers": [
+      "Nectin-4"
+    ]
+  },
+  {
+    "row_id": "LBA7",
+    "regimen": "Disitamab vedotin + toripalimab versus chemotherapy",
+    "drugs": [
+      "Disitamab vedotin",
+      "toripalimab",
+      "chemotherapy",
+      "disitamab vedotin"
+    ],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "LBA7",
+    "biomarkers": [
+      "HER2"
+    ]
+  },
+  {
+    "row_id": "ROW_1841",
+    "regimen": "optimal 1L treatment",
+    "population": "mHSPC",
+    "line": "1L",
+    "phase": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_1948",
+    "regimen": "Optimising 1L treatment",
+    "population": "mHSPC",
+    "line": "1L",
+    "phase": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_2777",
+    "regimen": "Optimising 1L treatment",
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_2919",
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_3207",
+    "population": "MIBC",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1766eP",
+    "biomarkers": [
+      "FGFR"
+    ],
+    "population": "NMIBC",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": []
+  },
+  {
+    "row_id": "ROW_3477",
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1513O",
+    "regimen": "GDF-15 neutralization + nivolumab",
+    "drugs": [
+      "GDF-15",
+      "nivolumab"
+    ],
+    "population": "Other",
+    "line": "3L",
+    "phase": "Phase 2",
+    "trial_id": "GDFATHER-01",
+    "biomarkers": []
+  },
+  {
+    "row_id": "52eP",
+    "regimen": "PF-08052667",
+    "drugs": [
+      "PF-08052667"
+    ],
+    "modality": [
+      "ADC"
+    ],
+    "population": "NMIBC",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_3935",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_4092",
+    "biomarkers": [
+      "emerging biomarkers"
+    ],
+    "population": "mUC",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": []
+  },
+  {
+    "row_id": "LBA8",
+    "regimen": "circulating tumour (ct)DNA-guided adjuvant atezolizumab vs placebo",
+    "drugs": [
+      "atezolizumab"
+    ],
+    "modality": [
+      "Adjuvant"
+    ],
+    "population": "MIBC",
+    "line": "Adjuvant",
+    "phase": "Phase 3",
+    "trial_id": "IMvigor011",
+    "biomarkers": []
+  },
+  {
+    "row_id": "25P",
+    "regimen": "KAT2A-mediated MECP2 lactylation",
+    "drugs": [],
+    "biomarkers": [
+      "KAT2A",
+      "MECP2",
+      "FGF1"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "KAT2A"
+  },
+  {
+    "row_id": "23P",
+    "regimen": "HDACs inhibitor sensitizes the efficacy of cisplatin",
+    "drugs": [
+      "cisplatin"
+    ],
+    "biomarkers": [
+      "H3K18la",
+      "DHRS2"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "HDACs"
+  },
+  {
+    "row_id": "CN68",
+    "regimen": "Chain Mediating Effect of Family APGAR and Psychosocial Adjustment",
+    "drugs": [],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "Family APGAR",
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA111",
+    "regimen": "upfront Magnetic Resonance Imaging versus Transurethral Resection",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "BladderPath"
+  },
+  {
+    "row_id": "3123eP",
+    "regimen": "first-line treatment strategies",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "3094P",
+    "regimen": "enfortumab vedotin + pembrolizumab",
+    "drugs": [
+      "enfortumab vedotin",
+      "pembrolizumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "ADC"
+    ],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "UNITE"
+  },
+  {
+    "row_id": "3132eP",
+    "regimen": "",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "3130eP",
+    "regimen": "",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "mUC",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "3101P",
+    "regimen": "",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "mUC",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1284",
+    "regimen": "",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1791",
+    "regimen": "",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1868",
+    "regimen": "",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1884",
+    "regimen": "",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1922",
+    "regimen": "",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_2063",
+    "regimen": "",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2326P",
+    "regimen": "Systemic Therapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "MIBC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "2326P"
+  },
+  {
+    "row_id": "ROW_2203",
+    "regimen": "Not specified",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_2203"
+  },
+  {
+    "row_id": "ROW_2254",
+    "regimen": "Not specified",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_2254"
+  },
+  {
+    "row_id": "ROW_2255",
+    "regimen": "Not specified",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_2255"
+  },
+  {
+    "row_id": "ROW_2288",
+    "regimen": "Combinations with ADCs",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "ADC"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_2288"
+  },
+  {
+    "row_id": "ROW_2700",
+    "regimen": "Not specified",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_2700"
+  },
+  {
+    "row_id": "ROW_2702",
+    "regimen": "Not specified",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_2702"
+  },
+  {
+    "row_id": "ROW_2705",
+    "regimen": "Not specified",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_2705"
+  },
+  {
+    "row_id": "ROW_2874",
+    "regimen": "Not specified",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_2874"
+  },
+  {
+    "row_id": "ROW_3093",
+    "regimen": "Not specified",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_3093"
+  },
+  {
+    "row_id": "24P",
+    "regimen": "Cancer cell reprogramming",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "24P"
+  },
+  {
+    "row_id": "ROW_3302",
+    "regimen": "Microbiome",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_3302"
+  },
+  {
+    "row_id": "ROW_3401",
+    "regimen": "Shared decision-making in la/mUC",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "mUC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_3401"
+  },
+  {
+    "row_id": "ROW_3455",
+    "regimen": "Novel imaging",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_3455"
+  },
+  {
+    "row_id": "3052eP",
+    "regimen": "KDM6A deficiency assessment",
+    "drugs": [],
+    "biomarkers": [
+      "KDM6A"
+    ],
+    "modality": [],
+    "population": "mUC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "3052eP"
+  },
+  {
+    "row_id": "245eP",
+    "regimen": "Urine biomarkers assessment",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "245eP"
+  },
+  {
+    "row_id": "62eP",
+    "regimen": "Metabolic regulation of metastasis",
+    "drugs": [],
+    "biomarkers": [
+      "ARHGDIB"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "62eP"
+  },
+  {
+    "row_id": "ROW_3677",
+    "regimen": "Clinical insights in MIBC",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "MIBC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_3677"
+  },
+  {
+    "row_id": "ROW_3749",
+    "regimen": "Real-world evidence in la/mUC",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "mUC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_3749"
+  },
+  {
+    "row_id": "ROW_4187",
+    "regimen": "Soluble biomarkers",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_4187"
+  },
+  {
+    "row_id": "ROW_4245",
+    "regimen": "Epigenetics and spatial genomics",
+    "trial_id": "ROW_4245",
+    "drugs": [],
+    "biomarkers": []
+  }
+]

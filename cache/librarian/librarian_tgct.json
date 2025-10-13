@@ -1,0 +1,32 @@
+[
+  {
+    "row_id": "2690MO",
+    "regimen": "pimicotinib",
+    "drugs": [
+      "pimicotinib"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 3",
+    "trial_id": "MANEUVER",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2694P",
+    "regimen": "vimseltinib",
+    "drugs": [
+      "vimseltinib"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 3",
+    "trial_id": "MOTION",
+    "biomarkers": []
+  }
+]

@@ -1,0 +1,2663 @@
+[
+  {
+    "row_id": "LBA33",
+    "regimen": "ctDNA-guided anti-EGFR rechallenge strategy",
+    "drugs": [
+      "EGFR",
+      "ctDNA"
+    ],
+    "biomarkers": [
+      "RAS",
+      "BRAF"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Phase 2",
+    "trial_id": "CITRIC"
+  },
+  {
+    "row_id": "LBA32",
+    "regimen": "Panitumumab retreatment followed by regorafenib",
+    "drugs": [
+      "Panitumumab",
+      "Regorafenib"
+    ],
+    "biomarkers": [
+      "RAS",
+      "BRAF"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "723O",
+    "regimen": "liquid biopsy-guided treatment",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Phase 2",
+    "trial_id": "PEGASUS"
+  },
+  {
+    "row_id": "775P",
+    "regimen": "Neoadjuvant Chemotherapy and Short Course Radiation Therapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "MIBC",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "SPADE"
+  },
+  {
+    "row_id": "1018eTiP",
+    "regimen": "Oral MYB Transcription Factor Inhibitor",
+    "drugs": [
+      "RGT-61159"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1486",
+    "regimen": "improve drug development",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1213",
+    "regimen": "biomarker analysis and molecular subtyping",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_823",
+    "regimen": "Optimizing Treatment Options",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1158",
+    "regimen": "liquid biopsy in CRC",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_509",
+    "regimen": "RAS/RAF blockade",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_88",
+    "regimen": "MSI-H/dMMR CRC",
+    "drugs": [],
+    "biomarkers": [
+      "MSI",
+      "dMMR"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_94",
+    "regimen": "BMS Therapeutic Pipeline",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1MO",
+    "regimen": "Placental features overexpression",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "724O",
+    "regimen": "comparison of outcomes in clinical trials",
+    "drugs": [],
+    "biomarkers": [
+      "dMMR"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "CN42",
+    "regimen": "Screening Adherence Drives Cost-Effectiveness",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "745P",
+    "regimen": "secondary resection of metastases",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2323P",
+    "regimen": "non-OS endpoints",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1744",
+    "regimen": "Cell proliferation and DNA repair defects",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "769P",
+    "regimen": "Liquid Biopsy in Stage II Colon Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "853P",
+    "regimen": "anti-EGFR resistance mutations in RAS/BRAF-wild type left-sided metastatic colorectal cancer",
+    "drugs": [
+      "cetuximab"
+    ],
+    "biomarkers": [
+      "RAS",
+      "BRAF"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 3",
+    "trial_id": "CRC01"
+  },
+  {
+    "row_id": "892eP",
+    "regimen": "Emerging trends of early-onset colorectal cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "740P",
+    "regimen": "Intraoperative Hyperthermic Intraperitoneal Chemotherapy (HIPEC)",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "HIPECT4"
+  },
+  {
+    "row_id": "2942eP",
+    "regimen": "incidence of cardiotoxicity in the treatment of colorectal cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "810P",
+    "regimen": "Multimodal Treatment on Sexual Function in Patients with Rectal Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "787P",
+    "regimen": "organ preservation approach in patients with locally advanced rectal cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "CHORD"
+  },
+  {
+    "row_id": "886eP",
+    "regimen": "impact of RAS and BRAF mutations on immunotherapy outcomes",
+    "drugs": [],
+    "biomarkers": [
+      "RAS",
+      "BRAF",
+      "MSI",
+      "dMMR"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "848P",
+    "regimen": "Treatment pathways and efficacy outcomes of patients with metastatic colorectal cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "mCRC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "PROMETCO"
+  },
+  {
+    "row_id": "885eP",
+    "regimen": "Hepatic arterial infusion chemotherapy (HAIC) as intensification or salvage treatment",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "mCRC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2882P",
+    "regimen": "Malignant Bowel Obstruction in Advanced Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "782P",
+    "regimen": "Neoadjuvant therapy for Locally Advanced Rectal Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "840P",
+    "regimen": "Circulating Biomarkers in Primary and Metastatic Colorectal Cancer Patients",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "821P",
+    "regimen": "Functional precision medicine using MicroOrganoSpheres",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "850P",
+    "regimen": "Short-term fasting vs. individualized nutrition during chemotherapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "901eP",
+    "regimen": "Tertiary lymphoid structures (TLSs) in metastatic colorectal cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "mCRC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "811P",
+    "regimen": "Safety and tolerability of fruquintinib",
+    "drugs": [
+      "fruquintinib"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "mCRC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1932",
+    "regimen": "Immunotherapy in MSS/pMMR colorectal cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "878eP",
+    "regimen": "impact of a novel liquid biopsy blood test on PROMs and PREMs",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1",
+    "regimen": "Anti-EGFR Monoclonal Antibodies",
+    "drugs": [
+      "Anti-EGFR Monoclonal Antibodies"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "846P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2",
+    "regimen": "mCapOX plus cetuximab",
+    "drugs": [
+      "mCapOX",
+      "cetuximab",
+      "mFOLFOX6"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "800P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3",
+    "regimen": "sirexatamab plus bevacizumab and chemotherapy",
+    "drugs": [
+      "sirexatamab",
+      "bevacizumab",
+      "chemotherapy"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Phase 2",
+    "trial_id": "LBA34",
+    "biomarkers": []
+  },
+  {
+    "row_id": "4",
+    "regimen": "Zanzalintinib plus atezolizumab",
+    "drugs": [
+      "Zanzalintinib",
+      "atezolizumab",
+      "regorafenib"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Not specified",
+    "trial_id": "LBA30",
+    "biomarkers": []
+  },
+  {
+    "row_id": "5",
+    "regimen": "Not specified",
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "842P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "6",
+    "regimen": "Conversion Surgery",
+    "population": "mCRC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "827P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "7",
+    "regimen": "Not specified",
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "734MO",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "8",
+    "regimen": "panitumumab vs bevacizumab",
+    "drugs": [
+      "panitumumab",
+      "bevacizumab"
+    ],
+    "population": "mCRC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "826P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "9",
+    "regimen": "Encorafenib + cetuximab + binimetinib",
+    "drugs": [
+      "Encorafenib",
+      "cetuximab",
+      "binimetinib"
+    ],
+    "population": "mCRC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "839P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "10",
+    "regimen": "pertuzumab + trastuzumab",
+    "drugs": [
+      "pertuzumab",
+      "trastuzumab"
+    ],
+    "population": "mCRC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "738P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "11",
+    "regimen": "A Multicenter-Derived Nodal Classification System for Colon Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "820P"
+  },
+  {
+    "row_id": "12",
+    "regimen": "sirexatamab plus bevacizumab and chemotherapy versus bevacizumab and chemotherapy",
+    "drugs": [
+      "sirexatamab",
+      "bevacizumab"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Phase 2",
+    "trial_id": "LBA34"
+  },
+  {
+    "row_id": "13",
+    "regimen": "Utilizing circulating tumor DNA methylation as postoperative surveillance for colorectal cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "765P"
+  },
+  {
+    "row_id": "14",
+    "regimen": "Zanzalintinib plus atezolizumab vs regorafenib in previously treated metastatic colorectal cancer",
+    "drugs": [
+      "zanzalintinib",
+      "atezolizumab",
+      "regorafenib"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "mCRC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "LBA30"
+  },
+  {
+    "row_id": "15",
+    "regimen": "Diagnostic Accuracy of Circulating Tumor DNA-Based Liquid Biopsy for Colorectal Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1743P"
+  },
+  {
+    "row_id": "16",
+    "regimen": "Towards achieving full MSI reflex testing in CRC, GC and EC",
+    "drugs": [],
+    "biomarkers": [
+      "MSI"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1756eP"
+  },
+  {
+    "row_id": "17",
+    "regimen": "Real-World Characteristics and Outcomes",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "mCRC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "873eP"
+  },
+  {
+    "row_id": "18",
+    "regimen": "SSGJ-707 targeting PD-1 and VEGF with chemotherapy",
+    "drugs": [
+      "SSGJ-707"
+    ],
+    "biomarkers": [
+      "PD-1",
+      "VEGF"
+    ],
+    "modality": [
+      "Bispecific",
+      "Chemotherapy"
+    ],
+    "population": "mCRC",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "796P"
+  },
+  {
+    "row_id": "19",
+    "regimen": "immunotherapy impact on mCRC",
+    "drugs": [],
+    "biomarkers": [
+      "mismatch repair"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "mCRC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "900eP"
+  },
+  {
+    "row_id": "20",
+    "regimen": "Short-course Radiotherapy followed by Chemotherapy and PD-L1 inhibitor",
+    "drugs": [],
+    "biomarkers": [
+      "PD-L1"
+    ],
+    "modality": [
+      "Radiotherapy",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "779P"
+  },
+  {
+    "row_id": "739P",
+    "regimen": "microsatellite instability detection",
+    "drugs": [],
+    "biomarkers": [
+      "MSI"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "739P"
+  },
+  {
+    "row_id": "2959eP",
+    "regimen": "EGFR-targeted monoclonal antibodies",
+    "drugs": [
+      "EGFR-targeted monoclonal antibodies"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "2959eP"
+  },
+  {
+    "row_id": "891eP",
+    "regimen": "anti-BRAF and anti-EGFR therapy",
+    "drugs": [
+      "anti-BRAF",
+      "anti-EGFR"
+    ],
+    "biomarkers": [
+      "BRAF V600E"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "891eP"
+  },
+  {
+    "row_id": "802P",
+    "regimen": "immunotherapy with pembrolizumab",
+    "drugs": [
+      "pembrolizumab"
+    ],
+    "biomarkers": [
+      "MSI-H",
+      "MSI"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "802P"
+  },
+  {
+    "row_id": "752P",
+    "regimen": "randomized trial of adjuvant therapy",
+    "drugs": [
+      "atezolizumab"
+    ],
+    "biomarkers": [
+      "dMMR",
+      "PD-L1"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "752P"
+  },
+  {
+    "row_id": "834P",
+    "regimen": "AI-Driven Colorectal Cancer Risk Stratification",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "834P"
+  },
+  {
+    "row_id": "2881P",
+    "regimen": "Total Neoadjuvant Therapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "2881P"
+  },
+  {
+    "row_id": "2365P",
+    "regimen": "Community-based Survivorship Care",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "2365P"
+  },
+  {
+    "row_id": "797P",
+    "regimen": "Irinotecan Liposome combined with 5-FU/LV and Bevacizumab",
+    "drugs": [
+      "Irinotecan Liposome",
+      "5-FU",
+      "LV",
+      "Bevacizumab"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Phase 2",
+    "trial_id": "797P"
+  },
+  {
+    "row_id": "763P",
+    "regimen": "blood-based multiplex methylation assay",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "763P"
+  },
+  {
+    "row_id": "907eTiP",
+    "regimen": "fecal microbiota transplantation plus QL1706 plus Bevacizumab plus XELOX",
+    "drugs": [
+      "QL1706",
+      "Bevacizumab",
+      "XELOX"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "907eTiP"
+  },
+  {
+    "row_id": "864eP",
+    "regimen": "second recurrence after resection",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "864eP"
+  },
+  {
+    "row_id": "841P",
+    "regimen": "dose-escalation study evaluating ginisortamab",
+    "drugs": [
+      "ginisortamab",
+      "5-fluorouracil"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1/2",
+    "trial_id": "841P"
+  },
+  {
+    "row_id": "777P",
+    "regimen": "chemoradiotherapy followed by immune checkpoint blockade",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "777P"
+  },
+  {
+    "row_id": "803P",
+    "regimen": "Neo BRAF wild-type metastatic colorectal cancer",
+    "drugs": [],
+    "biomarkers": [
+      "BRAF wild-type"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "803P"
+  },
+  {
+    "row_id": "2964eP",
+    "regimen": "serum substance P level prediction",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "2964eP"
+  },
+  {
+    "row_id": "762P",
+    "regimen": "incident colorectal cancer associated with smoking",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "762P"
+  },
+  {
+    "row_id": "760P",
+    "regimen": "incidence of primary colorectal cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "760P"
+  },
+  {
+    "row_id": "852P",
+    "regimen": "Neoadjuvant Options in Synchronous mCRC",
+    "drugs": [],
+    "biomarkers": [
+      "RAS mutated",
+      "RAS wild type"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "852P"
+  },
+  {
+    "row_id": "785P",
+    "regimen": "Neoadjuvant Chemotherapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "785P"
+  },
+  {
+    "row_id": "870eP",
+    "regimen": "local radical therapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "870eP"
+  },
+  {
+    "row_id": "880eP",
+    "regimen": "Encorafenib + Cetuximab",
+    "drugs": [
+      "Encorafenib",
+      "Cetuximab"
+    ],
+    "biomarkers": [
+      "BRAF V600E"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "880eP"
+  },
+  {
+    "row_id": "890eP",
+    "regimen": "Trifluridine-Tipiracil with or without Bevacizumab",
+    "drugs": [
+      "Trifluridine-Tipiracil",
+      "Bevacizumab"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "890eP"
+  },
+  {
+    "row_id": "814P",
+    "regimen": "anti-EGFR therapy",
+    "drugs": [],
+    "biomarkers": [
+      "RAS",
+      "BRAF V600E"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "814P"
+  },
+  {
+    "row_id": "793P",
+    "regimen": "induction chemotherapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "793P"
+  },
+  {
+    "row_id": "792P",
+    "regimen": "Frontline Anti-VEGF and Anti-EGFR Exposure",
+    "drugs": [
+      "Trifluridine/Tipiracil",
+      "Bevacizumab",
+      "Regorafenib"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "792P"
+  },
+  {
+    "row_id": "851P",
+    "regimen": "Botensilimab, Balstilimab and Regorafenib",
+    "drugs": [
+      "Botensilimab",
+      "Balstilimab",
+      "Regorafenib"
+    ],
+    "biomarkers": [
+      "MSS"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "851P"
+  },
+  {
+    "row_id": "869eP",
+    "regimen": "Incidence of Colorectal Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "869eP"
+  },
+  {
+    "row_id": "764P",
+    "regimen": "tumor-informed molecular residual disease detection",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "764P"
+  },
+  {
+    "row_id": "776P",
+    "regimen": "predictive factors for severe toxicities",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "776P"
+  },
+  {
+    "row_id": "1597eTiP",
+    "regimen": "Personalised Tumour Trained Lymphocytes",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase I/IIa",
+    "trial_id": "1597eTiP"
+  },
+  {
+    "row_id": "2197P",
+    "regimen": "Return to Work After Curative Cancer Treatment",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "2197P"
+  },
+  {
+    "row_id": "899eP",
+    "regimen": "Individualized Triplet Chemotherapy Decision-Making",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "899eP"
+  },
+  {
+    "row_id": "784P",
+    "regimen": "prediction of metastatic lymph nodes",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "784P"
+  },
+  {
+    "row_id": "731MO",
+    "regimen": "Telisotuzumab adizutecan + Bevacizumab vs SOC",
+    "drugs": [
+      "Telisotuzumab adizutecan",
+      "Bevacizumab"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "3L",
+    "phase": "Not specified",
+    "trial_id": "731MO"
+  },
+  {
+    "row_id": "909eTiP",
+    "regimen": "AMB-05X for ctDNA(+) colorectal cancer",
+    "drugs": [
+      "AMB-05X"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "909eTiP"
+  },
+  {
+    "row_id": "766P",
+    "regimen": "tissue-agnostic approach for detecting MRD",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "766P"
+  },
+  {
+    "row_id": "808P",
+    "regimen": "Tumor Microenvironment Heterogeneity and Resistance Mechanisms to HER2 Inhibition",
+    "drugs": [],
+    "biomarkers": [
+      "HER2"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "808P"
+  },
+  {
+    "row_id": "795P",
+    "regimen": "Optimizing Immunotherapy in Mismatch Repair-Deficient Colorectal Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "795P"
+  },
+  {
+    "row_id": "744P",
+    "regimen": "Validating ARCAD-Derived External Control Arms",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "744P"
+  },
+  {
+    "row_id": "868eP",
+    "regimen": "Robotic-Assisted, Laparoscopic and Open Surgery",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "832P",
+    "regimen": "First-line Metastatic Colorectal Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "PLATFORM-B"
+  },
+  {
+    "row_id": "902eTiP",
+    "regimen": "DPD phenotype-guided dose individualization of fluoropyrimidine-based chemotherapy",
+    "drugs": [
+      "fluoropyrimidine"
+    ],
+    "biomarkers": [
+      "DPD"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "730MO",
+    "regimen": "Trifluridine/Tipiracil with Capecitabine and Bevacizumab",
+    "drugs": [
+      "Trifluridine",
+      "Tipiracil",
+      "Capecitabine",
+      "Bevacizumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "TriComB"
+  },
+  {
+    "row_id": "790P",
+    "regimen": "Induction chemotherapy with mDCF prior to Chemoradiotherapy",
+    "drugs": [
+      "mDCF"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "761P",
+    "regimen": "Early-Onset Colorectal Cancer Study",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "898eP",
+    "regimen": "Fruquintinib alternating with Bevacizumab plus Capecitabine",
+    "drugs": [
+      "Fruquintinib",
+      "Bevacizumab",
+      "Capecitabine"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Maintenance",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "2334P",
+    "regimen": "Socioeconomic Status and Overall Survival in Colorectal Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "911eTiP",
+    "regimen": "Node-sparing modified Short-Course Radiation with CAPOX and Sintilimab",
+    "drugs": [
+      "CAPOX",
+      "Sintilimab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "836P",
+    "regimen": "Immunotherapy-Based Total Neoadjuvant Therapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "887eP",
+    "regimen": "SBRT Combined with Immune Checkpoint Inhibitors",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "894eP",
+    "regimen": "Global Disease Burden of Colorectal Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "733P",
+    "regimen": "Atezolizumab with or without Tiragolumab following neoadjuvant chemoradiotherapy",
+    "drugs": [
+      "Atezolizumab",
+      "Tiragolumab",
+      "atezolizumab"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "NEOTE"
+  },
+  {
+    "row_id": "741P",
+    "regimen": "Chemoradiotherapy followed by tislelizumab and CAPOX",
+    "drugs": [
+      "tislelizumab",
+      "CAPOX"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "RELIEVE-01"
+  },
+  {
+    "row_id": "877eP",
+    "regimen": "Non‐Alcoholic Fatty Liver Disease and Risk of Early-Onset Colorectal Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "863eP",
+    "regimen": "Impact of Inflammatory Status on Quality of Life in Advanced Colorectal Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "905eTiP",
+    "regimen": "CAPOX plus PD-1 inhibitor with or without short-course radiotherapy",
+    "drugs": [
+      "CAPOX",
+      "PD-1 inhibitor"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "TORCH-iTNT"
+  },
+  {
+    "row_id": "783P",
+    "regimen": "Neoadjuvant envafolimab combined with chemoradiotherapy",
+    "drugs": [
+      "envafolimab"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "LBA31",
+    "regimen": "Neoadjuvant immunotherapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "754P",
+    "regimen": "Predicting sex-specific subsequent primary extracolonic cancer risks",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "ROW_3432",
+    "regimen": "Current treatment strategies",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "3065eP",
+    "regimen": "HLA loss of heterozygosity in colorectal cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_3544",
+    "regimen": "Early CRC Treatment",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_3585",
+    "regimen": "Multidisciplinary treatment approaches",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "6P",
+    "regimen": "Patient-Derived Organoid Assays",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1764eP",
+    "regimen": "Multi-omic liquid biopsy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "LBA9",
+    "regimen": "ctDNA-Guided Adjuvant Chemotherapy De-Escalation",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Phase 3",
+    "trial_id": "AGITG DYNAMIC-III"
+  },
+  {
+    "row_id": "287eP",
+    "regimen": "Comprehensive genomic profiling",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "32eP",
+    "regimen": "Exosomal miR-382-5p inhibits pre-metastatic niche formation",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "726O",
+    "regimen": "Combined Analysis of Pathologists and AI",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_3962",
+    "regimen": "Positioning later line treatment options",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1772eP",
+    "regimen": "Blood-only, Targeted Methylation ctDNA Assay",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "156P",
+    "regimen": "FOLFOXIRI/bevacizumab combined with nivolumab",
+    "drugs": [
+      "FOLFOXIRI",
+      "bevacizumab",
+      "nivolumab"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "mCRC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1736eP",
+    "regimen": "Treatment Sequence in Advanced Small Bowel Neuroendocrine Neoplasms",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "251eP",
+    "regimen": "Integrative cfDNA Fragmentation and Methylation Profiling",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "7P",
+    "regimen": "Spatial single-cell imaging and transcriptomic profiling",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "670P",
+    "regimen": "Intra-CSF delivery of Dual CD19/CD22 CAR-T Therapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "CAR-T"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_4196",
+    "regimen": "Time to address liver transplantation",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "mCRC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "LBA29",
+    "regimen": "Nivolumab plus ipilimumab vs nivolumab monotherapy",
+    "drugs": [
+      "nivolumab",
+      "ipilimumab"
+    ],
+    "biomarkers": [
+      "MSI",
+      "dMMR"
+    ],
+    "modality": [],
+    "population": "mCRC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_4300",
+    "regimen": "Introduction and welcome",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_4301",
+    "regimen": "Immunotherapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_4302",
+    "regimen": "Targeting KRAS and TGFbeta",
+    "drugs": [],
+    "biomarkers": [
+      "KRAS",
+      "TGFbeta"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_4330",
+    "regimen": "Nursing management of side effects",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "266eP",
+    "regimen": "Nelmastobart plus Capecitabine",
+    "drugs": [
+      "Nelmastobart",
+      "Capecitabine"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Phase Ib/II",
+    "phase": "Phase 1",
+    "trial_id": "266eP"
+  },
+  {
+    "row_id": "ROW_4422",
+    "regimen": "Supporting adherence and monitoring",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "56eP",
+    "regimen": "Targeting the RMI2-RAD51 Axis",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "56eP"
+  },
+  {
+    "row_id": "143P",
+    "regimen": "Spatial Heterogeneity of the Immune Microenvironment",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "143P"
+  },
+  {
+    "row_id": "ROW_4660",
+    "regimen": "Refining patient selection for regional therapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_4661",
+    "regimen": "Discussion",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "881eP",
+    "regimen": "neoadjuvant chemoradiotherapy (nCRT) combined with camrelizumab",
+    "drugs": [
+      "camrelizumab"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "EV-302",
+    "biomarkers": []
+  },
+  {
+    "row_id": "858P",
+    "regimen": "Exploring antigen presentation and Wnt/beta-Catenin pathway alterations",
+    "drugs": [],
+    "biomarkers": [
+      "Microsatellite",
+      "MSI"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "889eP",
+    "regimen": "adjuvant treatment",
+    "drugs": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "",
+    "biomarkers": []
+  },
+  {
+    "row_id": "849P",
+    "regimen": "Pro-inflammatory Immune Cell Infiltration",
+    "drugs": [],
+    "biomarkers": [
+      "Consensus Molecular Subtype"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "806P",
+    "regimen": "biparatopic anti-HER2 antibody conjugate (ADC)",
+    "drugs": [
+      "JSKN003"
+    ],
+    "modality": [
+      "ADC"
+    ],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "",
+    "biomarkers": [
+      "HER2"
+    ]
+  },
+  {
+    "row_id": "845P",
+    "regimen": "Liposomal irinotecan combined with capecitabine and bevacizumab",
+    "drugs": [
+      "liposomal irinotecan",
+      "capecitabine",
+      "bevacizumab"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Not specified",
+    "trial_id": "",
+    "biomarkers": []
+  },
+  {
+    "row_id": "882eP",
+    "regimen": "Intratumoural IVX037",
+    "drugs": [
+      "IVX037"
+    ],
+    "biomarkers": [
+      "CD55",
+      "KRAS"
+    ],
+    "modality": [
+      "Vaccine"
+    ],
+    "population": "Other",
+    "line": "",
+    "phase": "Phase 1",
+    "trial_id": ""
+  },
+  {
+    "row_id": "833P",
+    "regimen": "Real-World Survival Outcomes Stratified by Oncogene Expression",
+    "drugs": [],
+    "biomarkers": [
+      "Oncogene Expression"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "801P",
+    "regimen": "Prognostic and Predictive Value of ctDNA-MSI",
+    "drugs": [],
+    "biomarkers": [
+      "ctDNA",
+      "MSI"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "838P",
+    "regimen": "ginisortamab (UCB6114) with trifluridine/tipir",
+    "drugs": [
+      "ginisortamab",
+      "trifluridine",
+      "tipir"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Phase 1/2",
+    "trial_id": ""
+  },
+  {
+    "row_id": "830P",
+    "regimen": "Liver fat in relation to clinical outcomes",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "893eP",
+    "regimen": "Boarding time as a predictor of short-term mortality",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "856P",
+    "regimen": "Patterns of care and treatment in Elderly patients with resected Colon Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "876eP",
+    "regimen": "Temporal and age-related patterns in mode of presentation for colorectal cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "732MO",
+    "regimen": "ctDNA clearance and correlation with outcome",
+    "drugs": [],
+    "biomarkers": [
+      "ctDNA"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "788P",
+    "regimen": "Neoadjuvant Chemotherapy in Rectal Cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "867eP",
+    "regimen": "Impact of Wnt/beta-catenin signalling on CAR-T cell cytotoxicity",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "CAR-T"
+    ],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "747P",
+    "regimen": "Regorafenib plus Irinotecan",
+    "drugs": [
+      "Regorafenib",
+      "Irinotecan"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Phase 2",
+    "trial_id": "N/A",
+    "biomarkers": []
+  },
+  {
+    "row_id": "912eTiP",
+    "regimen": "SCRT + mFOLFOX6 + PD-1 Antibody + Targeted Therapy",
+    "drugs": [
+      "SCRT",
+      "mFOLFOX6",
+      "PD-1 Antibody"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "CRIT",
+    "biomarkers": []
+  },
+  {
+    "row_id": "819P",
+    "regimen": "AI-based blood test",
+    "population": "Other",
+    "line": "N/A",
+    "phase": "Not specified",
+    "trial_id": "N/A",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "727MO",
+    "regimen": "FOLFOX plus PANITUMUMAB",
+    "drugs": [
+      "FOLFOX",
+      "PANITUMUMAB"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "N/A",
+    "biomarkers": []
+  },
+  {
+    "row_id": "872eP",
+    "regimen": "Identifying fit-for-use real-world data",
+    "population": "Other",
+    "line": "N/A",
+    "phase": "Not specified",
+    "trial_id": "AZUR-1",
+    "drugs": [],
+    "biomarkers": [
+      "MSI",
+      "dMMR"
+    ]
+  },
+  {
+    "row_id": "2921eP",
+    "regimen": "Medical oral nutrition supplement",
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "NUTRACT",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "854P",
+    "regimen": "Immunonutrition",
+    "population": "Other",
+    "line": "N/A",
+    "phase": "Not specified",
+    "trial_id": "N/A",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "750P",
+    "regimen": "Dynamic ctDNA in Predicting Response to Neoadjuvant Chemotherapy",
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "CONVERT",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "828P",
+    "regimen": "Enhance immune checkpoint inhibitor efficacy",
+    "population": "Other",
+    "line": "N/A",
+    "phase": "Not specified",
+    "trial_id": "N/A",
+    "drugs": [],
+    "biomarkers": [
+      "MSI"
+    ]
+  },
+  {
+    "row_id": "735P",
+    "regimen": "Adjuvant aspirin for colorectal cancers",
+    "drugs": [
+      "Aspirin"
+    ],
+    "biomarkers": [
+      "PIK3CA"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "ASCOLT"
+  },
+  {
+    "row_id": "771P",
+    "regimen": "ctDNA-negative resection",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "NCT06562348",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "737MO",
+    "regimen": "Trastuzumab deruxtecan (T-DXd)",
+    "drugs": [
+      "Trastuzumab deruxtecan"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Phase 2",
+    "trial_id": "DESTINY-CRC02",
+    "biomarkers": [
+      "HER2"
+    ]
+  },
+  {
+    "row_id": "861TiP",
+    "regimen": "ctDNA guided palliative systemic therapy",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "NCT06562348",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "825P",
+    "regimen": "Oxaliplatin-Based Chemotherapy + Targeted Agents",
+    "drugs": [
+      "Oxaliplatin"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "ARCAD D",
+    "biomarkers": []
+  },
+  {
+    "row_id": "786P",
+    "regimen": "Serplulimab Combined with CapeOX and Celecoxib",
+    "drugs": [
+      "Serplulimab",
+      "CapeOX",
+      "Celecoxib"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "SCAR",
+    "biomarkers": []
+  },
+  {
+    "row_id": "746P",
+    "regimen": "Zanidatamab + mFOLFOX6 +/- Bevacizumab",
+    "drugs": [
+      "Zanidatamab",
+      "mFOLFOX6",
+      "Bevacizumab"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": [
+      "HER2"
+    ]
+  },
+  {
+    "row_id": "817P",
+    "regimen": "anti-EGFR Therapy",
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "823P",
+    "regimen": "mFOLFOXIRI Following Metastasectomy",
+    "drugs": [
+      "mFOLFOXIRI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "FANTASTIC",
+    "biomarkers": []
+  },
+  {
+    "row_id": "866eP",
+    "regimen": "toripalimab, cetuximab plus FOLFIRI",
+    "drugs": [
+      "toripalimab",
+      "cetuximab",
+      "FOLFIRI"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "Tesla study",
+    "biomarkers": []
+  },
+  {
+    "row_id": "773P",
+    "regimen": "Cadonilimab into Total Neoadjuvant Therapy",
+    "drugs": [
+      "Cadonilimab"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "906eTiP",
+    "regimen": "neoadjuvant PD-1 vaccine PD1-Vaxx",
+    "drugs": [
+      "PD1-Vaxx"
+    ],
+    "modality": [
+      "Vaccine"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "Neo-POLEM",
+    "biomarkers": [
+      "MSI"
+    ]
+  },
+  {
+    "row_id": "742P",
+    "regimen": "real world matched study",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "Survival of patients with dMMR versus pMMR early stage colon cancer",
+    "drugs": [],
+    "biomarkers": [
+      "dMMR"
+    ]
+  },
+  {
+    "row_id": "875eP",
+    "regimen": "first line combination chemotherapy",
+    "drugs": [
+      "EGFR-inhibitors",
+      "VEGF-inhibitors"
+    ],
+    "biomarkers": [
+      "EGFR"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "Increased EGFR gene copy number (GCN) in prediction of outcome"
+  },
+  {
+    "row_id": "815P",
+    "regimen": "Microsatellite Instability Assessment",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "Prospective Evaluation of Deepath-MSI for Microsatellite Instability Assessment",
+    "drugs": [],
+    "biomarkers": [
+      "MSI"
+    ]
+  },
+  {
+    "row_id": "813P",
+    "regimen": "ACTION HIV",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "A LATAM Record of Patients with Anal Squamous Cell Carcinoma with and without HIV Infection",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "871eP",
+    "regimen": "Molecular Profiles and Genomic Therapy",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "Molecular Profiles and Genomic Therapy in Young vs. Average-Onset Gastrointestinal (GI) Cancers",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "897eP",
+    "regimen": "chemoradiation",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "Patient-reported quality of life after treatment with chemoradiation in patients with non-metastatic anal squamous cell carcinoma",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "812P",
+    "regimen": "nivolumab and ipilimumab",
+    "drugs": [
+      "nivolumab",
+      "ipilimumab"
+    ],
+    "biomarkers": [
+      "MSI",
+      "dMMR"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "The PRODIGE-74 GERCOR NIPISAFE randomized non-comparati"
+  },
+  {
+    "row_id": "879eP",
+    "regimen": "nivolumab and ipilimumab",
+    "drugs": [
+      "nivolumab",
+      "ipilimumab"
+    ],
+    "biomarkers": [
+      "MSI",
+      "dMMR"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "GERCOR NIPIRESCUE phase II trial"
+  },
+  {
+    "row_id": "831P",
+    "regimen": "Cadonilimab Combined with FOLFOXIRI and Bevacizumab",
+    "drugs": [
+      "Cadonilimab",
+      "FOLFOXIRI",
+      "Bevacizumab"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "Cadonilimab Combined with FOLFOXIRI and Bevacizumab as First-Line Treatment for MSS/pMMR Metastatic Colorectal Cancer",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1534P",
+    "regimen": "BTN1A1-Targeted Immunotherapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "855P",
+    "regimen": "Larotrectinib in NTRK Fusion-Positive Colorectal Cancer",
+    "drugs": [
+      "Larotrectinib"
+    ],
+    "biomarkers": [
+      "NTRK"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "888eP",
+    "regimen": "Bi-specific T cell engager (BiTE) activity in Colorectal Cancer",
+    "drugs": [],
+    "biomarkers": [
+      "EpCAM"
+    ],
+    "modality": [
+      "Bispecific"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "768P",
+    "regimen": "Adjuvant chemotherapy by ctDNA-based genomic profile",
+    "drugs": [],
+    "biomarkers": [
+      "ctDNA"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "837P",
+    "regimen": "BRAF-Targeted Therapy in Pretreated Colorectal Cancer",
+    "drugs": [],
+    "biomarkers": [
+      "TP53"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "770P",
+    "regimen": "ctDNA Testing for Adjuvant Chemotherapy Decision-Making",
+    "drugs": [],
+    "biomarkers": [
+      "ctDNA"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "757P",
+    "regimen": "Not specified",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "757P"
+  },
+  {
+    "row_id": "986P",
+    "regimen": "NovoTTF-100L(P) in Combination with Chemotherapy",
+    "drugs": [
+      "NovoTTF-100L(P)",
+      "Chemotherapy"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "986P"
+  },
+  {
+    "row_id": "847P",
+    "regimen": "Not specified",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "847P"
+  },
+  {
+    "row_id": "ROW_2804",
+    "regimen": "immunotherapy in early-stages colon cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ROW_2804"
+  },
+  {
+    "row_id": "805P",
+    "regimen": "UGT1A1 genotype-guided irinotecan dosing",
+    "drugs": [
+      "irinotecan"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "805P"
+  },
+  {
+    "row_id": "772P",
+    "regimen": "Perioperative atezolizumab with or without IMM-101",
+    "drugs": [
+      "atezolizumab",
+      "IMM-101"
+    ],
+    "biomarkers": [
+      "MSI",
+      "dMMR"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Perioperative",
+    "phase": "Not specified",
+    "trial_id": "772P"
+  },
+  {
+    "row_id": "794P",
+    "regimen": "Fruquintinib Expanded Access Program",
+    "drugs": [
+      "Fruquintinib"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "mCRC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "794P"
+  },
+  {
+    "row_id": "767P",
+    "regimen": "Not specified",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "767P"
+  },
+  {
+    "row_id": "884eP",
+    "regimen": "Not specified",
+    "drugs": [],
+    "biomarkers": [
+      "Interleukin-1beta",
+      "Interleukin-6"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "884eP"
+  },
+  {
+    "row_id": "873eP",
+    "regimen": "Not specified",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "873eP"
+  },
+  {
+    "row_id": "ROW_3321",
+    "trial_id": "ROW_3321",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_3360",
+    "trial_id": "ROW_3360",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1756eP",
+    "trial_id": "1756eP",
+    "drugs": [],
+    "biomarkers": [
+      "MSI"
+    ]
+  },
+  {
+    "row_id": "ROW_4303",
+    "trial_id": "ROW_4303",
+    "drugs": [],
+    "biomarkers": []
+  }
+]

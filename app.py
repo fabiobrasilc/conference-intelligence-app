@@ -3845,22 +3845,86 @@ def stream_playbook(playbook_key):
             # Check if this is a cacheable request (single TA, no other filters)
             if ta_filters and len(ta_filters) == 1 and not drug_filters and not session_filters and not date_filters:
                 ta_filter = ta_filters[0]
-
-                # Load from consolidated cache
                 ta_key = ta_filter.lower().replace(' ', '_').replace('&', 'and')
-                cache_file = Path(__file__).parent / "cache" / f"journalist_{playbook_key}.json"
 
-                if cache_file.exists():
-                    print(f"[CACHE HIT] Loading {ta_filter} from consolidated cache: {cache_file.name}")
+                # Try new subdirectory cache structure first (per-TA files)
+                new_cache_file = Path(__file__).parent / "cache" / "deep_intelligence" / f"{playbook_key}_{ta_key}.json"
+
+                # Fall back to old consolidated cache format
+                old_cache_file = Path(__file__).parent / "cache" / f"journalist_{playbook_key}.json"
+
+                # Try new cache format first
+                if new_cache_file.exists():
+                    print(f"[CACHE HIT] Loading {ta_filter} from new cache: {new_cache_file.name}")
                     start_time = time.time()
 
                     try:
-                        with open(cache_file, 'r', encoding='utf-8') as f:
+                        with open(new_cache_file, 'r', encoding='utf-8') as f:
+                            cached_data = json.load(f)
+
+                        load_time = time.time() - start_time
+                        print(f"[CACHE] Loaded {ta_filter} in {load_time:.3f}s")
+
+                        # Send metadata
+                        metadata = cached_data.get("metadata", {})
+                        yield "data: " + json.dumps({
+                            "cache_metadata": {
+                                "generated_at": metadata.get("generated_at", "Unknown"),
+                                "model": metadata.get("model", "gpt-5"),
+                                "dataset_size": metadata.get("dataset_size", 0),
+                                "cache_hit": True,
+                                "report_type": "deep_intelligence"
+                            }
+                        }) + "\n\n"
+
+                        # Send tables if present
+                        tables = cached_data.get("tables", {})
+                        for table_name, table_data in tables.items():
+                            if table_data.get("rows"):
+                                yield "data: " + json.dumps({
+                                    "title": table_name.replace("_", " ").title(),
+                                    "columns": table_data.get("columns", []),
+                                    "rows": sanitize_data_structure(table_data.get("rows", []))
+                                }) + "\n\n"
+
+                        if tables:
+                            print(f"[CACHE] Sent {len(tables)} tables")
+
+                        # Stream analysis with realistic typing effect PRESERVING NEWLINES
+                        analysis_text = cached_data.get("analysis", "")
+
+                        if analysis_text:
+                            # Stream in chunks while preserving ALL line breaks
+                            chunk_size = 50  # characters per chunk
+                            for i in range(0, len(analysis_text), chunk_size):
+                                chunk = analysis_text[i:i + chunk_size]
+                                yield "data: " + json.dumps({"text": chunk}) + "\n\n"
+                                time.sleep(0.03)  # 30ms between chunks for natural feel
+
+                        yield "data: [DONE]\n\n"
+
+                        total_time = time.time() - start_time
+                        print(f"[CACHE] Deep intelligence delivered in {total_time:.1f}s")
+                        print(f"[CACHE] API cost: $0.00 (pre-computed intelligence)")
+                        return
+
+                    except Exception as cache_error:
+                        print(f"[CACHE ERROR] Failed to load new cache: {cache_error}")
+                        print(f"[CACHE] Trying old cache format...")
+                        # Fall through to try old cache format
+
+                # Try old consolidated cache format
+                elif old_cache_file.exists():
+                    print(f"[CACHE HIT] Loading {ta_filter} from consolidated cache: {old_cache_file.name}")
+                    start_time = time.time()
+
+                    try:
+                        with open(old_cache_file, 'r', encoding='utf-8') as f:
                             all_tas_cache = json.load(f)
 
                         # Extract this TA's report
                         if ta_key not in all_tas_cache:
-                            print(f"[CACHE MISS] {ta_filter} not found in {cache_file.name}")
+                            print(f"[CACHE MISS] {ta_filter} not found in {old_cache_file.name}")
                             print(f"[CACHE] Available TAs: {list(all_tas_cache.keys())}")
                             print(f"[CACHE] Run: python generate_deep_intelligence.py --button {playbook_key} --ta \"{ta_filter}\"")
                             # Fall through to real-time generation
@@ -3918,7 +3982,7 @@ def stream_playbook(playbook_key):
                         print(f"[CACHE] Falling back to real-time generation...")
                         # Fall through to real-time generation
                 else:
-                    print(f"[CACHE MISS] Consolidated cache not found: {cache_file.name}")
+                    print(f"[CACHE MISS] No cache found for {ta_filter}")
                     print(f"[CACHE] Run: python generate_deep_intelligence.py --button {playbook_key} --ta \"{ta_filter}\"")
                     # Fall through to real-time generation
 

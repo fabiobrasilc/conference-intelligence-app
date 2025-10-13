@@ -1,0 +1,4612 @@
+[
+  {
+    "row_id": "1",
+    "regimen": "TQB2450 plus intensity-modulated radiotherapy",
+    "drugs": [
+      "TQB2450"
+    ],
+    "modality": [
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "1377P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2",
+    "regimen": "neoadjuvant chemotherapy with docetaxel plus cisplatin and 5-fluorouracil",
+    "drugs": [
+      "docetaxel",
+      "cisplatin",
+      "5-fluorouracil"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "1362P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3",
+    "regimen": "Paclitaxel, Cisplatin, and Capecitabine vs. Cisplatin and Fluorouracil as Induction Chemotherapy",
+    "drugs": [
+      "Paclitaxel",
+      "Cisplatin",
+      "Capecitabine",
+      "Fluorouracil"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1370P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "4",
+    "regimen": "Anti-Angiogenic Drugs Reverse Immune Resistance",
+    "drugs": [
+      "Anti-Angiogenic Drugs"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1356P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "5",
+    "regimen": "the role of systemic therapy in patients with recurrent or metastatic head and neck squamous cell carcinoma progressed to immunotherapy",
+    "drugs": [
+      "systemic therapy"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1455eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "6",
+    "regimen": "PD-L1+ Tumoral Extracellular Vesicles as Biomarkers of Immune-Related Toxicities",
+    "drugs": [],
+    "biomarkers": [
+      "PD-L1"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "318P"
+  },
+  {
+    "row_id": "7",
+    "regimen": "luvometinib (FCN-159) in recurrent or progressive pediatric low-grade glioma",
+    "drugs": [
+      "luvometinib (FCN-159)"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "661MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "8",
+    "regimen": "Enhancing the Identification of Peri-Tumoral Regions in High-Grade Gliomas",
+    "drugs": [],
+    "modality": [
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "691P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "9",
+    "regimen": "DDX5 super-enhancer promote vasculogenic mimicry formation and metastasis",
+    "drugs": [],
+    "biomarkers": [
+      "DDX5"
+    ],
+    "modality": [
+      "Other"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1432P"
+  },
+  {
+    "row_id": "10",
+    "regimen": "Survival Benefit of Curative Therapy in Functionally Frail Head and Neck Cancer Patients",
+    "drugs": [],
+    "modality": [
+      "Other"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1449eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "11",
+    "regimen": "",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "",
+    "line": "",
+    "phase": "",
+    "trial_id": "ROW_4634"
+  },
+  {
+    "row_id": "12",
+    "regimen": "",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "",
+    "line": "",
+    "phase": "",
+    "trial_id": "ROW_4645"
+  },
+  {
+    "row_id": "13",
+    "regimen": "",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "",
+    "line": "",
+    "phase": "",
+    "trial_id": "ROW_4650"
+  },
+  {
+    "row_id": "14",
+    "regimen": "",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "",
+    "line": "",
+    "phase": "",
+    "trial_id": "ROW_4665"
+  },
+  {
+    "row_id": "15",
+    "regimen": "Mechanisms and therapeutic interventions of KAT5-mediated immunotherapy resistance",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "11P"
+  },
+  {
+    "row_id": "ROW_102",
+    "regimen": "patient-derived tumour organoids for guiding treatment decisions",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1518MO",
+    "regimen": "plasma exchange in melanoma",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "3071MO",
+    "regimen": "Disitamab Vedotin plus Tislelizumab as Nephron-Sparing Therapy",
+    "drugs": [
+      "Disitamab Vedotin",
+      "Tislelizumab",
+      "disitamab vedotin",
+      "tislelizumab"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "DISTINCT-I"
+  },
+  {
+    "row_id": "2385MO",
+    "regimen": "T-cell phenotypes and clinical efficacy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2596MO",
+    "regimen": "Ipilimumab, Nivolumab, and Ciforadenant",
+    "drugs": [
+      "Ipilimumab",
+      "Nivolumab",
+      "Ciforadenant",
+      "nivolumab"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1b/2",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1521MO",
+    "regimen": "solnerstotug combined with cemiplimab",
+    "drugs": [
+      "solnerstotug",
+      "cemiplimab"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": ""
+  },
+  {
+    "row_id": "LBA92",
+    "regimen": "Docetaxel in Combination with Darolutamide + ADT",
+    "drugs": [
+      "Docetaxel",
+      "Darolutamide"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 3",
+    "trial_id": "ARASAFE"
+  },
+  {
+    "row_id": "926MO",
+    "regimen": "MK-1084 Monotherapy",
+    "drugs": [
+      "MK-1084"
+    ],
+    "biomarkers": [
+      "KRAS"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "KANDLELIT-001"
+  },
+  {
+    "row_id": "927MO",
+    "regimen": "Single-agent divarasib",
+    "drugs": [
+      "divarasib"
+    ],
+    "biomarkers": [
+      "KRAS"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "925MO",
+    "regimen": "oral Werner helicase inhibitor HRO761",
+    "drugs": [
+      "HRO761"
+    ],
+    "biomarkers": [
+      "MSI",
+      "dMMR"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1/Ib",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1517MO",
+    "regimen": "botensilimab and balstilimab",
+    "drugs": [
+      "botensilimab",
+      "balstilimab"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1b",
+    "trial_id": ""
+  },
+  {
+    "row_id": "3069MO",
+    "regimen": "durvalumab plus neoadjuvant chemotherapy",
+    "drugs": [
+      "durvalumab"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "MIBC",
+    "line": "Perioperative",
+    "phase": "Not specified",
+    "trial_id": "NIAGARA"
+  },
+  {
+    "row_id": "1516MO",
+    "regimen": "personalized cancer vaccine EVX-01",
+    "drugs": [
+      "EVX-01"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "LBA111",
+    "regimen": "upfront Magnetic Resonance Imaging Versus Transurethral Resection",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "BladderPath"
+  },
+  {
+    "row_id": "923MO",
+    "regimen": "next generation, CNS-penetrant, PARP1-selective inhibitor SNV1521",
+    "drugs": [
+      "SNV1521"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": ""
+  },
+  {
+    "row_id": "16",
+    "regimen": "Exploration of Post-Treatment Strategies",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1347P"
+  },
+  {
+    "row_id": "17",
+    "regimen": "Update on the phase II study",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "661MO"
+  },
+  {
+    "row_id": "18",
+    "regimen": "Development of an Interpretable Machine Learning-Based Prediction Model",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1402P"
+  },
+  {
+    "row_id": "19",
+    "regimen": "DNA methylation-based epigenetic signatures",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "665MO"
+  },
+  {
+    "row_id": "20",
+    "regimen": "Enhancing the Identification of Peri-Tumoral Regions",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "691P"
+  },
+  {
+    "row_id": "LBA58",
+    "regimen": "pembrolizumab plus lenvatinib",
+    "drugs": [
+      "pembrolizumab",
+      "lenvatinib"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "PLUME"
+  },
+  {
+    "row_id": "1318O",
+    "regimen": "Nimotuzumab Plus Cisplatin-Based Chemoradiotherapy",
+    "drugs": [
+      "Nimotuzumab",
+      "Cisplatin",
+      "cisplatin"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Phase 3",
+    "trial_id": "1318O"
+  },
+  {
+    "row_id": "LBA103",
+    "regimen": "Oral Nutritional Supplements During Concurrent Chemoradiotherapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "LBA103"
+  },
+  {
+    "row_id": "2762MO",
+    "regimen": "lurbinectedin + atezolizumab",
+    "drugs": [
+      "lurbinectedin",
+      "atezolizumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 3",
+    "trial_id": "IMforte"
+  },
+  {
+    "row_id": "1609MO",
+    "regimen": "adjuvant nivolumab vs ipilimumab",
+    "drugs": [
+      "nivolumab",
+      "ipilimumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Phase 3",
+    "trial_id": "CheckMate 238"
+  },
+  {
+    "row_id": "1605MO",
+    "regimen": "BNT111 in combination with cemiplimab",
+    "drugs": [
+      "BNT111",
+      "cemiplimab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Phase 2",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "LBA52",
+    "regimen": "Nofazinlimab combined with lenvatinib",
+    "drugs": [
+      "Nofazinlimab",
+      "lenvatinib"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 3",
+    "trial_id": "LBA52"
+  },
+  {
+    "row_id": "114MO",
+    "regimen": "genomic-guided targeted therapies",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "IMPRESS-Norway"
+  },
+  {
+    "row_id": "116MO",
+    "regimen": "taselisib",
+    "drugs": [
+      "taselisib"
+    ],
+    "biomarkers": [
+      "PIK3CA"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Phase 2",
+    "trial_id": "LORELEI"
+  },
+  {
+    "row_id": "2804MO",
+    "regimen": "Cancer-associated cachexia indicators",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Other"
+    ],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "2807MO",
+    "regimen": "Predicting Chemotherapy-Related severe Hematological Toxicities",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "117MO",
+    "regimen": "neoadjuvant anti-PD1",
+    "drugs": [],
+    "biomarkers": [
+      "PD1"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "1298eP",
+    "regimen": "PD-1/CD20 Dual-Target Therapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "LBA60",
+    "regimen": "intralesional L19IL2/L19TNF",
+    "drugs": [
+      "L19IL2",
+      "L19TNF"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "LBA60"
+  },
+  {
+    "row_id": "ROW_994",
+    "regimen": "Invited Discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "ROW_994"
+  },
+  {
+    "row_id": "ROW_790",
+    "regimen": "Invited Discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "ROW_790"
+  },
+  {
+    "row_id": "ROW_774",
+    "regimen": "Invited Discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "ROW_774"
+  },
+  {
+    "row_id": "ROW_796",
+    "regimen": "Invited Discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "ROW_796"
+  },
+  {
+    "row_id": "ROW_1042",
+    "regimen": "Invited Discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "ROW_1042"
+  },
+  {
+    "row_id": "1319O",
+    "regimen": "perioperative camrelizumab plus chemotherapy",
+    "drugs": [
+      "camrelizumab",
+      "chemotherapy"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Perioperative",
+    "phase": "Phase 2",
+    "trial_id": "CAMORAL"
+  },
+  {
+    "row_id": "ROW_1286",
+    "regimen": "recent data in resectable LA HNSCC",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1310",
+    "regimen": "integrating novel strategies into patient care in resectable LA HNSCC",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1465",
+    "regimen": "invited discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1437",
+    "regimen": "invited discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1248",
+    "regimen": "invited discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1293",
+    "regimen": "invited discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1343",
+    "regimen": "invited discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1695",
+    "regimen": "invited discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1707",
+    "regimen": "invited discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1057P",
+    "regimen": "epidemiological pattern in testicular cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2805MO",
+    "regimen": "impact of Mediterranean dietary intervention",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1471MO",
+    "regimen": "adding ipilimumab to atezolizumab plus bevacizumab",
+    "drugs": [
+      "Ipilimumab",
+      "Atezolizumab",
+      "Bevacizumab",
+      "atezolizumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "PROD"
+  },
+  {
+    "row_id": "2806MO",
+    "regimen": "effect of a multidisciplinary intervention on fatigue",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "113MO",
+    "regimen": "multimodal molecular investigation of rare cancer patients",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2781P",
+    "regimen": "prognostic and predictive value of CD8 intratumoral density",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2679eP",
+    "regimen": "CT-based intratumoral vascular feature",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1018eTiP",
+    "regimen": "Phase I trial of RGT-61159",
+    "drugs": [
+      "RGT-61159"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Phase 1",
+    "trial_id": ""
+  },
+  {
+    "row_id": "LBA35",
+    "regimen": "EGFR×HER3 Bispecific Antibody-drug Conjugate vs Physician's Choice of Chemotherapy",
+    "drugs": [
+      "Iza-Bren",
+      "Chemotherapy"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Bispecific",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Phase 2",
+    "trial_id": "BL-B01D1"
+  },
+  {
+    "row_id": "LBA45",
+    "regimen": "Relacorilant + Nab-paclitaxel",
+    "drugs": [
+      "Relacorilant",
+      "Nab-paclitaxel"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "GOG3073"
+  },
+  {
+    "row_id": "1464eP",
+    "regimen": "genetic heterogeneity analysis",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_3210",
+    "regimen": "invited discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1450eP",
+    "regimen": "locoregional recurrence analysis",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1418P",
+    "regimen": "Fusobacterium nucleatum impact",
+    "drugs": [],
+    "biomarkers": [
+      "Fusobacterium nucleatum",
+      "Porphyromonas gingivalis"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "147P",
+    "regimen": "gene expression panel for recurrence",
+    "drugs": [],
+    "biomarkers": [
+      "Circulating Tumor Cells"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "LBA76",
+    "regimen": "Paclitaxel-bevacizumab +/- atezolizumab",
+    "drugs": [
+      "Paclitaxel",
+      "bevacizumab",
+      "atezolizumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy",
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "IFCT-2201 ADAPTABLE"
+  },
+  {
+    "row_id": "ROW_3256",
+    "regimen": "invited discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1438P",
+    "regimen": "mortality trends analysis",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1421P",
+    "regimen": "cisplatin and radiotherapy",
+    "drugs": [
+      "cisplatin"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1436P",
+    "regimen": "nutrition impact on kidney disease",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_3278",
+    "regimen": "invited discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1446eP",
+    "regimen": "multidisciplinary care survey",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1372P",
+    "regimen": "Nab-Paclitaxel combined with cisplatin and PD-1 inhibitor",
+    "drugs": [
+      "Nab-Paclitaxel",
+      "cisplatin"
+    ],
+    "biomarkers": [
+      "PD-1"
+    ],
+    "modality": [
+      "Chemotherapy",
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1426P",
+    "regimen": "real-world use of pembrolizumab",
+    "drugs": [
+      "pembrolizumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "HNSCC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1463eP",
+    "regimen": "gas metabolite patterns analysis",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1373P",
+    "regimen": "Tislelizumab combined with TP Regimen",
+    "drugs": [
+      "Tislelizumab",
+      "tislelizumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1387P",
+    "regimen": "tumor heterogeneity analysis",
+    "drugs": [],
+    "biomarkers": [
+      "EBV-DNA"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1371P",
+    "regimen": "Nivolumab plus chemoradiotherapy",
+    "drugs": [
+      "Nivolumab",
+      "nivolumab",
+      "cisplatin"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO",
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "NPC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1444eP",
+    "regimen": "lymph nodes and extranodal extension impact",
+    "drugs": [],
+    "biomarkers": [
+      "HPV-positive"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1403P",
+    "regimen": "transcriptomic signatures validation",
+    "drugs": [
+      "nivolumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "HNSCC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1338P",
+    "regimen": "neoadjuvant PARP inhibitor and immunotherapy",
+    "drugs": [
+      "PARP inhibitor",
+      "immunotherapy"
+    ],
+    "biomarkers": [
+      "HPV-negative"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "PRIME H&N Study"
+  },
+  {
+    "row_id": "1346P",
+    "regimen": "sequential immune checkpoint inhibitor and cetuximab-based chemotherapy",
+    "drugs": [
+      "immune checkpoint inhibitor",
+      "cetuximab",
+      "chemotherapy"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Pooled Analysis"
+  },
+  {
+    "row_id": "1351P",
+    "regimen": "low-dose weekly carboplatin and paclitaxel metronomic chemotherapy",
+    "drugs": [
+      "carboplatin",
+      "paclitaxel"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Phase 2",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "1345P",
+    "regimen": "omission of elective neck irradiation",
+    "drugs": [],
+    "biomarkers": [
+      "pT3-T4 Oral Squamous Cell Carcinoma",
+      "pN0 Neck"
+    ],
+    "modality": [
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "1359P",
+    "regimen": "1st line treatment in recurrent/metastatic head and neck squamous cell carcinoma",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "REALKEY"
+  },
+  {
+    "row_id": "1374P",
+    "regimen": "exploratory analysis of microenvironment-informed delta radiomics",
+    "drugs": [
+      "pembrolizumab",
+      "gemcitabine",
+      "cisplatin"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Not specified"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "NEOSPACE"
+  },
+  {
+    "row_id": "1428P",
+    "regimen": "anti-PD-1 immune checkpoint inhibitors combined with cetuximab",
+    "drugs": [
+      "anti-PD-1",
+      "cetuximab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "1353P",
+    "regimen": "discontinuing immune checkpoint inhibitors",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "1405P",
+    "regimen": "AI informed virtual immunocyte profiling",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Not specified"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "VIPER"
+  },
+  {
+    "row_id": "80MO",
+    "regimen": "durvalumab plus tremelimumab",
+    "drugs": [
+      "durvalumab",
+      "tremelimumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "IMMUNOBIL GER"
+  },
+  {
+    "row_id": "1659P",
+    "regimen": "neoadjuvant immunotherapy",
+    "drugs": [
+      "cetuximab"
+    ],
+    "biomarkers": [
+      "PD-L1"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "NRG-HN014"
+  },
+  {
+    "row_id": "1415P",
+    "regimen": "PD-L1 expression analysis",
+    "drugs": [],
+    "biomarkers": [
+      "PD-L1",
+      "TIGIT",
+      "CD155"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1352P",
+    "regimen": "Amivantamab plus paclitaxel",
+    "drugs": [
+      "Amivantamab",
+      "paclitaxel"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1341P",
+    "regimen": "follow-up strategy assessment",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "HETECO"
+  },
+  {
+    "row_id": "128P",
+    "regimen": "anti-PD(L)1 immunotherapy",
+    "drugs": [],
+    "biomarkers": [
+      "PTI Score"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1701eTiP",
+    "regimen": "neoadjuvant immunotherapy with response-adapted treatment",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 3",
+    "trial_id": "NRG-HN014"
+  },
+  {
+    "row_id": "LBA27",
+    "regimen": "SM-1 combined with temozolomide",
+    "drugs": [
+      "SM-1",
+      "temozolomide"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "LBA51",
+    "regimen": "Atezolizumab plus Bevacizumab",
+    "drugs": [
+      "Atezolizumab",
+      "Bevacizumab",
+      "atezolizumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "",
+    "phase": "Phase IIIb",
+    "trial_id": "IKF-035/ABC-HCC"
+  },
+  {
+    "row_id": "555MO",
+    "regimen": "Datopotamab deruxtecan plus durvalumab",
+    "drugs": [
+      "Datopotamab deruxtecan",
+      "durvalumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "487MO",
+    "regimen": "CDK4/6 inhibitors",
+    "drugs": [],
+    "biomarkers": [
+      "HER2"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "720eP",
+    "regimen": "Therapeutic Drug Monitoring",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "81MO",
+    "regimen": "Tinengotinib in advanced CCA",
+    "drugs": [
+      "Tinengotinib"
+    ],
+    "biomarkers": [
+      "FGFR"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "LBA85",
+    "regimen": "short-course versus long-course chemotherapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "",
+    "phase": "Phase 3",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_4035",
+    "regimen": "consolidation and ablative therapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_4053",
+    "regimen": "Invited Discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_4120",
+    "regimen": "Circulating EBV DNA for treatment selection",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1408P",
+    "regimen": "C-FAST assessment",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2280MO",
+    "regimen": "Control Groups in Cancer Trials",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "213eP",
+    "regimen": "Therapeutic Drug Monitoring",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "FORAGER-1",
+    "regimen": "LY3866288 in FGFR3-altered advanced solid tumors",
+    "drugs": [
+      "LY3866288"
+    ],
+    "biomarkers": [
+      "FGFR3"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 1",
+    "trial_id": "FORAGER-1"
+  },
+  {
+    "row_id": "SAKK 01/10",
+    "regimen": "Single-dose carboplatin and involved-node radiotherapy",
+    "drugs": [
+      "carboplatin"
+    ],
+    "modality": [
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "SAKK 01/10",
+    "biomarkers": []
+  },
+  {
+    "row_id": "SunRISe-4",
+    "regimen": "Neoadjuvant gemcitabine intravesical system (TAR-200) + cetrelimab",
+    "drugs": [
+      "gemcitabine",
+      "cetrelimab"
+    ],
+    "modality": [
+      "Intravesical"
+    ],
+    "population": "MIBC",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "SunRISe-4",
+    "biomarkers": []
+  },
+  {
+    "row_id": "START-001",
+    "regimen": "invikafusp alfa as monotherapy",
+    "drugs": [
+      "invikafusp alfa"
+    ],
+    "modality": [
+      "Bispecific"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "START-001",
+    "biomarkers": []
+  },
+  {
+    "row_id": "METROPH",
+    "regimen": "Metronomic Cyclophosphamide VS Doxorubicin",
+    "drugs": [
+      "Cyclophosphamide",
+      "Doxorubicin"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "METROPH",
+    "biomarkers": []
+  },
+  {
+    "row_id": "COTESARC",
+    "regimen": "Combination of MEK and PDL-1 inhibitors",
+    "drugs": [
+      "MEK",
+      "PDL-1 inhibitors"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase I-II",
+    "trial_id": "COTESARC",
+    "biomarkers": []
+  },
+  {
+    "row_id": "PETRANHA",
+    "regimen": "saruparib + androgen receptor pathway inhibitors",
+    "drugs": [
+      "saruparib",
+      "androgen receptor pathway inhibitors"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "mPC",
+    "line": "1L",
+    "phase": "Phase 1/2",
+    "trial_id": "PETRANHA",
+    "biomarkers": []
+  },
+  {
+    "row_id": "AMPLITUDE",
+    "regimen": "niraparib and abiraterone acetate plus prednisone",
+    "drugs": [
+      "niraparib",
+      "abiraterone acetate",
+      "prednisone"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 3",
+    "trial_id": "AMPLITUDE",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1515MO",
+    "regimen": "mRNA-4359 Plus Pembrolizumab",
+    "drugs": [
+      "mRNA-4359",
+      "Pembrolizumab",
+      "pembrolizumab"
+    ],
+    "biomarkers": [
+      "PD-L1"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1515MO"
+  },
+  {
+    "row_id": "1520MO",
+    "regimen": "anti-CD137 switch antibody agonist STA551 as monotherapy and in combination with atezolizumab",
+    "drugs": [
+      "STA551",
+      "atezolizumab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "1520MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1519MO",
+    "regimen": "systemic STING agonist BI 1703880 plus ezabenlimab",
+    "drugs": [
+      "BI 1703880",
+      "ezabenlimab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase Ia",
+    "trial_id": "1519MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1522MO",
+    "regimen": "INCA33890, A PD-1/TGFbetaR2 Bispecific Antibody",
+    "drugs": [
+      "INCA33890"
+    ],
+    "modality": [
+      "Bispecific"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "1522MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2802O",
+    "regimen": "Home-based supervised physical activity for metastatic cancer patients receiving oral targeted therapy",
+    "drugs": [
+      "oral targeted therapy"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 3",
+    "trial_id": "2802O",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2687MO",
+    "regimen": "nivolumab+/-relatlimab",
+    "drugs": [
+      "nivolumab",
+      "relatlimab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase II",
+    "trial_id": "2687MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2688MO",
+    "regimen": "FOG-001, a first-in-class direct beta-catenin:TCF4 inhibitor",
+    "drugs": [
+      "FOG-001"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1/2",
+    "trial_id": "2688MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_97",
+    "regimen": "Invited Discussant",
+    "trial_id": "ROW_97",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_126",
+    "regimen": "Combinations of cell death modulators and other therapies",
+    "trial_id": "ROW_126",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_128",
+    "regimen": "Invited Discussant",
+    "trial_id": "ROW_128",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_132",
+    "regimen": "Invited Discussant",
+    "trial_id": "ROW_132",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_137",
+    "regimen": "The rationale behind drug combinations",
+    "trial_id": "ROW_137",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_181",
+    "regimen": "Invited Discussant",
+    "trial_id": "ROW_181",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2420MO",
+    "regimen": "Effects of prostate radiotherapy (RT) on synchronous, metastatic, hormone-sensitive prostate cancer (mHSPC)",
+    "trial_id": "2420MO",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA99",
+    "regimen": "BIOmarker driven trial of Vegf2 inhibitor in Advanced or metastatic Sarcoma",
+    "trial_id": "LBA99",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2691MO",
+    "regimen": "Twenty year survival of advanced gastrointestinal stromal tumours treated with imatinib",
+    "trial_id": "2691MO",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2605MO",
+    "regimen": "Final efficacy data and biomarker analysis from the clear cell cohort of CALYPSO",
+    "trial_id": "2605MO",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "3072MO",
+    "regimen": "Datopotamab deruxtecan + rilvegostomig",
+    "drugs": [
+      "Datopotamab deruxtecan",
+      "rilvegostomig"
+    ],
+    "population": "mUC",
+    "line": "2L",
+    "phase": "Phase 2",
+    "trial_id": "TROPION-PanTumor",
+    "biomarkers": []
+  },
+  {
+    "row_id": "924MO",
+    "regimen": "ART6043 as monotherapy and in combination with olaparib",
+    "drugs": [
+      "ART6043",
+      "olaparib"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2690MO",
+    "regimen": "pimicotinib",
+    "drugs": [
+      "pimicotinib"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 3",
+    "trial_id": "MANEUVER",
+    "biomarkers": []
+  },
+  {
+    "row_id": "922MO",
+    "regimen": "AMT-116",
+    "drugs": [
+      "AMT-116"
+    ],
+    "population": "Other",
+    "phase": "Phase I/II",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2689MO",
+    "regimen": "Chidamide and Toripalimab",
+    "drugs": [
+      "Chidamide",
+      "Toripalimab",
+      "toripalimab"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase II",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2592MO",
+    "regimen": "Fruquintinib plus sintilimab versus axitinib or everolimus",
+    "drugs": [
+      "Fruquintinib",
+      "sintilimab",
+      "axitinib",
+      "everolimus"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3012MO",
+    "regimen": "Metastasis dissemination and divergence timing",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "TRACERx"
+  },
+  {
+    "row_id": "1320O",
+    "regimen": "Postoperative adjuvant radiochemotherapy with cisplatin vs. aRCH plus pembrolizumab",
+    "drugs": [
+      "cisplatin",
+      "pembrolizumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "ADRI"
+  },
+  {
+    "row_id": "1229eP",
+    "regimen": "Biparatopic FRalpha-Targeting ADC",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "ADC"
+    ],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "GenSci140"
+  },
+  {
+    "row_id": "3196eP",
+    "regimen": "Determining Line of Therapy with LLMs",
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "3196eP",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2808MO",
+    "regimen": "Impact of Proton Pump Inhibitors on Immunotherapy Outcomes",
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "2808MO",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1603MO",
+    "regimen": "Adjuvant cemiplimab vs placebo",
+    "drugs": [
+      "cemiplimab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Phase 3",
+    "trial_id": "C-POST",
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA59",
+    "regimen": "Combined Percutaneous Hepatic Perfusion with Ipilimumab plus Nivolumab",
+    "drugs": [
+      "Ipilimumab",
+      "Nivolumab",
+      "nivolumab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Phase 2",
+    "trial_id": "CHOPIN",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2543MO",
+    "regimen": "Multimodal Digital Therapeutic for Cancer-Related Fatigue",
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "2543MO",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1MO",
+    "regimen": "Placental features overexpression",
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1MO",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "CN157",
+    "regimen": "Enhancing Adherence to Oral Hormone Therapy",
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "CN157",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1317O",
+    "regimen": "neoadjuvant durvalumab plus chemoradiotherapy (CRT) followed by adjuvant durvalumab immunotherapy (IO)",
+    "drugs": [
+      "durvalumab"
+    ],
+    "modality": [
+      "IO",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 3",
+    "trial_id": "CompARE",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1348MO",
+    "regimen": "tiragolumab (tira) + atezolizumab (atezo) and atezo + placebo (pbo) as first-line (1L) treatment",
+    "drugs": [
+      "tiragolumab",
+      "atezolizumab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "SKYSCRAPER-09",
+    "biomarkers": [
+      "PD-L1"
+    ]
+  },
+  {
+    "row_id": "CN90",
+    "regimen": "chemoradiation",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "CN90"
+  },
+  {
+    "row_id": "2209eP",
+    "regimen": "intravenous (ivST) versus oral systemic treatment (oST)",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "2209eP"
+  },
+  {
+    "row_id": "2949eP",
+    "regimen": "oral treatments",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "2949eP"
+  },
+  {
+    "row_id": "1065MO",
+    "regimen": "AZD5335, a folate receptor alpha (FRalpha)-targeted antibody-drug conjugate",
+    "drugs": [
+      "AZD5335"
+    ],
+    "biomarkers": [
+      "FRalpha"
+    ],
+    "modality": [
+      "ADC"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "1065MO"
+  },
+  {
+    "row_id": "LBA41",
+    "regimen": "baseline multiplex cytokine profiling",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 3",
+    "trial_id": "LBA41"
+  },
+  {
+    "row_id": "LBA43",
+    "regimen": "TUB-040, a novel NaPi2b-targeting exatecan antibody-drug conjugate",
+    "drugs": [
+      "TUB-040"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "ADC"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "LBA43"
+  },
+  {
+    "row_id": "294MO",
+    "regimen": "giredestrant or tamoxifen (tam)",
+    "drugs": [
+      "giredestrant",
+      "tamoxifen"
+    ],
+    "biomarkers": [
+      "HER2"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "294MO"
+  },
+  {
+    "row_id": "2613MO",
+    "regimen": "Nivolumab plus Ipilimumab Therapy",
+    "drugs": [
+      "Nivolumab",
+      "Ipilimumab",
+      "nivolumab"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Phase 1",
+    "trial_id": "COSMIC 313"
+  },
+  {
+    "row_id": "1323MO",
+    "regimen": "Evorpacept in combination with Pembrolizumab",
+    "drugs": [
+      "Evorpacept",
+      "Pembrolizumab",
+      "pembrolizumab"
+    ],
+    "biomarkers": [
+      "PD-L1"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "ASPEN-03"
+  },
+  {
+    "row_id": "LBA44",
+    "regimen": "Durvalumab + Paclitaxel/Carboplatin + Bevacizumab followed by Durvalumab, Bevacizumab + Olaparib maintenance",
+    "drugs": [
+      "Durvalumab",
+      "Paclitaxel",
+      "Carboplatin",
+      "Bevacizumab",
+      "Olaparib",
+      "durvalumab",
+      "carboplatin"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "ADC",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Maintenance",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1510TiP",
+    "regimen": "Oral Fecal Microbiota Capsule for Reprogramming Immunity",
+    "drugs": [
+      "Oral Fecal Microbiota Capsule"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1247MO",
+    "regimen": "Molecular Landscape of Distinct Follicular Lymphoma Histologic Grades",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "889eP",
+    "regimen": "adjuvant treatment in localized colorectal cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2189P",
+    "regimen": "Active oncologic treatment in the last month of life",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1970",
+    "regimen": "oral SERD in HR+, HER2- MBC",
+    "drugs": [
+      "oral SERD"
+    ],
+    "biomarkers": [
+      "HR+",
+      "HER2-",
+      "HER2"
+    ],
+    "modality": [],
+    "population": "MIBC",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2559P",
+    "regimen": "cognitive behavioral therapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1994",
+    "regimen": "Invited Discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_2031",
+    "regimen": "Invited Discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "919O",
+    "regimen": "oral IAG933 in advanced mesothelioma",
+    "drugs": [
+      "oral IAG933"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Phase 1",
+    "trial_id": ""
+  },
+  {
+    "row_id": "876eP",
+    "regimen": "patterns in mode of presentation for colorectal cancer",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "732MO",
+    "regimen": "ctDNA clearance in INTERCEPT colorectal cancer study",
+    "drugs": [],
+    "biomarkers": [
+      "ctDNA"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1250MO",
+    "regimen": "Second-Line Therapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2890P",
+    "regimen": "Remote Monitoring of Patients Receiving Oral or Intravenous Anticancer Treatments",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1244MO",
+    "regimen": "Response Assessment with Sequential Whole Body Magnetic Resonance Imaging",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2849P",
+    "regimen": "low-molecular-weight heparins vs direct oral anticoagulants",
+    "drugs": [
+      "low-molecular-weight heparins",
+      "direct oral anticoagulants"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "2849P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "916O",
+    "regimen": "INCB161734, A Novel Oral KRAS G12D Inhibitor",
+    "drugs": [
+      "INCB161734"
+    ],
+    "population": "Other",
+    "phase": "Phase 1",
+    "trial_id": "916O",
+    "biomarkers": [
+      "KRAS"
+    ]
+  },
+  {
+    "row_id": "727MO",
+    "regimen": "FOLFOX plus PANITUMUMAB",
+    "drugs": [
+      "FOLFOX",
+      "PANITUMUMAB"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "727MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2921eP",
+    "regimen": "medical oral nutrition supplement",
+    "drugs": [
+      "medical oral nutrition supplement"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "2921eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA46",
+    "regimen": "TAK228 in Combination With Intravenous Weekly Paclitaxel",
+    "drugs": [
+      "TAK228",
+      "Intravenous Weekly Paclitaxel"
+    ],
+    "population": "Other",
+    "phase": "Phase 2",
+    "trial_id": "LBA46",
+    "biomarkers": []
+  },
+  {
+    "row_id": "737MO",
+    "regimen": "Trastuzumab deruxtecan (T-DXd)",
+    "drugs": [
+      "Trastuzumab deruxtecan"
+    ],
+    "biomarkers": [
+      "HER2"
+    ],
+    "population": "mCRC",
+    "phase": "Phase 2",
+    "trial_id": "737MO"
+  },
+  {
+    "row_id": "1324MO",
+    "regimen": "evorpacept in combination with pembrolizumab and chemotherapy",
+    "drugs": [
+      "evorpacept",
+      "pembrolizumab",
+      "chemotherapy"
+    ],
+    "population": "Other",
+    "phase": "Phase 2",
+    "trial_id": "1324MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1327MO",
+    "regimen": "Amivantamab in recurrent/metastatic head & neck squamous cell cancer after disease progression on checkpoint inhibition and chemotherapy",
+    "drugs": [
+      "Amivantamab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Phase 1",
+    "trial_id": "OrigAM",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2951eP",
+    "regimen": "Efficacy of Ketamine for Oral And Pharyngeal Mucositis Pain",
+    "drugs": [
+      "Ketamine"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 3",
+    "trial_id": "KARM",
+    "biomarkers": []
+  },
+  {
+    "row_id": "297MO",
+    "regimen": "Timing of Pegfilgrastim Administration and Pegfilgrastim-Induced Bone Pain",
+    "drugs": [
+      "Pegfilgrastim"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 3",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "979P",
+    "regimen": "Phase 1 dose escalation study of T-1101 (Tosylate) Capsule",
+    "drugs": [
+      "T-1101 (Tosylate)"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2600MO",
+    "regimen": "Comparing ipilimumab/nivolumab versus standard of care in non-clear cell renal cell cancer",
+    "drugs": [
+      "ipilimumab",
+      "nivolumab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "SUNNIFORECAST",
+    "biomarkers": [
+      "PD-L1"
+    ]
+  },
+  {
+    "row_id": "LBA40",
+    "regimen": "WES-derived Aneuploidy score identifies MMRd patients with reduced benefit from immunotherapy",
+    "drugs": [],
+    "biomarkers": [
+      "MMRd"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 3",
+    "trial_id": "AtTEnd/ENGOT-EN7"
+  },
+  {
+    "row_id": "2599MO",
+    "regimen": "Soluble MAdCAM-1 predicts outcomes in patients with metastatic renal cell carcinoma",
+    "drugs": [],
+    "biomarkers": [
+      "MAdCAM-1"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "323MO",
+    "regimen": "Efficacy of adjuvant anti-PD-L1 avelumab by tumor infiltrating lymphocytes for high-risk triple negative breast cancer",
+    "drugs": [
+      "avelumab"
+    ],
+    "biomarkers": [
+      "PD-L1"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Phase 3",
+    "trial_id": "A-BRAVE"
+  },
+  {
+    "row_id": "2595MO",
+    "regimen": "Comparing Ipilimumab plus Nivolumab vs standard of care as first line treatment",
+    "drugs": [
+      "Ipilimumab",
+      "Nivolumab",
+      "nivolumab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "SUNNIFORECAST",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1328MO",
+    "regimen": "hypofractionated radiotherapy + pembrolizumab",
+    "drugs": [
+      "pembrolizumab"
+    ],
+    "modality": [
+      "Radiotherapy",
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1328MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1849MO",
+    "regimen": "encorafenib + binimetinib",
+    "drugs": [
+      "encorafenib",
+      "binimetinib"
+    ],
+    "population": "mUC",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "1849MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "731MO",
+    "regimen": "telisotuzumab adizutecan + bevacizumab",
+    "drugs": [
+      "telisotuzumab adizutecan",
+      "bevacizumab"
+    ],
+    "population": "Other",
+    "line": "3L",
+    "phase": "Not specified",
+    "trial_id": "731MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "295MO",
+    "regimen": "neoadjuvant chemotherapy",
+    "drugs": [],
+    "biomarkers": [
+      "Ki-67"
+    ],
+    "modality": [
+      "Chemotherapy",
+      "Neoadjuvant"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "295MO"
+  },
+  {
+    "row_id": "1249MO",
+    "regimen": "Bexmarilimab + Azacitidine",
+    "drugs": [
+      "Bexmarilimab",
+      "Azacitidine"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1/2",
+    "trial_id": "1249MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1329MO",
+    "regimen": "enfortumab vedotin + pembrolizumab",
+    "drugs": [
+      "enfortumab vedotin",
+      "pembrolizumab"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "1329MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "293MO",
+    "regimen": "neoadjuvant vepdegestrant or anastrozole",
+    "drugs": [
+      "vepdegestrant",
+      "anastrozole"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "293MO",
+    "biomarkers": [
+      "HER2"
+    ]
+  },
+  {
+    "row_id": "1846MO",
+    "regimen": "olomorasib in patients with KRAS G12C-mutant NSCLC",
+    "drugs": [
+      "olomorasib"
+    ],
+    "biomarkers": [
+      "KRAS G12C",
+      "KRAS"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1846MO"
+  },
+  {
+    "row_id": "2593MO",
+    "regimen": "LAG3 expression patterns and immunotherapy response",
+    "drugs": [],
+    "biomarkers": [
+      "LAG3"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "mUC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "2593MO"
+  },
+  {
+    "row_id": "1325MO",
+    "regimen": "Retifanlimab Alone Or In Combination With Anti-LAG3 +/- Anti-TIM3 mAbs",
+    "drugs": [
+      "Retifanlimab"
+    ],
+    "biomarkers": [
+      "PD-L1",
+      "LAG3",
+      "TIM3"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1325MO"
+  },
+  {
+    "row_id": "1016eTiP",
+    "regimen": "LY4066434 in KRAS-mutant solid tumors",
+    "drugs": [
+      "LY4066434"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 1",
+    "trial_id": "1016eTiP",
+    "biomarkers": [
+      "KRAS"
+    ]
+  },
+  {
+    "row_id": "292MO",
+    "regimen": "Durvalumab in Combination with Neoadjuvant Chemotherapy",
+    "drugs": [
+      "Durvalumab",
+      "durvalumab"
+    ],
+    "modality": [
+      "IO",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "292MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1246MO",
+    "regimen": "R-CHOP and Anti-CD19 CAR T Therapies",
+    "drugs": [
+      "R-CHOP",
+      "Anti-CD19 CAR T"
+    ],
+    "modality": [
+      "Chemotherapy",
+      "CAR-T"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1246MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2828P",
+    "regimen": "Pirfenidone in the Treatment of Radiation-Induced Oral Mucositis",
+    "drugs": [
+      "Pirfenidone"
+    ],
+    "modality": [
+      "Other"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "2828P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "730MO",
+    "regimen": "Trifluridine/Tipiracil + Capecitabine + Bevacizumab",
+    "drugs": [
+      "Trifluridine",
+      "Tipiracil",
+      "Capecitabine",
+      "Bevacizumab"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "TriComB",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1566P",
+    "regimen": "Intratumoral JNJ-87704916 + Cetrelimab",
+    "drugs": [
+      "JNJ-87704916",
+      "Cetrelimab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2594MO",
+    "regimen": "KIM-1 levels association",
+    "biomarkers": [
+      "KIM-1"
+    ],
+    "modality": [
+      "Not specified"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "COSMIC-313",
+    "drugs": []
+  },
+  {
+    "row_id": "2229P",
+    "regimen": "Oxaliplatin + Irinotecan Liposome + 5-FU/LV",
+    "drugs": [
+      "Oxaliplatin",
+      "Irinotecan Liposome",
+      "5-FU",
+      "LV"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1248MO",
+    "regimen": "Venetoclax-containing regimen",
+    "drugs": [
+      "Venetoclax"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "CN126",
+    "regimen": "ondansetron oral soluble film-based regimens",
+    "drugs": [
+      "ondansetron"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "734MO",
+    "regimen": "blood-based early cancer detection test",
+    "modality": [
+      "Not specified"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1330MO",
+    "regimen": "neoadjuvant-adjuvant pembrolizumab + SOC",
+    "drugs": [
+      "pembrolizumab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA34",
+    "regimen": "sirexatamab + bevacizumab + chemotherapy",
+    "drugs": [
+      "sirexatamab",
+      "bevacizumab"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Phase 2",
+    "trial_id": "DeFianCe Trial",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1245MO",
+    "regimen": "Mitoxantrone Hydrochloride Liposome + Chidamide",
+    "drugs": [
+      "Mitoxantrone Hydrochloride Liposome",
+      "Chidamide"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1388P",
+    "regimen": "Incidence Patterns and Survival Trajectories",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "1388P"
+  },
+  {
+    "row_id": "1458eP",
+    "regimen": "Biomarker and Genomic Landscape Study",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "1458eP"
+  },
+  {
+    "row_id": "1437P",
+    "regimen": "Prediction of 1-Year Recurrence-Free Survival",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "1437P"
+  },
+  {
+    "row_id": "1337P",
+    "regimen": "superselective intra-arterial cisplatin and concomitant radiotherapy",
+    "drugs": [
+      "cisplatin"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "1337P"
+  },
+  {
+    "row_id": "1419P",
+    "regimen": "radiation therapy",
+    "modality": [
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1419P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1401P",
+    "regimen": "APG-157-Induced Anti-Tumor Immune Remodeling",
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1401P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1390P",
+    "regimen": "Becotatug Vedotin combined with Pucotenlimab",
+    "drugs": [
+      "Becotatug Vedotin",
+      "Pucotenlimab"
+    ],
+    "population": "Other",
+    "phase": "Phase 2",
+    "trial_id": "1390P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1461eP",
+    "regimen": "miRNA Signatures as Diagnostic Biomarker",
+    "biomarkers": [
+      "miRNA"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1461eP",
+    "drugs": []
+  },
+  {
+    "row_id": "ROW_3399",
+    "regimen": "Maintenance therapy after chemo-immunotherapy",
+    "modality": [
+      "Maintenance"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "ROW_3399",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "235eP",
+    "regimen": "Chemotherapy Survival Status",
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "235eP",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA106",
+    "regimen": "Niraparib in relapsed mesothelioma",
+    "drugs": [
+      "Niraparib"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "phase": "Phase 2",
+    "trial_id": "LBA106",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1424P",
+    "regimen": "Comparative Diagnostic Performance of CBCT and CT",
+    "modality": [
+      "Other"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1424P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1465eTiP",
+    "regimen": "Tislelizumab Combined with Chemotherapy Followed by Radiotherapy/Adaptive Surgery",
+    "drugs": [
+      "Tislelizumab",
+      "tislelizumab"
+    ],
+    "modality": [
+      "IO",
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1465eTiP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA26",
+    "regimen": "LY4064809 (STX-478), a pan-mutant-selective PI3Kalpha inhibitor",
+    "drugs": [
+      "LY4064809",
+      "STX-478"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "phase": "Phase 1",
+    "trial_id": "LBA26",
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA48",
+    "regimen": "buparlisib plus paclitaxel",
+    "drugs": [
+      "buparlisib",
+      "paclitaxel"
+    ],
+    "biomarkers": [
+      "PD-1",
+      "PD-L1"
+    ],
+    "modality": [
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 3",
+    "trial_id": "BURAN"
+  },
+  {
+    "row_id": "662MO",
+    "regimen": "concomitant radiotherapy with olaparib and temozolomide",
+    "drugs": [
+      "olaparib",
+      "temozolomide"
+    ],
+    "modality": [
+      "Radiotherapy",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "OLA-TMZ-RTE-01",
+    "biomarkers": []
+  },
+  {
+    "row_id": "200eP",
+    "regimen": "dual PD-L1 and TGFbeta inhibition",
+    "drugs": [],
+    "biomarkers": [
+      "PD-L1",
+      "TGFbeta"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1817MO",
+    "regimen": "osimertinib",
+    "drugs": [
+      "osimertinib"
+    ],
+    "biomarkers": [
+      "EGFR",
+      "EGFRm"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "LAURA"
+  },
+  {
+    "row_id": "1671P",
+    "regimen": "cutaneous angiosarcoma treatment",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1425P",
+    "regimen": "locally advanced head and neck cancer treatment",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "486MO",
+    "regimen": "camizestrant plus CDK4/6 inhibitor",
+    "drugs": [
+      "camizestrant",
+      "CDK4/6 inhibitor"
+    ],
+    "biomarkers": [
+      "ESR1m",
+      "HER2"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "SERENA-6"
+  },
+  {
+    "row_id": "1462eP",
+    "regimen": "risk prediction involving KIF13B variant",
+    "drugs": [],
+    "biomarkers": [
+      "KIF13B c.*3163G>A"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1392P",
+    "regimen": "avelumab in high-risk oral potentially malignant disorders",
+    "drugs": [
+      "avelumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "Impede"
+  },
+  {
+    "row_id": "LBA25",
+    "regimen": "Culmerciclib Plus Fulvestrant",
+    "drugs": [
+      "Culmerciclib",
+      "Fulvestrant"
+    ],
+    "modality": [
+      "TKI",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 3",
+    "trial_id": "CULMINATE-2",
+    "biomarkers": [
+      "HER2"
+    ]
+  },
+  {
+    "row_id": "LBA22",
+    "regimen": "sacituzumab govitecan + pembrolizumab vs chemotherapy + pembrolizumab",
+    "drugs": [
+      "sacituzumab govitecan",
+      "pembrolizumab",
+      "chemotherapy"
+    ],
+    "biomarkers": [
+      "PD-L1"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "660MO",
+    "regimen": "regorafenib plus temozolomide with or without radiotherapy",
+    "drugs": [
+      "regorafenib",
+      "temozolomide"
+    ],
+    "modality": [
+      "TKI",
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 1",
+    "trial_id": "REGOM",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1349P",
+    "regimen": "Tipifarnib and alpelisib",
+    "drugs": [
+      "Tipifarnib",
+      "alpelisib"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 1",
+    "trial_id": "KURRENT-HN",
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA11",
+    "regimen": "Neoadjuvant Toripalimab Plus Lenvatinib and GEMOX",
+    "drugs": [
+      "Toripalimab",
+      "Lenvatinib",
+      "GEMOX",
+      "toripalimab"
+    ],
+    "modality": [
+      "IO",
+      "Chemotherapy",
+      "Neoadjuvant"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase II-III",
+    "trial_id": "",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1399P",
+    "regimen": "Prognostic model driven by explainable AI",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1399P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "663MO",
+    "regimen": "IL13Ralpha2-targeted CAR-T cell therapy",
+    "modality": [
+      "CAR-T"
+    ],
+    "population": "Other",
+    "phase": "Phase 1",
+    "trial_id": "663MO",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1469MO",
+    "regimen": "Liver resection versus continued atezolizumab plus bevacizumab",
+    "drugs": [
+      "atezolizumab",
+      "bevacizumab"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1469MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1851MO",
+    "regimen": "Pembrolizumab plus chemotherapy",
+    "drugs": [
+      "pembrolizumab",
+      "chemotherapy"
+    ],
+    "biomarkers": [
+      "PD-L1"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 3",
+    "trial_id": "1851MO"
+  },
+  {
+    "row_id": "485MO",
+    "regimen": "Adding Palbociclib to HER2 and Endocrine Therapy",
+    "drugs": [
+      "Palbociclib",
+      "HER2",
+      "Endocrine Therapy"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "485MO",
+    "biomarkers": [
+      "HER2"
+    ]
+  },
+  {
+    "row_id": "1336P",
+    "regimen": "Definitive Radiotherapy Regimens",
+    "modality": [
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1336P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1459eP",
+    "regimen": "Adjuvant Fluoropyrimidines Following Definitive Chemoradiotherapy",
+    "drugs": [
+      "Fluoropyrimidines"
+    ],
+    "modality": [
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "1459eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1404P",
+    "regimen": "Analysis Of Comorbidities And Demographic Factors",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1404P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1409P",
+    "regimen": "NOTCH pathway in head and neck squamous cell carcinoma",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1409P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1443TiP",
+    "regimen": "Pembrolizumab and Radiotherapy",
+    "drugs": [
+      "Pembrolizumab",
+      "pembrolizumab"
+    ],
+    "modality": [
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 3",
+    "trial_id": "EORTC 2014-HNCG PROLoNg",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1395P",
+    "regimen": "FID-007 Plus Cetuximab",
+    "drugs": [
+      "FID-007",
+      "Cetuximab"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "R/M HNSCC",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2214MO",
+    "regimen": "telisotuzumab adizutecan",
+    "drugs": [
+      "telisotuzumab adizutecan"
+    ],
+    "modality": [
+      "ADC"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "ABBV-400; Temab-A",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1710MO",
+    "regimen": "Belzutifan for Advanced Pancreatic Neuroendocrine Tumors",
+    "drugs": [
+      "Belzutifan"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "LITESPARK-015",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1360P",
+    "regimen": "Concurrent Weekly Carboplatin, Paclitaxel, and Cetuximab",
+    "drugs": [
+      "Carboplatin",
+      "Paclitaxel",
+      "Cetuximab",
+      "carboplatin"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Not specified",
+    "trial_id": "Recurrent or Metastatic Head and Neck Squamous Cell",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1331P",
+    "regimen": "induction chemotherapy with cisplatin, 5-fluorouracil and docetaxel",
+    "drugs": [
+      "cisplatin",
+      "5-fluorouracil",
+      "docetaxel"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "GORTEC 2019-01",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1440TiP",
+    "regimen": "Tislelizumab Plus Gemcitabine/Capecitabine versus Tislelizumab Plus Gemcitabine/Cisplatin",
+    "drugs": [
+      "Tislelizumab",
+      "Gemcitabine",
+      "Capecitabine",
+      "Cisplatin",
+      "tislelizumab",
+      "gemcitabine",
+      "cisplatin"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 3",
+    "trial_id": "Recurrent/Metastatic Nasopharyngeal",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1375P",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1375P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1334P",
+    "regimen": "neoadjuvant pembrolizumab combined with low-dose cisplatin and 5-fluorouracil",
+    "drugs": [
+      "pembrolizumab",
+      "cisplatin",
+      "5-fluorouracil"
+    ],
+    "modality": [
+      "IO",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "1334P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1342P",
+    "regimen": "neoadjuvant anti-PD1 with low-dose cisplatin/5-fluorouracil",
+    "drugs": [
+      "anti-PD1",
+      "cisplatin",
+      "5-fluorouracil"
+    ],
+    "modality": [
+      "IO",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "1342P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1451eP",
+    "regimen": "neoadjuvant chemoimmunotherapy",
+    "modality": [
+      "Chemotherapy",
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "1451eP",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1321O",
+    "regimen": "Concurrent Chemoradiotherapy with/without Adjuvant Capecitabine",
+    "drugs": [
+      "Capecitabine"
+    ],
+    "modality": [
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Phase 3",
+    "trial_id": "1321O",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1413P",
+    "regimen": "Cisplatin Chemoresistance via the EGFR-JAK2-STAT3 Pathway",
+    "drugs": [
+      "Cisplatin",
+      "cisplatin"
+    ],
+    "biomarkers": [
+      "DDAH1",
+      "EGFR",
+      "JAK2",
+      "STAT3"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1413P"
+  },
+  {
+    "row_id": "1453eP",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1453eP",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1434P",
+    "regimen": "High-Dose Cisplatin Chemoradiotherapy",
+    "drugs": [
+      "Cisplatin",
+      "cisplatin"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1434P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA70",
+    "regimen": "association of radiomic features +/- on-treatment ctDNA detection",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "LBA70",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1034MO",
+    "regimen": "Targeted Alpha Therapy",
+    "drugs": [
+      "Targeted Alpha Therapy"
+    ],
+    "modality": [
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1034MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1365P",
+    "regimen": "risk-adapted phase 2 study",
+    "drugs": [
+      "HPV circulating tumor DNA"
+    ],
+    "population": "Other",
+    "phase": "Phase 2",
+    "trial_id": "1365P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1414P",
+    "regimen": "Next Generation Sequencing (NGS) Analysis",
+    "drugs": [
+      "Next Generation Sequencing"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1414P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1384P",
+    "regimen": "Photoimmunotherapy",
+    "drugs": [
+      "Photoimmunotherapy"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1384P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1397P",
+    "regimen": "personalized drug therapy selection",
+    "drugs": [
+      "patient-derived organoids"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1397P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "457eP",
+    "regimen": "neoadjuvant chemotherapy",
+    "drugs": [
+      "chemotherapy"
+    ],
+    "modality": [
+      "Neoadjuvant"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "457eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1442TiP",
+    "regimen": "Peri-radiotherapy immunotherapy",
+    "drugs": [
+      "immunotherapy"
+    ],
+    "modality": [
+      "IO",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1442TiP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "270eP",
+    "regimen": "Peritumoral desmoplasia",
+    "drugs": [],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "270eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1422P",
+    "regimen": "PD-1 inhibitor or cetuximab combined with chemotherapy",
+    "drugs": [
+      "PD-1 inhibitor",
+      "cetuximab",
+      "chemotherapy"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "1422P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1457eP",
+    "regimen": "TPF regimen chrono-chemotherapy combined with cisplatin concurrent chemoradiotherapy",
+    "drugs": [
+      "TPF regimen",
+      "cisplatin",
+      "chemoradiotherapy"
+    ],
+    "modality": [
+      "Chemotherapy",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "1457eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "664MO",
+    "regimen": "larotrectinib",
+    "drugs": [
+      "larotrectinib"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "664MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "504P",
+    "regimen": "First-Line (1L) treatment in HR+ HER2- Metastatic Breast Cancer",
+    "drugs": [
+      "ESR1 mutations",
+      "AKT Pathway"
+    ],
+    "biomarkers": [
+      "ESR1m",
+      "AKTp",
+      "HER2"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "504P"
+  },
+  {
+    "row_id": "1035MO",
+    "regimen": "Prediction Tool for Malnutrition and Sarcopenia",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "GETNE-S2109"
+  },
+  {
+    "row_id": "489MO",
+    "regimen": "vepdegestrant vs fulvestrant",
+    "drugs": [
+      "vepdegestrant",
+      "fulvestrant"
+    ],
+    "biomarkers": [
+      "ESR1m",
+      "HER2"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1460eP",
+    "regimen": "Personalized Targeted Therapies",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1340P",
+    "regimen": "GM-CSF on prevention and treatment of oral mucositis",
+    "drugs": [
+      "GM-CSF"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "ChiCTR2300068457"
+  },
+  {
+    "row_id": "1417P",
+    "regimen": "immunonutrition on oral mucositis",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "479P",
+    "regimen": "H4K8la/CXCL10-driven M2 polarization",
+    "drugs": [
+      "doxorubicin"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1354P",
+    "regimen": "discontinuation of immune checkpoint inhibitors",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "1354P"
+  },
+  {
+    "row_id": "1350P",
+    "regimen": "Immuno-Chemotherapy Alone",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Phase 2",
+    "trial_id": "1350P"
+  },
+  {
+    "row_id": "2216MO",
+    "regimen": "Nab-Paclitaxel and Gemcitabine with/without intravenous VCN-01",
+    "drugs": [
+      "Nab-Paclitaxel",
+      "Gemcitabine",
+      "VCN-01",
+      "gemcitabine"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Phase 2b",
+    "trial_id": "2216MO"
+  },
+  {
+    "row_id": "1429P",
+    "regimen": "cytotoxic chemotherapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "1429P"
+  },
+  {
+    "row_id": "1427P",
+    "regimen": "photoimmunotherapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "1427P"
+  },
+  {
+    "row_id": "1411P",
+    "regimen": "PD-1 inhibitors",
+    "drugs": [],
+    "biomarkers": [
+      "PD-1"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Other",
+    "phase": "Not specified",
+    "trial_id": "1411P"
+  },
+  {
+    "row_id": "1344P",
+    "regimen": "neoadjuvant immunochemotherapy and radical surgery",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "1344P"
+  },
+  {
+    "row_id": "ROW_4310",
+    "trial_id": "ROW_4310",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1380P",
+    "regimen": "metronomic capecitabine adjuvant chemotherapy",
+    "drugs": [
+      "capecitabine"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "1380P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1333P",
+    "regimen": "adjuvant radiotherapy",
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "1333P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1433P",
+    "trial_id": "1433P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1364P",
+    "trial_id": "1364P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_4330",
+    "trial_id": "ROW_4330",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2281MO",
+    "trial_id": "2281MO",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1407P",
+    "trial_id": "1407P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "1441TiP",
+    "regimen": "SIRPalpha monoclonal antibody BI 770371 in combination with pembrolizumab",
+    "drugs": [
+      "BI 770371",
+      "pembrolizumab",
+      "cetuximab"
+    ],
+    "phase": "Phase Ib",
+    "trial_id": "1441TiP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1708MO",
+    "regimen": "ZG005 in combination with etoposide and cisplatin",
+    "drugs": [
+      "ZG005",
+      "etoposide",
+      "cisplatin"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "1708MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1343P",
+    "regimen": "Neoadjuvant Tislelizumab Plus Chemotherapy",
+    "drugs": [
+      "Tislelizumab",
+      "tislelizumab"
+    ],
+    "modality": [
+      "Chemotherapy",
+      "Neoadjuvant"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "NeoSPOT",
+    "biomarkers": []
+  },
+  {
+    "row_id": "536MO",
+    "regimen": "SHR-A1811 plus pertuzumab",
+    "drugs": [
+      "SHR-A1811",
+      "pertuzumab"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "Not specified",
+    "biomarkers": [
+      "HER2"
+    ]
+  },
+  {
+    "row_id": "1347P",
+    "regimen": "Neoadjuvant PD-1 Inhibitor Combined with Chemotherapy",
+    "drugs": [
+      "PD-1 Inhibitor"
+    ],
+    "modality": [
+      "Chemotherapy",
+      "Neoadjuvant"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1378P",
+    "regimen": "Envafolimab plus chemoradiotherapy",
+    "drugs": [
+      "Envafolimab"
+    ],
+    "modality": [
+      "Chemotherapy",
+      "Radiotherapy",
+      "Neoadjuvant"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1358P",
+    "regimen": "Combination of Cadonilimab and Low-Dose Radiotherapy",
+    "drugs": [
+      "Cadonilimab"
+    ],
+    "modality": [
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1335P",
+    "regimen": "Neoadjuvant Tislelizumab Plus Platinum-Based Doublet Chemotherapy",
+    "drugs": [
+      "Tislelizumab",
+      "tislelizumab"
+    ],
+    "modality": [
+      "Chemotherapy",
+      "Neoadjuvant"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1376P",
+    "regimen": "Immune Checkpoint Inhibitors",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "1376P"
+  },
+  {
+    "row_id": "665MO",
+    "regimen": "DNA methylation-based epigenetic signatures",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "665MO"
+  },
+  {
+    "row_id": "652eTiP",
+    "regimen": "FWD1802 with CDK4/6 inhibitors and mTOR inhibitor",
+    "drugs": [
+      "FWD1802",
+      "CDK4/6 inhibitors",
+      "mTOR inhibitor"
+    ],
+    "biomarkers": [
+      "ER",
+      "HER2"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Phase 1",
+    "trial_id": "652eTiP"
+  },
+  {
+    "row_id": "1339P",
+    "regimen": "Neoadjuvant Chemotherapy Plus Toripalimab",
+    "drugs": [
+      "Toripalimab",
+      "toripalimab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "1339P"
+  },
+  {
+    "row_id": "11P",
+    "regimen": "KAT5-mediated immunotherapy resistance interventions",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "11P"
+  },
+  {
+    "row_id": "1332P",
+    "regimen": "SBRT followed by neoadjuvant chemo-immunotherapy of Sintilimab plus docetaxel and cisplatin",
+    "drugs": [
+      "Sintilimab",
+      "docetaxel",
+      "cisplatin"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Radiotherapy",
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "1332P"
+  },
+  {
+    "row_id": "1383P",
+    "regimen": "Cetuximab-Enhanced Induction Chemotherapy",
+    "drugs": [
+      "Cetuximab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "1383P"
+  },
+  {
+    "row_id": "1355P",
+    "regimen": "docetaxel plus pembrolizumab combination treatment",
+    "drugs": [
+      "docetaxel",
+      "pembrolizumab"
+    ],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Phase 2",
+    "trial_id": "1355P"
+  },
+  {
+    "row_id": "1456eP",
+    "regimen": "Gunagratinib in patients with head and neck cancer",
+    "drugs": [
+      "Gunagratinib"
+    ],
+    "biomarkers": [
+      "FGFR"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "1456eP"
+  },
+  {
+    "row_id": "1386P",
+    "regimen": "Deep Learning-Based Time-Habitat Longitudinal MRI Radiomics Model",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "",
+    "phase": "Not specified",
+    "trial_id": "1386P"
+  },
+  {
+    "row_id": "1454eP",
+    "regimen": "Benmelstobart Combined with Anlotinib and Chemotherapy",
+    "drugs": [
+      "Benmelstobart",
+      "Anlotinib"
+    ],
+    "modality": [
+      "Chemotherapy"
+    ],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "1454eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1382P",
+    "regimen": "Next-generation sequencing detection of Epstein-Barr virus and microbiome signatures",
+    "drugs": [],
+    "biomarkers": [
+      "Epstein-Barr virus"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1382P"
+  },
+  {
+    "row_id": "1396P",
+    "regimen": "Circulating tumor DNA for Minimal Disease Detection",
+    "drugs": [],
+    "biomarkers": [
+      "ctDNA"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "1396P"
+  },
+  {
+    "row_id": "1423P",
+    "regimen": "Neoadjuvant Immunotherapy",
+    "drugs": [],
+    "population": "Other",
+    "line": "Neoadjuvant",
+    "phase": "Not specified",
+    "trial_id": "1423P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1389P",
+    "regimen": "Becotatug Vedotin in combination with Pucotenlimab",
+    "drugs": [
+      "Becotatug Vedotin",
+      "Pucotenlimab"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "1389P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1381P",
+    "regimen": "Adjuvant treatment for metastatic nasopharyngeal carcinoma",
+    "drugs": [],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "1381P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_4665",
+    "population": "Other",
+    "trial_id": "ROW_4665",
+    "drugs": [],
+    "biomarkers": []
+  }
+]

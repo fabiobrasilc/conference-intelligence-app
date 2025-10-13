@@ -1,0 +1,1542 @@
+[
+  {
+    "row_id": "3070MO",
+    "regimen": "LY3866288",
+    "drugs": [
+      "LY3866288"
+    ],
+    "biomarkers": [
+      "FGFR3"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "FORAGER-1"
+  },
+  {
+    "row_id": "2596MO",
+    "regimen": "Ipilimumab + Nivolumab + Ciforadenant",
+    "drugs": [
+      "Ipilimumab",
+      "Nivolumab",
+      "Ciforadenant",
+      "nivolumab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 1b/2",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2592MO",
+    "regimen": "Fruquintinib + Sintilimab vs Axitinib or Everolimus",
+    "drugs": [
+      "Fruquintinib",
+      "Sintilimab",
+      "Axitinib",
+      "Everolimus"
+    ],
+    "modality": [
+      "IO",
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2604P",
+    "regimen": "Cabozantinib + KO-2806",
+    "drugs": [
+      "Cabozantinib",
+      "KO-2806"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 1",
+    "trial_id": "FIT-001",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2650P",
+    "regimen": "Metastasis-directed therapies",
+    "drugs": [],
+    "modality": [
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "KAIROS",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2635P",
+    "regimen": "Immune checkpoint inhibitors",
+    "drugs": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA94",
+    "regimen": "Lenvatinib + Everolimus vs Cabozantinib",
+    "drugs": [
+      "Lenvatinib",
+      "Everolimus",
+      "Cabozantinib"
+    ],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2680eP",
+    "regimen": "Immune checkpoint inhibitor combination",
+    "drugs": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "FUMAHR",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2639P",
+    "regimen": "Immune-checkpoint inhibitors rechallenge",
+    "drugs": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2638P",
+    "regimen": "Anlotinib + Everolimus",
+    "drugs": [
+      "Anlotinib",
+      "Everolimus"
+    ],
+    "modality": [
+      "IO",
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "UC-001",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2665eP",
+    "regimen": "Combined immune checkpoint and TKI therapy",
+    "drugs": [],
+    "modality": [
+      "IO",
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2609P",
+    "regimen": "Tumor-Informed Whole Genome-Based (WGS) ctDNA Assay",
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "2609P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2603P",
+    "regimen": "lenvatinib + pembrolizumab",
+    "drugs": [
+      "lenvatinib",
+      "pembrolizumab",
+      "sunitinib"
+    ],
+    "population": "MIBC",
+    "line": "1L",
+    "phase": "Phase 3",
+    "trial_id": "CLEAR",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2624P",
+    "regimen": "nivolumab + ipilimumab",
+    "drugs": [
+      "nivolumab",
+      "ipilimumab",
+      "sunitinib"
+    ],
+    "population": "MIBC",
+    "phase": "Not specified",
+    "trial_id": "2624P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2669eP",
+    "regimen": "Spatial Transcriptomics",
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "2669eP",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2675eP",
+    "regimen": "Shared Genetic and Proteomic Architecture",
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "2675eP",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2683eTiP",
+    "regimen": "genetically-modified Tie-2 expressing monocytes",
+    "population": "MIBC",
+    "phase": "Phase 1",
+    "trial_id": "2683eTiP",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2808MO",
+    "regimen": "Proton Pump Inhibitors",
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "2808MO",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2606P",
+    "regimen": "Transcriptomic predictors",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "2606P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA96",
+    "regimen": "Pembrolizumab-based Regimens",
+    "drugs": [
+      "pembrolizumab"
+    ],
+    "population": "MIBC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "KEYMAKER-U03",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2619P",
+    "regimen": "Real-World Practice Patterns",
+    "population": "MIBC",
+    "phase": "Not specified",
+    "trial_id": "2619P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2636P",
+    "regimen": "Patient Perceptions of Cure",
+    "population": "MIBC",
+    "phase": "Not specified",
+    "trial_id": "2636P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2643P",
+    "regimen": "Urinary microbiome diversity",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "2643P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2641P",
+    "regimen": "Systemic immunosuppressive and pro-inflammatory milieu",
+    "population": "MIBC",
+    "phase": "Not specified",
+    "trial_id": "2641P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2625P",
+    "regimen": "[177Lu]Lu-PSMA-617",
+    "population": "MIBC",
+    "line": "1L",
+    "phase": "Phase 2",
+    "trial_id": "RENALUT",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2631P",
+    "regimen": "Unmet Needs & Disparities in Kidney Cancer",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "2631P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2614P",
+    "regimen": "Recurrence After Local Treatment",
+    "population": "MIBC",
+    "phase": "Not specified",
+    "trial_id": "UroCCR Ndeg213",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2622P",
+    "regimen": "systemic immunotherapy +/- resection",
+    "modality": [
+      "IO"
+    ],
+    "population": "MIBC",
+    "phase": "Not specified",
+    "trial_id": "UroCCR Ndeg193",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA95",
+    "regimen": "Neoadjuvant immunotherapy",
+    "modality": [
+      "IO"
+    ],
+    "population": "MIBC",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "NESCIO",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2671eP",
+    "regimen": "Sarcomatoid Dedifferentiation",
+    "population": "MIBC",
+    "phase": "Not specified",
+    "trial_id": "ARON-1",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2651P",
+    "regimen": "Cabozantinib and Sunitinib",
+    "drugs": [
+      "cabozantinib",
+      "sunitinib"
+    ],
+    "population": "MIBC",
+    "phase": "Not specified",
+    "trial_id": "TOG",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2607P",
+    "regimen": "Belzutifan after PD-(L)1 inhibitor and >=2 VEGFR-TKIs",
+    "drugs": [
+      "Belzutifan"
+    ],
+    "population": "Other",
+    "line": "2L",
+    "phase": "Not specified",
+    "trial_id": "LITESPARK-005",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2629P",
+    "regimen": "First Line treatment in metastatic renal cell carcinoma",
+    "population": "mRCC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "Real World",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "LBA93",
+    "regimen": "Adjuvant durvalumab monotherapy or combined with tremelimumab",
+    "drugs": [
+      "durvalumab",
+      "tremelimumab"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Phase 3",
+    "trial_id": "RAMPART",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2642P",
+    "regimen": "Immunotherapy responsiveness in clear cell renal cell carcinoma",
+    "population": "ccRCC",
+    "phase": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2657eP",
+    "regimen": "Single cell RNA sequencing study in renal cell carcinoma",
+    "population": "Other",
+    "phase": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2661eP",
+    "regimen": "Autophagic regulation leading to metastasis in chromophobe renal cell carcinoma",
+    "population": "Other",
+    "phase": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2623P",
+    "regimen": "Cadonilimab Plus Lenvatinib in previously immunotherapy-treated advanced clear cell renal cell carcinoma",
+    "drugs": [
+      "Cadonilimab",
+      "Lenvatinib"
+    ],
+    "population": "ccRCC",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "CLEAR-IT",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2660eP",
+    "regimen": "TKIs Plus PD-1 Inhibitor Therapy",
+    "population": "mRCC",
+    "phase": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2616P",
+    "regimen": "Belzutifan versus everolimus in previously treated advanced renal cell carcinoma",
+    "drugs": [
+      "Belzutifan",
+      "everolimus"
+    ],
+    "population": "RCC",
+    "line": "2L",
+    "phase": "Not specified",
+    "trial_id": "LITESPARK-005",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2618P",
+    "regimen": "Immuno-oncology-based combinations in advanced renal cell carcinoma",
+    "population": "aRCC",
+    "phase": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2621P",
+    "regimen": "Adjuvant penpulimab in very high-risk clear cell renal cell carcinoma",
+    "drugs": [
+      "penpulimab"
+    ],
+    "population": "ccRCC",
+    "line": "Adjuvant",
+    "phase": "Phase 2",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2634P",
+    "regimen": "PD-1 blockade plus tyrosine kinase inhibitor in advanced renal cell carcinoma",
+    "drugs": [
+      "PD-1 blockade",
+      "tyrosine kinase inhibitor"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2630P",
+    "regimen": "Single-Nucleus Atlas of Collecting Duct Carcinoma",
+    "population": "Other",
+    "phase": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2654eP",
+    "regimen": "Multi-Omic Analysis of Collecting Duct Carcinoma",
+    "population": "Other",
+    "phase": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2649P",
+    "regimen": "Patient experience of services in kidney cancer",
+    "population": "Other",
+    "phase": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2666eP",
+    "regimen": "immune checkpoint inhibition",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1038",
+    "regimen": "real-world data",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1053",
+    "regimen": "TKIs",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "TKI"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2663eP",
+    "regimen": "different treatment options",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "MIBC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2681eP",
+    "regimen": "immunotherapy-based combinations",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "ARON-1 mu"
+  },
+  {
+    "row_id": "2662eP",
+    "regimen": "combination immunotherapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2673eP",
+    "regimen": "genomic profiling",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "MIBC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2664eP",
+    "regimen": "Metastatectomy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "MIBC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2678eP",
+    "regimen": "Cytoreductive Nephrectomy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "MIBC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2667eP",
+    "regimen": "Dialysis Status",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2620P",
+    "regimen": "Systemic Therapies",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "MIBC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2647P",
+    "regimen": "Immune Checkpoint Inhibitor-based Therapies",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "MIBC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2602P",
+    "regimen": "iparomlimab and tuvonralimab plus lenvatinib",
+    "drugs": [
+      "iparomlimab",
+      "tuvonralimab",
+      "lenvatinib"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "MIBC",
+    "line": "Not specified",
+    "phase": "Phase 1b",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2648P",
+    "regimen": "Sintilimab in Combination with Axitinib and Stereotactic Radiotherapy",
+    "drugs": [
+      "Sintilimab",
+      "Axitinib"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO",
+      "Radiotherapy"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2626P",
+    "regimen": "cabozantinib plus nivolumab",
+    "drugs": [
+      "cabozantinib",
+      "nivolumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "MIBC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "CaboCombo"
+  },
+  {
+    "row_id": "2628P",
+    "regimen": "registry study",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2627P",
+    "regimen": "HIF2-dependent Regulation",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2682eTiP",
+    "regimen": "neoadjuvant zanzalintinib plus nivolumab",
+    "drugs": [
+      "zanzalintinib",
+      "nivolumab"
+    ],
+    "biomarkers": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "MIBC",
+    "line": "Neoadjuvant",
+    "phase": "Phase 2",
+    "trial_id": "EXPLORE-RCC"
+  },
+  {
+    "row_id": "2676eP",
+    "regimen": "Schwann Cell-Mediated Mechanisms",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "ROW_1284",
+    "regimen": "Invited Discussant",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "1",
+    "regimen": "immunotherapy",
+    "phase": "Phase 3",
+    "trial_id": "2601P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2",
+    "regimen": "Immune-Combinations",
+    "drugs": [
+      "pembrolizumab"
+    ],
+    "population": "mRCC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "2645P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "3",
+    "regimen": "systemic treatment",
+    "population": "mRCC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "2658eP",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "4",
+    "regimen": "Cabozantinib and Nivolumab",
+    "drugs": [
+      "Cabozantinib",
+      "Nivolumab"
+    ],
+    "population": "mccRCC",
+    "line": "Not specified",
+    "phase": "Phase 2",
+    "trial_id": "2591O",
+    "biomarkers": []
+  },
+  {
+    "row_id": "5",
+    "regimen": "adjuvant pembrolizumab",
+    "drugs": [
+      "pembrolizumab"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "2659eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "6",
+    "regimen": "Adjuvant Immune Checkpoint Inhibition",
+    "phase": "Not specified",
+    "trial_id": "2612P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "7",
+    "regimen": "Ipilimumab",
+    "drugs": [
+      "Ipilimumab"
+    ],
+    "population": "mccRCC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "2637P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "8",
+    "regimen": "adjuvant Pembrolizumab",
+    "drugs": [
+      "pembrolizumab"
+    ],
+    "population": "Other",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "2672eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "9",
+    "regimen": "nivolumab-based immunotherapy",
+    "drugs": [
+      "nivolumab"
+    ],
+    "population": "mccRCC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "2674eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "10",
+    "regimen": "systemic cancer treatment",
+    "phase": "Phase 3",
+    "trial_id": "2617P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "11",
+    "regimen": "Immunotherapy",
+    "phase": "Not specified",
+    "trial_id": "2670eP",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "12",
+    "regimen": "Belzutifan Plus Lenvatinib",
+    "drugs": [
+      "Belzutifan",
+      "Lenvatinib"
+    ],
+    "population": "ccRCC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "2615P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "13",
+    "regimen": "first-line treatment decisions",
+    "phase": "Not specified",
+    "trial_id": "2655eP",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "14",
+    "regimen": "liquid biopsy assay",
+    "phase": "Not specified",
+    "trial_id": "2608P",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "15",
+    "regimen": "intratumoral vascular feature",
+    "phase": "Not specified",
+    "trial_id": "2679eP",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "16",
+    "regimen": "[68Ga]Ga-DPI-4452 PET/CT",
+    "population": "Other",
+    "phase": "Not specified",
+    "trial_id": "2597MO",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "17",
+    "regimen": "Nivolumab plus Ipilimumab Therapy",
+    "drugs": [
+      "Nivolumab",
+      "Ipilimumab"
+    ],
+    "population": "mccRCC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "2613MO",
+    "biomarkers": []
+  },
+  {
+    "row_id": "18",
+    "regimen": "Novel Therapies",
+    "phase": "Not specified",
+    "trial_id": "ROW_1882",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "19",
+    "regimen": "carboplatin dosing optimization",
+    "phase": "Not specified",
+    "trial_id": "2940eP",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2961eP",
+    "regimen": "Carboplatin dose calculation based on renal function assessment",
+    "drugs": [
+      "carboplatin"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1530P",
+    "regimen": "NUC-7738 and PD-1 Inhibition",
+    "drugs": [
+      "NUC-7738"
+    ],
+    "biomarkers": [
+      "PD-1"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2861P",
+    "regimen": "Meldonium in metastatic renal cell carcinoma",
+    "drugs": [
+      "Meldonium"
+    ],
+    "modality": [],
+    "population": "mRCC",
+    "line": "Not specified",
+    "phase": "Phase 1/2",
+    "trial_id": "",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2598MO",
+    "regimen": "Intratumor Mycobiome Promotes Clear Cell Renal Cell Carcinoma Progression",
+    "drugs": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2600MO",
+    "regimen": "Ipilimumab/Nivolumab versus standard of care",
+    "drugs": [
+      "Ipilimumab",
+      "Nivolumab",
+      "nivolumab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "SUNNIFORECAST",
+    "biomarkers": [
+      "PD-L1"
+    ]
+  },
+  {
+    "row_id": "2599MO",
+    "regimen": "Soluble MAdCAM-1 predicts outcomes in metastatic renal cell carcinoma",
+    "drugs": [],
+    "modality": [],
+    "population": "mRCC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2595MO",
+    "regimen": "Ipilimumab plus Nivolumab vs standard of care",
+    "drugs": [
+      "Ipilimumab",
+      "Nivolumab",
+      "nivolumab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "SUNNIFORECAST",
+    "biomarkers": []
+  },
+  {
+    "row_id": "1547P",
+    "regimen": "Acquired Resistance to Checkpoint Inhibitors",
+    "drugs": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2610MO",
+    "regimen": "Genomic Analysis of Papillary Renal Cell Carcinoma",
+    "drugs": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2963eP",
+    "regimen": "Nivolumab",
+    "drugs": [
+      "Nivolumab",
+      "nivolumab"
+    ],
+    "biomarkers": [
+      "GDF-15"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "mRCC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2593MO",
+    "regimen": "Immunotherapy response in metastatic renal cell carcinoma",
+    "drugs": [],
+    "biomarkers": [
+      "LAG3"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "mRCC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2594MO",
+    "regimen": "Circulating kidney injury molecule-1 levels with clinical outcomes",
+    "drugs": [],
+    "biomarkers": [
+      "KIM-1"
+    ],
+    "modality": [],
+    "population": "aRCC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "COSMIC-313"
+  },
+  {
+    "row_id": "64eP",
+    "regimen": "Patient-Derived Organoids in Renal Cell Carcinoma",
+    "drugs": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "",
+    "biomarkers": []
+  },
+  {
+    "row_id": "277eP",
+    "regimen": "First-Line Immune Checkpoint Blockade",
+    "drugs": [],
+    "modality": [
+      "IO"
+    ],
+    "population": "mRCC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "",
+    "biomarkers": []
+  },
+  {
+    "row_id": "44eP",
+    "regimen": "Biologically Targeted Dual Adaptive and Innate Nano-Immunotherapy",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "254eP",
+    "regimen": "Urinary Sediment SNORD4A as a Novel Diagnostic Biomarker",
+    "drugs": [],
+    "biomarkers": [
+      "SNORD4A"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "68eP",
+    "regimen": "Secretory GPX3 promotes lung metastasis",
+    "drugs": [],
+    "biomarkers": [
+      "GPX3"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified"
+  },
+  {
+    "row_id": "228eP",
+    "regimen": "Impact on immunotherapy outcomes",
+    "drugs": [],
+    "biomarkers": [
+      "ABCA1",
+      "ABCG1"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "CHOMET"
+  },
+  {
+    "row_id": "2605MO",
+    "regimen": "Final efficacy data and biomarker analysis",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2632P",
+    "regimen": "Second-line patterns and outcomes",
+    "drugs": [],
+    "biomarkers": [],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2652eP",
+    "regimen": "Succinate-dehydrogenase B protein expression and prognosis",
+    "drugs": [],
+    "biomarkers": [
+      "succinate-dehydrogenase B"
+    ],
+    "modality": [],
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": ""
+  },
+  {
+    "row_id": "2601P",
+    "regimen": "immunotherapy",
+    "drugs": [
+      "immunotherapy"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Phase 3",
+    "trial_id": "2601P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2645P",
+    "regimen": "Immune-Combinations",
+    "drugs": [
+      "Immune-Combinations"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "2645P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2658eP",
+    "regimen": "systemic treatment",
+    "drugs": [
+      "systemic treatment"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "2658eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2591O",
+    "regimen": "Cabozantinib and Nivolumab",
+    "drugs": [
+      "Cabozantinib",
+      "Nivolumab",
+      "nivolumab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "mUC",
+    "line": "2L",
+    "phase": "Phase 2",
+    "trial_id": "2591O",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2659eP",
+    "regimen": "adjuvant pembrolizumab",
+    "drugs": [
+      "pembrolizumab"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "mUC",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "2659eP",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2612P",
+    "regimen": "Adjuvant Immune Checkpoint Inhibition",
+    "drugs": [
+      "Immune Checkpoint Inhibition"
+    ],
+    "modality": [
+      "IO"
+    ],
+    "population": "mUC",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "2612P",
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_1431",
+    "population": "Other",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2637P",
+    "regimen": "First Line Ipilimumab",
+    "drugs": [
+      "Ipilimumab",
+      "nivolumab"
+    ],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2672eP",
+    "regimen": "Adjuvant Pembrolizumab",
+    "drugs": [
+      "Pembrolizumab",
+      "pembrolizumab"
+    ],
+    "population": "MIBC",
+    "line": "Adjuvant",
+    "phase": "Not specified",
+    "trial_id": "ARON-1",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2674eP",
+    "regimen": "Nivolumab-based immunotherapy",
+    "drugs": [
+      "Nivolumab",
+      "nivolumab"
+    ],
+    "population": "MIBC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2617P",
+    "regimen": "Coaching on side effects of systemic cancer treatment",
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Phase 3",
+    "trial_id": "PREPARE",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2670eP",
+    "biomarkers": [
+      "SPP1"
+    ],
+    "population": "MIBC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": []
+  },
+  {
+    "row_id": "2615P",
+    "regimen": "Belzutifan Plus Lenvatinib",
+    "drugs": [
+      "Belzutifan",
+      "Lenvatinib"
+    ],
+    "population": "mUC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "LITESPARK-010",
+    "biomarkers": []
+  },
+  {
+    "row_id": "2655eP",
+    "population": "MIBC",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "VOCALIZE",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2608P",
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2679eP",
+    "population": "Other",
+    "line": "Not specified",
+    "phase": "Not specified",
+    "trial_id": "Not specified",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2597MO",
+    "modality": [
+      "PET/CT"
+    ],
+    "population": "Other",
+    "trial_id": "2597MO",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2613MO",
+    "regimen": "Nivolumab plus Ipilimumab Therapy",
+    "drugs": [
+      "Nivolumab",
+      "Ipilimumab",
+      "nivolumab"
+    ],
+    "biomarkers": [
+      "PD-L1"
+    ],
+    "population": "mUC",
+    "line": "1L",
+    "phase": "Not specified",
+    "trial_id": "COSMIC 313"
+  },
+  {
+    "row_id": "ROW_1882",
+    "regimen": "Novel Therapies",
+    "population": "Other",
+    "trial_id": "ROW_1882",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "2940eP",
+    "regimen": "Carboplatin Dosing Optimization",
+    "population": "Other",
+    "trial_id": "2940eP",
+    "drugs": [
+      "carboplatin"
+    ],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_2203",
+    "trial_id": "ROW_2203",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_2254",
+    "trial_id": "ROW_2254",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_2255",
+    "trial_id": "ROW_2255",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "CN74",
+    "regimen": "Clinical Nurse Specialist and Specialist Pharmacist Clinics",
+    "population": "Other",
+    "trial_id": "CN74",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_2874",
+    "trial_id": "ROW_2874",
+    "drugs": [],
+    "biomarkers": []
+  },
+  {
+    "row_id": "ROW_3093",
+    "trial_id": "ROW_3093",
+    "drugs": [],
+    "biomarkers": []
+  }
+]
