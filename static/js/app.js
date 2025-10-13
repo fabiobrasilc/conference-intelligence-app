@@ -430,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    const headers = ['Title','Speakers','Speaker Location','Affiliation','Identifier','Room','Date','Time','Session','Theme'];
+    const headers = ['Title','Speakers','Speaker Location','Abstract','Affiliation','Identifier','Room','Date','Time','Session','Theme'];
 
     // Save current column widths before re-rendering (if table exists)
     const existingTable = document.getElementById('dataTable');
@@ -450,6 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
       'Title':'300px',
       'Speakers':'180px',
       'Speaker Location':'140px',
+      'Abstract':'140px',
       'Affiliation':'180px',
       'Identifier':'100px',
       'Room':'120px',
@@ -552,6 +553,8 @@ document.addEventListener('DOMContentLoaded', function() {
       document.body.appendChild(tooltip);
     }
 
+    let globalTooltipTimer = null;
+
     // Use event delegation for ALL table cells in AI assistant (including entity-table-container and ai-chat-table)
     document.body.addEventListener('mouseenter', (e) => {
       // Match both .ai-chat-table and .entity-table-container tables
@@ -559,9 +562,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check for data-full-text first, fall back to title attribute
         const fullText = e.target.getAttribute('data-full-text') || e.target.getAttribute('title');
         if (fullText && fullText.trim()) {
-          tooltip.textContent = fullText;
-          tooltip.classList.add('show');
-          positionTooltip(e, tooltip);
+          // Add 500ms delay before showing tooltip
+          globalTooltipTimer = setTimeout(() => {
+            tooltip.textContent = fullText;
+            tooltip.classList.add('show');
+            positionTooltip(e, tooltip);
+          }, 500);
         }
       }
     }, true);
@@ -574,18 +580,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.body.addEventListener('mouseleave', (e) => {
       if (e.target.matches('.ai-chat-table tbody td, .entity-table-container table tbody td')) {
+        // Clear timer if user leaves before tooltip shows
+        if (globalTooltipTimer) {
+          clearTimeout(globalTooltipTimer);
+          globalTooltipTimer = null;
+        }
         tooltip.classList.remove('show');
       }
     }, true);
   }
 
   function attachTooltipListeners(cell, tooltip) {
+    let tooltipTimer = null;
+
     cell.addEventListener('mouseenter', (e) => {
       const fullText = cell.getAttribute('data-full-text');
       if (fullText && fullText.trim()) {
-        tooltip.textContent = fullText;
-        tooltip.classList.add('show');
-        positionTooltip(e, tooltip);
+        // Add 500ms delay before showing tooltip
+        tooltipTimer = setTimeout(() => {
+          tooltip.textContent = fullText;
+          tooltip.classList.add('show');
+          positionTooltip(e, tooltip);
+        }, 500);
       }
     });
 
@@ -596,6 +612,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     cell.addEventListener('mouseleave', () => {
+      // Clear timer if user leaves before tooltip shows
+      if (tooltipTimer) {
+        clearTimeout(tooltipTimer);
+        tooltipTimer = null;
+      }
       tooltip.classList.remove('show');
     });
   }
@@ -817,7 +838,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const getColWidth = (col) => {
       const widthMap = {
         'Drug': '12%', 'Company': '15%',
-        'Title': '22%', 'Speakers': '15%', 'Speaker': '20%', 'Speaker Location': '12%',
+        'Title': '22%', 'Speakers': '15%', 'Speaker': '20%', 'Speaker Location': '12%', 'Abstract': '12%',
         'Affiliation': '18%', 'Identifier': '7%', 'Room': '10%',
         'Date': '8%', 'Time': '7%', 'Session': '12%', 'Theme': '15%',
         'Threat Type': '12%', 'Location': '15%',
@@ -1313,20 +1334,61 @@ document.addEventListener('DOMContentLoaded', function() {
   function escapeHtml(text){ const div = document.createElement('div'); div.textContent = text ?? ''; return div.innerHTML; }
   function debounce(fn, wait){ let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn.apply(this,args), wait); }; }
 
-  // Format AI text with line breaks and basic formatting
+  // Format AI text with markdown parsing or intelligent structuring
   function formatAIText(text) {
     if (!text) return '';
-    // Escape HTML first
-    let formatted = escapeHtml(text);
-    // Convert double line breaks to paragraphs
-    formatted = formatted.replace(/\n\n/g, '<br><br>');
-    // Convert single line breaks to br
-    formatted = formatted.replace(/\n/g, '<br>');
-    // Bold text (**text** → <strong>text</strong>)
-    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Italic text (*text* → <em>text</em>)
-    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    return formatted;
+
+    console.log('[DEBUG formatAIText] Text length:', text.length);
+    console.log('[DEBUG formatAIText] First 200 chars:', text.substring(0, 200));
+
+    // If it already looks like markdown or has line breaks, use marked
+    const looksLikeMd = /(^|\n)([#*-]|\d+\.)/.test(text) || text.includes('\n');
+    console.log('[DEBUG formatAIText] looksLikeMd:', looksLikeMd, 'has newlines:', text.includes('\n'));
+    console.log('[DEBUG formatAIText] marked:', typeof marked, 'DOMPurify:', typeof DOMPurify);
+
+    if (typeof marked !== 'undefined' && looksLikeMd) {
+      console.log('[DEBUG formatAIText] Using marked.parse');
+      const html = marked.parse(text);
+      const result = (window.DOMPurify ? DOMPurify.sanitize(html) : html);
+      console.log('[DEBUG formatAIText] Result HTML length:', result.length);
+      return result;
+    }
+
+    // Otherwise, structure raw prose into readable HTML
+    console.log('[DEBUG formatAIText] Using structurePlainText');
+    const result = structurePlainText(text);
+    console.log('[DEBUG formatAIText] structurePlainText result length:', result.length);
+    return result;
+  }
+
+  function structurePlainText(raw) {
+    let t = (raw || '').trim();
+
+    // Turn inline " - " / " – " / " — " bullets into real list markers
+    t = t.replace(/(?:^|[\s])[-–—]\s+/g, '\n- ');
+
+    // Add breaks before numbered sections like "2." or "2.1"
+    t = t.replace(/(\s)(?=\d+(\.\d+)*\s)/g, '\n\n');
+
+    // Split long blobs into sentences/paragraphs
+    t = t.replace(/(?<=\.)\s+(?=[A-Z(])/g, '\n');
+
+    const lines = t.split('\n').map(s => s.trim()).filter(Boolean);
+    let html = '';
+    let inList = false;
+
+    for (const line of lines) {
+      if (line.startsWith('- ')) {
+        if (!inList) { html += '<ul>'; inList = true; }
+        html += '<li>' + escapeHtml(line.slice(2)) + '</li>';
+      } else {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += '<p>' + escapeHtml(line) + '</p>';
+      }
+    }
+    if (inList) html += '</ul>';
+
+    return window.DOMPurify ? DOMPurify.sanitize(html) : html;
   }
 
   function renderCellContent(val) {
@@ -1797,7 +1859,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ===== COLUMN TOGGLE - SIMPLE CLICK-ONLY APPROACH =====
-  const columnHeaders = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier', 'Room', 'Date', 'Time', 'Session', 'Theme'];
+  const columnHeaders = ['Title', 'Speakers', 'Speaker Location', 'Abstract', 'Affiliation', 'Identifier', 'Room', 'Date', 'Time', 'Session', 'Theme'];
 
   // Simple function to hide/show a single column
   window.toggleColumn = function(columnName, shouldHide) {

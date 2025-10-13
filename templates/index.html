@@ -48,6 +48,7 @@
             <button class="filter-toggle-btn ta-filter-btn" data-value="Colorectal Cancer">Colorectal Cancer</button>
             <button class="filter-toggle-btn ta-filter-btn" data-value="Head and Neck Cancer">Head & Neck Cancer</button>
             <button class="filter-toggle-btn ta-filter-btn" data-value="TGCT">TGCT</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Merkel Cell">Merkel Cell</button>
           </div>
         </div>
 
@@ -186,7 +187,8 @@
               <span class="toggle-label">Toggle Columns:</span>
               <button class="column-toggle-btn active" data-column="Title">Title</button>
               <button class="column-toggle-btn active" data-column="Speakers">Speakers</button>
-              <button class="column-toggle-btn active" data-column="Speaker Location">Location</button>
+              <button class="column-toggle-btn" data-column="Speaker Location">Location</button>
+              <button class="column-toggle-btn active" data-column="Abstract">Abstract</button>
               <button class="column-toggle-btn active" data-column="Affiliation">Affiliation</button>
               <button class="column-toggle-btn active" data-column="Identifier">Identifier</button>
               <button class="column-toggle-btn active" data-column="Session">Session</button>
@@ -256,7 +258,7 @@
 
                 <!-- Floating Jump to Bottom Button -->
                 <button id="jumpToBottomBtn" class="jump-to-bottom-btn">
-                  ↓ Jump to Bottom
+                  ↓ Bottom
                 </button>
               </div>
 
@@ -274,6 +276,7 @@
                     <option value="ta:Colorectal Cancer">Colorectal Cancer</option>
                     <option value="ta:Head and Neck Cancer">Head & Neck Cancer</option>
                     <option value="ta:TGCT">TGCT</option>
+                    <option value="ta:Merkel Cell">Merkel Cell</option>
                   </select>
 
                   <!-- Thinking Mode Selector -->
@@ -351,6 +354,7 @@
                 <button class="modal-filter-btn" data-type="ta" data-value="Colorectal Cancer">Colorectal</button>
                 <button class="modal-filter-btn" data-type="ta" data-value="Head and Neck Cancer">Head & Neck</button>
                 <button class="modal-filter-btn" data-type="ta" data-value="TGCT">TGCT</button>
+                <button class="modal-filter-btn" data-type="ta" data-value="Merkel Cell">Merkel Cell</button>
               </div>
             </div>
 
@@ -460,6 +464,18 @@
         </div>
       </div>
     </div>
+
+    <!-- Markdown Parser and Sanitizer for AI Intelligence Reports -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script>
+      marked.setOptions({
+        gfm: true,
+        breaks: true,        // keeps single newlines readable while streaming
+        smartLists: true,
+        headerIds: false
+      });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>

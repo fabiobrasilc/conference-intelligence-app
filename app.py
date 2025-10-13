@@ -111,7 +111,7 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "a_strong_fallback_secret_ke
 # CONFIGURATION
 # ============================================================================
 
-CSV_FILE = Path(__file__).parent / "ESMO_2025_FINAL_20250929.csv"
+CSV_FILE = Path(__file__).parent / "ESMO_2025_FINAL_20251013.csv"
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 # OpenAI client with controlled connection pooling for Railway deployment
@@ -618,6 +618,11 @@ ESMO_THERAPEUTIC_AREAS = {
         "keywords": [r"\btgct\b", r"\bpvns\b", "tenosynovial giant cell tumor", "pigmented villonodular synovitis"],
         "exclude_if_in_title": ["testicular", "germ cell tumor", "seminoma", "nonseminoma"],
         "regex": True
+    },
+    "Merkel Cell": {
+        "keywords": ["merkel cell", "merkel cell carcinoma"],
+        "exclude_if_in_title": ["melanoma", "basal cell", "squamous cell", "cervical"],
+        "regex": False
     }
 }
 
@@ -1945,104 +1950,6 @@ def detect_unambiguous_combination(user_query: str) -> dict:
     return None
 
 
-def detect_competitor_query(user_message: str, ta_filters: Optional[list] = None) -> Optional[List[str]]:
-    """
-    AI-powered competitor detection using drug database context.
-
-    Detects queries like "show me competitor data" and determines which drugs
-    are competitors to EMD Serono's avelumab based on indication and MOA.
-
-    Args:
-        user_message: User's query
-        ta_filters: Active therapeutic area filters (e.g., ["bladder"])
-
-    Returns:
-        List of competitor drug names, or None if not a competitor query
-    """
-    # Quick check: does query mention "competitor" or "competition"?
-    query_lower = user_message.lower()
-    if "competitor" not in query_lower and "competition" not in query_lower and "competitive" not in query_lower:
-        return None
-
-    # Build TA context
-    ta_context = ", ".join(ta_filters) if ta_filters else "bladder cancer (primary indication)"
-
-    # Get available MOA classes from cache
-    moa_summary = []
-    for moa_class in ['ICI', 'ADC', 'TKI', 'Bispecific Antibody', 'Targeted Therapy']:
-        if moa_class in MOA_DRUG_CACHE:
-            moa_summary.append(f"- {moa_class}: {len(MOA_DRUG_CACHE[moa_class])} drugs")
-
-    prompt = f"""You are analyzing a competitor intelligence query for EMD Serono's medical affairs team.
-
-**COMPANY CONTEXT**:
-- User company: EMD Serono (Merck KGaA/Pfizer)
-- Key product: Avelumab (Bavencio)
-- Drug class: PD-L1 checkpoint inhibitor (ICI)
-- Primary indication: First-line maintenance metastatic urothelial/bladder cancer
-- Current therapeutic area filter: {ta_context}
-
-**DRUG DATABASE AVAILABLE**:
-{chr(10).join(moa_summary)}
-
-**USER QUERY**: "{user_message}"
-
-**TASK**: Determine which drugs are COMPETITORS to avelumab in this context.
-
-**REASONING**:
-1. Avelumab is an ICI (checkpoint inhibitor) for bladder cancer
-2. Direct competitors = other ICIs approved/studied in bladder cancer
-3. Example competitors: pembrolizumab (Keytruda), nivolumab (Opdivo), atezolizumab (Tecentriq), durvalumab (Imfinzi)
-4. May also include ADCs if they compete for same patient population (e.g., enfortumab vedotin)
-5. EXCLUDE avelumab itself (don't show own product data)
-
-**RETURN JSON**:
-{{
-  "is_competitor_query": true/false,
-  "user_product": "avelumab",
-  "competitor_drugs": ["drug1", "drug2", ...],
-  "rationale": "brief 1-sentence explanation"
-}}
-
-**EXAMPLES**:
-Query: "Show me competitor data" (bladder filter active)
-Response: {{"is_competitor_query": true, "user_product": "avelumab", "competitor_drugs": ["pembrolizumab", "nivolumab", "atezolizumab", "durvalumab"], "rationale": "Other ICIs competing in 1L maintenance bladder cancer"}}
-
-Query: "Compare our data to competitors" (bladder filter)
-Response: {{"is_competitor_query": true, "user_product": "avelumab", "competitor_drugs": ["pembrolizumab", "nivolumab", "atezolizumab", "durvalumab", "enfortumab vedotin"], "rationale": "ICIs and leading ADC competing for same patient population"}}
-"""
-
-    try:
-        response = client.responses.create(
-            model="gpt-4o-mini",
-            input=[{"role": "user", "content": prompt}],
-            text={"verbosity": "medium"},
-            max_output_tokens=300
-        )
-
-        output_text = response.output_text
-        print(f"[COMPETITOR DETECTION DEBUG] Raw AI response: {output_text[:500]}")
-
-        # Strip markdown code blocks if present
-        if output_text.startswith("```json"):
-            output_text = output_text.replace("```json", "").replace("```", "").strip()
-        elif output_text.startswith("```"):
-            output_text = output_text.replace("```", "").strip()
-
-        result = json.loads(output_text)
-
-        if result.get("is_competitor_query"):
-            competitor_drugs = result.get("competitor_drugs", [])
-            print(f"[COMPETITOR DETECTION] Identified {len(competitor_drugs)} competitors: {competitor_drugs}")
-            print(f"[COMPETITOR DETECTION] Rationale: {result.get('rationale')}")
-            return competitor_drugs
-
-        return None
-
-    except Exception as e:
-        print(f"[COMPETITOR DETECTION ERROR] {e}")
-        print(f"[COMPETITOR DETECTION DEBUG] Failed to parse AI response")
-        return None
 
 
 def classify_user_query(user_message: str, conversation_history: list = None) -> dict:
@@ -2676,20 +2583,38 @@ def generate_top_institutions_table(df: pd.DataFrame, n: int = 15) -> pd.DataFra
             institution = parts[0].strip()
 
             # Filter out generic terms and single city names
-            generic_terms = [
+            # Updated to match partial strings and more comprehensive patterns
+            generic_patterns = [
                 'department of medicine', 'school of medicine', 'institute of pathology',
                 'division of oncology', 'department of oncology', 'medical oncology',
                 'clinical oncology', 'radiation oncology', 'medicine', 'oncology',
-                'pathology', 'surgery', 'radiology', 'pharmacy'
+                'pathology', 'surgery', 'radiology', 'pharmacy',
+                'medical oncology department', 'medical oncology unit',
+                'department of internal medicine', 'department of medical oncology',
+                'division of medical oncology', 'medical oncology and hematology unit',
+                'department of gastroenterological surgery',
+                'melanoma and cutaneous medical oncology',
+                'medical oncology and hematology',
+                'internal medicine',
+                'hematology',
+                'hemostasis'
             ]
 
-            # Check if institution is too short (likely just a city) or generic
-            if len(institution) < 10 or institution.lower() in generic_terms:
+            inst_lower = institution.lower()
+
+            # Check if institution is too short (likely just a city) or matches generic patterns
+            # Use "in" check for partial matches (e.g., "Medical Oncology Department" contains "medical oncology")
+            is_generic = any(pattern in inst_lower for pattern in generic_patterns)
+
+            if len(institution) < 10 or is_generic:
                 # Try second part if available (might be the actual institution name)
                 if len(parts) > 1:
                     institution = parts[1].strip()
-                    # Still filter out if too short
-                    if len(institution) < 10:
+                    # Re-check if the second part is also generic
+                    inst_lower2 = institution.lower()
+                    is_generic2 = any(pattern in inst_lower2 for pattern in generic_patterns)
+                    # Still filter out if too short or generic
+                    if len(institution) < 10 or is_generic2:
                         return None
                 else:
                     return None
@@ -2707,8 +2632,10 @@ def generate_top_institutions_table(df: pd.DataFrame, n: int = 15) -> pd.DataFra
         return pd.DataFrame()
 
     # Fuzzy merge similar institution names
-    def get_canonical_name(institution):
-        """Map similar institution names to canonical form."""
+    def get_canonical_name(row):
+        """Map similar institution names to canonical form, checking original affiliation for location info."""
+        institution = row['normalized_institution']
+        original_affiliation = str(row['Affiliation']).lower()  # Check original for location info
         inst_lower = institution.lower()
 
         # IRCCS variants
@@ -2722,9 +2649,15 @@ def generate_top_institutions_table(df: pd.DataFrame, n: int = 15) -> pd.DataFra
         if 'dana-farber' in inst_lower or 'dana farber' in inst_lower:
             return 'Dana-Farber Cancer Institute'
 
-        # MD Anderson variants
+        # MD Anderson variants - differentiate by location using ORIGINAL affiliation
         if 'md anderson' in inst_lower or 'anderson cancer' in inst_lower:
-            return 'MD Anderson Cancer Center'
+            # Check original affiliation for location (not normalized which strips location)
+            if 'madrid' in original_affiliation or 'spain' in original_affiliation:
+                return 'MD Anderson Cancer Center, Madrid'
+            elif 'houston' in original_affiliation or 'texas' in original_affiliation:
+                return 'MD Anderson Cancer Center, Houston'
+            else:
+                return 'MD Anderson Cancer Center'  # Fallback if location unclear
 
         # Memorial Sloan Kettering variants
         if 'sloan kettering' in inst_lower or 'mskcc' in inst_lower or 'memorial sloan' in inst_lower:
@@ -2745,7 +2678,7 @@ def generate_top_institutions_table(df: pd.DataFrame, n: int = 15) -> pd.DataFra
         # Default: return original
         return institution
 
-    df_with_institutions['canonical_institution'] = df_with_institutions['normalized_institution'].apply(get_canonical_name)
+    df_with_institutions['canonical_institution'] = df_with_institutions.apply(get_canonical_name, axis=1)
 
     # Count unique studies per canonical institution
     inst_counts = df_with_institutions.groupby('canonical_institution').agg({
@@ -2909,152 +2842,6 @@ def classify_studies_with_drug_db(df: pd.DataFrame, therapeutic_area: str) -> pd
     for _, row in df.iterrows():
         title = row['Title'].lower()
         identifier = row['Identifier']
-
-        # Find all drugs mentioned in this title
-        # Use word boundaries for short drug names to avoid false matches (e.g., "pt" matching "patients")
-        detected_drugs = []
-        for drug_name, drug_info in drug_lookup.items():
-            # Skip very short strings (≤2 chars) - too many false positives
-            if len(drug_name) <= 2:
-                continue
-
-            # For short strings (3-5 chars), require word boundaries
-            if len(drug_name) <= 5:
-                import re
-                pattern = r'\b' + re.escape(drug_name) + r'\b'
-                if re.search(pattern, title):
-                    detected_drugs.append((drug_name, drug_info))
-            else:
-                # Longer drug names can use simple substring matching
-                if drug_name in title:
-                    detected_drugs.append((drug_name, drug_info))
-
-        # Remove duplicates (e.g., if both "enfortumab vedotin" and "enfortumab vedotin-ejfv" matched)
-        # Keep the longer match
-        unique_drugs = []
-        for drug_name, drug_info in detected_drugs:
-            # Check if this is a substring of any other detected drug
-            is_substring = False
-            for other_name, _ in detected_drugs:
-                if drug_name != other_name and drug_name in other_name:
-                    is_substring = True
-                    break
-            if not is_substring:
-                unique_drugs.append((drug_name, drug_info))
-
-        # Filter out EMD-only studies (but keep EMD + competitor combinations)
-        non_emd_drugs = []
-        emd_count = 0
-        for drug_name, drug_info in unique_drugs:
-            if drug_name in emd_drugs:
-                emd_count += 1
-            else:
-                non_emd_drugs.append((drug_name, drug_info))
-
-        # Skip if only EMD drugs detected
-        if emd_count > 0 and len(non_emd_drugs) == 0:
-            continue
-
-        # Use non-EMD drugs (or all drugs if no EMD detected)
-        final_drugs = non_emd_drugs if non_emd_drugs else unique_drugs
-
-        if not final_drugs:
-            continue
-
-        # Build result entry
-        if len(final_drugs) == 1:
-            # Monotherapy
-            drug_name, drug_info = final_drugs[0]
-            results.append({
-                'Drug': drug_info['display_name'],
-                'Company': drug_info['company'],
-                'MOA Class': drug_info['moa_class'],
-                'MOA Target': drug_info['moa_target'],
-                'Identifier': identifier,
-                'Title': row['Title'],  # Full title, no truncation
-                'Study Type': 'Monotherapy'
-            })
-        else:
-            # Combination - append MOAs
-            drug_names = []
-            companies = []
-            moa_classes = []
-            moa_targets = []
-
-            for drug_name, drug_info in final_drugs:
-                drug_names.append(drug_info['display_name'])
-                companies.append(drug_info['company'])
-                moa_classes.append(drug_info['moa_class'])
-                moa_targets.append(drug_info['moa_target'])
-
-            results.append({
-                'Drug': ' + '.join(drug_names),
-                'Company': ' + '.join(companies),
-                'MOA Class': ' + '.join(moa_classes),
-                'MOA Target': '; '.join(moa_targets),
-                'Identifier': identifier,
-                'Title': row['Title'],  # Full title, no truncation
-                'Study Type': 'Combination'
-            })
-
-    result_df = pd.DataFrame(results)
-
-    # Sort alphabetically by Drug column (combinations will sort by first drug name)
-    if not result_df.empty:
-        result_df = result_df.sort_values('Drug', ascending=True)
-
-    print(f"[DRUG MATCHER] Found {len(result_df)} competitor studies ({len([r for r in results if r['Study Type'] == 'Monotherapy'])} monotherapy, {len([r for r in results if r['Study Type'] == 'Combination'])} combination)")
-
-    return result_df
-
-def generate_competitor_table(df: pd.DataFrame, indication_keywords: list = None, focus_moa_classes: list = None, n: int = 200) -> pd.DataFrame:
-    """
-    LEGACY: Generate competitor drugs table using CSV with MOA/target data.
-    Enhanced to detect combination therapies and prevent double-counting.
-
-    Args:
-        df: Dataframe to search
-        indication_keywords: Keywords to filter by indication (e.g., ["bladder", "urothelial"])
-        focus_moa_classes: MOA classes to focus on (e.g., ["ICI", "ADC", "Targeted Therapy"])
-        n: Max results
-    """
-    if df.empty:
-        return pd.DataFrame()
-
-    print(f"[COMPETITOR] Generating table with indication_keywords: {indication_keywords}, MOA filters: {focus_moa_classes}")
-
-    # Load drug database with MOA data
-    try:
-        drug_db_path = Path(__file__).parent / "Drug_Company_names.csv"
-        drug_db = pd.read_csv(drug_db_path, encoding='utf-8-sig')
-        print(f"[COMPETITOR] Loaded drug database with {len(drug_db)} drugs")
-    except Exception as e:
-        print(f"[COMPETITOR] ERROR: Could not load Drug_Company_names.csv: {e}")
-        return pd.DataFrame()
-
-    # EMD portfolio drugs to exclude from competitor list
-    emd_drugs = ['avelumab', 'bavencio', 'tepotinib', 'cetuximab', 'erbitux', 'pimicotinib']
-
-    # Build a drug name lookup for combination detection
-    drug_lookup = {}
-    for _, row in drug_db.iterrows():
-        commercial = str(row['drug_commercial']).strip().lower() if pd.notna(row['drug_commercial']) else ""
-        generic = str(row['drug_generic']).strip().lower() if pd.notna(row['drug_generic']) else ""
-        moa_class = str(row['moa_class']).strip() if pd.notna(row['moa_class']) else ""
-
-        if commercial:
-            drug_lookup[commercial] = {'generic': generic, 'moa_class': moa_class}
-        if generic:
-            # Handle base names (e.g., "enfortumab vedotin" from "enfortumab vedotin-ejfv")
-            base_generic = generic.split('-')[0].strip() if '-' in generic else generic
-            drug_lookup[generic] = {'commercial': commercial, 'moa_class': moa_class}
-            if base_generic != generic:
-                drug_lookup[base_generic] = {'commercial': commercial, 'moa_class': moa_class}
-
-    # Track processed abstracts to avoid duplicates in combinations
-    processed_abstracts = set()
-    results = []
-
     # Skip combination detection for now - it's too slow and causing timeouts
     # TODO: Optimize this in the future by only checking filtered abstracts
     combination_studies = []
@@ -3887,7 +3674,7 @@ def get_data():
         display_df = filtered_df  # Show all filtered results
 
     # Convert to records for JSON serialization
-    data_records = display_df[['Title', 'Speakers', 'Affiliation', 'Speaker Location', 'Identifier', 'Room',
+    data_records = display_df[['Title', 'Speakers', 'Speaker Location', 'Abstract', 'Affiliation', 'Identifier', 'Room',
                                  'Session', 'Date', 'Time', 'Theme']].to_dict('records')
 
     # Sanitize Unicode
@@ -3949,7 +3736,7 @@ def search_data():
         display_df = filtered_df  # Show all filtered/search results
 
     # Convert to records
-    data_records = display_df[['Title', 'Speakers', 'Affiliation', 'Speaker Location', 'Identifier', 'Room',
+    data_records = display_df[['Title', 'Speakers', 'Speaker Location', 'Abstract', 'Affiliation', 'Identifier', 'Room',
                                  'Session', 'Date', 'Time', 'Theme']].to_dict('records')
 
     # Sanitize Unicode
@@ -4051,6 +3838,93 @@ def stream_playbook(playbook_key):
     def generate():
         try:
             print(f"[PLAYBOOK] Starting {playbook_key} with filters: drugs={drug_filters}, tas={ta_filters}")
+
+            # ============================================================================
+            # CACHE-FIRST STRATEGY for Deep Intelligence Reports
+            # ============================================================================
+            # Check if this is a cacheable request (single TA, no other filters)
+            if ta_filters and len(ta_filters) == 1 and not drug_filters and not session_filters and not date_filters:
+                ta_filter = ta_filters[0]
+
+                # Load from consolidated cache
+                ta_key = ta_filter.lower().replace(' ', '_').replace('&', 'and')
+                cache_file = Path(__file__).parent / "cache" / f"journalist_{playbook_key}.json"
+
+                if cache_file.exists():
+                    print(f"[CACHE HIT] Loading {ta_filter} from consolidated cache: {cache_file.name}")
+                    start_time = time.time()
+
+                    try:
+                        with open(cache_file, 'r', encoding='utf-8') as f:
+                            all_tas_cache = json.load(f)
+
+                        # Extract this TA's report
+                        if ta_key not in all_tas_cache:
+                            print(f"[CACHE MISS] {ta_filter} not found in {cache_file.name}")
+                            print(f"[CACHE] Available TAs: {list(all_tas_cache.keys())}")
+                            print(f"[CACHE] Run: python generate_deep_intelligence.py --button {playbook_key} --ta \"{ta_filter}\"")
+                            # Fall through to real-time generation
+                        else:
+                            cached_data = all_tas_cache[ta_key]
+
+                            load_time = time.time() - start_time
+                            print(f"[CACHE] Loaded {ta_filter} in {load_time:.3f}s")
+
+                            # Send metadata
+                            metadata = cached_data.get("metadata", {})
+                            yield "data: " + json.dumps({
+                                "cache_metadata": {
+                                    "generated_at": metadata.get("generated_at", "Unknown"),
+                                    "model": metadata.get("model", "gpt-5"),
+                                    "dataset_size": metadata.get("dataset_size", 0),
+                                    "cache_hit": True,
+                                    "report_type": "deep_intelligence"
+                                }
+                            }) + "\n\n"
+
+                            # Send tables if present
+                            tables = cached_data.get("tables", {})
+                            for table_name, table_data in tables.items():
+                                if table_data.get("rows"):
+                                    yield "data: " + json.dumps({
+                                        "title": table_name.replace("_", " ").title(),
+                                        "columns": table_data.get("columns", []),
+                                        "rows": sanitize_data_structure(table_data.get("rows", []))
+                                    }) + "\n\n"
+
+                            if tables:
+                                print(f"[CACHE] Sent {len(tables)} tables")
+
+                            # Stream analysis with realistic typing effect PRESERVING NEWLINES
+                            analysis_text = cached_data.get("analysis", "")
+
+                            if analysis_text:
+                                # Stream in chunks while preserving ALL line breaks
+                                chunk_size = 50  # characters per chunk
+                                for i in range(0, len(analysis_text), chunk_size):
+                                    chunk = analysis_text[i:i + chunk_size]
+                                    yield "data: " + json.dumps({"text": chunk}) + "\n\n"
+                                    time.sleep(0.03)  # 30ms between chunks for natural feel
+
+                            yield "data: [DONE]\n\n"
+
+                            total_time = time.time() - start_time
+                            print(f"[CACHE] Deep intelligence delivered in {total_time:.1f}s")
+                            print(f"[CACHE] API cost: $0.00 (pre-computed intelligence)")
+                            return
+
+                    except Exception as cache_error:
+                        print(f"[CACHE ERROR] Failed to load cache: {cache_error}")
+                        print(f"[CACHE] Falling back to real-time generation...")
+                        # Fall through to real-time generation
+                else:
+                    print(f"[CACHE MISS] Consolidated cache not found: {cache_file.name}")
+                    print(f"[CACHE] Run: python generate_deep_intelligence.py --button {playbook_key} --ta \"{ta_filter}\"")
+                    # Fall through to real-time generation
+
+            # ============================================================================
+            # REAL-TIME GENERATION (Original Logic - Fallback)
+            # ============================================================================
 
             # 1. For COMPETITOR button: Drug filter is for FOCUS, not dataset filtering
             # Apply filters to get dataset
@@ -4552,7 +4426,7 @@ load_competitive_landscapes()
 
 if df_global is None:
     print("\n[ERROR] Failed to load conference data. Application cannot start.")
-    print("[ERROR] Make sure ESMO_2025_FINAL_20250929.csv is in the application directory.")
+    print("[ERROR] Make sure ESMO_2025_FINAL_20251013.csv is in the application directory.")
     print("[ERROR] Current directory:", Path.cwd())
     print("[ERROR] Expected location:", CSV_FILE.absolute())
 else:
