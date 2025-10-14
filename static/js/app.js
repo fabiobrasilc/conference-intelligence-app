@@ -1520,9 +1520,9 @@ document.addEventListener('DOMContentLoaded', function() {
       filters: ['ta'], // TA only - AI will discuss all biomarkers/MOAs in this TA
       instruction: 'Select a therapeutic area:'
     },
-    strategy: {
+    strategic: {
       icon: '📋',
-      title: 'Strategic Recommendations',
+      title: 'Strategic Briefing',
       filters: ['ta'], // TA only - AI will provide TA-wide strategy with asset-specific context
       instruction: 'Select a therapeutic area to analyze:'
     }
