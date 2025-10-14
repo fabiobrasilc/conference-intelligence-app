@@ -153,6 +153,10 @@ document.addEventListener('DOMContentLoaded', function() {
   let sortState = { column: null, direction: 'asc' };
   let conversationHistory = []; // Store last 10 messages (5 user + 5 AI)
 
+  // Track active TA and button type for AI assistant context
+  let activeTA = null;
+  let activeButtonType = null;
+
   // ===== Init =====
   loadData();
 
@@ -1159,7 +1163,9 @@ document.addEventListener('DOMContentLoaded', function() {
           session_filters: [],
           date_filters: [],
           conversation_history: conversationHistory,
-          thinking_mode: thinkingMode  // Pass thinking mode to backend
+          thinking_mode: thinkingMode,  // Pass thinking mode to backend
+          active_ta: activeTA,  // Pass active TA for report context
+          button_type: activeButtonType  // Pass button type to load correct report
         })
       });
 
@@ -1280,7 +1286,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function appendToChat(html){
     chatContainer.insertAdjacentHTML('beforeend', html);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+    // Scroll the actual scrollable container (not chatContainer which is just the content wrapper)
+    const chatScrollable = document.querySelector('.ai-chat-scrollable');
+    if (chatScrollable) {
+      chatScrollable.scrollTop = chatScrollable.scrollHeight;
+    } else {
+      // Fallback to chatContainer if scrollable not found
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
   }
 
   // ===== Download Conversation =====
@@ -1574,6 +1587,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // Build filter arrays
     const drugFilters = selectedFilterType === 'drug' ? [selectedFilterValue] : [];
     const taFilters = selectedFilterType === 'ta' ? [selectedFilterValue] : [];
+
+    // Set active TA and button type for AI assistant context
+    if (taFilters.length > 0) {
+      activeTA = taFilters[0];
+      activeButtonType = pendingPlaybookType;
+      console.log(`[TA SCOPE] Set active TA: ${activeTA}, button: ${activeButtonType}`);
+
+      // Update chat scope dropdown to show selected TA
+      const chatScopeDropdown = document.getElementById('chatScopeDropdown');
+      if (chatScopeDropdown) {
+        chatScopeDropdown.value = `ta:${activeTA}`;
+        // Enable chat input
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput) {
+          chatInput.disabled = false;
+          chatInput.placeholder = 'Ask about the conference data...';
+        }
+        // Update activeChatScope
+        activeChatScope = { type: 'ta', value: activeTA };
+        console.log(`[TA SCOPE] Updated dropdown to: ta:${activeTA}`);
+      }
+    }
 
     // Close modal
     const modal = bootstrap.Modal.getInstance(quickIntelModal);

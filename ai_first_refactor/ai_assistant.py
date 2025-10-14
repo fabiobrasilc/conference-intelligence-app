@@ -30,14 +30,16 @@ def handle_chat_query(
     user_query: str,
     active_filters: Dict[str, List[str]],
     conversation_history: List[Dict[str, str]] = None,
-    thinking_mode: str = "auto"
+    thinking_mode: str = "auto",
+    active_ta: str = None,
+    latest_report: str = None
 ) -> Dict[str, Any]:
     """
     Main chat handler - Two-step AI-first approach.
 
     Step 1: AI interprets query and generates search keywords (with conversation context)
     Step 2: Filter DataFrame using keywords
-    Step 3: AI analyzes filtered results (with conversation context)
+    Step 3: AI analyzes filtered results (with conversation context + latest report if available)
 
     Args:
         df: Full conference dataset (already filtered by UI filters)
@@ -45,6 +47,8 @@ def handle_chat_query(
         active_filters: Dict of active UI filters
         conversation_history: List of {user: str, assistant: str} from previous exchanges
         thinking_mode: "auto" (default), "quick", "normal", or "deep"
+        active_ta: Active therapeutic area from button click (e.g., "Bladder Cancer")
+        latest_report: Latest generated insights report for the active TA (if available)
 
     Returns:
         {
@@ -98,6 +102,99 @@ def handle_chat_query(
             'response_stream': error_generator()
         }
 
+    # Handle conceptual/strategic query (answer with knowledge, optionally use studies as evidence)
+    if response_type == 'conceptual_query':
+        print(f"[STEP 1] AI detected conceptual/strategic query")
+        topic = interpretation.get('topic', '')
+        context_entities = interpretation.get('context_entities', [])
+        retrieve_studies = interpretation.get('retrieve_supporting_studies', False)
+        print(f"[CONCEPTUAL] Topic: {topic}")
+        print(f"[CONCEPTUAL] Context entities: {', '.join(context_entities)}")
+        print(f"[CONCEPTUAL] Retrieve supporting studies: {retrieve_studies}")
+
+        # If AI wants supporting studies, filter by context entities
+        if retrieve_studies and context_entities:
+            print(f"[STEP 2] Filtering for supporting studies about: {', '.join(context_entities)}")
+            entity_pattern = '|'.join([re.escape(e) for e in context_entities])
+            filtered_df = df[
+                df['Title'].str.contains(entity_pattern, case=False, na=False, regex=True)
+            ]
+            print(f"[STEP 2] Filtered: {len(df)} -> {len(filtered_df)} supporting studies")
+        else:
+            # No study filtering needed - AI will answer from knowledge
+            filtered_df = pd.DataFrame()
+            print(f"[STEP 2] No study filtering needed - conceptual answer from medical knowledge")
+
+        # Skip to Step 3 - AI answers conceptually
+        print(f"\n[STEP 3] AI answering conceptual query about '{topic}'...")
+        response_generator = analyze_filtered_results_with_ai(
+            user_query=user_query,
+            filtered_df=filtered_df,
+            original_count=len(df),
+            active_filters=active_filters,
+            extracted_keywords={'response_type': 'conceptual_query', 'topic': topic, 'context_entities': context_entities},
+            thinking_mode=thinking_mode,
+            conversation_history=conversation_history,
+            active_ta=active_ta,
+            latest_report=latest_report
+        )
+
+        return {
+            'type': 'ai_response',
+            'filtered_data': filtered_df,
+            'response_stream': response_generator
+        }
+
+    # Handle follow-up question (reuse previous data from conversation history)
+    if response_type == 'followup':
+        print(f"[STEP 1] AI detected follow-up question - extracting previous study identifiers from conversation history")
+        context_query = interpretation.get('context_query', '')
+        print(f"[FOLLOWUP] Context: {context_query}")
+
+        # Extract study identifiers mentioned in the most recent assistant response
+        if conversation_history:
+            last_response = conversation_history[-1].get('assistant', '')
+            # Find all study identifiers (pattern: digits followed by P, like "1234P")
+            import re
+            identifier_pattern = r'\b(\d+P)\b'
+            identifiers = list(set(re.findall(identifier_pattern, last_response)))
+
+            if identifiers:
+                print(f"[FOLLOWUP] Found {len(identifiers)} study identifiers in previous response: {', '.join(identifiers[:10])}")
+                # Filter DataFrame to only include these studies
+                filtered_df = df[df['Identifier'].isin(identifiers)].copy()
+                print(f"[FOLLOWUP] Filtered to {len(filtered_df)} studies from previous conversation")
+
+                # Create pseudo-keywords for the analyzer to understand context
+                keywords = {
+                    'response_type': 'followup',
+                    'context_query': context_query,
+                    'reused_identifiers': identifiers
+                }
+
+                # Skip to Step 3 - AI analyzes the same filtered results
+                print(f"\n[STEP 3] AI analyzing {len(filtered_df)} studies from follow-up...")
+                response_generator = analyze_filtered_results_with_ai(
+                    user_query=user_query,
+                    filtered_df=filtered_df,
+                    original_count=len(df),
+                    active_filters=active_filters,
+                    extracted_keywords=keywords,
+                    thinking_mode=thinking_mode,
+                    conversation_history=conversation_history,
+                    active_ta=active_ta,
+                    latest_report=latest_report
+                )
+
+                return {
+                    'type': 'ai_response',
+                    'filtered_data': filtered_df,
+                    'response_stream': response_generator
+                }
+            else:
+                print(f"[FOLLOWUP] No study identifiers found in previous response - falling back to full dataset")
+                # Fall through to normal search if no identifiers found
+
     # Data query - extract keywords from interpretation
     keywords = interpretation
     print(f"[STEP 1] AI-generated keywords:")
@@ -124,7 +221,9 @@ def handle_chat_query(
         active_filters=active_filters,  # Pass active filters so analyzer knows what's filtered
         extracted_keywords=keywords,  # Pass keywords for transparency
         thinking_mode=thinking_mode,  # Pass thinking mode to analyzer
-        conversation_history=conversation_history  # Pass history for context
+        conversation_history=conversation_history,  # Pass history for context
+        active_ta=active_ta,  # Pass active TA scope
+        latest_report=latest_report  # Pass latest generated report for context
     )
 
     return {
@@ -173,14 +272,15 @@ def extract_search_keywords_from_ai(
         filter_parts.append(f"{', '.join(active_filters['drug'])}")
     filter_context = " about " + " and ".join(filter_parts) if filter_parts else ""
 
-    # Build conversation context
+    # Build conversation context - FULL history for follow-up detection
     history_context = ""
     if conversation_history:
-        history_context = "\n\n**CONVERSATION HISTORY (for context):**\n"
+        history_context = "\n\n**CONVERSATION HISTORY (FULL - last 5 exchanges):**\n"
         for i, exchange in enumerate(conversation_history[-5:], 1):  # Last 5 exchanges
-            history_context += f"\nExchange {i}:\n"
+            history_context += f"\n--- Exchange {i} ---\n"
             history_context += f"User: {exchange.get('user', '')}\n"
-            history_context += f"Assistant: {exchange.get('assistant', '')[:200]}...\n"  # Truncate long responses
+            # Include FULL assistant response (no truncation) for follow-up detection
+            history_context += f"Assistant: {exchange.get('assistant', '')}\n"
 
     system_prompt = f"""You are a pharmaceutical query interpreter for a conference intelligence system.
 
@@ -195,7 +295,24 @@ Return: {{"response_type": "greeting", "message": "your friendly conversational 
 - Mention the {dataset_size} studies{filter_context} they're viewing
 - Offer to help: "What would you like to know?"
 
-**Option 2 - Data Query** - Apply DECISION PRIORITY:
+**Option 2 - Follow-Up Question** (referring to previous studies/data):
+CRITICAL: If the user's query refers to previous results using phrases like:
+- "these studies", "those presentations", "the above data", "from that list"
+- "tell me more about them", "what do they mean", "how do they impact..."
+- Any question that clearly builds on the previous exchange
+Then return: {{"response_type": "followup", "context_query": "brief summary of what user is asking about the previous data"}}
+IMPORTANT: The system will reuse the previously filtered data - DO NOT extract new search keywords.
+
+**Option 3 - Conceptual/Strategic Question** (answering with medical/strategic knowledge):
+CRITICAL: If the user asks a question that requires EXPLANATION, COMPARISON, or STRATEGIC ANALYSIS rather than study retrieval:
+- Mechanism questions: "What is the difference between X and Y?", "How does X work?", "What's the MOA of X?"
+- Market/strategy questions: "How could X gain market share?", "What's the competitive landscape for X?"
+- Background questions: "Tell me about X", "What is X used for?"
+Then return: {{"response_type": "conceptual_query", "topic": "brief description of what they're asking about", "context_entities": ["entity1", "entity2"], "retrieve_supporting_studies": true/false}}
+- Set "retrieve_supporting_studies" to TRUE if studies would add value (e.g., "How could retifanlimab compete?" → get retifanlimab studies)
+- Set to FALSE if it's pure knowledge question (e.g., "What's the difference between PD-1 and PD-L1?")
+
+**Option 4 - New Data Query** - Apply DECISION PRIORITY:
 
 **DECISION PRIORITY (CRITICAL):**
 1) If user mentions a MOLECULAR ENTITY (mutation/alteration/pathway/biomarker), that becomes the PRIMARY filter
@@ -236,7 +353,16 @@ USER QUERY: "{user_query}"
 Greeting:
 "Hello!" → {{"response_type": "greeting", "message": "Hi! I can help you explore the {dataset_size} studies{filter_context}. What would you like to know?"}}
 
-Drug abbreviation expansion:
+Follow-up (referring to previous studies):
+"What do these studies mean for avelumab?" → {{"response_type": "followup", "context_query": "Impact of previously discussed studies on avelumab positioning"}}
+"Tell me more about them" → {{"response_type": "followup", "context_query": "Additional details about previously mentioned studies"}}
+
+Conceptual/Knowledge Questions (answer with medical knowledge, optionally use studies as evidence):
+"What is the difference between PD-1 and PD-L1 inhibitors?" → {{"response_type": "conceptual_query", "topic": "Mechanism difference between PD-1 vs PD-L1 checkpoint inhibitors", "context_entities": [], "retrieve_supporting_studies": false}}
+"How could retifanlimab gain market share in MCC?" → {{"response_type": "conceptual_query", "topic": "Market positioning strategy for retifanlimab in Merkel cell carcinoma", "context_entities": ["retifanlimab", "avelumab"], "retrieve_supporting_studies": true}}
+"Tell me about tepotinib's mechanism of action" → {{"response_type": "conceptual_query", "topic": "Tepotinib MET inhibitor mechanism", "context_entities": ["tepotinib"], "retrieve_supporting_studies": false}}
+
+Drug abbreviation expansion (NEW search):
 "EV + P studies" → {{"response_type": "search", "drugs": ["enfortumab vedotin", "pembrolizumab"], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
 Molecular entity (PRIMARY filter - don't add drugs):
@@ -414,13 +540,33 @@ def filter_dataframe_with_keywords(
             ]
         print(f"  After TA filter: {len(filtered)} studies")
 
-    # 6. Filter by speakers (if specified)
+    # 6. Filter by speakers (if specified) - Use fuzzy/partial matching
     if keywords.get('speakers'):
-        speaker_pattern = '|'.join([re.escape(s) for s in keywords['speakers']])
+        # For each speaker name, extract last name and first name parts
+        # Match on: last name + at least first letter of first name
+        # This handles "Cindy J. Jiang" → "Cindy Y. Jiang" mismatches
+        speaker_patterns = []
+        for speaker in keywords['speakers']:
+            # Split name into parts
+            parts = speaker.strip().split()
+            if len(parts) >= 2:
+                # Last part is last name, first part is first name
+                first_name = parts[0]
+                last_name = parts[-1]
+                # Match: last name + first letter of first name (case-insensitive)
+                # Example: "Jiang" AND "C" matches "Cindy Y. Jiang" or "Cindy J. Jiang"
+                pattern = f"(?=.*{re.escape(last_name)})(?=.*{re.escape(first_name[0])})"
+                speaker_patterns.append(pattern)
+            else:
+                # Single word - just match that word
+                speaker_patterns.append(re.escape(speaker))
+
+        # Combine all speaker patterns with OR
+        combined_pattern = '|'.join(speaker_patterns)
         filtered = filtered[
-            filtered['Speakers'].str.contains(speaker_pattern, case=False, na=False, regex=True)
+            filtered['Speakers'].str.contains(combined_pattern, case=False, na=False, regex=True)
         ]
-        print(f"  After speaker filter: {len(filtered)} studies")
+        print(f"  After speaker filter (fuzzy): {len(filtered)} studies")
 
     # 7. Filter by additional search terms (if specified)
     # NOTE: Only apply if we don't already have drug-based filtering
@@ -451,7 +597,9 @@ def analyze_filtered_results_with_ai(
     active_filters: Dict[str, List[str]],
     extracted_keywords: Dict[str, List[str]] = None,
     thinking_mode: str = "auto",
-    conversation_history: List[Dict[str, str]] = None
+    conversation_history: List[Dict[str, str]] = None,
+    active_ta: str = None,
+    latest_report: str = None
 ) -> Generator[str, None, None]:
     """
     STEP 3: AI analyzes filtered results and generates response.
@@ -466,6 +614,8 @@ def analyze_filtered_results_with_ai(
         extracted_keywords: Keywords extracted by AI in Step 1 (for transparency)
         thinking_mode: "auto", "quick", "normal", or "deep"
         conversation_history: Previous exchanges for context
+        active_ta: Active therapeutic area scope (e.g., "Bladder Cancer")
+        latest_report: Latest insights report for the active TA (if available)
 
     Yields:
         Response tokens for streaming
@@ -473,46 +623,30 @@ def analyze_filtered_results_with_ai(
 
     client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
-    # AUTO-SCALE thinking mode based on query and result count
-    if thinking_mode == "auto":
-        result_count = len(filtered_df)
-        query_lower = user_query.lower()
-
-        # Auto-detect thinking level
-        deep_keywords = ['strategy', 'strategic', 'competitive', 'landscape', 'compare', 'comparison', 'analyze', 'analysis', 'insight']
-        quick_keywords = ['when', 'what time', 'who', 'which speaker', 'how many', 'list']
-
-        if any(kw in query_lower for kw in deep_keywords) or result_count > 30:
-            reasoning_effort = "high"
-            verbosity = "high"
-            print(f"[AUTO-SCALE] Deep thinking mode (query complexity or {result_count} results)")
-        elif any(kw in query_lower for kw in quick_keywords) and result_count <= 10:
-            reasoning_effort = "low"
-            verbosity = "low"
-            print(f"[AUTO-SCALE] Quick mode (simple query, {result_count} results)")
-        else:
-            reasoning_effort = "medium"
-            verbosity = "medium"
-            print(f"[AUTO-SCALE] Normal mode (balanced, {result_count} results)")
-
-    # Manual override modes
-    elif thinking_mode == "quick":
-        reasoning_effort = "low"
-        verbosity = "low"
-        print(f"[MANUAL] Quick mode selected")
-    elif thinking_mode == "deep":
-        reasoning_effort = "high"
-        verbosity = "high"
-        print(f"[MANUAL] Deep thinking mode selected")
-    else:  # "normal" or default
+    # Simplified thinking mode: Standard (default) or Deep Thinking
+    if thinking_mode == "deep":
         reasoning_effort = "medium"
         verbosity = "medium"
-        print(f"[MANUAL] Normal mode selected")
+        print(f"[THINKING MODE] Deep Thinking - medium reasoning, medium verbosity")
+    else:  # "standard" or default
+        reasoning_effort = "low"
+        verbosity = "low"
+        print(f"[THINKING MODE] Standard - low reasoning, low verbosity")
 
-    # Format filtered data
+    # Format filtered data - ALWAYS include abstracts if available
     essential_cols = ['Identifier', 'Title', 'Speakers', 'Affiliation', 'Date', 'Time', 'Session', 'Theme']
-    available_cols = [col for col in essential_cols if col in filtered_df.columns]
 
+    # Check if Abstract column exists in the DataFrame
+    if 'Abstract' in filtered_df.columns:
+        essential_cols.append('Abstract')
+        # Check if abstracts are actually populated (not all NaN)
+        non_null_abstracts = filtered_df['Abstract'].notna().sum()
+        print(f"[ABSTRACT MODE] Including Abstract column - {non_null_abstracts}/{len(filtered_df)} studies have abstracts")
+    else:
+        print(f"[NO ABSTRACTS] Abstract column not found in DataFrame")
+
+    available_cols = [col for col in essential_cols if col in filtered_df.columns]
+    print(f"[DATA COLUMNS] Sending to AI: {', '.join(available_cols)}")
     dataset_json = filtered_df[available_cols].to_json(orient='records', indent=2)
 
     # Build interpretation summary for transparency
@@ -549,6 +683,14 @@ def analyze_filtered_results_with_ai(
             history_context += f"User: {exchange.get('user', '')}\n"
             history_context += f"Assistant: {exchange.get('assistant', '')[:150]}...\n"
 
+    # Build report context (if available) - pass entire report
+    report_context = ""
+    if active_ta and latest_report:
+        report_context = f"\n\n**LATEST INSIGHTS REPORT FOR {active_ta.upper()}:**\n(This is the most recent comprehensive analysis generated for this therapeutic area. Use it to provide deeper context and answer follow-up questions.)\n\n{latest_report}\n"
+
+    # Detect query intent from extracted_keywords
+    query_intent = extracted_keywords.get('response_type', 'search') if extracted_keywords else 'search'
+
     # Build system prompt
     system_prompt = f"""You are an AI medical affairs intelligence assistant for EMD Serono (Merck KGaA).
 
@@ -562,33 +704,90 @@ def analyze_filtered_results_with_ai(
 2. Tepmetko (tepotinib) - MET inhibitor for NSCLC with MET alterations
 3. Erbitux (cetuximab) - EGFR inhibitor for CRC/H&N
 
-**Core Principles:**
-- You are receiving FILTERED data - these specific studies matched the user's intent
-- START by confirming what you understood before diving into analysis
-- Always cite study Identifiers when referencing specific presentations
-- End with clarifying questions or follow-up suggestions to continue the conversation
-- Be helpful and conversational - the user can't access full abstracts or search the web through you
+**QUERY INTENT DETECTION:**
+Your role changes based on what the user is asking:
 
-**Natural Intelligence:**
-- Interpret the user's query intent naturally - don't be overly rigid
-- If they're asking a simple factual question (when/who/how many), be concise
-- If they want strategic insights or analysis, provide depth
-- Adapt your response style to what they're really asking for
-- If results seem surprisingly small/large, acknowledge it and offer to refine
-{history_context}"""
+**Type 1: RETRIEVAL Queries** ("What studies...", "Show me...", "Find presentations about...")
+→ Goal: Describe the filtered studies in detail
+→ Response: Start with what studies you found, then analyze them
+→ Use study Identifiers, cite abstracts, describe presenters/institutions
 
-    user_message = f"""**Original Query:** {user_query}
+**Type 2: CONCEPTUAL Queries** ("What is the difference between X and Y?", "How does X work?", "What's the MOA of X?")
+→ Goal: Answer with medical/pharmacological knowledge FIRST
+→ Response: Start directly with the answer (mechanisms, definitions, comparisons)
+→ Use studies as SUPPORTING EVIDENCE only if provided (e.g., "Based on study 1234P, we see...")
+→ If no studies provided, answer purely from medical knowledge
+→ DO NOT say "I found N studies" or "The filtered search returned..." - just answer the question
+
+**Type 3: STRATEGIC Queries** ("How could X gain market share?", "What's the competitive landscape?", "Market dynamics...")
+→ Goal: Provide strategic analysis using competitive intelligence
+→ Response: Strategic insights first, use studies as evidence of trends
+→ Frame around EMD assets (avelumab, tepotinib, cetuximab) when relevant
+
+**IMPORTANT - Abstract Usage:**
+- If the filtered data includes "Abstract" fields, use them to provide evidence-based answers
+- When user asks about efficacy, safety, results, methods, or study details, extract specific data points from abstracts:
+  * Response rates (ORR, DCR, etc.) with confidence intervals
+  * Survival data (PFS, OS) with hazard ratios and p-values
+  * Safety data (grade 3-4 AEs, discontinuation rates, specific toxicities)
+  * Study design (phase, N, randomization, endpoints)
+  * Key takeaways and conclusions
+- For "summary of study X" queries, provide comprehensive abstract summary
+- For specific questions (e.g., "what were the efficacy results"), focus only on relevant sections
+- Always cite the study Identifier when quoting abstract data
+
+**Response Style - NATURAL AND CONVERSATIONAL:**
+- NO robotic confirmations like "Confirmed: you want..." or "What I understood..."
+- Start DIRECTLY with the answer to their question
+- For simple queries (who/when/what): answer directly and concisely
+- For evidence queries with abstracts: extract and cite specific data points
+- For strategic queries: provide depth and competitive context using EMD assets as reference
+- End with ONE specific follow-up suggestion if relevant, not a menu of options
+- Infer strategic implications from titles and KOL affiliations even without full abstracts
+{history_context}{report_context}"""
+
+    # Build data availability notice
+    has_abstracts = 'Abstract' in available_cols
+    data_notice = ""
+    if has_abstracts:
+        data_notice = "\n\n🔬 **IMPORTANT: FULL ABSTRACTS ARE INCLUDED BELOW**\nThe JSON data includes complete 'Abstract' fields for all studies. Extract specific data points (response rates, survival, safety, study design, conclusions) directly from these abstracts. DO NOT say you need to retrieve abstracts - you already have them."
+    else:
+        data_notice = "\n\n📋 **Data Available:** Study metadata (title, speakers, affiliations, sessions). Full abstracts not included."
+
+    # Build user message - conditional based on query type
+    if query_intent == 'conceptual_query':
+        # Conceptual query - minimal framing, let AI answer naturally
+        if len(filtered_df) > 0:
+            user_message = f"""**User Question:** {user_query}
+
+**Supporting Context:** {len(filtered_df)} related studies are available as supporting evidence (if relevant to your answer).
+{data_notice}
+
+**Studies Available (JSON format with {len(available_cols)} fields: {', '.join(available_cols)}):**
+{dataset_json}
+
+Answer the user's question directly using your medical knowledge. Use the studies above as supporting evidence only if they add value."""
+        else:
+            # No studies - pure knowledge answer
+            user_message = f"""**User Question:** {user_query}
+
+Answer the user's question directly using your medical and pharmaceutical knowledge. No conference studies were filtered for this conceptual question."""
+
+    else:
+        # Retrieval/search query - show filtering results
+        user_message = f"""**Original Query:** {user_query}
 
 **What I Understood:** Studies {interpretation_summary}
 
 **Filtering Results:**
 - Started with: {original_count} studies total
 - Filtered to: {len(filtered_df)} studies
+{data_notice}
 
-**Filtered Studies:**
+**Filtered Studies (JSON format with {len(available_cols)} fields: {', '.join(available_cols)}):**
 {dataset_json}
 
-Please analyze these {len(filtered_df)} studies. Start by confirming what you understood, then provide analysis citing specific Identifiers."""
+Analyze these {len(filtered_df)} studies and answer the user's question. Cite specific study Identifiers when referencing data."""
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -599,9 +798,8 @@ Please analyze these {len(filtered_df)} studies. Start by confirming what you un
         stream = client.responses.create(
             model="gpt-5-mini",
             input=messages,
-            reasoning={"effort": reasoning_effort},  # Dynamic based on thinking_mode
-            text={"verbosity": verbosity},  # Dynamic based on thinking_mode
-            max_output_tokens=4000,
+            reasoning={"effort": reasoning_effort},  # "low" (standard) or "medium" (deep thinking)
+            text={"verbosity": verbosity},  # "low" (standard) or "medium" (deep thinking)
             stream=True
         )
 

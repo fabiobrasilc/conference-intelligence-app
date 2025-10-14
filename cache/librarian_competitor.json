@@ -1397,235 +1397,74 @@
   ],
   "lung_cancer": [
     {
-      "row_id": "ROW_151",
-      "regimen": "emerging therapies for lung cancer",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_151"
-    },
-    {
-      "row_id": "ROW_154",
-      "regimen": "DLL3 targeting in lung cancers of neuroendocrine origin",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_154"
-    },
-    {
-      "row_id": "2986eP",
-      "regimen": "identifying a population at risk in lung cancer",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2986eP"
-    },
-    {
-      "row_id": "3172eP",
-      "regimen": "predictive value of LIPI score in immunotherapy response",
-      "drugs": [],
-      "biomarkers": [
-        "LIPI"
-      ],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "3172eP"
-    },
-    {
-      "row_id": "1882P",
-      "regimen": "population-level real-world evidence in lung cancer",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1882P"
-    },
-    {
       "row_id": "1",
-      "regimen": "Combined Blockade of KRAS and PRMT5",
+      "regimen": "osimertinib then chemotherapy",
       "drugs": [
-        "KRAS",
-        "PRMT5"
+        "osimertinib"
       ],
-      "biomarkers": [
-        "KRAS"
-      ],
+      "biomarkers": [],
       "modality": [
         "TKI"
       ],
       "population": "Other",
-      "line": "1L",
+      "line": "3L",
       "phase": "Not specified",
-      "trial_id": "2248P"
+      "trial_id": "OCELOT-cohort A"
     },
     {
       "row_id": "2",
-      "regimen": "First-Line anti-EGFR Therapy",
+      "regimen": "trifluridine/tipiracil without bevacizumab",
       "drugs": [
-        "anti-EGFR"
+        "trifluridine",
+        "tipiracil"
       ],
-      "biomarkers": [
-        "DNA Methylation"
-      ],
+      "biomarkers": [],
       "modality": [
-        "IO"
+        "Chemotherapy"
       ],
       "population": "Other",
       "line": "1L",
       "phase": "Not specified",
-      "trial_id": "817P"
+      "trial_id": "multicenter"
     },
     {
       "row_id": "3",
-      "regimen": "toripalimab, cetuximab plus FOLFIRI",
-      "drugs": [
-        "toripalimab",
-        "cetuximab",
-        "FOLFIRI"
-      ],
+      "regimen": "emerging therapies in lung cancers of neuroendocrine origin",
+      "drugs": [],
       "biomarkers": [
-        "RAS",
-        "BRAF"
+        "DLL3"
       ],
-      "modality": [
-        "IO",
-        "Chemotherapy"
-      ],
+      "modality": [],
       "population": "Other",
-      "line": "1L",
-      "phase": "Phase 2",
-      "trial_id": "866eP"
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "N/A"
     },
     {
       "row_id": "4",
-      "regimen": "HRS-4642 Combined with Gemcitabine and Nab-paclitaxel",
-      "drugs": [
-        "HRS-4642",
-        "Gemcitabine",
-        "Nab-paclitaxel"
-      ],
-      "biomarkers": [
-        "KRAS-G12D"
-      ],
-      "modality": [
-        "ADC",
-        "Chemotherapy"
-      ],
+      "regimen": "cost-benefit analysis of lung cancer screening program",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
       "population": "Other",
-      "line": "1L",
-      "phase": "Phase 1b/2",
-      "trial_id": "2215O"
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "RISP"
     },
     {
       "row_id": "5",
-      "regimen": "DS-3939 in advanced/metastatic solid tumors",
-      "drugs": [
-        "DS-3939"
-      ],
-      "biomarkers": [
-        "TA-MUC1"
-      ],
-      "modality": [
-        "ADC"
-      ],
+      "regimen": "exercise training for improving quality of life in lung cancer patients",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "917O"
+      "trial_id": "N/A"
     },
     {
       "row_id": "6",
-      "regimen": "Conversion Therapy With Encorafenib + Cetuximab",
-      "drugs": [
-        "Encorafenib",
-        "Cetuximab"
-      ],
-      "biomarkers": [
-        "BRAF V600E"
-      ],
-      "modality": [
-        "TKI",
-        "IO"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "880eP"
-    },
-    {
-      "row_id": "7",
-      "regimen": "Predictive biomarker to anti-EGFR therapy",
-      "drugs": [
-        "anti-EGFR"
-      ],
-      "biomarkers": [
-        "Lactate dehydrogenase",
-        "RAS",
-        "BRAF"
-      ],
-      "modality": [
-        "IO"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "814P"
-    },
-    {
-      "row_id": "8",
-      "regimen": "Optimised adaptive strategies with systemic therapy",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_2457"
-    },
-    {
-      "row_id": "9",
-      "regimen": "Frontline Anti-VEGF and Anti-EGFR Exposure",
-      "drugs": [
-        "Trifluridine",
-        "Tipiracil",
-        "Regorafenib"
-      ],
-      "biomarkers": [],
-      "modality": [
-        "IO"
-      ],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": "792P"
-    },
-    {
-      "row_id": "10",
-      "regimen": "Welcome and introductions",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_2470"
-    },
-    {
-      "row_id": "11",
-      "regimen": "systemic mitochondrial alterations in lung cancer",
+      "regimen": "systemic mitochondrial alterations",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
@@ -1635,8 +1474,34 @@
       "trial_id": "224eP"
     },
     {
-      "row_id": "12",
-      "regimen": "DNA mutation and methylation evolution in lung adenocarcinoma",
+      "row_id": "7",
+      "regimen": "KRAS inhibition",
+      "drugs": [],
+      "biomarkers": [
+        "KRAS"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "78eP"
+    },
+    {
+      "row_id": "8",
+      "regimen": "Bronchial artery chemoembolization combined with immunotherapy",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [
+        "IO"
+      ],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2077eP"
+    },
+    {
+      "row_id": "9",
+      "regimen": "DNA mutation and methylation analysis",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
@@ -1646,270 +1511,35 @@
       "trial_id": "3042eP"
     },
     {
-      "row_id": "13",
-      "regimen": "targeted therapy in BRAF-mutant glioblastomas",
+      "row_id": "10",
+      "regimen": "cisplatin chemoresistance",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "687P"
+      "trial_id": "1413P"
     },
     {
-      "row_id": "14",
-      "regimen": "efficacy of second-line BRAF/MEK inhibitors",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "2L",
-      "phase": "Not specified",
-      "trial_id": "1646P"
-    },
-    {
-      "row_id": "15",
-      "regimen": "clinical efficacy of PD-1/CTLA-4 bispecific antibody",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "IO"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "18P"
-    },
-    {
-      "row_id": "16",
-      "regimen": "external validation of Rachel score",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1721P"
-    },
-    {
-      "row_id": "17",
-      "regimen": "interlesional heterogeneity of EGFR mutations",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "249eP"
-    },
-    {
-      "row_id": "18",
-      "regimen": "real-world treatment patterns in NTRK+ tumors",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "171P"
-    },
-    {
-      "row_id": "19",
-      "regimen": "efficacy and safety of anlotinib plus sintilimab",
+      "row_id": "11",
+      "regimen": "combination of encorafenib, binimetinib and palbociclib",
       "drugs": [
-        "Anlotinib",
-        "Sintilimab"
+        "encorafenib",
+        "binimetinib",
+        "palbociclib"
       ],
       "biomarkers": [],
-      "modality": [
-        "TKI",
-        "IO"
-      ],
-      "population": "Other",
-      "line": "2L",
-      "phase": "Phase 2",
-      "trial_id": "2991P"
-    },
-    {
-      "row_id": "2073eP",
-      "regimen": "Adherence to Tumor Board Recommendations",
-      "drugs": [],
-      "biomarkers": [],
       "modality": [],
       "population": "Other",
       "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2073eP"
+      "phase": "Phase 1",
+      "trial_id": "1645P"
     },
     {
-      "row_id": "1927P",
-      "regimen": "Tracking Myeloid Cells Variation",
+      "row_id": "12",
+      "regimen": "c-Met Protein targeting",
       "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1927P"
-    },
-    {
-      "row_id": "2055eP",
-      "regimen": "Occupational Exposure to Carcinogens",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2055eP"
-    },
-    {
-      "row_id": "ROW_655",
-      "regimen": "Diagnosis and treatment of G3 lung NET",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_655"
-    },
-    {
-      "row_id": "1897P",
-      "regimen": "PD-1/IL-2 Bispecific Antibody",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "IO"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1897P"
-    },
-    {
-      "row_id": "2978P",
-      "regimen": "AI-defined Lung Nodule Malignancy Score",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Phase 2",
-      "trial_id": "2978P"
-    },
-    {
-      "row_id": "ROW_719",
-      "regimen": "Lung",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_719"
-    },
-    {
-      "row_id": "ROW_730",
-      "regimen": "Invited Discussant",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_730"
-    },
-    {
-      "row_id": "ROW_733",
-      "regimen": "Q&A & discussion",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_733"
-    },
-    {
-      "row_id": "ROW_734",
-      "regimen": "Conclusion remarks",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_734"
-    },
-    {
-      "row_id": "2975P",
-      "regimen": "Barriers to lung cancer screening",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2975P"
-    },
-    {
-      "row_id": "1873P",
-      "regimen": "Ipilimumab Plus Nivolumab With or Without Chemotherapy",
-      "drugs": [
-        "Ipilimumab",
-        "Nivolumab",
-        "nivolumab"
-      ],
-      "biomarkers": [],
-      "modality": [
-        "IO",
-        "Chemotherapy"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1873P"
-    },
-    {
-      "row_id": "1925P",
-      "regimen": "Single cell RNA-sequencing reveals IGFBP3+ CAFs",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1925P"
-    },
-    {
-      "row_id": "1968P",
-      "regimen": "MedSR (Median Short Fragment Ratio)",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1968P"
-    },
-    {
-      "row_id": "ROW_796",
-      "regimen": "Invited Discussant",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_796"
-    },
-    {
-      "row_id": "1951P",
-      "regimen": "Companion diagnostic assay for c-Met protein overexpression",
-      "drugs": [
-        "telisotuzumab vedotin"
-      ],
       "biomarkers": [
         "c-Met"
       ],
@@ -1917,58 +1547,61 @@
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "1951P"
+      "trial_id": "ROW_1687"
     },
     {
-      "row_id": "ROW_803",
-      "regimen": "Harnessing the immune system for cancer prevention",
+      "row_id": "13",
+      "regimen": "novel treatment options",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "ROW_803"
+      "trial_id": "ROW_1691"
     },
     {
-      "row_id": "2077eP",
-      "regimen": "Evaluation of efficacy differences among three treatment modalities",
+      "row_id": "14",
+      "regimen": "immunotherapy",
       "drugs": [],
       "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2077eP"
-    },
-    {
-      "row_id": "2072eP",
-      "regimen": "Predicting Brain Metastasis at the Time of Diagnosis",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2072eP"
-    },
-    {
-      "row_id": "ROW_866",
-      "regimen": "Relentless research for novel treatment options",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_866"
-    },
-    {
-      "row_id": "1906P",
-      "regimen": "first-line immune checkpoint inhibitors",
-      "drugs": [
-        "immune checkpoint inhibitors"
+      "modality": [
+        "IO"
       ],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "ROW_1696"
+    },
+    {
+      "row_id": "15",
+      "regimen": "combined blockade of KRAS and PRMT5",
+      "drugs": [],
+      "biomarkers": [
+        "KRAS",
+        "MTAP"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2248P"
+    },
+    {
+      "row_id": "16",
+      "regimen": "case presentation",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "ROW_1740"
+    },
+    {
+      "row_id": "17",
+      "regimen": "first-line immune checkpoint inhibitors",
+      "drugs": [],
       "biomarkers": [],
       "modality": [
         "IO"
@@ -1979,663 +1612,52 @@
       "trial_id": "1906P"
     },
     {
-      "row_id": "1900P",
-      "regimen": "high-intensity interval training",
+      "row_id": "18",
+      "regimen": "introductions",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "1900P"
+      "trial_id": "ROW_1778"
     },
     {
-      "row_id": "2000P",
-      "regimen": "selective RET inhibitor",
-      "drugs": [
-        "selective RET inhibitor"
-      ],
-      "biomarkers": [],
-      "modality": [
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2000P"
-    },
-    {
-      "row_id": "2050eP",
-      "regimen": "analysis of prognostic factors",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2050eP"
-    },
-    {
-      "row_id": "2069eP",
-      "regimen": "molecular targeted agents",
-      "drugs": [
-        "molecular targeted agents"
-      ],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2069eP"
-    },
-    {
-      "row_id": "2776P",
-      "regimen": "DLL3-targeting antibody therapies",
-      "drugs": [
-        "DLL3-targeting antibody therapies"
-      ],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2776P"
-    },
-    {
-      "row_id": "2987O",
-      "regimen": "Dabrafenib Plus Trametinib",
-      "drugs": [
-        "Dabrafenib",
-        "Trametinib"
-      ],
-      "biomarkers": [],
-      "modality": [
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2987O"
-    },
-    {
-      "row_id": "3194eP",
-      "regimen": "short films as tool in lung cancer communication",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "3194eP"
-    },
-    {
-      "row_id": "2070eP",
-      "regimen": "Pemetrexed-Based Chemo-Immunotherapy",
-      "drugs": [
-        "Pemetrexed"
-      ],
-      "biomarkers": [
-        "TTF-1",
-        "PD-L1"
-      ],
-      "modality": [
-        "IO",
-        "Chemotherapy"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2070eP"
-    },
-    {
-      "row_id": "1913P",
-      "regimen": "targeted therapy",
-      "drugs": [
-        "ctDNA Testing"
-      ],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1913P"
-    },
-    {
-      "row_id": "1956P",
-      "regimen": "osimertinib then chemotherapy",
-      "drugs": [
-        "osimertinib",
-        "chemotherapy"
-      ],
-      "biomarkers": [
-        "EGFR"
-      ],
-      "modality": [
-        "TKI",
-        "Chemotherapy"
-      ],
-      "population": "Other",
-      "line": "3L",
-      "phase": "Not specified",
-      "trial_id": "1956P"
-    },
-    {
-      "row_id": "1832P",
-      "regimen": "remodel lung adenocarcinoma immune microenvironment",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1832P"
-    },
-    {
-      "row_id": "2016P",
-      "regimen": "neuropsychological assessment and brain imaging",
-      "drugs": [
-        "atezolizumab"
-      ],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2016P"
-    },
-    {
-      "row_id": "3175eP",
-      "regimen": "not specified",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ICARUS-LUNG01"
-    },
-    {
-      "row_id": "ROW_1216",
-      "regimen": "not specified",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "2065eP",
-      "regimen": "not specified",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "1980P",
-      "regimen": "not specified",
-      "drugs": [],
-      "biomarkers": [
-        "ALK",
-        "TMB"
-      ],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Phase 2",
-      "trial_id": "ABP"
-    },
-    {
-      "row_id": "1814eP",
-      "regimen": "not specified",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "1866P",
-      "regimen": "camrelizumab plus famitinib",
-      "drugs": [
-        "camrelizumab",
-        "famitinib"
-      ],
-      "biomarkers": [],
-      "modality": [
-        "IO",
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Phase 2",
-      "trial_id": "CAPSTONE"
-    },
-    {
-      "row_id": "2066eP",
-      "regimen": "not specified",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "1977P",
-      "regimen": "not specified",
-      "drugs": [
-        "SGR-5573"
-      ],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "1898P",
-      "regimen": "not specified",
-      "drugs": [
-        "pembrolizumab"
-      ],
-      "biomarkers": [
-        "PD-1"
-      ],
-      "modality": [
-        "IO"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "2053eP",
-      "regimen": "not specified",
-      "drugs": [],
-      "biomarkers": [
-        "EGFR",
-        "ALK"
-      ],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "WAYFIND-R"
-    },
-    {
-      "row_id": "ROW_1320",
-      "regimen": "not specified",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "ROW_1322",
-      "regimen": "not specified",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "2009P",
-      "regimen": "chemotherapy and tyrosine kinase inhibition",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "Chemotherapy",
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "ROW_1369",
-      "regimen": "not specified",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "3193eP",
-      "regimen": "not specified",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "1961P",
-      "regimen": "osimertinib monotherapy",
-      "drugs": [
-        "osimertinib"
-      ],
-      "biomarkers": [
-        "TP53"
-      ],
-      "modality": [
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "2780P",
-      "regimen": "not specified",
-      "drugs": [
-        "BL0020"
-      ],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Phase 1",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "ROW_1421",
-      "regimen": "not specified",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "1830P",
-      "regimen": "not specified",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "1793P",
-      "regimen": "not specified",
-      "drugs": [],
-      "biomarkers": [
-        "EGFR"
-      ],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "not specified"
-    },
-    {
-      "row_id": "2040eP",
-      "regimen": "treatment-naive, driver-negative metastatic lung cancer",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2040eP"
-    },
-    {
-      "row_id": "1805eP",
-      "regimen": "microwave ablation versus lobectomy",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1805eP"
-    },
-    {
-      "row_id": "1812eP",
-      "regimen": "IO treatment",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "IO"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1812eP"
-    },
-    {
-      "row_id": "2047eP",
-      "regimen": "large language models in multidisciplinary planning",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2047eP"
-    },
-    {
-      "row_id": "2049eP",
-      "regimen": "osimertinib rechallenge",
-      "drugs": [
-        "osimertinib"
-      ],
-      "biomarkers": [],
-      "modality": [
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2049eP"
-    },
-    {
-      "row_id": "CN158",
-      "regimen": "association between genetic risk and lung cancer risk",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "CN158"
-    },
-    {
-      "row_id": "1800P",
-      "regimen": "lower CT nodule thresholds in lung cancer screening",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1800P"
-    },
-    {
-      "row_id": "1909P",
-      "regimen": "radiological and molecular patterns of metastatic growth",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1909P"
-    },
-    {
-      "row_id": "1892P",
-      "regimen": "treatment and prognosis of lung cancer in young patients",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1892P"
-    },
-    {
-      "row_id": "2008P",
-      "regimen": "frontline TKIs",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2008P"
-    },
-    {
-      "row_id": "1799P",
-      "regimen": "uniportal video-assisted thoracoscopic surgery",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1799P"
-    },
-    {
-      "row_id": "1903P",
-      "regimen": "antibiotic exposure before or during immune checkpoint inhibitor therapy",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "IO"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1903P"
-    },
-    {
-      "row_id": "ROW_1686",
-      "regimen": "invited discussant",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_1686"
-    },
-    {
-      "row_id": "2838P",
-      "regimen": "trastuzumab deruxtecan-induced interstitial lung disease",
+      "row_id": "19",
+      "regimen": "post-trastuzumab deruxtecan treatment",
       "drugs": [
         "trastuzumab deruxtecan"
       ],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2838P"
-    },
-    {
-      "row_id": "LBA84",
-      "regimen": "GFH375 monotherapy",
-      "drugs": [
-        "GFH375"
-      ],
       "biomarkers": [
-        "KRAS"
+        "HER2"
       ],
       "modality": [],
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "LBA84"
+      "trial_id": "540P"
     },
     {
-      "row_id": "2186P",
-      "regimen": "pre-treatment inflammation and long-term cancer-related fatigue",
+      "row_id": "20",
+      "regimen": "Clinical outcomes of lung cancer survivors",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "2186P"
+      "trial_id": "2986eP"
     },
     {
-      "row_id": "853P",
-      "regimen": "anti-EGFR resistance mutations",
+      "row_id": "1798P",
+      "regimen": "molecular landscape prediction",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "Not specified",
+      "line": "1L",
       "phase": "Not specified",
-      "trial_id": "853P"
-    },
-    {
-      "row_id": "2371eP",
-      "regimen": "scalable implementation of a thoracic tumor functional unit",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2371eP"
-    },
-    {
-      "row_id": "886eP",
-      "regimen": "impact of RAS and BRAF mutations on immunotherapy outcomes",
-      "drugs": [],
-      "biomarkers": [
-        "MSI",
-        "dMMR"
-      ],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "886eP"
-    },
-    {
-      "row_id": "ROW_1793",
-      "regimen": "optimised adaptive strategies with radiotherapy",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "Radiotherapy"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_1793"
+      "trial_id": "1798P"
     },
     {
       "row_id": "928P",
@@ -2655,25 +1677,71 @@
       "trial_id": "928P"
     },
     {
-      "row_id": "882eP",
-      "regimen": "Intratumoural IVX037",
-      "drugs": [
-        "IVX037"
-      ],
-      "biomarkers": [
-        "KRAS"
-      ],
-      "modality": [
-        "IO"
-      ],
+      "row_id": "1808eP",
+      "regimen": "bronchoalveolar lavage for diagnosis",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
       "population": "Other",
       "line": "1L",
-      "phase": "Phase 1",
-      "trial_id": "882eP"
+      "phase": "Not specified",
+      "trial_id": "1808eP"
+    },
+    {
+      "row_id": "972P",
+      "regimen": "Neladalkib efficacy and safety",
+      "drugs": [
+        "Neladalkib"
+      ],
+      "biomarkers": [
+        "ALK"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "1L",
+      "phase": "Not specified",
+      "trial_id": "972P"
+    },
+    {
+      "row_id": "2013P",
+      "regimen": "Repotrectinib in NTRK+ tumors",
+      "drugs": [
+        "Repotrectinib"
+      ],
+      "biomarkers": [
+        "NTRK"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "1L",
+      "phase": "Not specified",
+      "trial_id": "2013P"
+    },
+    {
+      "row_id": "1940P",
+      "regimen": "cfDNA analysis for diagnosis",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "1L",
+      "phase": "Not specified",
+      "trial_id": "1940P"
+    },
+    {
+      "row_id": "1833P",
+      "regimen": "multi-marker methylation panel",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "1L",
+      "phase": "Not specified",
+      "trial_id": "1833P"
     },
     {
       "row_id": "2884P",
-      "regimen": "Multimodal Care for Lung Cancer Patients",
+      "regimen": "supportive care for lung cancer",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
@@ -2683,8 +1751,21 @@
       "trial_id": "2884P"
     },
     {
+      "row_id": "628",
+      "regimen": "targeting KRAS",
+      "drugs": [],
+      "biomarkers": [
+        "KRAS"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "1L",
+      "phase": "Not specified",
+      "trial_id": "ROW_628"
+    },
+    {
       "row_id": "995P",
-      "regimen": "Effect of High-Fat Meal on DO-2",
+      "regimen": "effect of high-fat meal on DO-2",
       "drugs": [
         "DO-2"
       ],
@@ -2696,33 +1777,20 @@
       "trial_id": "995P"
     },
     {
-      "row_id": "2848P",
-      "regimen": "Anticoagulation Strategies in Lung Cancer Patients",
+      "row_id": "3029eP",
+      "regimen": "ASS1 and EGFR in KRAS G12C",
       "drugs": [],
-      "biomarkers": [],
+      "biomarkers": [
+        "ASS1",
+        "EGFR",
+        "KRAS G12C",
+        "KRAS"
+      ],
       "modality": [],
       "population": "Other",
       "line": "1L",
       "phase": "Not specified",
-      "trial_id": "2848P"
-    },
-    {
-      "row_id": "914O",
-      "regimen": "HRS-7058 in advanced solid tumors",
-      "drugs": [
-        "HRS-7058"
-      ],
-      "biomarkers": [
-        "KRAS G12C",
-        "KRAS"
-      ],
-      "modality": [
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Phase 1",
-      "trial_id": "914O"
+      "trial_id": "3029eP"
     },
     {
       "row_id": "915O",
@@ -2734,444 +1802,689 @@
         "KRAS G12D",
         "KRAS"
       ],
-      "modality": [
-        "TKI"
-      ],
+      "modality": [],
       "population": "Other",
       "line": "1L",
       "phase": "Phase 1",
       "trial_id": "915O"
     },
     {
-      "row_id": "972P",
-      "regimen": "Neladalkib efficacy and safety",
+      "row_id": "891eP",
+      "regimen": "anti-BRAF and anti-EGFR therapy",
+      "drugs": [],
+      "biomarkers": [
+        "BRAF V600E"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "1L",
+      "phase": "Not specified",
+      "trial_id": "891eP"
+    },
+    {
+      "row_id": "LBA33",
+      "regimen": "ctDNA-guided anti-EGFR strategy",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "1L",
+      "phase": "Phase 2",
+      "trial_id": "LBA33"
+    },
+    {
+      "row_id": "2045eP",
+      "regimen": "perivascular spaces as immune gatekeepers",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "1L",
+      "phase": "Not specified",
+      "trial_id": "2045eP"
+    },
+    {
+      "row_id": "1914P",
+      "regimen": "sex differences in targeted therapies",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "1L",
+      "phase": "Not specified",
+      "trial_id": "1914P"
+    },
+    {
+      "row_id": "ROW_301",
+      "regimen": "first-line strategies",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "1L",
+      "phase": "Not specified",
+      "trial_id": "ROW_301"
+    },
+    {
+      "row_id": "ROW_305",
+      "regimen": "introduction to lung cancer",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "1L",
+      "phase": "Not specified",
+      "trial_id": "ROW_305"
+    },
+    {
+      "row_id": "ROW_508",
+      "regimen": "evolving treatment strategies",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "1L",
+      "phase": "Not specified",
+      "trial_id": "ROW_508"
+    },
+    {
+      "row_id": "1927P",
+      "regimen": "tracking myeloid cells variation",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "1927P"
+    },
+    {
+      "row_id": "2055eP",
+      "regimen": "occupational exposure to carcinogens",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2055eP"
+    },
+    {
+      "row_id": "2073eP",
+      "regimen": "adherence to tumor board recommendations",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2073eP"
+    },
+    {
+      "row_id": "3201eP",
+      "regimen": "optimising earlier detection of lung cancer",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "3201eP"
+    },
+    {
+      "row_id": "882eP",
+      "regimen": "IVX037 in advanced colorectal cancer",
       "drugs": [
-        "Neladalkib"
+        "IVX037"
       ],
       "biomarkers": [
-        "ALK"
+        "KRAS"
       ],
-      "modality": [
-        "TKI"
-      ],
+      "modality": [],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
       "phase": "Phase 1",
-      "trial_id": "972P"
+      "trial_id": "882eP"
     },
     {
-      "row_id": "2005",
-      "regimen": "Implementing shared decision-making",
-      "drugs": [],
-      "biomarkers": [],
+      "row_id": "914O",
+      "regimen": "HRS-7058 in advanced solid tumors",
+      "drugs": [
+        "HRS-7058"
+      ],
+      "biomarkers": [
+        "KRAS G12C",
+        "KRAS"
+      ],
       "modality": [],
       "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": "2005"
+      "line": "Not specified",
+      "phase": "Phase 1",
+      "trial_id": "914O"
     },
     {
-      "row_id": "2006",
-      "regimen": "Discussion",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": "2006"
-    },
-    {
-      "row_id": "2031",
-      "regimen": "Invited Discussant",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": "2031"
-    },
-    {
-      "row_id": "1994",
-      "regimen": "Invited Discussant",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": "1994"
-    },
-    {
-      "row_id": "2067",
-      "regimen": "Defining an unfit population",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": "2067"
-    },
-    {
-      "row_id": "2106",
-      "regimen": "Presentation of case/condition",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": "2106"
-    },
-    {
-      "row_id": "2959eP",
-      "regimen": "EGFR-targeted monoclonal antibodies",
+      "row_id": "249eP",
+      "regimen": "interlesional heterogeneity of EGFR mutations",
       "drugs": [],
       "biomarkers": [
         "EGFR"
       ],
       "modality": [],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "2959eP"
+      "trial_id": "249eP"
+    },
+    {
+      "row_id": "1646P",
+      "regimen": "second-line BRAF/MEK inhibitors",
+      "drugs": [],
+      "biomarkers": [
+        "BRAFV600"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "2L",
+      "phase": "Not specified",
+      "trial_id": "1646P"
+    },
+    {
+      "row_id": "687P",
+      "regimen": "targeted therapy in adult BRAF-mutant glioblastomas",
+      "drugs": [],
+      "biomarkers": [
+        "BRAF"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "687P"
+    },
+    {
+      "row_id": "2535eP",
+      "regimen": "incidental primary lung malignancies vs. solitary prostate cancer lung metastasis",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2535eP"
+    },
+    {
+      "row_id": "ROW_790",
+      "regimen": "lung cancer care",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "ROW_790"
+    },
+    {
+      "row_id": "ROW_791",
+      "regimen": "discussion",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "ROW_791"
+    },
+    {
+      "row_id": "ROW_850",
+      "regimen": "anti-EGFR rechallenge in later lines",
+      "drugs": [],
+      "biomarkers": [
+        "EGFR"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "ROW_850"
+    },
+    {
+      "row_id": "ROW_890",
+      "regimen": "innovative data in BRAF mt mCRC",
+      "drugs": [],
+      "biomarkers": [
+        "BRAF"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "ROW_890"
     },
     {
       "row_id": "2961eP",
-      "regimen": "Carboplatin dose calculation",
+      "regimen": "carboplatin dose calculation",
       "drugs": [
-        "Carboplatin",
         "carboplatin"
       ],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
       "phase": "Not specified",
       "trial_id": "2961eP"
     },
     {
-      "row_id": "1829",
-      "regimen": "First-line strategies",
+      "row_id": "ROW_968",
+      "regimen": "it's about time, small things matter",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "1829"
+      "trial_id": "ROW_968"
     },
     {
-      "row_id": "1809",
-      "regimen": "Patient supportive care",
+      "row_id": "ROW_981",
+      "regimen": "how to define an unfit population",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "1809"
+      "trial_id": "ROW_981"
     },
     {
-      "row_id": "932P",
-      "regimen": "amivantamab in subjects with aberrant MET and/or EGFR solid tumors",
+      "row_id": "ROW_1101",
+      "regimen": "diagnosis and treatment of G3 lung NET",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "ROW_1101"
+    },
+    {
+      "row_id": "ROW_1104",
+      "regimen": "presentation of case/condition",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "ROW_1104"
+    },
+    {
+      "row_id": "1873P",
+      "regimen": "ipilimumab plus nivolumab with or without chemotherapy",
       "drugs": [
-        "Amivantamab"
+        "ipilimumab",
+        "nivolumab"
+      ],
+      "biomarkers": [],
+      "modality": [
+        "IO"
+      ],
+      "population": "Other",
+      "line": "2L",
+      "phase": "Not specified",
+      "trial_id": "TOPGAN2023-01"
+    },
+    {
+      "row_id": "18P",
+      "regimen": "PD-1/CTLA-4 bispecific antibody cadonilimab",
+      "drugs": [
+        "cadonilimab"
+      ],
+      "biomarkers": [],
+      "modality": [
+        "IO"
+      ],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "1951P",
+      "regimen": "telisotuzumab vedotin",
+      "drugs": [
+        "telisotuzumab vedotin"
       ],
       "biomarkers": [
-        "MET",
-        "EGFR"
+        "c-Met"
       ],
       "modality": [
-        "TKI"
+        "ADC"
       ],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "2214MO",
+      "regimen": "telisotuzumab adizutecan",
+      "drugs": [
+        "telisotuzumab adizutecan"
+      ],
+      "biomarkers": [
+        "c-Met"
+      ],
+      "modality": [
+        "ADC"
+      ],
+      "population": "Other",
+      "line": "Not specified",
       "phase": "Phase 1",
-      "trial_id": "Baskets of Baskets"
+      "trial_id": ""
     },
     {
-      "row_id": "1016eTiP",
-      "regimen": "LY4066434 in KRAS-mutant solid tumors",
-      "drugs": [
-        "LY4066434"
-      ],
-      "biomarkers": [
-        "KRAS"
-      ],
-      "modality": [
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Phase 1",
-      "trial_id": "Trial in Progress"
-    },
-    {
-      "row_id": "2932eP",
-      "regimen": "lung cancer patient navigator for toxicities management",
+      "row_id": "ROW_1793",
+      "regimen": "State-of-the-art in 2025",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": ""
+      "trial_id": "ROW_1793"
     },
     {
-      "row_id": "2880P",
-      "regimen": "effect of physical activities in long-term survivors of lung cancer",
+      "row_id": "1900P",
+      "regimen": "high-intensity interval training",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": ""
+      "trial_id": "1900P"
     },
     {
-      "row_id": "2204eP",
-      "regimen": "palliative care management in lung cancer",
-      "drugs": [],
+      "row_id": "2080eTiP",
+      "regimen": "iza-bren (BL-B01D1) combinations",
+      "drugs": [
+        "iza-bren (BL-B01D1)"
+      ],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": ""
+      "line": "Not specified",
+      "phase": "Phase I/IIa",
+      "trial_id": "2080eTiP"
     },
     {
-      "row_id": "875eP",
-      "regimen": "EGFR-, VEGF-inhibitors or no biologics with first line combination chemotherapy",
+      "row_id": "2000P",
+      "regimen": "genome-guided treatments",
       "drugs": [],
       "biomarkers": [
-        "EGFR"
+        "RET"
       ],
-      "modality": [
-        "Chemotherapy"
-      ],
+      "modality": [],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": ""
+      "trial_id": "2000P"
     },
     {
-      "row_id": "835P",
-      "regimen": "encorafenib plus cetuximab in BRAF V600E-mutated colorectal carcinoma",
-      "drugs": [
-        "Encorafenib",
-        "Cetuximab"
-      ],
-      "biomarkers": [
-        "BRAF V600E"
-      ],
-      "modality": [
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Phase 2",
-      "trial_id": ""
-    },
-    {
-      "row_id": "1558P",
-      "regimen": "REGN7075 in patients receiving bispecific antibody",
-      "drugs": [
-        "REGN7075"
-      ],
-      "biomarkers": [],
-      "modality": [
-        "Bispecific"
-      ],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Phase 2",
-      "trial_id": ""
-    },
-    {
-      "row_id": "728MO",
-      "regimen": "predictive value of low-frequency resistance mutations in anti-EGFR rechallenge",
+      "row_id": "817P",
+      "regimen": "anti-EGFR therapy",
       "drugs": [],
       "biomarkers": [
         "EGFR"
       ],
       "modality": [],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": ""
+      "trial_id": "817P"
     },
     {
-      "row_id": "2610MO",
-      "regimen": "genomic analysis of papillary renal cell carcinoma",
+      "row_id": "ROW_1910",
+      "regimen": "Panel Discussion and Q&A",
       "drugs": [],
-      "biomarkers": [
-        "MET"
-      ],
+      "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": ""
+      "trial_id": "ROW_1910"
     },
     {
-      "row_id": "837P",
-      "regimen": "impact of TP53 gain of function mutations on clinical outcomes",
+      "row_id": "2050eP",
+      "regimen": "mortality analysis",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2050eP"
+    },
+    {
+      "row_id": "2069eP",
+      "regimen": "therapeutic response to molecular targeted agents",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2069eP"
+    },
+    {
+      "row_id": "153P",
+      "regimen": "prospective analysis",
       "drugs": [],
       "biomarkers": [
+        "EGFR",
         "TP53"
       ],
       "modality": [],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": ""
+      "trial_id": "153P"
+    },
+    {
+      "row_id": "1694eP",
+      "regimen": "induction targeted therapy with immune checkpoint inhibitor therapy switch",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "1694eP"
+    },
+    {
+      "row_id": "1742P",
+      "regimen": "methylation-based early detection",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "1742P"
+    },
+    {
+      "row_id": "866eP",
+      "regimen": "toripalimab, cetuximab plus FOLFIRI",
+      "drugs": [
+        "toripalimab",
+        "cetuximab",
+        "FOLFIRI"
+      ],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Phase II",
+      "trial_id": "866eP"
+    },
+    {
+      "row_id": "2776P",
+      "regimen": "DLL3-targeting antibody therapies",
+      "drugs": [],
+      "biomarkers": [
+        "DLL3"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2776P"
+    },
+    {
+      "row_id": "196eP",
+      "regimen": "SOS1 inhibitor and EGFR inhibitor combinations",
+      "drugs": [
+        "BMS-986509"
+      ],
+      "biomarkers": [
+        "KRAS G12C",
+        "KRAS"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "196eP"
+    },
+    {
+      "row_id": "2215O",
+      "regimen": "HRS-4642 combined with gemcitabine and nab-paclitaxel",
+      "drugs": [
+        "HRS-4642",
+        "gemcitabine",
+        "nab-paclitaxel"
+      ],
+      "biomarkers": [
+        "KRAS-G12D",
+        "KRAS"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Phase Ib/II",
+      "trial_id": "2215O"
+    },
+    {
+      "row_id": "2987O",
+      "regimen": "dabrafenib plus trametinib",
+      "drugs": [
+        "dabrafenib",
+        "trametinib"
+      ],
+      "biomarkers": [
+        "BRAF V600"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2987O"
+    },
+    {
+      "row_id": "3194eP",
+      "regimen": "short films as tool in lung cancer communication",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "3194eP"
+    },
+    {
+      "row_id": "2070eP",
+      "regimen": "pemetrexed-based chemo-immunotherapy",
+      "drugs": [
+        "pemetrexed"
+      ],
+      "biomarkers": [
+        "TTF-1",
+        "PD-L1"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2070eP"
+    },
+    {
+      "row_id": "1913P",
+      "regimen": "ctDNA testing expedites targeted therapy",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "1913P"
+    },
+    {
+      "row_id": "917O",
+      "regimen": "TA-MUC1-directed antibody-drug conjugate",
+      "drugs": [
+        "DS-3939"
+      ],
+      "biomarkers": [],
+      "modality": [
+        "ADC"
+      ],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "917O"
     },
     {
       "row_id": "2944eP",
-      "regimen": "decreased risk of radiation pneumonitis with valsartan",
+      "regimen": "thoracic radiation therapy",
       "drugs": [
-        "Valsartan"
+        "valsartan"
       ],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": ""
+      "trial_id": "Not specified"
     },
     {
-      "row_id": "2580eP",
-      "regimen": "causal relationships between personality traits and lung cancer",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "2373eP",
-      "regimen": "barriers undermining lung cancer screening",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "2602",
-      "regimen": "geographic variation in somatic genomics of lung cancer",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "2491",
-      "regimen": "summary and take-home messages",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "2572",
-      "regimen": "tackling EGFR treatment resistance",
+      "row_id": "1832P",
+      "regimen": "cGAS-STING axis modulation",
       "drugs": [],
       "biomarkers": [
-        "EGFR"
+        "CHCHD3"
       ],
       "modality": [],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": ""
+      "trial_id": "Not specified"
     },
     {
-      "row_id": "20",
-      "regimen": "patient-derived organoids response to KRAS inhibition",
+      "row_id": "ROW_2381",
+      "regimen": "c-Met protein directed strategies",
       "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "78eP"
-    },
-    {
-      "row_id": "1413P",
-      "regimen": "Cisplatin Chemoresistance",
-      "drugs": [
-        "Cisplatin",
-        "cisplatin"
-      ],
-      "biomarkers": [],
-      "modality": [
-        "Chemotherapy"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1413P"
-    },
-    {
-      "row_id": "540P",
-      "regimen": "post-trastuzumab deruxtecan treatment",
-      "drugs": [
-        "trastuzumab deruxtecan"
-      ],
       "biomarkers": [
-        "HER2"
+        "c-Met"
       ],
-      "modality": [
-        "TKI"
-      ],
+      "modality": [],
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "540P"
+      "trial_id": "Not specified"
     },
     {
-      "row_id": "3022eP",
-      "regimen": "Radioresistance promotion",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "Radiotherapy"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "3022eP"
-    },
-    {
-      "row_id": "1762eP",
-      "regimen": "Non-Invasive Tool for Lung Cancer Detection",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "Other"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1762eP"
-    },
-    {
-      "row_id": "4086",
-      "regimen": "ADC Design and Evaluation",
+      "row_id": "ROW_2575",
+      "regimen": "ADC Design, Function, and Evaluation",
       "drugs": [],
       "biomarkers": [],
       "modality": [
@@ -3180,44 +2493,92 @@
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "4086"
+      "trial_id": "Not specified"
     },
     {
-      "row_id": "ROW_4088",
-      "regimen": "",
+      "row_id": "1762eP",
+      "regimen": "canine olfaction for lung cancer detection",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "Not specified"
+    },
+    {
+      "row_id": "ROW_2655",
+      "regimen": "somatic genomics analysis",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "Not specified"
+    },
+    {
+      "row_id": "ROW_2696",
+      "regimen": "Preventing and treating resistance",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
       "phase": "Not specified",
       "trial_id": ""
     },
     {
-      "row_id": "ROW_4107",
-      "regimen": "",
+      "row_id": "ROW_2706",
+      "regimen": "Welcome and introductions",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
       "phase": "Not specified",
       "trial_id": ""
     },
     {
-      "row_id": "ROW_4132",
-      "regimen": "",
+      "row_id": "728MO",
+      "regimen": "Predictive value of low-frequency resistance mutations",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "ROW_2733",
+      "regimen": "Presentation by the Expert",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "2065eP",
+      "regimen": "Thoracic surgery vs radiotherapy in TKI-responsive stage IV EGFR-mutant adenocarcinoma",
+      "drugs": [
+        "TKI"
+      ],
+      "biomarkers": [],
+      "modality": [
+        "Radiotherapy"
+      ],
+      "population": "Other",
+      "line": "Not specified",
       "phase": "Not specified",
       "trial_id": ""
     },
     {
       "row_id": "1699eP",
-      "regimen": "encorafenib plus binimetinib",
+      "regimen": "Treatment patterns using encorafenib plus binimetinib",
       "drugs": [
         "encorafenib",
         "binimetinib"
@@ -3227,187 +2588,561 @@
         "TKI"
       ],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "1980P",
+      "regimen": "Tumor mutational burden and proliferation as negative prognostic factors for ALK+ lung cancer",
+      "drugs": [],
+      "biomarkers": [
+        "ALK",
+        "TMB"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
       "phase": "Not specified",
       "trial_id": ""
     },
     {
       "row_id": "720eP",
-      "regimen": "",
+      "regimen": "Novel ASAP1::BRAF fusion in a young adult with low-grade temporal lobe glioma",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
       "phase": "Not specified",
       "trial_id": ""
     },
     {
-      "row_id": "ROW_4158",
-      "regimen": "",
+      "row_id": "875eP",
+      "regimen": "Increased EGFR gene copy number in prediction of outcome of EGFR-, VEGF-inhibitors or no biologics",
       "drugs": [],
-      "biomarkers": [],
+      "biomarkers": [
+        "EGFR"
+      ],
       "modality": [],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
       "phase": "Not specified",
       "trial_id": ""
     },
     {
-      "row_id": "34eP",
-      "regimen": "",
+      "row_id": "1814eP",
+      "regimen": "Comparative analysis of preoperative localization methods for lung nodules",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
       "phase": "Not specified",
       "trial_id": ""
     },
     {
-      "row_id": "173TiP",
-      "regimen": "Circulating tumour DNA guided Adaptive BRAF and MEK Inhibitor therapy",
+      "row_id": "ROW_2803",
+      "regimen": "How to define resistance and potential biomarkers",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "2932eP",
+      "regimen": "Feasibility study of lung cancer patient navigator in identification and management of toxicities post initial commencement of EGFR TKI",
+      "drugs": [
+        "EGFR TKI"
+      ],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "1866P",
+      "regimen": "Phase II CAPSTONE trial of first-line camrelizumab plus famitinib",
+      "drugs": [
+        "camrelizumab",
+        "famitinib"
+      ],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "1L",
       "phase": "Phase 2",
-      "trial_id": "DyNAMIc"
+      "trial_id": "CAPSTONE"
     },
     {
-      "row_id": "276eP",
-      "regimen": "",
-      "drugs": [],
+      "row_id": "2066eP",
+      "regimen": "Resistance to third-generation EGFR-TKIs",
+      "drugs": [
+        "EGFR-TKIs"
+      ],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
       "phase": "Not specified",
       "trial_id": ""
     },
     {
-      "row_id": "ROW_4250",
-      "regimen": "",
+      "row_id": "1977P",
+      "regimen": "SGR-5573 is a potent, selective, brain-penetrant inhibitor of osimertinib-resistant EGFR variants",
+      "drugs": [
+        "SGR-5573",
+        "osimertinib"
+      ],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "932P",
+      "regimen": "Amivantamab in subjects with aberrant MET and/or EGFR solid tumors",
+      "drugs": [
+        "Amivantamab"
+      ],
+      "biomarkers": [
+        "MET",
+        "EGFR"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "1898P",
+      "regimen": "Multicenter prospective study of programmed death 1 (PD-1) SNPs in patients with metastatic lung adenocarcinoma treated with pembrolizumab",
+      "drugs": [
+        "pembrolizumab"
+      ],
+      "biomarkers": [
+        "PD-1"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "2053eP",
+      "regimen": "ESMO treatment guideline adherence in patients with lung cancer with EGFR or ALK alterations",
+      "drugs": [],
+      "biomarkers": [
+        "EGFR",
+        "ALK"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "ROW_2984",
+      "regimen": "Panel discussion & audience Q&A",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "2009P",
+      "regimen": "Real world data on fusion-positive advanced lung cancers treated with the combination of chemotherapy and tyrosine kinase inhibition",
+      "drugs": [
+        "chemotherapy",
+        "tyrosine kinase inhibition"
+      ],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "ROW_3052",
+      "regimen": "Systemic therapy options",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
       "phase": "Not specified",
       "trial_id": ""
     },
     {
       "row_id": "218eP",
-      "regimen": "",
+      "regimen": "treatment recommendations",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "AIO-TF/YMO-0223"
+    },
+    {
+      "row_id": "835P",
+      "regimen": "encorafenib plus cetuximab",
+      "drugs": [
+        "encorafenib",
+        "cetuximab"
+      ],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
       "phase": "Not specified",
       "trial_id": ""
     },
     {
+      "row_id": "ROW_3115",
+      "regimen": "treatment of BRAF-mutant cancers",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "931P",
+      "regimen": "necitumumab",
+      "drugs": [
+        "necitumumab"
+      ],
+      "biomarkers": [
+        "EGFR"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Phase 2",
+      "trial_id": "WJOG15021M"
+    },
+    {
       "row_id": "9P",
-      "regimen": "amivantamab",
+      "regimen": "Role of MET in EGFR binding",
       "drugs": [
         "amivantamab"
       ],
       "biomarkers": [
         "MET"
       ],
-      "modality": [
-        "IO"
-      ],
+      "modality": [],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "3193eP",
+      "regimen": "MTB-driven decision process",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
       "phase": "Not specified",
       "trial_id": ""
     },
     {
       "row_id": "124P",
-      "regimen": "",
+      "regimen": "Cell-free DNA methylation testing",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
       "phase": "Not specified",
       "trial_id": ""
     },
     {
-      "row_id": "ROW_4302",
-      "regimen": "",
+      "row_id": "ROW_3166",
+      "regimen": "Present and future targets in CRC",
       "drugs": [],
       "biomarkers": [
         "KRAS"
       ],
       "modality": [],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "1961P",
+      "regimen": "osimertinib monotherapy",
+      "drugs": [
+        "osimertinib"
+      ],
+      "biomarkers": [
+        "EGFR",
+        "TP53"
+      ],
+      "modality": [
+        "TKI"
+      ],
+      "population": "Other",
+      "line": "1L",
       "phase": "Not specified",
       "trial_id": ""
     },
     {
       "row_id": "3002P",
-      "regimen": "Dabrafenib Plus Trametinib",
+      "regimen": "dabrafenib plus trametinib",
       "drugs": [
-        "Dabrafenib",
-        "Trametinib"
+        "dabrafenib",
+        "trametinib"
+      ],
+      "biomarkers": [
+        "BRAF"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "837P",
+      "regimen": "BRAF-targeted therapy",
+      "drugs": [],
+      "biomarkers": [
+        "TP53"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "2780P",
+      "regimen": "BL0020",
+      "drugs": [
+        "BL0020"
+      ],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Phase 1",
+      "trial_id": ""
+    },
+    {
+      "row_id": "1654P",
+      "regimen": "tumor infiltrating lymphocyte therapy",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "2880P",
+      "regimen": "effect of physical activities",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "AMAti"
+    },
+    {
+      "row_id": "2580eP",
+      "regimen": "causal relationships between personality and psychiatric traits",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "2998P",
+      "regimen": "characteristics and clinical outcomes of NTRK and RET fusion-positive",
+      "drugs": [],
+      "biomarkers": [
+        "NTRK",
+        "RET"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "886eP",
+      "regimen": "impact of RAS and BRAF mutations on immunotherapy outcomes",
+      "drugs": [],
+      "biomarkers": [
+        "RAS",
+        "BRAF",
+        "MSI",
+        "dMMR"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "ROW_3334",
+      "regimen": "Panel discussion, Q&A",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "ROW_3362",
+      "regimen": "Radiotherapy options",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [
+        "Radiotherapy"
+      ],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "2373eP",
+      "regimen": "lung cancer screening",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2373eP"
+    },
+    {
+      "row_id": "1793P",
+      "regimen": "postoperative survival analysis",
+      "drugs": [],
+      "biomarkers": [
+        "EGFR"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "1793P"
+    },
+    {
+      "row_id": "2351P",
+      "regimen": "lung cancer screening",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2351P"
+    },
+    {
+      "row_id": "1784eP",
+      "regimen": "liquid biopsy for early-stage lung cancer",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "1784eP"
+    },
+    {
+      "row_id": "2905P",
+      "regimen": "patient-reported outcomes in lung cancer",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2905P"
+    },
+    {
+      "row_id": "2047eP",
+      "regimen": "multidisciplinary planning for lung cancer",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2047eP"
+    },
+    {
+      "row_id": "2049P",
+      "regimen": "osimertinib rechallenge",
+      "drugs": [
+        "osimertinib"
       ],
       "biomarkers": [],
       "modality": [
         "TKI"
       ],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": ""
+      "trial_id": "2049P"
     },
     {
-      "row_id": "1654P",
-      "regimen": "",
+      "row_id": "1909P",
+      "regimen": "molecular patterns of metastatic growth",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": ""
+      "trial_id": "1909P"
     },
     {
-      "row_id": "2998P",
-      "regimen": "",
-      "drugs": [],
+      "row_id": "933P",
+      "regimen": "bispecific antibody-drug conjugate",
+      "drugs": [
+        "iza-bren (BL-B01D1)"
+      ],
       "biomarkers": [],
-      "modality": [],
+      "modality": [
+        "ADC"
+      ],
       "population": "Other",
-      "line": "",
+      "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "ROW_4384",
-      "regimen": "",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "1784eP",
-      "regimen": "salivary exosome-based liquid biopsy",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "",
-      "phase": "Not specified",
-      "trial_id": ""
+      "trial_id": "933P"
     },
     {
       "row_id": "1514O",
@@ -3419,77 +3154,442 @@
       ],
       "modality": [],
       "population": "Other",
-      "line": "1L",
+      "line": "Not specified",
       "phase": "Phase 1",
-      "trial_id": ""
+      "trial_id": "1514O"
     },
     {
-      "row_id": "926MO",
-      "regimen": "MK-1084 Monotherapy",
+      "row_id": "1647P",
+      "regimen": "real-world survival analysis",
       "drugs": [
-        "MK-1084"
+        "Dabrafenib",
+        "trametinib",
+        "encorafenib",
+        "binimetinib"
       ],
       "biomarkers": [
-        "KRAS G12C",
-        "KRAS"
+        "BRAF"
       ],
-      "modality": [
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Phase 1",
-      "trial_id": "KANDLELIT-001"
-    },
-    {
-      "row_id": "927MO",
-      "regimen": "single-agent divarasib",
-      "drugs": [
-        "divarasib"
-      ],
-      "biomarkers": [
-        "KRAS G12C",
-        "KRAS"
-      ],
-      "modality": [
-        "TKI"
-      ],
+      "modality": [],
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "927MO"
+      "trial_id": "1647P"
     },
     {
-      "row_id": "ROW_163",
-      "regimen": "c-Met protein directed strategies",
+      "row_id": "1575P",
+      "regimen": "treatment for lung cancer-associated cachexia",
+      "drugs": [
+        "Tocilizumab"
+      ],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Phase 2",
+      "phase": "Not specified",
+      "trial_id": "1575P"
+    },
+    {
+      "row_id": "659O",
+      "regimen": "molecular diagnosis and management",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "659O"
+    },
+    {
+      "row_id": "918O",
+      "regimen": "telisotuzumab adizutecan in MET-amplified tumors",
+      "drugs": [
+        "Telisotuzumab adizutecan (ABBV-400; Temab-A)"
+      ],
+      "biomarkers": [
+        "MET amplification"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Phase 1",
+      "phase": "Not specified",
+      "trial_id": "918O"
+    },
+    {
+      "row_id": "839P",
+      "regimen": "combination therapy for BRAF-mutated cancer",
+      "drugs": [
+        "Encorafenib",
+        "cetuximab",
+        "binimetinib"
+      ],
+      "biomarkers": [
+        "BRAF"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "839P"
+    },
+    {
+      "row_id": "738P",
+      "regimen": "pertuzumab plus trastuzumab for HER2-positive cancer",
+      "drugs": [
+        "pertuzumab",
+        "trastuzumab"
+      ],
+      "biomarkers": [
+        "HER2"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "738P"
+    },
+    {
+      "row_id": "846P",
+      "regimen": "longitudinal ctDNA analysis",
       "drugs": [],
       "biomarkers": [
-        "c-Met"
+        "RAS",
+        "BRAF",
+        "PIK3CA"
       ],
-      "modality": [
-        "IO"
-      ],
+      "modality": [],
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "ROW_163"
+      "trial_id": "846P"
+    },
+    {
+      "row_id": "2240P",
+      "regimen": "KRAS variants and outcomes analysis",
+      "drugs": [],
+      "biomarkers": [
+        "KRAS"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2240P"
+    },
+    {
+      "row_id": "1903P",
+      "regimen": "impact of antibiotic exposure on therapy",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "1903P"
+    },
+    {
+      "row_id": "683P",
+      "regimen": "prognostic value of mutations in melanoma",
+      "drugs": [],
+      "biomarkers": [
+        "BRAF",
+        "NRAS",
+        "PD-L1",
+        "C-KIT"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "683P"
+    },
+    {
+      "row_id": "ROW_3897",
+      "regimen": "InvitedDiscussantLBA72",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "LBA72"
+    },
+    {
+      "row_id": "ROW_3898",
+      "regimen": "InvitedDiscussantLBA75 and LBA74",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "LBA75"
+    },
+    {
+      "row_id": "2757O",
+      "regimen": "InvitedDiscussant2757O and 2761O",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2757O"
+    },
+    {
+      "row_id": "ROW_3913",
+      "regimen": "InvitedDiscussantLBA65 and LBA69",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "LBA65"
+    },
+    {
+      "row_id": "2758MO",
+      "regimen": "InvitedDiscussantLBA100, 2758MO and 2759MO",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "LBA100"
+    },
+    {
+      "row_id": "2760MO",
+      "regimen": "InvitedDiscussant2760MO, 2762MO and LBA101",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "2760MO"
+    },
+    {
+      "row_id": "1845MO",
+      "regimen": "InvitedDiscussant1845MO and 1846MO",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "1845MO"
+    },
+    {
+      "row_id": "1847MO",
+      "regimen": "InvitedDiscussant1847MO and 1848MO",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "1847MO"
+    },
+    {
+      "row_id": "ROW_3989",
+      "regimen": "InvitedDiscussantLBA77 and LBA73",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "LBA77"
+    },
+    {
+      "row_id": "1787MO",
+      "regimen": "InvitedDiscussantLBA66, 1787MO and 1817MO",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "LBA66"
+    },
+    {
+      "row_id": "1818MO",
+      "regimen": "InvitedDiscussantLBA67, LBA68 and 1818MO",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "LBA67"
+    },
+    {
+      "row_id": "ROW_4004",
+      "regimen": "InvitedDiscussantLBA106 and LBA70",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "LBA106"
+    },
+    {
+      "row_id": "1849MO",
+      "regimen": "InvitedDiscussant1849MO and 1987MO",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "1849MO"
+    },
+    {
+      "row_id": "1853MO",
+      "regimen": "InvitedDiscussantLBA71, LBA76 and 1853MO",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "LBA71"
+    },
+    {
+      "row_id": "1850MO",
+      "regimen": "InvitedDiscussant1850MO, 1851MO and 1852MO",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "1850MO"
+    },
+    {
+      "row_id": "2838P",
+      "regimen": "trastuzumab deruxtecan",
+      "drugs": [
+        "trastuzumab deruxtecan"
+      ],
+      "population": "Other",
+      "phase": "Not specified",
+      "trial_id": "2838P",
+      "biomarkers": []
+    },
+    {
+      "row_id": "LBA84",
+      "regimen": "GFH375 monotherapy",
+      "drugs": [
+        "GFH375"
+      ],
+      "population": "Other",
+      "phase": "Not specified",
+      "trial_id": "LBA84",
+      "biomarkers": [
+        "KRAS"
+      ]
     },
     {
       "row_id": "2022P",
       "regimen": "immunotherapy",
       "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "IO"
+      "population": "Other",
+      "phase": "Not specified",
+      "trial_id": "2022P",
+      "biomarkers": []
+    },
+    {
+      "row_id": "1016eTiP",
+      "regimen": "LY4066434",
+      "drugs": [
+        "LY4066434"
       ],
       "population": "Other",
-      "line": "Not specified",
+      "phase": "Phase 1",
+      "trial_id": "1016eTiP",
+      "biomarkers": [
+        "KRAS"
+      ]
+    },
+    {
+      "row_id": "2996P",
+      "regimen": "radioactive iodine-refractory treatment",
+      "drugs": [],
+      "biomarkers": [
+        "BRAF"
+      ],
+      "population": "Other",
       "phase": "Not specified",
-      "trial_id": "2022P"
+      "trial_id": "2996P"
+    },
+    {
+      "row_id": "265eP",
+      "regimen": "Flow SuperRCA for KRAS mutation detection",
+      "drugs": [],
+      "biomarkers": [
+        "KRAS"
+      ],
+      "population": "Other",
+      "phase": "Not specified",
+      "trial_id": "265eP"
+    },
+    {
+      "row_id": "3172eP",
+      "regimen": "immunotherapy",
+      "drugs": [],
+      "biomarkers": [],
+      "population": "Other",
+      "phase": "Not specified",
+      "trial_id": "3172eP"
     },
     {
       "row_id": "2650P",
-      "regimen": "metastasis-directed therapies",
+      "regimen": "Metastasis-directed therapies",
+      "drugs": [],
+      "population": "Other",
+      "phase": "Not specified",
+      "trial_id": "2650P",
+      "biomarkers": []
+    },
+    {
+      "row_id": "853P",
+      "regimen": "anti-EGFR resistance mutations",
+      "drugs": [],
+      "biomarkers": [
+        "EGFR",
+        "RAS",
+        "BRAF"
+      ],
+      "modality": [
+        "Chemotherapy"
+      ],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Phase 3",
+      "trial_id": "CRC01"
+    },
+    {
+      "row_id": "1682P",
+      "regimen": "BRAF plus MEK inhibitors",
+      "drugs": [
+        "BRAF inhibitors",
+        "MEK inhibitors"
+      ],
+      "biomarkers": [],
+      "modality": [
+        "TKI"
+      ],
+      "population": "Other",
+      "line": "1L",
+      "phase": "Not specified",
+      "trial_id": "Not specified"
+    },
+    {
+      "row_id": "ROW_200",
+      "regimen": "adaptive strategies with radiotherapy",
       "drugs": [],
       "biomarkers": [],
       "modality": [
@@ -3498,226 +3598,72 @@
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "2650P"
+      "trial_id": "Not specified"
     },
     {
-      "row_id": "1918P",
-      "regimen": "evaluation of a GPT-based conversational AI tool",
+      "row_id": "ROW_223",
+      "regimen": "Germline mutations testing",
       "drugs": [],
       "biomarkers": [],
-      "modality": [
-        "Other"
-      ],
+      "modality": [],
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "1918P"
+      "trial_id": "Not specified"
+    },
+    {
+      "row_id": "ROW_246",
+      "regimen": "patient supportive care",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "Not specified"
+    },
+    {
+      "row_id": "1918P",
+      "regimen": "GPT-based conversational ai tool",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "Not specified"
     },
     {
       "row_id": "1921P",
       "regimen": "computational modeling for rare mutations",
       "drugs": [],
       "biomarkers": [],
-      "modality": [
-        "Other"
-      ],
+      "modality": [],
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "1921P"
+      "trial_id": "Not specified"
     },
     {
-      "row_id": "1798P",
-      "regimen": "molecular landscape prediction",
+      "row_id": "171P",
+      "regimen": "neurotrophic tyrosine receptor kinase-positive treatment",
       "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "Other"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1798P"
-    },
-    {
-      "row_id": "1808eP",
-      "regimen": "bronchoalveolar lavage",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "Other"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1808eP"
-    },
-    {
-      "row_id": "2013P",
-      "regimen": "repotrectinib",
-      "drugs": [
-        "repotrectinib"
-      ],
       "biomarkers": [
         "NTRK"
       ],
-      "modality": [
-        "TKI"
-      ],
+      "modality": [],
       "population": "Other",
-      "line": "Not specified",
+      "line": "",
       "phase": "Not specified",
-      "trial_id": "2013P"
+      "trial_id": ""
     },
     {
-      "row_id": "1815eP",
-      "regimen": "Aumolertinib",
-      "drugs": [
-        "Aumolertinib"
-      ],
-      "biomarkers": [
-        "EGFR"
-      ],
-      "modality": [
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Phase 2",
-      "trial_id": "1815eP"
-    },
-    {
-      "row_id": "LBA33",
-      "regimen": "ctDNA-Guided Anti-EGFR Rechallenge",
-      "drugs": [
-        "Anti-EGFR"
-      ],
-      "biomarkers": [
-        "ctDNA"
-      ],
-      "modality": [
-        "IO"
-      ],
-      "population": "Other",
-      "line": "2L",
-      "phase": "Phase 2",
-      "trial_id": "CITRIC"
-    },
-    {
-      "row_id": "1940P",
-      "regimen": "Cerebrospinal Fluid cfDNA Analysis",
-      "drugs": [],
-      "biomarkers": [
-        "cfDNA"
-      ],
-      "modality": [
-        "Other"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1940P"
-    },
-    {
-      "row_id": "1833P",
-      "regimen": "Multi-marker methylation panel (epiLung)",
-      "drugs": [],
-      "biomarkers": [
-        "methylation markers"
-      ],
-      "modality": [
-        "Other"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1833P"
-    },
-    {
-      "row_id": "2045eP",
-      "regimen": "Perivascular Spaces as Immune Gatekeepers",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "Other"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2045eP"
-    },
-    {
-      "row_id": "1797P",
-      "regimen": "Clinical risk stratification",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "Other"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1797P"
-    },
-    {
-      "row_id": "ROW_455",
-      "regimen": "Evolving treatment strategies",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "Other"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_455"
-    },
-    {
-      "row_id": "ROW_500",
+      "row_id": "ROW_628",
       "regimen": "Targeting KRAS",
       "drugs": [],
       "biomarkers": [
         "KRAS"
       ],
-      "modality": [
-        "Other"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_500"
-    },
-    {
-      "row_id": "1914P",
-      "regimen": "Sex differences in tolerability to Targeted Therapies",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "Other"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1914P"
-    },
-    {
-      "row_id": "ROW_519",
-      "regimen": "Invited Discussant",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "Other"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_519"
-    },
-    {
-      "row_id": "2535eP",
-      "regimen": "PSMA-PET CT scans for prostate cancer staging and surveillance",
-      "drugs": [],
-      "biomarkers": [],
       "modality": [],
       "population": "Other",
       "line": "",
@@ -3725,548 +3671,11 @@
       "trial_id": ""
     },
     {
-      "row_id": "ROW_572",
-      "regimen": "anti-EGFR rechallenge",
+      "row_id": "2959eP",
+      "regimen": "EGFR-targeted monoclonal antibodies",
       "drugs": [
-        "anti-EGFR"
+        "EGFR-targeted monoclonal antibodies"
       ],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "3201eP",
-      "regimen": "earlier detection of lung cancer",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "ROW_589",
-      "regimen": "BRAF mt mCRC",
-      "drugs": [],
-      "biomarkers": [
-        "BRAF"
-      ],
-      "modality": [],
-      "population": "Other",
-      "line": "",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "ROW_613",
-      "regimen": "small things matter",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "ROW_901",
-      "regimen": "State-of-the-art in 2025",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "LBA32",
-      "regimen": "Panitumumab retreatment followed by regorafenib",
-      "drugs": [
-        "Panitumumab",
-        "regorafenib"
-      ],
-      "biomarkers": [
-        "RAS",
-        "BRAF"
-      ],
-      "modality": [
-        "Chemotherapy"
-      ],
-      "population": "Other",
-      "line": "",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "2080eTiP",
-      "regimen": "iza-bren (BL-B01D1) combinations",
-      "drugs": [
-        "iza-bren",
-        "BL-B01D1"
-      ],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "",
-      "phase": "Phase 1",
-      "trial_id": ""
-    },
-    {
-      "row_id": "ROW_1111",
-      "regimen": "long-term patient-centred care",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "ROW_1112",
-      "regimen": "long-term patient-centred care",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [],
-      "population": "Other",
-      "line": "",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "ROW_1113",
-      "regimen": "Summary and close",
-      "trial_id": "ROW_1113",
-      "drugs": [],
-      "biomarkers": []
-    },
-    {
-      "row_id": "ROW_1155",
-      "regimen": "New targets",
-      "trial_id": "ROW_1155",
-      "drugs": [],
-      "biomarkers": []
-    },
-    {
-      "row_id": "ROW_1809",
-      "regimen": "Optimising patient supportive care",
-      "trial_id": "ROW_1809",
-      "drugs": [],
-      "biomarkers": []
-    },
-    {
-      "row_id": "ROW_1829",
-      "regimen": "Advances in first-line strategies",
-      "trial_id": "ROW_1829",
-      "drugs": [],
-      "biomarkers": []
-    },
-    {
-      "row_id": "ROW_1994",
-      "regimen": "Invited Discussant",
-      "trial_id": "ROW_1994",
-      "drugs": [],
-      "biomarkers": []
-    },
-    {
-      "row_id": "ROW_2005",
-      "regimen": "Lung cancer care: Implementing shared decision-making",
-      "trial_id": "ROW_2005",
-      "drugs": [],
-      "biomarkers": []
-    },
-    {
-      "row_id": "ROW_2006",
-      "regimen": "Discussion",
-      "trial_id": "ROW_2006",
-      "drugs": [],
-      "biomarkers": []
-    },
-    {
-      "row_id": "ROW_2031",
-      "regimen": "Invited Discussant",
-      "trial_id": "ROW_2031",
-      "drugs": [],
-      "biomarkers": []
-    },
-    {
-      "row_id": "ROW_2067",
-      "regimen": "How to define an unfit population",
-      "trial_id": "ROW_2067",
-      "drugs": [],
-      "biomarkers": []
-    },
-    {
-      "row_id": "ROW_2099",
-      "regimen": "Invited Discussant",
-      "trial_id": "ROW_2099",
-      "drugs": [],
-      "biomarkers": []
-    },
-    {
-      "row_id": "891eP",
-      "regimen": "anti-BRAF and anti-EGFR therapy",
-      "drugs": [
-        "anti-BRAF",
-        "anti-EGFR"
-      ],
-      "biomarkers": [
-        "BRAF V600E"
-      ],
-      "modality": [
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "2L",
-      "phase": "Not specified",
-      "trial_id": "Not specified"
-    },
-    {
-      "row_id": "LBA35",
-      "regimen": "Iza-Bren (BL-B01D1) versus Physician's Choice of Chemotherapy",
-      "drugs": [
-        "Iza-Bren (BL-B01D1)",
-        "Chemotherapy"
-      ],
-      "biomarkers": [
-        "EGFR",
-        "HER3"
-      ],
-      "modality": [
-        "ADC",
-        "Chemotherapy"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "Not specified"
-    },
-    {
-      "row_id": "727MO",
-      "regimen": "FOLFOX plus PANITUMUMAB according to a 'stop-and-go' strategy",
-      "drugs": [
-        "FOLFOX",
-        "PANITUMUMAB"
-      ],
-      "biomarkers": [
-        "RAS",
-        "BRAF"
-      ],
-      "modality": [
-        "Chemotherapy"
-      ],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": "Not specified"
-    },
-    {
-      "row_id": "931P",
-      "regimen": "necitumumab",
-      "drugs": [
-        "necitumumab"
-      ],
-      "biomarkers": [
-        "EGFR"
-      ],
-      "modality": [
-        "Chemotherapy"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Phase 2",
-      "trial_id": "WJOG15021M"
-    },
-    {
-      "row_id": "855P",
-      "regimen": "Larotrectinib",
-      "drugs": [
-        "Larotrectinib"
-      ],
-      "biomarkers": [
-        "NTRK"
-      ],
-      "modality": [
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "Not specified"
-    },
-    {
-      "row_id": "933P",
-      "regimen": "iza-bren (BL-B01D1)",
-      "drugs": [
-        "iza-bren (BL-B01D1)"
-      ],
-      "modality": [
-        "ADC"
-      ],
-      "population": "Other",
-      "phase": "Phase 1",
-      "trial_id": "933P",
-      "biomarkers": []
-    },
-    {
-      "row_id": "1575P",
-      "regimen": "Tocilizumab",
-      "drugs": [
-        "Tocilizumab"
-      ],
-      "population": "Other",
-      "phase": "Phase 2",
-      "trial_id": "1575P",
-      "biomarkers": []
-    },
-    {
-      "row_id": "918O",
-      "regimen": "telisotuzumab adizutecan (ABBV-400; Temab-A)",
-      "drugs": [
-        "telisotuzumab adizutecan (ABBV-400; Temab-A)"
-      ],
-      "population": "Other",
-      "phase": "Phase 1",
-      "trial_id": "918O",
-      "biomarkers": []
-    },
-    {
-      "row_id": "839P",
-      "regimen": "Encorafenib, cetuximab, plus binimetinib",
-      "drugs": [
-        "Encorafenib",
-        "cetuximab",
-        "binimetinib"
-      ],
-      "population": "Other",
-      "phase": "Not specified",
-      "trial_id": "839P",
-      "biomarkers": []
-    },
-    {
-      "row_id": "738P",
-      "regimen": "pertuzumab plus trastuzumab",
-      "drugs": [
-        "pertuzumab",
-        "trastuzumab"
-      ],
-      "population": "Other",
-      "phase": "Not specified",
-      "trial_id": "738P",
-      "biomarkers": [
-        "HER2"
-      ]
-    },
-    {
-      "row_id": "846P",
-      "regimen": "Anti-EGFR Monoclonal Antibodies",
-      "drugs": [
-        "Anti-EGFR Monoclonal Antibodies"
-      ],
-      "population": "Other",
-      "phase": "Not specified",
-      "trial_id": "846P",
-      "biomarkers": [
-        "PIK3CA"
-      ]
-    },
-    {
-      "row_id": "2240P",
-      "regimen": "Major KRAS Variants",
-      "drugs": [],
-      "population": "Other",
-      "phase": "Not specified",
-      "trial_id": "2240P",
-      "biomarkers": [
-        "KRAS"
-      ]
-    },
-    {
-      "row_id": "800P",
-      "regimen": "mCapOX plus cetuximab with mFOLFOX6 plus cetuximab",
-      "drugs": [
-        "mCapOX",
-        "cetuximab",
-        "mFOLFOX6"
-      ],
-      "population": "Other",
-      "phase": "Phase 2",
-      "trial_id": "800P",
-      "biomarkers": []
-    },
-    {
-      "row_id": "2129P",
-      "regimen": "Transarterial infusion chemotherapy and embolization (TAICE)",
-      "drugs": [],
-      "population": "Other",
-      "phase": "Phase 2",
-      "trial_id": "2129P",
-      "biomarkers": []
-    },
-    {
-      "row_id": "2996P",
-      "regimen": "Radioactive Iodine-Refractory Differentiated Thyroid Cancer treatment",
-      "drugs": [
-        "BRAF Mutation"
-      ],
-      "biomarkers": [
-        "BRAF"
-      ],
-      "modality": [
-        "Chemotherapy"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "2996P"
-    },
-    {
-      "row_id": "265eP",
-      "regimen": "Flow SuperRCA for KRAS Mutation Detection",
-      "drugs": [
-        "KRAS Mutation"
-      ],
-      "biomarkers": [
-        "KRAS"
-      ],
-      "modality": [
-        "Not specified"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "265eP"
-    },
-    {
-      "row_id": "36eP",
-      "regimen": "NCOA4 as an immunological and prognostic biomarker",
-      "drugs": [],
-      "biomarkers": [
-        "NCOA4"
-      ],
-      "modality": [
-        "Not specified"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "36eP"
-    },
-    {
-      "row_id": "3046eP",
-      "regimen": "Co-Mutational Racial Disparities in EGFR positive Lung Cancer",
-      "drugs": [],
-      "biomarkers": [
-        "EGFR"
-      ],
-      "modality": [
-        "Not specified"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "3046eP"
-    },
-    {
-      "row_id": "ROW_3217",
-      "regimen": "Germline mutations testing",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "Not specified"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "ROW_3217"
-    },
-    {
-      "row_id": "1786O",
-      "regimen": "AI for early-stage lung cancer recurrence prognosis",
-      "drugs": [],
-      "biomarkers": [],
-      "modality": [
-        "Not specified"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1786O"
-    },
-    {
-      "row_id": "1682P",
-      "regimen": "BRAF plus MEK inhibitors treatment",
-      "drugs": [
-        "BRAF",
-        "MEK inhibitors"
-      ],
-      "biomarkers": [],
-      "modality": [
-        "Chemotherapy"
-      ],
-      "population": "Other",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": "1682P"
-    },
-    {
-      "row_id": "1753eP",
-      "regimen": "Microdose Trial of [68Ga]Ga-R54",
-      "drugs": [
-        "[68Ga]Ga-R54"
-      ],
-      "biomarkers": [],
-      "modality": [
-        "Not specified"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "1753eP"
-    },
-    {
-      "row_id": "171P",
-      "regimen": "NTRK+ solid tumors treatment",
-      "drugs": [],
-      "biomarkers": [
-        "NTRK"
-      ],
-      "modality": [
-        "Not specified"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "171P"
-    },
-    {
-      "row_id": "3029eP",
-      "regimen": "KRAS G12C inhibitors treatment",
-      "drugs": [
-        "KRAS G12C inhibitors"
-      ],
-      "biomarkers": [
-        "ASS1",
-        "EGFR",
-        "KRAS"
-      ],
-      "modality": [
-        "Not specified"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "3029eP"
-    },
-    {
-      "row_id": "249eP",
-      "regimen": "systematic review and meta-analysis",
-      "drugs": [],
       "biomarkers": [
         "EGFR"
       ],
@@ -4277,42 +3686,10 @@
       "trial_id": ""
     },
     {
-      "row_id": "687P",
-      "regimen": "Targeted therapy",
+      "row_id": "ROW_1183",
+      "regimen": "Oncology insights",
       "drugs": [],
-      "biomarkers": [
-        "BRAF",
-        "NTRK"
-      ],
-      "modality": [],
-      "population": "Other",
-      "line": "",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "1646P",
-      "regimen": "second-line BRAF/MEK inhibitors",
-      "drugs": [
-        "BRAF",
-        "MEK"
-      ],
-      "biomarkers": [
-        "BRAFV600"
-      ],
-      "modality": [],
-      "population": "Other",
-      "line": "2L",
-      "phase": "Not specified",
-      "trial_id": ""
-    },
-    {
-      "row_id": "16P",
-      "regimen": "TET2-Mutant Clonal Hematopoiesis",
-      "drugs": [],
-      "biomarkers": [
-        "TET2"
-      ],
+      "biomarkers": [],
       "modality": [],
       "population": "Other",
       "line": "",
@@ -4321,7 +3698,7 @@
     },
     {
       "row_id": "1721P",
-      "regimen": "External validation of Rachel score",
+      "regimen": "Rachel score validation",
       "drugs": [],
       "biomarkers": [],
       "modality": [],
@@ -4347,12 +3724,21 @@
       "trial_id": ""
     },
     {
-      "row_id": "68eP",
-      "regimen": "promotes lung metastasis",
+      "row_id": "2978P",
+      "regimen": "AI-defined lung nodule malignancy score validation",
       "drugs": [],
-      "biomarkers": [
-        "GPX3"
-      ],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "",
+      "phase": "Phase 2",
+      "trial_id": ""
+    },
+    {
+      "row_id": "ROW_1276",
+      "regimen": "Lung",
+      "drugs": [],
+      "biomarkers": [],
       "modality": [],
       "population": "Other",
       "line": "",
@@ -4360,137 +3746,248 @@
       "trial_id": ""
     },
     {
-      "row_id": "18P",
-      "regimen": "Clinical Efficacy and Immune Mechanism of PD-1/CTLA-4 Bispecific Antibody Cadonilimab",
-      "drugs": [
-        "Cadonilimab"
-      ],
+      "row_id": "ROW_1307",
+      "regimen": "Conclusion remarks",
+      "drugs": [],
       "biomarkers": [],
-      "modality": [
-        "Bispecific"
-      ],
+      "modality": [],
       "population": "Other",
       "line": "",
       "phase": "Not specified",
       "trial_id": ""
     },
     {
-      "row_id": "1643P",
-      "regimen": "regorafenib combined with BRAF-/MEK-inhibitors",
-      "drugs": [
-        "regorafenib",
-        "BRAF-inhibitors",
-        "MEK-inhibitors"
-      ],
-      "biomarkers": [
-        "BRAFV600"
-      ],
-      "modality": [
-        "TKI"
-      ],
+      "row_id": "ROW_1309",
+      "regimen": "Q&A & discussion",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
       "population": "Other",
-      "line": "Not specified",
-      "phase": "Phase 2",
-      "trial_id": "RegoMel"
-    },
-    {
-      "row_id": "2214MO",
-      "regimen": "telisotuzumab adizutecan",
-      "drugs": [
-        "telisotuzumab adizutecan",
-        "ABBV-400",
-        "Temab-A"
-      ],
-      "biomarkers": [
-        "c-Met"
-      ],
-      "modality": [
-        "ADC"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Phase 1",
-      "trial_id": "2214MO"
-    },
-    {
-      "row_id": "1645P",
-      "regimen": "Combination of Encorafenib, Binimetinib and Palbociclib",
-      "drugs": [
-        "Encorafenib",
-        "Binimetinib",
-        "Palbociclib"
-      ],
-      "biomarkers": [
-        "BRAF-Mutant"
-      ],
-      "modality": [
-        "TKI"
-      ],
-      "population": "Other",
-      "line": "Not specified",
-      "phase": "Phase 1b",
-      "trial_id": "1645P"
-    },
-    {
-      "row_id": "1694eP",
-      "regimen": "induction targeted therapy with immune checkpoint inhibitor therapy switch",
-      "drugs": [
-        "BRAF",
-        "ICI"
-      ],
-      "modality": [
-        "IO"
-      ],
-      "population": "Other",
-      "line": "1L",
+      "line": "",
       "phase": "Not specified",
-      "trial_id": "1694eP",
+      "trial_id": ""
+    },
+    {
+      "row_id": "2347P",
+      "population": "Other",
+      "trial_id": "2347P",
+      "drugs": [],
       "biomarkers": []
     },
     {
-      "row_id": "196eP",
-      "regimen": "SOS1 inhibitor and EGFR inhibitor combinations",
+      "row_id": "2975P",
+      "population": "Other",
+      "trial_id": "2975P",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "803P",
+      "population": "Other",
+      "trial_id": "803P",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "1643P",
+      "regimen": "regorafenib combined with BRAF-/MEK-inhibitors",
       "drugs": [
-        "BMS-986509",
-        "adagrasib"
+        "regorafenib"
       ],
       "biomarkers": [
-        "KRAS G12C",
+        "BRAFV600-mut"
+      ],
+      "phase": "Phase 2",
+      "trial_id": "1643P"
+    },
+    {
+      "row_id": "ROW_1459",
+      "population": "Other",
+      "trial_id": "ROW_1459",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "1642P",
+      "regimen": "BRAF/MEKi rechallenge",
+      "biomarkers": [
+        "BRAFV600"
+      ],
+      "phase": "Not specified",
+      "trial_id": "1642P",
+      "drugs": []
+    },
+    {
+      "row_id": "ROW_1490",
+      "population": "Other",
+      "trial_id": "ROW_1490",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "ROW_1500",
+      "population": "Other",
+      "trial_id": "ROW_1500",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "2300P",
+      "population": "Other",
+      "trial_id": "2300P",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "2841P",
+      "regimen": "osimertinib",
+      "drugs": [
+        "osimertinib"
+      ],
+      "population": "Other",
+      "trial_id": "2841P",
+      "biomarkers": []
+    },
+    {
+      "row_id": "173TiP",
+      "regimen": "BRAF and MEK inhibitor therapy",
+      "drugs": [
+        "BRAF inhibitor",
+        "MEK inhibitor"
+      ],
+      "biomarkers": [],
+      "modality": [
+        "TKI"
+      ],
+      "population": "Other",
+      "line": "2L",
+      "phase": "Phase 2",
+      "trial_id": "DyNAMIc"
+    },
+    {
+      "row_id": "916O",
+      "regimen": "oral KRAS G12D inhibitor therapy",
+      "drugs": [
+        "INCB161734"
+      ],
+      "biomarkers": [
+        "KRAS G12D",
         "KRAS"
       ],
       "modality": [
         "TKI"
       ],
       "population": "Other",
-      "line": "Not specified",
-      "phase": "Not specified",
-      "trial_id": "196eP"
+      "line": "1L",
+      "phase": "Phase 1",
+      "trial_id": "INCB161734"
     },
     {
-      "row_id": "1623P",
-      "regimen": "switching from BRAF/MEK inhibition to immune checkpoint inhibition",
+      "row_id": "727MO",
+      "regimen": "FOLFOX plus PANITUMUMAB",
       "drugs": [
-        "BRAF",
-        "MEK",
-        "ICI"
+        "FOLFOX",
+        "PANITUMUMAB"
+      ],
+      "biomarkers": [
+        "RAS",
+        "BRAF"
       ],
       "modality": [
+        "Chemotherapy"
+      ],
+      "population": "mCRC",
+      "line": "1L",
+      "phase": "Not specified",
+      "trial_id": "FFC"
+    },
+    {
+      "row_id": "127P",
+      "regimen": "metabolomic signatures for early detection",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "224eP",
+      "regimen": "systemic mitochondrial alterations",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "78eP",
+      "regimen": "KRAS inhibition",
+      "drugs": [],
+      "biomarkers": [
+        "KRAS"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "2077eP",
+      "regimen": "Bronchial artery chemoembolization combined with immunotherapy",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [
+        "Chemotherapy",
         "IO"
       ],
       "population": "Other",
       "line": "Not specified",
       "phase": "Not specified",
-      "trial_id": "1623P",
-      "biomarkers": []
+      "trial_id": ""
     },
     {
-      "row_id": "1647P",
-      "regimen": "Dabrafenib/trametinib versus encorafenib/binimetinib",
+      "row_id": "3042eP",
+      "regimen": "DNA mutation and methylation evolution",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "1413P",
+      "regimen": "cisplatin chemoresistance via EGFR-JAK2-STAT3 pathway",
       "drugs": [
-        "Dabrafenib",
-        "Trametinib",
-        "Encorafenib",
-        "Binimetinib"
+        "cisplatin"
+      ],
+      "biomarkers": [
+        "DDAH1",
+        "EGFR",
+        "JAK2",
+        "STAT3"
+      ],
+      "modality": [
+        "Chemotherapy"
+      ],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "1645P",
+      "regimen": "combination of encorafenib, binimetinib and palbociclib",
+      "drugs": [
+        "encorafenib",
+        "binimetinib",
+        "palbociclib"
       ],
       "biomarkers": [
         "BRAF"
@@ -4498,53 +3995,394 @@
       "modality": [
         "TKI"
       ],
-      "population": "mUC",
-      "line": "1L",
-      "phase": "Not specified",
-      "trial_id": "1647P"
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Phase Ib",
+      "trial_id": ""
     },
     {
-      "row_id": "683P",
-      "regimen": "Dual Immune Checkpoint Inhibition",
+      "row_id": "ROW_1687",
+      "biomarkers": [
+        "c-Met"
+      ],
+      "population": "Other",
+      "trial_id": "ROW_1687",
+      "drugs": []
+    },
+    {
+      "row_id": "ROW_1691",
+      "population": "Other",
+      "trial_id": "ROW_1691",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "ROW_1696",
+      "modality": [
+        "IO"
+      ],
+      "population": "Other",
+      "trial_id": "ROW_1696",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "ROW_1697",
+      "population": "Other",
+      "trial_id": "ROW_1697",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "2248P",
+      "biomarkers": [
+        "KRAS",
+        "MTAP"
+      ],
+      "population": "Other",
+      "trial_id": "2248P",
+      "drugs": []
+    },
+    {
+      "row_id": "ROW_1740",
+      "population": "Other",
+      "trial_id": "ROW_1740",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "1906P",
+      "population": "Other",
+      "trial_id": "1906P",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "ROW_1778",
+      "population": "Other",
+      "trial_id": "ROW_1778",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "540P",
       "drugs": [
-        "BRAF",
-        "NRAS",
-        "PD-L1",
-        "C-KIT"
+        "trastuzumab deruxtecan",
+        "T-DXd"
       ],
       "biomarkers": [
-        "BRAF",
-        "NRAS",
-        "PD-L1",
-        "C-KIT"
+        "HER2"
+      ],
+      "population": "Other",
+      "trial_id": "540P"
+    },
+    {
+      "row_id": "3026eP",
+      "population": "Other",
+      "trial_id": "3026eP",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "LBA32",
+      "regimen": "Panitumumab retreatment followed by regorafenib",
+      "drugs": [
+        "Panitumumab",
+        "regorafenib"
+      ],
+      "biomarkers": [
+        "RAS",
+        "BRAF"
+      ],
+      "modality": [
+        "Chemotherapy"
+      ],
+      "population": "Other",
+      "line": "3L",
+      "phase": "Not specified",
+      "trial_id": "LBA32"
+    },
+    {
+      "row_id": "880eP",
+      "regimen": "Conversion therapy with encorafenib + cetuximab",
+      "drugs": [
+        "encorafenib",
+        "cetuximab"
+      ],
+      "biomarkers": [
+        "BRAF V600E"
+      ],
+      "modality": [
+        "Chemotherapy"
+      ],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "880eP"
+    },
+    {
+      "row_id": "814P",
+      "regimen": "Predictive biomarker to anti-epidermal growth factor receptor therapy",
+      "drugs": [
+        "anti-epidermal growth factor receptor"
+      ],
+      "biomarkers": [
+        "Lactate dehydrogenase",
+        "RAS",
+        "BRAF"
       ],
       "modality": [
         "IO"
       ],
       "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "814P"
+    },
+    {
+      "row_id": "1830P",
+      "regimen": "High-risk stratification in lung cancer",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "1830P"
+    },
+    {
+      "row_id": "ROW_2209",
+      "regimen": "Optimised adaptive strategies with systemic therapy",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "ROW_2209"
+    },
+    {
+      "row_id": "1956P",
+      "regimen": "Osimertinib then chemotherapy",
+      "drugs": [
+        "Osimertinib"
+      ],
+      "biomarkers": [
+        "EGFR"
+      ],
+      "modality": [
+        "Chemotherapy"
+      ],
+      "population": "Other",
+      "line": "3L",
+      "phase": "Not specified",
+      "trial_id": "1956P"
+    },
+    {
+      "row_id": "792P",
+      "regimen": "Frontline anti-VEGF and anti-EGFR exposure",
+      "drugs": [
+        "trifluridine/tipiracil",
+        "regorafenib"
+      ],
+      "biomarkers": [],
+      "modality": [
+        "Chemotherapy"
+      ],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "792P"
+    },
+    {
+      "row_id": "259eP",
+      "regimen": "Modulator of cancer metabolism and BRAF-inhibitor sensitivity",
+      "drugs": [],
+      "biomarkers": [
+        "BRAF"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "259eP"
+    },
+    {
+      "row_id": "ROW_2267",
+      "regimen": "Discussion",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "ROW_2267"
+    },
+    {
+      "row_id": "ROW_2271",
+      "regimen": "Chair's welcome and introductions",
+      "drugs": [],
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": "ROW_2271"
+    },
+    {
+      "row_id": "ROW_2272",
+      "regimen": "Clinical factors",
+      "trial_id": "ROW_2272",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "ROW_2275",
+      "regimen": "Unmet needs and future perspectives for treatment of lung cancer",
+      "trial_id": "ROW_2275",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "ROW_2276",
+      "regimen": "Panel discussion and audience Q&A",
+      "trial_id": "ROW_2276",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "ROW_2281",
+      "regimen": "Emerging therapies in lung cancers of neuroendocrine origin: DLL3",
+      "trial_id": "ROW_2281",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "2369P",
+      "regimen": "Preliminary cost-benefit analysis results from the RISP lung cancer screening program",
+      "trial_id": "2369P",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "926MO",
+      "regimen": "MK-1084 monotherapy",
+      "drugs": [
+        "MK-1084"
+      ],
+      "population": "Other",
+      "line": "1L",
+      "phase": "Phase 1",
+      "trial_id": "KANDLELIT-001",
+      "biomarkers": [
+        "KRAS"
+      ]
+    },
+    {
+      "row_id": "927MO",
+      "regimen": "Single-agent divarasib experience",
+      "drugs": [
+        "divarasib"
+      ],
+      "population": "Other",
       "line": "1L",
       "phase": "Not specified",
-      "trial_id": "683P"
+      "trial_id": "927MO",
+      "biomarkers": [
+        "KRAS"
+      ]
     },
     {
-      "row_id": "ROW_4650",
-      "trial_id": "ROW_4650",
+      "row_id": "ROW_2337",
+      "regimen": "Summary & Take-Home Messages",
+      "trial_id": "ROW_2337",
       "drugs": [],
       "biomarkers": []
     },
     {
-      "row_id": "ROW_4655",
-      "trial_id": "ROW_4655",
+      "row_id": "ROW_2357",
+      "regimen": "The effect of exercise training at different times on improving sleep quality",
+      "trial_id": "ROW_2357",
       "drugs": [],
       "biomarkers": []
     },
     {
-      "row_id": "ROW_4671",
-      "modality": [
-        "IO"
+      "row_id": "ROW_2395",
+      "regimen": "Summary and close",
+      "trial_id": "ROW_2395",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "1623P",
+      "regimen": "switching from BRAF/MEK inhibition to immune checkpoint inhibition",
+      "drugs": [
+        "BRAF inhibitor",
+        "MEK inhibitor",
+        "immune checkpoint inhibitor"
       ],
-      "trial_id": "ROW_4671",
+      "biomarkers": [],
+      "modality": [],
+      "population": "Other",
+      "line": "2L",
+      "phase": "Not specified",
+      "trial_id": "EUMelaReg"
+    },
+    {
+      "row_id": "2610MO",
+      "regimen": "genomic analysis of papillary renal cell carcinoma",
       "drugs": [],
+      "biomarkers": [
+        "MET"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "ROW_2562",
+      "regimen": "tackling EGFR treatment resistance",
+      "drugs": [],
+      "biomarkers": [
+        "EGFR"
+      ],
+      "modality": [],
+      "population": "Other",
+      "line": "Not specified",
+      "phase": "Not specified",
+      "trial_id": ""
+    },
+    {
+      "row_id": "2016P",
+      "trial_id": "ATEZO-BRAIN",
+      "drugs": [
+        "atezolizumab"
+      ],
+      "biomarkers": []
+    },
+    {
+      "row_id": "3175eP",
+      "trial_id": "ICARUS-LUNG01",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "ROW_2634",
+      "drugs": [],
+      "biomarkers": []
+    },
+    {
+      "row_id": "2049eP",
+      "regimen": "osimertinib rechallenge",
+      "drugs": [
+        "osimertinib"
+      ],
+      "population": "Other",
+      "line": "Adjuvant",
+      "phase": "Not specified",
+      "trial_id": "ADAURA",
       "biomarkers": []
     }
   ],

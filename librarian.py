@@ -101,6 +101,24 @@ def deterministic_alias_sweep(record: Dict, title: str, aliases: Dict) -> Dict:
                 if canonical not in record['biomarkers']:
                     record['biomarkers'].append(canonical)
 
+    # MET-specific detection: distinguish MET alterations from metastasis
+    # Only tag as MET biomarker if it appears with alteration/mutation/exon context
+    met_biomarker_patterns = [
+        r'\bmet\s+alteration',
+        r'\bmet\s+mutation',
+        r'\bmet\s+amplification',
+        r'\bmet\s+exon',
+        r'\bmetex14',
+        r'\bmet\s+ex14',
+        r'\bmet\s+ex\s*14',
+        r'\bc-met\b',
+        r'\bhgf/met\b'
+    ]
+
+    if any(re.search(pattern, title_lower) for pattern in met_biomarker_patterns):
+        if 'MET' not in record['biomarkers']:
+            record['biomarkers'].append('MET')
+
     return record
 
 
@@ -124,14 +142,14 @@ async def librarian_extract_batch_async(
         per_item = 65
         max_tokens = min(300 + per_item * len(studies), 3000)
 
-    # Build compact prompt
+    # Build compact prompt with abstracts
     studies_text = "\n".join([
-        f"[{s['row_id']}] {s['title'][:180]}"
+        f"[{s['row_id']}]\nTitle: {s['title']}\nAbstract: {s['abstract'][:500] if s['abstract'] else 'Not available'}\n"
         for s in studies
     ])
 
     # NDJSON prompt with pattern hints
-    user_prompt = f"""Extract structured data from {len(studies)} study titles.
+    user_prompt = f"""Extract structured data from {len(studies)} studies (titles + abstracts when available).
 
 **Output Format**: One JSON object per line (NDJSON). Do NOT wrap in array. Omit empty/null fields.
 
@@ -148,22 +166,40 @@ async def librarian_extract_batch_async(
   "trial_id": <string>
 }}
 
+**CRITICAL - MET BIOMARKER EXTRACTION (HIGHEST PRIORITY)**:
+YOU MUST extract MET as a biomarker when ANY of these appear in title/abstract:
+- "MET exon 14" / "METex14" / "METex 14" / "MET ex14" → Extract "MET" in biomarkers array
+- "MET amplification" / "MET amp" / "METamp" → Extract "MET" in biomarkers array
+- "MET overexpression" / "MET protein" / "c-MET" → Extract "MET" in biomarkers array
+- "MET alteration" / "MET mutation" / "HGF/MET" → Extract "MET" in biomarkers array
+
+DO NOT extract "MET" when these appear (these are NOT biomarkers):
+- "metastatic" / "metastasis" / "mNSCLC" / "metastases" → These describe disease stage, NOT MET biomarker
+
+**CRITICAL - MET DRUG EXTRACTION (HIGHEST PRIORITY)**:
+ALWAYS extract these MET-targeting drugs when mentioned:
+- tepotinib, Tepmetko, capmatinib, Tabrecta, savolitinib, crizotinib
+- telisotuzumab vedotin, Teliso-V, amivantamab, osimertinib + savolitinib, osimertinib + capmatinib
+
 **CRITICAL - Regimen vs Drugs**:
 - "regimen": The PRIMARY treatment being studied (how you'd describe it clinically)
-  - For combinations: "enfortumab vedotin + pembrolizumab", "nivolumab + gemcitabine/cisplatin"
-  - For monotherapy: "erdafitinib", "avelumab maintenance"
+  - For combinations: "osimertinib + savolitinib", "nivolumab + gemcitabine/cisplatin"
+  - For monotherapy: "tepotinib", "capmatinib", "erdafitinib"
   - For sequence studies: "platinum chemotherapy → avelumab maintenance"
 - "drugs": Individual drug components (array for deduplication/normalization later)
 
 **Pattern Hints**:
-- Trial IDs: Look like "EV-302", "POTOMAC", "SunRISe-4", "KEYNOTE-A39"
-- Biomarkers: Gene/protein tokens like "FGFR3", "PD-L1", "TROP2", "HER2"
+- Trial IDs: Look like "EV-302", "POTOMAC", "SunRISe-4", "KEYNOTE-A39", "SAVANNAH"
+- Biomarkers: Gene/protein tokens like "FGFR3", "PD-L1", "TROP2", "HER2", "MET"
+  - CRITICAL for MET: "MET alteration", "MET exon", "MET amplification", "MET mutation", "METex14" = biomarker (extract as "MET")
+  - "metastatic", "metastasis", "mNSCLC" = population descriptor (NOT a biomarker)
 - Drugs: Brand/generic/codes like "enfortumab vedotin", "Padcev", "LY3866288", "nivolumab"
-- Combinations: Look for "+", "with", "plus", "combined with" patterns
+  - MET-targeting drugs: "tepotinib", "Tepmetko", "capmatinib", "Tabrecta", "savolitinib", "crizotinib", "telisotuzumab vedotin", "Teliso-V", "amivantamab"
+- Combinations: Look for "+", "with", "plus", "combined with" patterns (e.g., "osimertinib + savolitinib")
 
-Extract ONLY what's explicit in title. Output exactly {len(studies)} lines.
+Extract ONLY what's explicit in title and abstract. Use abstract content for richer extraction. Output exactly {len(studies)} lines.
 
-**Titles**:
+**Studies**:
 {studies_text}"""
 
     try:
@@ -344,6 +380,11 @@ def librarian_process_all(
     for idx, row in filtered_df.iterrows():
         title = str(row['Title'])
 
+        # Get abstract if available
+        abstract = str(row.get('Abstract', '')).strip()
+        if abstract == 'nan' or abstract == 'None':
+            abstract = ''
+
         # Handle potentially missing Identifier
         try:
             row_id = str(row['Identifier']).strip()
@@ -353,7 +394,7 @@ def librarian_process_all(
             row_id = f"ROW_{idx}"
 
         if is_valid_study(title, row_id):
-            studies.append({'row_id': row_id, 'title': title})
+            studies.append({'row_id': row_id, 'title': title, 'abstract': abstract})
             study_map[row_id] = title
         else:
             skipped += 1

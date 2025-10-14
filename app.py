@@ -1499,6 +1499,63 @@ def apply_therapeutic_area_filter(df: pd.DataFrame, ta_filter: str) -> pd.Series
     return final_mask
 
 # ============================================================================
+# HELPER FUNCTIONS FOR AI ASSISTANT
+# ============================================================================
+
+def get_latest_report_for_ta(ta: str, button_type: str = None) -> str:
+    """
+    Load the most recently generated report for a given therapeutic area.
+
+    Args:
+        ta: Therapeutic area name (e.g., "Bladder Cancer")
+        button_type: Optional - specific button type to load (insights, competitor, kol, etc.)
+                    If None, searches all button types and returns most recent.
+
+    Returns:
+        Report text if found, None otherwise
+    """
+    try:
+        # Normalize TA name to cache key format
+        ta_key = ta.lower().replace(' ', '_').replace('-', '_')
+
+        # Map of cache files by button type
+        cache_files = {
+            'insights': 'cache/journalist_insights.json',
+            'competitor': 'cache/journalist_competitor.json',
+            'kol': 'cache/journalist_kol.json',
+            'institution': 'cache/journalist_institution.json',
+            'strategic': 'cache/journalist_strategic.json'
+        }
+
+        latest_report = None
+        latest_timestamp = None
+
+        # If button_type specified, only check that cache
+        files_to_check = {button_type: cache_files[button_type]} if button_type and button_type in cache_files else cache_files
+
+        for btn_type, cache_file in files_to_check.items():
+            try:
+                with open(cache_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+
+                    if ta_key in data:
+                        report_data = data[ta_key]
+                        report_text = report_data.get('analysis', '')
+                        timestamp = report_data.get('metadata', {}).get('generated_at', '')
+
+                        # Track most recent report
+                        if report_text and (latest_timestamp is None or timestamp > latest_timestamp):
+                            latest_report = report_text
+                            latest_timestamp = timestamp
+            except (FileNotFoundError, json.JSONDecodeError, KeyError):
+                continue
+
+        return latest_report
+    except Exception as e:
+        print(f"[REPORT LOADER] Error loading report for {ta}: {e}")
+        return None
+
+# ============================================================================
 # MULTI-FILTER LOGIC (Main Filtering Function)
 # ============================================================================
 
@@ -3847,87 +3904,27 @@ def stream_playbook(playbook_key):
                 ta_filter = ta_filters[0]
                 ta_key = ta_filter.lower().replace(' ', '_').replace('&', 'and')
 
-                # Try new subdirectory cache structure first (per-TA files)
-                new_cache_file = Path(__file__).parent / "cache" / "deep_intelligence" / f"{playbook_key}_{ta_key}.json"
+                # Try consolidated cache format FIRST (NEW structure - single file per button)
+                consolidated_cache_file = Path(__file__).parent / "cache" / f"journalist_{playbook_key}.json"
 
-                # Fall back to old consolidated cache format
-                old_cache_file = Path(__file__).parent / "cache" / f"journalist_{playbook_key}.json"
+                # Fall back to old per-TA cache structure (legacy)
+                legacy_cache_file = Path(__file__).parent / "cache" / "deep_intelligence" / f"{playbook_key}_{ta_key}.json"
 
-                # Try new cache format first
-                if new_cache_file.exists():
-                    print(f"[CACHE HIT] Loading {ta_filter} from new cache: {new_cache_file.name}")
+                # Try consolidated cache format first (PRIORITY 1)
+                if consolidated_cache_file.exists():
+                    print(f"[CACHE HIT] Loading {ta_filter} from consolidated cache: {consolidated_cache_file.name}")
                     start_time = time.time()
 
                     try:
-                        with open(new_cache_file, 'r', encoding='utf-8') as f:
-                            cached_data = json.load(f)
-
-                        load_time = time.time() - start_time
-                        print(f"[CACHE] Loaded {ta_filter} in {load_time:.3f}s")
-
-                        # Send metadata
-                        metadata = cached_data.get("metadata", {})
-                        yield "data: " + json.dumps({
-                            "cache_metadata": {
-                                "generated_at": metadata.get("generated_at", "Unknown"),
-                                "model": metadata.get("model", "gpt-5"),
-                                "dataset_size": metadata.get("dataset_size", 0),
-                                "cache_hit": True,
-                                "report_type": "deep_intelligence"
-                            }
-                        }) + "\n\n"
-
-                        # Send tables if present
-                        tables = cached_data.get("tables", {})
-                        for table_name, table_data in tables.items():
-                            if table_data.get("rows"):
-                                yield "data: " + json.dumps({
-                                    "title": table_name.replace("_", " ").title(),
-                                    "columns": table_data.get("columns", []),
-                                    "rows": sanitize_data_structure(table_data.get("rows", []))
-                                }) + "\n\n"
-
-                        if tables:
-                            print(f"[CACHE] Sent {len(tables)} tables")
-
-                        # Stream analysis with realistic typing effect PRESERVING NEWLINES
-                        analysis_text = cached_data.get("analysis", "")
-
-                        if analysis_text:
-                            # Stream in chunks while preserving ALL line breaks
-                            chunk_size = 50  # characters per chunk
-                            for i in range(0, len(analysis_text), chunk_size):
-                                chunk = analysis_text[i:i + chunk_size]
-                                yield "data: " + json.dumps({"text": chunk}) + "\n\n"
-                                time.sleep(0.03)  # 30ms between chunks for natural feel
-
-                        yield "data: [DONE]\n\n"
-
-                        total_time = time.time() - start_time
-                        print(f"[CACHE] Deep intelligence delivered in {total_time:.1f}s")
-                        print(f"[CACHE] API cost: $0.00 (pre-computed intelligence)")
-                        return
-
-                    except Exception as cache_error:
-                        print(f"[CACHE ERROR] Failed to load new cache: {cache_error}")
-                        print(f"[CACHE] Trying old cache format...")
-                        # Fall through to try old cache format
-
-                # Try old consolidated cache format
-                elif old_cache_file.exists():
-                    print(f"[CACHE HIT] Loading {ta_filter} from consolidated cache: {old_cache_file.name}")
-                    start_time = time.time()
-
-                    try:
-                        with open(old_cache_file, 'r', encoding='utf-8') as f:
+                        with open(consolidated_cache_file, 'r', encoding='utf-8') as f:
                             all_tas_cache = json.load(f)
 
                         # Extract this TA's report
                         if ta_key not in all_tas_cache:
-                            print(f"[CACHE MISS] {ta_filter} not found in {old_cache_file.name}")
+                            print(f"[CACHE MISS] {ta_filter} not found in {consolidated_cache_file.name}")
                             print(f"[CACHE] Available TAs: {list(all_tas_cache.keys())}")
                             print(f"[CACHE] Run: python generate_deep_intelligence.py --button {playbook_key} --ta \"{ta_filter}\"")
-                            # Fall through to real-time generation
+                            # Fall through to legacy cache or real-time generation
                         else:
                             cached_data = all_tas_cache[ta_key]
 
@@ -3978,7 +3975,67 @@ def stream_playbook(playbook_key):
                             return
 
                     except Exception as cache_error:
-                        print(f"[CACHE ERROR] Failed to load cache: {cache_error}")
+                        print(f"[CACHE ERROR] Failed to load consolidated cache: {cache_error}")
+                        print(f"[CACHE] Trying legacy cache format...")
+                        # Fall through to try legacy cache format
+
+                # Try legacy per-TA cache format (PRIORITY 2 - fallback only)
+                elif legacy_cache_file.exists():
+                    print(f"[CACHE HIT] Loading {ta_filter} from legacy cache: {legacy_cache_file.name}")
+                    start_time = time.time()
+
+                    try:
+                        with open(legacy_cache_file, 'r', encoding='utf-8') as f:
+                            cached_data = json.load(f)
+
+                        load_time = time.time() - start_time
+                        print(f"[CACHE] Loaded {ta_filter} in {load_time:.3f}s")
+
+                        # Send metadata
+                        metadata = cached_data.get("metadata", {})
+                        yield "data: " + json.dumps({
+                            "cache_metadata": {
+                                "generated_at": metadata.get("generated_at", "Unknown"),
+                                "model": metadata.get("model", "gpt-5"),
+                                "dataset_size": metadata.get("dataset_size", 0),
+                                "cache_hit": True,
+                                "report_type": "deep_intelligence"
+                            }
+                        }) + "\n\n"
+
+                        # Send tables if present
+                        tables = cached_data.get("tables", {})
+                        for table_name, table_data in tables.items():
+                            if table_data.get("rows"):
+                                yield "data: " + json.dumps({
+                                    "title": table_name.replace("_", " ").title(),
+                                    "columns": table_data.get("columns", []),
+                                    "rows": sanitize_data_structure(table_data.get("rows", []))
+                                }) + "\n\n"
+
+                        if tables:
+                            print(f"[CACHE] Sent {len(tables)} tables")
+
+                        # Stream analysis with realistic typing effect PRESERVING NEWLINES
+                        analysis_text = cached_data.get("analysis", "")
+
+                        if analysis_text:
+                            # Stream in chunks while preserving ALL line breaks
+                            chunk_size = 50  # characters per chunk
+                            for i in range(0, len(analysis_text), chunk_size):
+                                chunk = analysis_text[i:i + chunk_size]
+                                yield "data: " + json.dumps({"text": chunk}) + "\n\n"
+                                time.sleep(0.03)  # 30ms between chunks for natural feel
+
+                        yield "data: [DONE]\n\n"
+
+                        total_time = time.time() - start_time
+                        print(f"[CACHE] Deep intelligence delivered in {total_time:.1f}s")
+                        print(f"[CACHE] API cost: $0.00 (pre-computed intelligence)")
+                        return
+
+                    except Exception as cache_error:
+                        print(f"[CACHE ERROR] Failed to load legacy cache: {cache_error}")
                         print(f"[CACHE] Falling back to real-time generation...")
                         # Fall through to real-time generation
                 else:
@@ -4411,8 +4468,21 @@ def stream_chat_ai_first():
     conversation_history = request.json.get('conversation_history', [])
     thinking_mode = request.json.get('thinking_mode', 'auto')  # auto, quick, normal, or deep
 
+    # Get active TA and button type from frontend (set when user clicks button)
+    active_ta = request.json.get('active_ta')  # e.g., "Bladder Cancer"
+    button_type = request.json.get('button_type')  # e.g., "insights"
+
     if not user_query:
         return jsonify({"error": "No message provided"}), 400
+
+    # Load latest report for the active TA (if available)
+    latest_report = None
+    if active_ta:
+        latest_report = get_latest_report_for_ta(active_ta, button_type)
+        if latest_report:
+            print(f"[AI-FIRST] Loaded {len(latest_report)} char report for {active_ta} ({button_type})")
+        else:
+            print(f"[AI-FIRST] No cached report found for {active_ta}")
 
     def generate():
         try:
@@ -4440,7 +4510,15 @@ def stream_chat_ai_first():
                 'date': date_filters
             }
 
-            result = handle_chat_query(filtered_df, user_query, active_filters, conversation_history, thinking_mode)
+            result = handle_chat_query(
+                filtered_df,
+                user_query,
+                active_filters,
+                conversation_history,
+                thinking_mode,
+                active_ta=active_ta,  # Pass active TA
+                latest_report=latest_report  # Pass report context
+            )
 
             print(f"[AI-FIRST] AI processing complete, streaming response...")
 

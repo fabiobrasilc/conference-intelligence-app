@@ -119,7 +119,7 @@ BUTTON_TYPES = [
 # Chief Editor Quality Control (for insights button)
 # Set to True to enable QC review layer (adds ~30s per report)
 # Set to False to skip QC and use journalist output directly
-ENABLE_CHIEF_EDITOR = True
+ENABLE_CHIEF_EDITOR = False  # Disabled for faster generation
 
 # Therapeutic Area Medical Terminology Synonyms (for PubMed/CT.gov queries)
 TA_MEDICAL_SYNONYMS = {
@@ -156,11 +156,13 @@ EMD_PORTFOLIO = {
         "approval_status": "FDA traditional approval (Feb 15, 2024); plasma CDx approved Nov 2024",
         "nccn_status": "NCCN-preferred for METex14 NSCLC",
         "key_competitors": [
-            "capmatinib (METex14)",
-            "telisotuzumab vedotin (c-MET IHC 3+)",
-            "savolitinib + osimertinib (MET-driven EGFR resistance)",
-            "amivantamab + lazertinib (EGFR + MET dual targeting)",
-            "crizotinib (METamp, off-label)"
+            "capmatinib",
+            "savolitinib",
+            "telisotuzumab vedotin",
+            "amivantamab",
+            "crizotinib",
+            "osimertinib + savolitinib",
+            "osimertinib + capmatinib"
         ]
     },
     "Colorectal Cancer": {
@@ -293,9 +295,14 @@ def get_ta_specific_competitor_guidance(ta: str) -> str:
     guidance = {
         "Lung Cancer": """
 **FOR LUNG CANCER: Focus ONLY on MET-altered NSCLC competitors**
-- TRUE COMPETITORS (analyze in detail): MET TKIs (capmatinib, savolitinib, crizotinib), MET ADCs (telisotuzumab vedotin), MET bispecifics (amivantamab), EGFR+MET combinations that threaten tepotinib's METex14/METamp market share
-- EXCLUDE from competitor analysis: EGFR-only, ALK, ROS1, KRAS, BRAF (unless combined with MET), broad IO studies, melanoma/thyroid studies
-- Context is fine, but Section 2 "Competitor Activity" should focus on drugs that directly compete with tepotinib for MET-altered NSCLC patients""",
+- TRUE COMPETITORS (analyze in detail):
+  * MET TKIs: capmatinib, savolitinib, crizotinib (METex14 skipping), tepmetko
+  * MET ADCs: telisotuzumab vedotin (Teliso-V), other c-MET-targeting ADCs
+  * MET bispecifics: amivantamab (EGFR/MET bispecific, especially for EGFR+MET co-alterations)
+  * EGFR+MET combinations that threaten tepotinib's market (e.g., osimertinib + MET TKI for MET-amplified resistance)
+- BIOMARKER CONTEXT: METex14 skipping mutations (~3-4% NSCLC), MET amplification (resistance mechanism post-EGFR TKI), MET overexpression
+- EXCLUDE from competitor analysis: EGFR-only, ALK, ROS1, KRAS, BRAF, NTRK, RET, PD-L1-driven IO monotherapy (unless combined with MET-targeting agent), melanoma/thyroid studies
+- Context is fine, but Section 2 "Competitor Activity" should focus EXCLUSIVELY on drugs competing for MET-altered NSCLC patients (METex14 or MET-amplified)""",
 
         "Colorectal Cancer": """
 **FOR COLORECTAL CANCER: Exclude EMD Serono/Merck KGaA assets from competitor analysis**
@@ -370,18 +377,22 @@ def update_librarian_for_ta(button: str, ta: str, ta_records, force: bool = Fals
         print(f"[LIBRARIAN] {ta} already cached for {button}. Use --refresh-librarian to regenerate.")
         return False
 
-    # Convert DataFrames to serializable format
-    serializable_records = {}
-    for key, value in ta_records.items():
-        if isinstance(value, pd.DataFrame):
-            serializable_records[key] = {
-                "columns": list(value.columns),
-                "rows": value.to_dict('records')
-            }
-        else:
-            serializable_records[key] = value
-
-    cache_data[ta_key] = serializable_records
+    # Handle both list (from librarian_process_all) and dict formats
+    if isinstance(ta_records, list):
+        # Direct list of records from librarian_process_all
+        cache_data[ta_key] = ta_records
+    else:
+        # Convert DataFrames to serializable format (for dict-based records)
+        serializable_records = {}
+        for key, value in ta_records.items():
+            if isinstance(value, pd.DataFrame):
+                serializable_records[key] = {
+                    "columns": list(value.columns),
+                    "rows": value.to_dict('records')
+                }
+            else:
+                serializable_records[key] = value
+        cache_data[ta_key] = serializable_records
     save_librarian_cache(button, cache_data)
 
     print(f"[LIBRARIAN] Updated {button} cache with {ta} data")
@@ -840,6 +851,11 @@ IMPORTANT: Begin with language like "ESMO 2025 {ta} competitor activity centers 
 ### 1.2 Approved Competitive Drugs
 - Which drugs are currently FDA/EMA approved for {ta}?
 - What are their labeled indications and positioning?
+- **IMPORTANT**: Include detailed approval history where relevant:
+  - Example: "Received accelerated approval in [YEAR], traditional/full approval in [YEAR]"
+  - Example: "Conditionally approved in China in [YEAR], full approval in [YEAR]"
+  - Include NCCN guideline status if known (e.g., "NCCN-preferred")
+  - Note availability of companion diagnostics where applicable (e.g., "plasma CDx available")
 - Any recent label expansions, withdrawals, or regulatory updates?
 
 ### 1.3 EMD Serono/Merck KGaA's Competitive Position
@@ -1343,7 +1359,7 @@ def build_research_insights_prompt(ta: str, filtered_df, tables_data: Dict) -> s
     # Build regimen context
     regimen_context = ""
     if regimen_groups:
-        regimen_context = "\n**KEY REGIMEN GROUPS (≥3 studies each):**\n"
+        regimen_context = "\n**KEY REGIMEN GROUPS (>=3 studies each):**\n"
         for regimen in regimen_groups:
             regimen_context += f"- {regimen['regimen']} ({regimen['count']} studies)\n"
             regimen_context += f"  Example studies: {', '.join(regimen['examples'][:3])}\n"
@@ -1355,6 +1371,91 @@ def build_research_insights_prompt(ta: str, filtered_df, tables_data: Dict) -> s
         for signal in unmet_need_signals:
             unmet_need_context += f"- {signal['category']}: {signal['count']} studies\n"
 
+    # Build abstracts section (CRITICAL - this is the actual data!)
+    # For Lung Cancer (now filtered to ~206 mNSCLC studies), include ALL abstracts
+    # For other large TAs (>100 studies), prioritize LBAs and studies with abstracts
+    abstracts_section = "\n**FULL STUDY ABSTRACTS:**\n\n"
+
+    if ta == "Lung Cancer":
+        # Lung Cancer: Smart prioritization for MET-focused insights
+        # Priority 1: EMD asset (tepotinib) - ALWAYS include
+        # Priority 2: MET competitors (capmatinib, savolitinib, telisotuzumab vedotin, amivantamab, crizotinib)
+        # Priority 3: LBAs
+        # Priority 4: Studies with abstracts
+        # Limit: ~100 studies to stay within context window
+
+        emd_asset_pattern = r'\btepotinib\b|\bTepmetko\b'
+        met_competitor_pattern = r'\bcapmatinib\b|\bsavolitinib\b|\btelisotuzumab vedotin\b|\bamivantamab\b|\bcrizotinib\b|\bTabrecta\b|\bTeliso-V\b'
+        lba_mask = filtered_df['Identifier'].str.contains('LBA', case=False, na=False)
+        has_abstract_mask = filtered_df['Abstract'].notna() & (filtered_df['Abstract'].str.len() > 100)
+
+        # Build priority tiers
+        tier1 = filtered_df[filtered_df['Title'].str.contains(emd_asset_pattern, case=False, na=False, regex=True)]
+        tier2 = filtered_df[filtered_df['Title'].str.contains(met_competitor_pattern, case=False, na=False, regex=True) & ~filtered_df['Identifier'].isin(tier1['Identifier'])]
+        tier3 = filtered_df[lba_mask & ~filtered_df['Identifier'].isin(pd.concat([tier1, tier2])['Identifier'])]
+        tier4 = filtered_df[has_abstract_mask & ~filtered_df['Identifier'].isin(pd.concat([tier1, tier2, tier3])['Identifier'])]
+
+        # Combine tiers up to 100 studies
+        abstracts_to_include = pd.concat([
+            tier1,
+            tier2.head(30),  # Top 30 MET competitor studies
+            tier3.head(20),  # Top 20 LBAs
+            tier4.head(50 - len(tier1))  # Fill remaining to ~100 total
+        ]).head(100)
+
+        abstracts_section += f"[NOTE: Prioritized {len(abstracts_to_include)}/{len(filtered_df)} mNSCLC studies - EMD assets ({len(tier1)}), MET competitors ({len(tier2[:30])}), LBAs ({len(tier3[:20])}), and key abstracts]\n\n"
+    elif len(filtered_df) > 100:
+        # Other large TAs: Prioritize LBAs and studies with abstracts
+        lba_mask = filtered_df['Identifier'].str.contains('LBA', case=False, na=False)
+        has_abstract_mask = filtered_df['Abstract'].notna() & (filtered_df['Abstract'].str.len() > 100)
+
+        priority_df = filtered_df[lba_mask | has_abstract_mask].head(80)  # Top 80 priority studies
+        abstracts_section += "[NOTE: For this large therapeutic area, showing prioritized abstracts - LBAs and key studies with full abstracts]\n\n"
+        abstracts_to_include = priority_df
+    else:
+        abstracts_to_include = filtered_df
+
+    for idx, row in abstracts_to_include.iterrows():
+        identifier = row.get('Identifier', 'N/A')
+        title = row.get('Title', 'N/A')
+        abstract = str(row.get('Abstract', '')).strip()
+
+        if abstract and abstract != 'nan' and abstract != 'None' and len(abstract) > 10:
+            abstracts_section += f"[{identifier}] {title}\n{abstract}\n\n---\n\n"
+        else:
+            abstracts_section += f"[{identifier}] {title}\n[Abstract not available]\n\n---\n\n"
+
+    # Build EMD asset context for study prioritization
+    emd_context = ""
+    if portfolio:
+        primary_asset = portfolio.get('primary_asset', 'None')
+        competitors = portfolio.get('key_competitors', [])
+        emd_context = f"""
+**EMD SERONO PORTFOLIO CONTEXT:**
+- EMD Primary Asset: {primary_asset}
+- Key Competitors: {', '.join(competitors[:5])}
+"""
+
+    # Add TA-specific biomarker focus for Lung Cancer
+    ta_specific_guidance = ""
+    if ta == "Lung Cancer":
+        ta_specific_guidance = """
+**CRITICAL FOR LUNG CANCER: MET Biomarker Focus**
+When analyzing Lung Cancer studies, distinguish between:
+- **MET alterations as biomarkers**: METex14 skipping mutations (~3-4% NSCLC), MET amplification (EGFR TKI resistance), MET overexpression
+- **Metastatic disease descriptors**: "metastatic NSCLC", "mNSCLC", "metastases" are NOT biomarkers
+
+PRIORITIZE for detailed analysis:
+- MET-altered NSCLC studies (tepotinib's direct market)
+- MET TKI trials (capmatinib, savolitinib, tepmetko, crizotinib)
+- MET ADC trials (telisotuzumab vedotin/Teliso-V)
+- MET bispecific trials (amivantamab for EGFR/MET)
+- EGFR+MET combination strategies (osimertinib resistance)
+- Biomarker studies clarifying MET testing, prevalence, or resistance mechanisms
+
+In Section 2 "Integrated Analysis", explicitly address MET-driven treatment evolution and evidence gaps in MET-altered NSCLC if data permits.
+"""
+
     prompt = f"""
 You are a senior Medical Affairs research intelligence analyst.
 Generate a comprehensive research insights report for {ta} based on ESMO 2025 data.
@@ -1365,15 +1466,25 @@ CONTEXT:
 - Therapeutic Area: {ta}
 - Conference: ESMO 2025
 - Total Studies: {len(filtered_df)}
+{emd_context}
+{ta_specific_guidance}
 
 DATA PROVIDED:
 {tables_data.get('table_context', '')}
 {regimen_context}
 {unmet_need_context}
 
+{abstracts_section}
+
 **CRITICAL INSTRUCTIONS:**
 
-1. **ADAPT TO DATA VOLUME** - Be proportional:
+1. **STUDY PRIORITIZATION** - Focus your detailed analysis:
+   - **CRITICAL HIGH PRIORITY**: Late-breaking abstracts (LBA prefix) and Presidential Symposium studies - these are practice-changing data. Note: Late-breaking abstracts are released day-of-presentation, so if full text is unavailable, analyze based on title, session placement, and speakers.
+   - **HIGH PRIORITY for detailed study-by-study analysis**: EMD assets ({portfolio.get('primary_asset', 'N/A')}), direct competitors ({', '.join(portfolio.get('key_competitors', [])[:3])}), practice-changing late-stage studies (Phase 3 readouts, pivotal trials)
+   - **MEDIUM PRIORITY for synthesis**: Novel mechanisms, emerging biomarkers, Phase 2 studies
+   - **LOW PRIORITY for brief mention**: Early-phase studies, preclinical work
+
+2. **ADAPT TO DATA VOLUME** - Be proportional:
    - If 500 studies in TA → Go deep, identify trends
    - If 5 studies in TA → Be concise, focus on what's there
    - If a section has no data → Say "Limited data" and move on in 1-2 sentences
@@ -1393,7 +1504,24 @@ DATA PROVIDED:
 
 5. **NO STRATEGIC RECOMMENDATIONS** - Focus on evidence gaps and scientific trends
 
-6. **GUIDELINES**:
+6. **ATTRIBUTION & ACCURACY - CRITICAL**:
+   - **ALWAYS attribute findings to the source**: Use "Study X reports...", "The abstract describes...", "[Speaker name] presented...", "The investigators found..."
+   - **DO NOT use "(authors report)" parenthetical attribution** - this is redundant. State findings directly or use the forms above.
+   - **NEVER speculate or infer data not explicitly stated in abstracts**
+   - **If data is missing from the abstract, SAY SO**: "Discontinuation rates were not reported", "Specific TEAE types were not detailed in the abstract"
+   - **DO NOT use vague language that implies you have data you don't have**: Avoid "mostly grade 1-2" unless that exact phrase is in the abstract
+   - **DO NOT extrapolate or create information**: If the abstract doesn't report biomarkers, don't write speculative biomarker implications
+   - **EXAMPLES OF GOOD ATTRIBUTION**:
+     * "The study reported ORR of 48% by RECIST v1.1" ✓
+     * "Study 3083P showed no evidence of cholestatic hepatotoxicity" ✓
+     * "Discontinuation rates were not detailed in the abstract" ✓
+   - **EXAMPLES OF BAD PRACTICE**:
+     * "ORR of 48% (authors report)" ✗ (redundant parenthetical - just say "The study reported ORR of 48%")
+     * "Safety profile was generally well tolerated with mostly grade 1-2 TEAEs" ✗ (vague, implies you have detailed data)
+     * "This suggests potential for..." ✗ (speculation)
+     * "Cross-trial inferences are not appropriate" followed by making cross-trial inferences ✗
+
+7. **GUIDELINES**:
    - Use specific study identifiers as examples (e.g., "Study 1234P demonstrated...")
    - Provide medical context where helpful (e.g., "Post-progression in bladder cancer typically...")
    - NO cross-trial efficacy comparisons (different populations, designs)
@@ -1401,202 +1529,369 @@ DATA PROVIDED:
 
 ---
 
-**SUGGESTED STRUCTURE** (adapt as needed):
+**REPORT STRUCTURE:**
+
+Generate a professional insights report with clean section headers (no instructional content in the actual report). Use this structure:
 
 # Research Insights & Trends: {ta} at ESMO 2025
 
 ## Executive Summary
-Synthesize 3-5 most significant developments in novel mechanisms, biomarker advances, regimen evolution, and evidence gaps. Be proportional to data volume.
+(3-5 key takeaways on mechanisms, biomarkers, regimen evolution, evidence gaps - proportional to data volume)
 
-## 1. Emerging Mechanisms & Targets
+## 1. Key Study Data Updates
 
-**Focus**: Novel MOAs, technology platforms (ADCs, bispecifics, cell therapy), clinical proof-of-concept
+(Concise study entries, 6-10 lines each. Structure each study as:
 
-**Example format**:
-> The meeting featured three distinct novel MOA categories: [describe]. Notable examples include Study 1234P exploring [mechanism] with preliminary ORR of [X]%, and Study 5678MO investigating [platform]...
+- **Why This Matters**: 1-2 sentences on clinical context/significance
+- **Design**: Single line with Phase, N, population, comparator, primary endpoints. If NCT ID is mentioned in the abstract, include it as a markdown hyperlink: [NCT12345678](https://clinicaltrials.gov/study/NCT12345678)
+- **Key Results**: Most important efficacy numbers only. Use compact format for subgroups.
+- **Safety Snapshot**: Grade ≥3 rate, discontinuation rate, notable signals. Skip section if not reported.
+- **Biomarkers**: Only if clinically actionable. Skip section otherwise.
+- **Bottom Line**: 1 sentence max
 
-## 2. Evidence Gaps & Unmet Needs
+For late-breaking abstracts with pending data, briefly note significance and data elements to watch (3-5 lines total).
 
-**THIS IS THE CORE MEDICAL AFFAIRS VALUE SECTION**
+**CONCISENESS EXAMPLES**:
 
-### 2.1 Clinical Questions Being Addressed
+### 3075P — CURATE-UTUC: ctDNA/utDNA monitoring in locally advanced UTUC
 
-Identify what questions the field is actively pursuing:
-- Post-progression settings (after standard therapy)
-- Special populations (elderly, brain mets, poor performance status)
-- Sequencing strategies
-- Biomarker-selected populations
-- Resistance mechanisms
+**Why This Matters**: First prospective study showing liquid biopsy can detect recurrence >3 months before imaging in UTUC and risk-stratify for adjuvant therapy decisions.
 
-**Example format**:
-> Post-progression after [standard therapy] remains a priority, with [N] studies addressing this gap. Study 1234P evaluated [approach] in patients progressing on [prior therapy]...
+**Design**: Prospective multicenter cohort; N=78 with pT2-4/N+ UTUC post-surgery; serial plasma + urine tumor-informed MRD assays.
 
-### 2.2 Key Regimen Evolution
+**Key Results**: Detected 94.1% of recurrences (32/34), median 106 days earlier than clinical detection. Post-op month-1 ctDNA+ predicted extravesical recurrence (HR 8.6, p<0.001); ctDNA+ after 2 cycles predicted systemic relapse (HR 40.9, p<0.001).
 
-**ONLY INCLUDE IF ≥3 studies per regimen**
-
-For regimens with ≥3 studies, synthesize evolution themes:
-- What dose/schedule variations are being tested?
-- What populations are being explored?
-- What endpoints are prioritized?
-
-**Example format**:
-> **Enfortumab vedotin + Pembrolizumab (8 studies)**: The field is actively exploring earlier-line positioning (Studies 1234P, 5678MO) and special populations including brain metastases (Study 9012P). Emerging questions center on optimal dosing in frail elderly patients...
-
-Limit to 200-300 words per regimen. Synthesize insights, don't just list studies.
-
-### 2.3 White Space Analysis
-
-Where are there gaps in the evidence? What populations, settings, or questions are NOT being addressed?
-
-## 3. Biomarker & Precision Medicine Landscape
-
-**Focus**: Biomarker prevalence data, predictive enrichment strategies, resistance mechanisms
-
-**Example format**:
-> PD-L1 selection was evaluated across [N] studies, with enrichment thresholds ranging from [X]% to [Y]%. Novel biomarker approaches included [describe Study 1234P's ctDNA strategy]...
-
-## 4. Translational & Early-Phase Research
-
-**Focus**: First-in-human studies, Phase 1 data, 3-5 year pipeline signals
-
-## 5. Safety & Tolerability Insights
-
-**Focus**: Grade 3/4 AE rates, dose optimization strategies, special population tolerability
-
-## 6. Innovation Watchlist
-
-**NO TABLES - Narrative format, grouped by priority**
-
-**Example format**:
-> **High Priority: Next-generation KRAS G12C inhibitor (Study LBA123, Dana-Farber)**
-> This Phase 2 study demonstrated a 38% ORR with median PFS of 6.2 months in heavily pretreated colorectal cancer, suggesting potential for activity in KRAS G12C beyond lung cancer. Key innovation: [describe mechanism refinement]. Relevance to field: [implications].
+**Bottom Line**: Dual liquid biopsy enables early MRD detection and could guide adjuvant therapy if validated interventionally.
 
 ---
 
-**REMINDER**: Adapt this structure based on data volume. If you only have 10 studies, you might combine sections 4-5 into one paragraph. Your job is to extract maximum medical affairs value from whatever data exists.
+### 3073P — EV-302: Subgroup analysis in older/comorbid patients
+
+**Why This Matters**: Addresses whether EV+P efficacy extends to frail populations often excluded from trials (≥75 years, diabetes, GFR <60).
+
+**Design**: Exploratory subgroup analysis from phase 3 EV-302 (EV+P vs platinum chemo); median FU 29 months.
+
+**Key Results**:
+- Age ≥75 (n=102/108): PFS 12.3 vs 6.0 mo (HR 0.43); OS 24.4 vs 11.6 mo (HR 0.51); ORR 66% vs 38%
+- Diabetes (n=85/97): PFS 26.3 vs 6.2 mo (HR 0.36); OS 36.1 vs 14.5 mo (HR 0.34)
+- GFR <60 (n=193/187): PFS 10.5 vs 6.2 mo (HR 0.49); OS 25.6 vs 13.3 mo (HR 0.53)
+
+**Safety Snapshot**: Grade ≥3 AEs higher in older patients (59% vs 73% chemo in age ≥75); neuropathy 13%, skin reactions 18% in EV+P arm.
+
+**Bottom Line**: Consistent benefit across comorbid subgroups but toxicity requires proactive management in frail/elderly populations.
+
+---
+
+**LENGTH TARGET**: Aim for 6-10 lines per study (excluding title). If abstract has minimal data (LBAs pending), use 3-5 lines to explain significance and data to watch.
+
+---
+
+**For LBAs with pending abstracts**, use this compact format:
+
+### LBA2 — KEYNOTE-905: Perioperative EV+pembro in cisplatin-ineligible MIBC
+
+**Why This Matters**: Presidential Symposium LBA testing perioperative EV+P in cisplatin-ineligible MIBC (~50% of MIBC population with no established perioperative options). If positive for pCR/EFS, extends EV+P into curative-intent setting.
+
+**Data to Watch**: pCR rate, event-free survival, surgical feasibility, and NECTIN4/ctDNA biomarkers.
+
+---
+
+**Another compact example for studies with rich subgroup data**:
+
+### 3083P — JAVELIN Bladder Medley: Ave+SG vs Ave mono (1L maintenance subgroups)
+
+**Why This Matters**: Tests whether adding sacituzumab govitecan to avelumab maintenance improves outcomes in visceral/high-risk subgroups.
+
+**Design**: Phase II randomized 2:1; aUC stable after 1L platinum; primary endpoint PFS.
+
+**Key Results**: PFS benefit across all subgroups - visceral mets: 9.3 vs 2.2 mo (HR 0.43); liver mets: 7.6 vs 1.9 mo (HR 0.38); lung mets: 5.6 vs 1.9 mo (HR 0.52). OS immature.
+
+**Safety Snapshot**: Grade ≥3 AEs substantially higher with Ave+SG (53-75%) vs Ave mono (0%).
+
+**Bottom Line**: Consistent PFS benefit but markedly higher toxicity; OS data needed to assess benefit-risk.
+
+## 2. Integrated Analysis: Trends, Insights & Evidence Gaps
+
+**PURPOSE**: Synthesize cross-study patterns and identify landscape shifts. Cautious speculation IS ENCOURAGED here (cite specific studies).
+
+**What to Cover** *(select 3-5 themes most supported by the data - adapt to what you found)*:
+
+**Mechanism & MOA Trends**
+- Which mechanisms/targets dominated this year's data? Quantify (e.g., "ADCs represented 12 of 30 key abstracts...")
+- Novel targets vs established pathway refinement?
+- Combination strategies evolving (ADC+IO, targeted+IO, etc.)?
+
+**Practice-Changing Signals** *(thoughtful speculation encouraged - but use your judgment)*
+
+**Title guidance:** Keep this subsection header general ("Practice-changing signals" or "Practice‑changing signals and caveats"), not topic-specific like "Perioperative landscape."
+
+**However**, if there genuinely isn't enough high-quality data to speculate about practice-changing impact (e.g., only early-phase studies, all retrospective, no pivotal trials), acknowledge this clearly: "Limited practice-changing signals at this meeting - most data are early-phase/exploratory."
+
+When you do have relevant data, think through the studies you highlighted in Section 1 - particularly LBAs, Presidential Symposium presentations, and Phase 3 pivotal trials. Ask yourself:
+- Which studies have the potential to expand treatment into new settings (perioperative, curative-intent, earlier lines)?
+- Which address underserved or high-unmet-need populations (cisplatin-ineligible, elderly, CNS metastases, ECOG ≥2)?
+- Which could establish new standards of care or change treatment sequencing?
+
+Even if full data are pending (LBAs), consider the strategic significance of the trial design, patient population, and session placement. Cite specific study IDs and explain the "why" - what makes this potentially practice-changing? What endpoints will be critical when full data emerge?
+
+**Biomarker Evolution**
+- Predictive enrichment strategies maturing beyond PD-L1?
+- ctDNA/MRD moving from exploratory to decision-making tools?
+- Spatial profiling / AI pathology advancing tissue-limited scenarios?
+
+**Safety & Tolerability Patterns**
+- Common AE patterns across drug classes?
+- Tolerability driving competitive differentiation?
+- Management strategies emerging?
+
+**Evidence Gaps & White Space** *(use medical knowledge for context - this is important)*
+- Patient populations NOT studied (elderly, ECOG ≥2, CNS metastases, organ dysfunction)
+- Clinical questions unaddressed (post-ADC progression, sequencing after IO, resistance mechanisms, combination toxicity management)
+- Biomarker validation needs (assay standardization, prospective trials, cutoff harmonization)
+- Geographic / access gaps
+
+**Tone**: "The data suggest...", "If confirmed in full publication...", "Early indication that...", "A critical gap remains...", "None of the X studies addressed..."
+
+**Length**: 3-5 paragraphs for large datasets (>50 studies); 2-3 paragraphs for medium (10-50); 1 paragraph for small (<10)
+
+---
+
+## 3. Innovation Watchlist *(optional - include only if ≥3 novel mechanisms/platforms worth tracking)*
+
+Brief narrative highlights (1-2 sentences each) of novel mechanisms, targets, platforms, or paradigm-shifting approaches with potential long-term impact. Focus on early-phase signals that could mature into practice.
+
+---
+
+**REPORT STRUCTURE - FINAL SECTIONS:**
+
+The report should contain ONLY these three main sections:
+1. Executive Summary
+2. Key Study Data Updates
+3. Integrated Analysis (trends, insights, evidence gaps)
+4. Innovation Watchlist (optional if ≥3 items)
+
+DO NOT include additional sections like "Data limitations", "What to watch next", "Closing notes", "Practical evidence notes", or other meta-commentary. Keep the report focused on insights and data.
 """
 
     return prompt
 
 
 def build_strategic_priorities_prompt(ta: str, filtered_df, tables_data: Dict) -> str:
-    """Build comprehensive prompt for strategic priorities deep research."""
+    """
+    Build comprehensive Strategic Briefing prompt.
+
+    This is the META-SYNTHESIS report that combines:
+    - Insights report (research trends)
+    - Competitor Intelligence (competitive threats)
+    - KOL Intelligence (key opinion leaders)
+    - Institution Intelligence (leading centers)
+    + Raw conference data for augmentation
+    + EMD portfolio context
+
+    Output: Executive-level strategic synthesis with actionable recommendations
+    """
     portfolio = EMD_PORTFOLIO.get(ta, {})
 
+    # Load all 4 existing reports from cache
+    insights_cache = load_journalist_cache("insights")
+    competitor_cache = load_journalist_cache("competitor")
+    kol_cache = load_journalist_cache("kol")
+    institution_cache = load_journalist_cache("institution")
+
+    # Get TA-specific reports (use normalized TA keys)
+    ta_key = ta.lower().replace(" ", "_")
+
+    insights_report = insights_cache.get(ta_key, {}).get('analysis', 'NOT AVAILABLE')
+    competitor_report = competitor_cache.get(ta_key, {}).get('analysis', 'NOT AVAILABLE')
+    kol_report = kol_cache.get(ta_key, {}).get('analysis', 'NOT AVAILABLE')
+    institution_report = institution_cache.get(ta_key, {}).get('analysis', 'NOT AVAILABLE')
+
+    # Format raw conference data (limited columns for context window efficiency)
+    raw_data_cols = ['Identifier', 'Title', 'Abstract', 'Speakers', 'Session', 'Date', 'Theme']
+    available_cols = [col for col in raw_data_cols if col in filtered_df.columns]
+    raw_data_json = filtered_df[available_cols].to_json(orient='records', indent=2)
+
     prompt = f"""
-You are a senior Medical Affairs strategic planning executive at EMD Serono/Merck KGaA.
-Generate a comprehensive strategic priorities report for {ta} based on ESMO 2025 data.
+You are a Senior Medical Strategy Advisor for Merck KGaA, tasked with synthesizing conference intelligence into actionable strategic recommendations.
 
-CONTEXT:
-- EMD Serono Asset: {portfolio.get('primary_asset', 'None')}
-- Therapeutic Area: {ta}
-- Conference: ESMO 2025
-- Total Studies: {len(filtered_df)}
+**YOUR MISSION**: Generate a Strategic Briefing that combines insights from 4 specialist reports + raw conference data to deliver executive-level strategic guidance for Medical Affairs leadership, MSLs, and HQ decision-makers.
 
-DATA PROVIDED:
-{tables_data.get('table_context', '')}
+---
 
-Generate a comprehensive report following this EXACT structure:
+## CONTEXT
 
-# Strategic Priorities Report: {ta} at ESMO 2025
+**Therapeutic Area**: {ta}
+**Conference**: ESMO 2025
+**Total Studies**: {len(filtered_df)}
+**Merck KGaA Asset(s)**: {portfolio.get('primary_asset', 'No primary asset in this TA')}
+**Indication**: {portfolio.get('indication', 'N/A')}
+**Key Competitors**: {', '.join(portfolio.get('key_competitors', [])[:5])}
+
+---
+
+## INPUT DATA
+
+You have access to FOUR pre-generated specialist reports + raw conference data:
+
+### 1. RESEARCH INSIGHTS REPORT
+{insights_report[:50000] if len(insights_report) > 50000 else insights_report}
+
+### 2. COMPETITOR INTELLIGENCE REPORT
+{competitor_report[:50000] if len(competitor_report) > 50000 else competitor_report}
+
+### 3. KOL INTELLIGENCE REPORT
+{kol_report[:30000] if len(kol_report) > 30000 else kol_report}
+
+### 4. INSTITUTION INTELLIGENCE REPORT
+{institution_report[:30000] if len(institution_report) > 30000 else institution_report}
+
+### 5. RAW CONFERENCE DATA (for augmentation if needed)
+{raw_data_json[:20000] if len(raw_data_json) > 20000 else raw_data_json}
+
+**IMPORTANT**: The 4 reports above are comprehensive. Use them as your primary source. Only reference raw data if you notice gaps or need to cross-check specific details.
+
+---
+
+## YOUR TASK
+
+Synthesize these inputs into a **Strategic Briefing** that answers:
+
+1. **Where do we stand?** (Our position in {ta} post-ESMO 2025)
+2. **What changed?** (Key conference developments affecting our strategy)
+3. **What should we do?** (Actionable recommendations by function)
+
+---
+
+## REPORT STRUCTURE (FLEXIBLE FRAMEWORK)
+
+Use your judgment to emphasize sections where data is rich and condense/skip sections where data is sparse. **Adapt to the therapeutic area** - some TAs have extensive activity (Lung, CRC), others have minimal data (TGCT, Merkel Cell).
+
+---
+
+# Strategic Briefing: {ta} at ESMO 2025
 
 ## Executive Summary
-- Critical strategic imperatives
-- Portfolio positioning assessment
-- Medical Affairs priorities
+**(2-4 paragraphs)**
 
-## 1. Portfolio Positioning Assessment
+Synthesize the strategic "so what":
+- Top 3 conference takeaways affecting {ta} treatment landscape
+- Our portfolio positioning: strengthened, threatened, or unchanged?
+- Critical action items (1-2 sentences per function: MSLs, Medical Affairs, HQ Leadership)
 
-### 1.1 Current Market Position
-- EMD's competitive standing in {ta}
-- Market share trends and dynamics
-- Strengths, weaknesses, opportunities, threats
+---
 
-### 1.2 Competitive Dynamics
-- Key competitive shifts at ESMO
-- Emerging threats to portfolio
-- Defensive strategies required
+## 1. Our Position in {ta}
 
-### 1.3 Lifecycle Management
-- Current asset maturity assessment
-- Line extension opportunities
-- Next-generation planning needs
+**(Adapt length: 3-5 paragraphs for active TAs, 1-2 paragraphs for low-activity TAs)**
 
-## 2. ESMO 2025 Strategic Signals
+### Current Assets & Competitive Standing
+- Merck KGaA's approved asset(s), indications, guideline status
+- Market position before ESMO (leader, challenger, niche player?)
+- Known strengths and vulnerabilities
 
-### 2.1 Market-Shaping Data
-- Presentations influencing guidelines
-- Payer-relevant outcomes
-- Real-world evidence impact
+### Post-ESMO Competitive Landscape Shift
+- Synthesize from Competitor Intelligence: What competitors gained ground? What threats emerged?
+- Treatment paradigm changes (if any): upstream migration, new standards of care, sequencing shifts
+- Impact on our positioning: Are we defending, attacking, or pivoting?
 
-### 2.2 Disruptive Innovations
-- Technologies threatening current paradigm
-- New entrants to monitor
-- Platform shifts requiring response
+**Tone**: Objective assessment - acknowledge threats and opportunities honestly.
 
-### 2.3 Partnership Signals
-- Collaboration announcements
-- M&A indicators
-- Licensing opportunities
+---
 
-## 3. Medical Affairs Strategic Plan
+## 2. Conference Highlights
 
-### 3.1 Near-Term Priorities (0-6 months)
-- ESMO data response strategy
-- KOL engagement imperatives
-- Publication planning updates
-- Medical education priorities
+**(Flexible: 4-6 paragraphs for large datasets; 2-3 for small)**
 
-### 3.2 Mid-Term Priorities (6-18 months)
-- Evidence generation plans
-- Guideline influence strategy
-- Market access support
-- Competitive differentiation
+Pull from Insights + Competitor reports to identify:
 
-### 3.3 Long-Term Vision (18+ months)
-- Portfolio evolution strategy
-- Innovation pipeline needs
-- Capability building requirements
+### Practice-Changing Studies
+- Top 3-5 studies (LBAs, Presidential Symposium, Phase 3 readouts) with potential to shift guidelines
+- Why they matter (cite specific data: ORR, PFS, OS, safety signals)
+- Timing of likely impact (immediate, 6-12 months, 18+ months)
 
-## 4. Cross-Functional Integration
+### Key Threats to Our Portfolio
+- Competitive studies that challenge our asset(s)
+- Biomarker-driven fragmentation (e.g., HER2, FGFR, PD-L1 cutoffs)
+- Combination strategies that could replace monotherapy standards
 
-### 4.1 R&D Alignment
-- Clinical development priorities
-- Translational research focus
-- Innovation partnership needs
+### Supportive Developments
+- Data reinforcing our strategy (e.g., biomarker validation, safety differentiation, unmet need confirmation)
+- White space opportunities (gaps competitors aren't filling)
 
-### 4.2 Commercial Synergies
-- Market access implications
-- Promotional strategy alignment
-- Customer engagement priorities
+**Flexibility**: If {ta} had minimal ESMO activity, acknowledge this in 1-2 sentences and focus on what WAS presented.
 
-### 4.3 External Affairs
-- Policy implications
-- Patient advocacy engagement
-- Healthcare system partnerships
+---
 
-## 5. Executive Recommendations
+## 3. Strategic Opportunities
 
-### 5.1 Portfolio Decisions
-- Investment priorities
-- Divestment considerations
-- Resource reallocation needs
+**(2-4 paragraphs - emphasize only if genuine opportunities exist)**
 
-### 5.2 Organizational Capabilities
-- Talent acquisition priorities
-- Technology infrastructure needs
-- Process optimization opportunities
+Based on synthesis across all reports:
 
-### 5.3 Risk Mitigation
-- Competitive defense strategies
-- Regulatory preparedness
-- Market access contingencies
+- **Evidence Gaps**: Clinical questions unaddressed by competitors (e.g., post-progression, elderly, CNS mets, biomarker-negative)
+- **KOL Engagement Targets**: From KOL Intelligence - which thought leaders are driving the narrative? Where should we focus engagement?
+- **Institutional Partnerships**: From Institution Intelligence - leading centers for ISTs, RWE collaborations, early access programs
+- **Clinical Development Pivots**: Label expansions, combination trials, biomarker enrichment strategies
 
-## 6. Action Plan & Metrics
-- 90-day immediate actions
-- Success metrics and KPIs
-- Governance and review cadence
+**Skip this section** if no clear opportunities - better to be honest than force speculation.
+
+---
+
+## 4. Functional Recommendations
+
+**(Core section - always include, but adapt depth to data richness)**
+
+### For MSLs (Field Medical)
+- **Talking Points**: How to position our asset(s) given ESMO data
+- **Objection Handling**: Anticipated KOL questions about competitive data
+- **Priority Targets**: Specific KOLs/institutions to engage (cite from KOL/Institution reports)
+
+### For Medical Affairs Leadership
+- **Publication Strategy**: Which ESMO abstracts to curate for internal use? External publications needed?
+- **Real-World Evidence**: RWE gaps to fill (sequencing, safety, subgroups)
+- **IST Opportunities**: Investigator-initiated studies to support (cite institutions/KOLs)
+- **Medical Education**: Congress materials, disease state updates, biomarker testing guidance
+
+### For Medical Directors (Clinical Development)
+- **Label Strategy**: Expansion opportunities based on unmet needs
+- **Biomarker Strategy**: Companion diagnostics, enrichment criteria, ctDNA integration
+- **Combination Hypotheses**: Rational combinations suggested by conference data
+
+### For HQ Leadership (Strategic Decisions)
+- **Portfolio Prioritization**: Investment signals (double down, maintain, divest?)
+- **Business Development**: In-licensing/partnership opportunities if gaps identified
+- **Competitive Response Timing**: When to accelerate programs, when to wait-and-see
+
+**Adapt**: For low-activity TAs, combine functions or skip sections with no actionable recommendations.
+
+---
+
+## CRITICAL INSTRUCTIONS
+
+1. **SYNTHESIZE, DON'T DUPLICATE**: Don't just copy-paste from the 4 reports. Extract themes, connect dots, add strategic interpretation.
+
+2. **BE PROPORTIONAL**:
+   - High-activity TA (>100 studies)? Go deep.
+   - Low-activity TA (<10 studies)? Keep brief, focus on what's there.
+   - No strategic opportunities? Say so - don't force empty recommendations.
+
+3. **CITE SPECIFICS**: Reference study IDs, KOL names, institutions when making points (e.g., "Study 1234P showed..." "Dr. Smith at Memorial Sloan Kettering presented...")
+
+4. **USE MEDICAL KNOWLEDGE**: You're a strategic advisor, not just a summarizer. Apply pharmaceutical industry context, regulatory knowledge, payer dynamics.
+
+5. **FLEXIBILITY > RIGIDITY**: Reorder sections, merge themes, skip empty categories. The framework above is a guide, not a straitjacket.
+
+6. **TONE**: Executive-level - direct, actionable, honest. Acknowledge uncertainty when appropriate. No marketing fluff.
+
+7. **LENGTH**: Let the data dictate length. Aim for **comprehensive but concise**:
+   - High-activity TA: 15-25 min read
+   - Medium-activity: 10-15 min
+   - Low-activity: 5-10 min
+
+---
+
+Generate the Strategic Briefing now. Focus on **strategic synthesis + actionable recommendations**, not just data recitation.
+
 """
 
     return prompt
@@ -1643,7 +1938,7 @@ def extract_regimen_groups(filtered_df, ta: str, min_studies: int = 3) -> List[D
         'Head and Neck Cancer': {
             'Pembrolizumab': [r'pembrolizumab', r'Keytruda'],
             'Nivolumab': [r'nivolumab', r'Opdivo'],
-            'Cetuximab': [r'cetuximab', r'Erbitux'],
+            # Note: Cetuximab/Erbitux is EMD Serono's asset - excluded from competitor tracking
         }
     }
 
@@ -1674,7 +1969,7 @@ def extract_regimen_groups(filtered_df, ta: str, min_studies: int = 3) -> List[D
         for regimen, count in sorted(regimen_counts.items(), key=lambda x: x[1], reverse=True)
     ]
 
-    print(f"[REGIMEN] Found {len(regimen_groups)} regimen groups with ≥{min_studies} studies")
+    print(f"[REGIMEN] Found {len(regimen_groups)} regimen groups with >={min_studies} studies")
     return regimen_groups
 
 
@@ -1775,46 +2070,68 @@ def prepare_table_data(button_type: str, ta: str, filtered_df, refresh_librarian
     print(f"[PREP] Filtered dataset: {len(filtered_df)} studies")
 
     if button_type == "competitor":
-        # CONSOLIDATED CACHING: Librarian -> Tagger -> Structured Data
+        # LUNG CANCER OPTIMIZATION: Skip Librarian, use direct CSV filtering
+        # The journalist (gpt-4o-mini) has strong medical knowledge and can identify
+        # MET alterations directly from abstracts without structured extraction
+        if ta == "Lung Cancer":
+            print(f"[LUNG CANCER OPTIMIZATION] Skipping Librarian - filtering to 'NSCLC, metastatic' theme")
+            print(f"[PREP] Total {ta} studies before theme filter: {len(filtered_df)}")
 
-        # Step 1: Load or extract Librarian data (consolidated caching)
-        ta_key = ta_to_key(ta)
-        librarian_cache = load_librarian_cache(button_type)
+            # Filter to "NSCLC, metastatic" theme to focus on relevant studies (~206 studies)
+            # This excludes SCLC, mesothelioma, and other non-mNSCLC studies
+            nsclc_metastatic = filtered_df[filtered_df['Theme'].str.contains('NSCLC, metastatic', case=False, na=False)]
+            print(f"[PREP] Filtered to 'NSCLC, metastatic': {len(nsclc_metastatic)} studies")
 
-        if ta_key in librarian_cache and not refresh_librarian:
-            print(f"[LIBRARIAN] Loading {ta} data from consolidated cache...")
-            librarian_records = librarian_cache[ta_key]
-            print(f"[LIBRARIAN] Loaded {len(librarian_records)} studies from cache")
+            # Create minimal structure for compatibility with existing two-step pattern
+            # We'll pass ALL mNSCLC studies directly without Librarian extraction
+            tables_data["skip_librarian"] = True
+            tables_data["all_studies_df"] = nsclc_metastatic
+            filtered_df = nsclc_metastatic  # Update filtered_df for downstream use
+
+            # Skip to prompt building (no regimen summary needed)
+            table_context_parts.append(f"**All {len(nsclc_metastatic)} mNSCLC studies will be analyzed by AI with MET alteration focus**")
+
         else:
-            if refresh_librarian:
-                print(f"[LIBRARIAN] --refresh-librarian flag set, regenerating {ta} data...")
+            # CONSOLIDATED CACHING: Librarian -> Tagger -> Structured Data (for other TAs)
+
+            # Step 1: Load or extract Librarian data (consolidated caching)
+            ta_key = ta_to_key(ta)
+            librarian_cache = load_librarian_cache(button_type)
+
+            if ta_key in librarian_cache and not refresh_librarian:
+                print(f"[LIBRARIAN] Loading {ta} data from consolidated cache...")
+                librarian_records = librarian_cache[ta_key]
+                print(f"[LIBRARIAN] Loaded {len(librarian_records)} studies from cache")
             else:
-                print(f"[LIBRARIAN] {ta} not found in cache, extracting...")
+                if refresh_librarian:
+                    print(f"[LIBRARIAN] --refresh-librarian flag set, regenerating {ta} data...")
+                else:
+                    print(f"[LIBRARIAN] {ta} not found in cache, extracting...")
 
-            print(f"[LIBRARIAN] Running extraction on {len(filtered_df)} {ta} studies...")
-            librarian_records = librarian_process_all(ta, batch_size=20)
+                print(f"[LIBRARIAN] Running extraction on {len(filtered_df)} {ta} studies...")
+                librarian_records = librarian_process_all(ta, batch_size=20)
 
-            # Update consolidated cache
-            update_librarian_for_ta(button_type, ta, librarian_records, force=refresh_librarian)
+                # Update consolidated cache
+                update_librarian_for_ta(button_type, ta, librarian_records, force=refresh_librarian)
 
-        # Step 2: Load aliases and run Tagger
-        aliases = load_aliases(ta)
-        print(f"[TAGGER] Normalizing entities...")
-        tagged_data = tag_and_aggregate(librarian_records, aliases)
+            # Step 2: Load aliases and run Tagger (only for non-Lung Cancer TAs)
+            aliases = load_aliases(ta)
+            print(f"[TAGGER] Normalizing entities...")
+            tagged_data = tag_and_aggregate(librarian_records, aliases)
 
-        # Step 3: Prepare regimen summary (NOT full data yet - two-step approach)
-        stats = tagged_data['stats']
-        competitor_regimens = tagged_data['competitor_regimens']
-        emerging_regimens = tagged_data['emerging_regimens']
-        regimen_counts = tagged_data['regimen_counts']
-        biomarker_counts = tagged_data['biomarker_counts']
+            # Step 3: Prepare regimen summary (NOT full data yet - two-step approach)
+            stats = tagged_data['stats']
+            competitor_regimens = tagged_data['competitor_regimens']
+            emerging_regimens = tagged_data['emerging_regimens']
+            regimen_counts = tagged_data['regimen_counts']
+            biomarker_counts = tagged_data['biomarker_counts']
 
-        print(f"[PREP] Extracted {stats['total_studies']} studies")
-        print(f"[PREP] Found {stats['unique_regimens']} regimens ({stats['competitor_regimens_found']} competitors, {stats['emerging_regimens_found']} emerging)")
-        print(f"[PREP] Found {stats['unique_biomarkers']} biomarkers")
+            print(f"[PREP] Extracted {stats['total_studies']} studies")
+            print(f"[PREP] Found {stats['unique_regimens']} regimens ({stats['competitor_regimens_found']} competitors, {stats['emerging_regimens_found']} emerging)")
+            print(f"[PREP] Found {stats['unique_biomarkers']} biomarkers")
 
-        # STEP 1 PROMPT: Ask AI to identify important regimens (NO full data yet)
-        structured_summary = f"""**COMPETITOR INTELLIGENCE DATA ({ta})**
+            # STEP 1 PROMPT: Ask AI to identify important regimens (NO full data yet)
+            structured_summary = f"""**COMPETITOR INTELLIGENCE DATA ({ta})**
 
 **Study Extraction Summary:**
 - Total studies analyzed: {stats['total_studies']}
@@ -1823,34 +2140,40 @@ def prepare_table_data(button_type: str, ta: str, filtered_df, refresh_librarian
 
 **Top Treatment Regimens (by study count):**
 """
-        for regimen, count in list(regimen_counts.items())[:15]:
-            tag = "★ COMPETITOR" if regimen in competitor_regimens else "○ Emerging"
-            structured_summary += f"- {regimen}: {count} studies [{tag}]\n"
+            for regimen, count in list(regimen_counts.items())[:15]:
+                tag = "★ COMPETITOR" if regimen in competitor_regimens else "○ Emerging"
+                structured_summary += f"- {regimen}: {count} studies [{tag}]\n"
 
-        structured_summary += f"""
+            structured_summary += f"""
 **Top Biomarkers (by study count):**
 """
-        for biomarker, count in list(biomarker_counts.items())[:10]:
-            structured_summary += f"- {biomarker}: {count} studies\n"
+            for biomarker, count in list(biomarker_counts.items())[:10]:
+                structured_summary += f"- {biomarker}: {count} studies\n"
 
-        structured_summary += f"""
+            # Add TA-specific competitor context
+            portfolio = EMD_PORTFOLIO.get(ta, {})
+            competitor_hint = ""
+            if portfolio and portfolio.get("key_competitors"):
+                competitor_hint = f"\n**PRIORITY COMPETITORS for {ta}**: {', '.join(portfolio['key_competitors'][:5])}\n"
 
+            structured_summary += f"""
+{competitor_hint}
 **TASK**: Based on the regimen counts above, identify the TOP 10-15 most important regimens/keywords
 for competitive intelligence analysis. Return as a JSON list of search terms.
 
-Example: ["enfortumab vedotin", "pembrolizumab", "disitamab vedotin", "avelumab", ...]
+Example: ["enfortumab vedotin", "pembrolizumab", "disitamab vedotin", "savolitinib", ...]
 
 Focus on:
 - High study count regimens
-- Direct competitors to avelumab
-- Novel ADC/IO combinations
-- Biomarker-driven therapies
+- Direct competitors listed above (PRIORITY)
+- Novel ADC/IO/TKI combinations
+- Biomarker-driven therapies (e.g., MET alterations, FGFR, PD-L1)
 """
 
-        # Store tagged_data for use in Step 2 (keyword-based filtering)
-        tables_data["competitor_intelligence"] = tagged_data
-        tables_data["regimen_summary"] = structured_summary
-        table_context_parts.append(structured_summary)
+            # Store tagged_data for use in Step 2 (keyword-based filtering)
+            tables_data["competitor_intelligence"] = tagged_data
+            tables_data["regimen_summary"] = structured_summary
+            table_context_parts.append(structured_summary)
 
     elif button_type == "kol":
         # Generate KOL-specific tables
@@ -1949,7 +2272,10 @@ Focus on:
                         for kol in enriched_kols:
                             if kol['speaker'] in competitor_presenters:
                                 kol['is_competitor_presenter'] = True
-                                print(f"[LIBRARIAN]     ✓ {kol['speaker']} is high-priority competitor presenter")
+                                try:
+                                    print(f"[LIBRARIAN]     ✓ {kol['speaker']} is high-priority competitor presenter")
+                                except UnicodeEncodeError:
+                                    print(f"[LIBRARIAN]     {kol['speaker']} is high-priority competitor presenter")
 
                         # Add NEW competitor presenters not already in top 10 (limit to top 5 by presentation count)
                         # Normalize names for comparison (strip spaces, lowercase)
@@ -2173,6 +2499,17 @@ Focus on:
             print(f"[LIBRARIAN] Speaker directory complete: {len(speaker_directory)} countries")
 
     elif button_type == "insights":
+        # LUNG CANCER OPTIMIZATION: Filter to NSCLC metastatic theme
+        if ta == "Lung Cancer":
+            print(f"[LUNG CANCER OPTIMIZATION] Filtering to 'NSCLC, metastatic' theme for insights")
+            print(f"[PREP] Total {ta} studies before theme filter: {len(filtered_df)}")
+
+            nsclc_metastatic = filtered_df[filtered_df['Theme'].str.contains('NSCLC, metastatic', case=False, na=False)]
+            print(f"[PREP] Filtered to 'NSCLC, metastatic': {len(nsclc_metastatic)} studies")
+
+            filtered_df = nsclc_metastatic  # Update for downstream processing
+            tables_data["lung_cancer_theme_filtered"] = True
+
         # Extract regimen groups (≥3 studies threshold)
         print(f"[LIBRARIAN] Extracting regimen groups...")
         regimen_groups = extract_regimen_groups(filtered_df, ta, min_studies=3)
@@ -2378,7 +2715,9 @@ If the report is high quality with no major issues, return:
                     severity = issue.get("severity", "unknown")
                     issue_type = issue.get("type", "unknown")
                     description = issue.get("description", "")
-                    print(f"[CHIEF EDITOR]   - [{severity.upper()}] {issue_type}: {description}")
+                    # Sanitize description for Windows console encoding (cp1252)
+                    safe_description = description.encode('ascii', 'replace').decode('ascii')
+                    print(f"[CHIEF EDITOR]   - [{severity.upper()}] {issue_type}: {safe_description}")
 
             return review_data
 
@@ -2428,16 +2767,8 @@ def generate_deep_intelligence(button_type: str, ta: str, refresh_librarian: boo
         return None
 
     # Step 2: Prepare table data
+    # NOTE: Librarian cache is already saved within prepare_table_data() at line ~2053
     tables_data = prepare_table_data(button_type, ta, filtered_df, refresh_librarian)
-
-    # Step 2.5: Save librarian data to cache
-    print(f"[LIBRARIAN] Saving enriched data to cache...")
-    update_librarian_for_ta(
-        button=button_type,
-        ta=ta,
-        ta_records=tables_data,
-        force=refresh_librarian
-    )
 
     # Step 3: Build appropriate prompt
     prompt_builders = {
@@ -2457,98 +2788,234 @@ def generate_deep_intelligence(button_type: str, ta: str, refresh_librarian: boo
 
     print(f"[DEEP] Prompt length: {len(prompt)} characters")
 
-    # Step 3.5: Two-step AI approach for competitor intelligence (ai_assistant.py pattern)
-    if button_type == "competitor" and "regimen_summary" in tables_data:
-        print(f"\n[TWO-STEP] Implementing ai_assistant.py pattern for competitor intelligence...")
+    # Step 3.5: Two-step AI approach using gpt-4o-mini for intelligent data extraction
+    # INSIGHTS BUTTON: Extract biomarkers, efficacy signals, unmet needs, MOAs
+    if button_type == "insights":
+        print(f"\n[TWO-STEP] Using gpt-4o-mini to intelligently extract insights data...")
 
-        # STEP 1: Get important keywords from AI based on regimen summary
-        print(f"[STEP 1] Asking AI to identify important regimens/keywords...")
+        # STEP 1: Get AI to identify important signals from titles
+        print(f"[STEP 1] Asking AI to extract biomarkers, mechanisms, and unmet needs...")
+
+        # Build a summary of all study titles for AI analysis
+        titles_summary = "\n".join([
+            f"[{row['Identifier']}] {row['Title']}"
+            for _, row in filtered_df.head(200).iterrows()  # Send first 200 titles to avoid token limits
+        ])
+
         try:
-            # Use standard Chat Completions API (not Responses API) for keyword extraction
             keyword_response = client.chat.completions.create(
-                model="gpt-4o-mini",  # Fast model for keyword extraction
+                model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "Extract important drug/regimen keywords for competitive intelligence analysis. Return ONLY a JSON array of search terms, no other text."},
-                    {"role": "user", "content": tables_data["regimen_summary"]}
+                    {"role": "system", "content": """You are a medical oncology expert extracting key signals from conference abstracts.
+
+Analyze the study titles and extract:
+1. **Biomarkers** (PD-L1, TMB, HER2, FGFR, MSI-H, dMMR, etc.)
+2. **Mechanisms of Action** (ADC, IO, TKI, bispecific, CAR-T, etc.)
+3. **Unmet Needs** (brain mets, elderly, post-progression, platinum-ineligible, poor PS, etc.)
+4. **Drug/Regimen Names** (both brand and generic names)
+
+Return a JSON object with these keys:
+{
+  "biomarkers": ["PD-L1", "FGFR3", ...],
+  "mechanisms": ["ADC", "IO", "TKI", ...],
+  "unmet_needs": ["brain metastases", "elderly", ...],
+  "drugs": ["pembrolizumab", "enfortumab vedotin", ...]
+}
+
+Focus on signals that appear in MULTIPLE studies (≥2 mentions). Return ONLY valid JSON, no other text."""},
+                    {"role": "user", "content": f"Therapeutic Area: {ta}\n\nStudy Titles:\n{titles_summary}"}
                 ],
                 temperature=0.3,
-                max_tokens=500
+                max_tokens=1000
             )
 
-            keyword_text = keyword_response.choices[0].message.content
+            keyword_text = keyword_response.choices[0].message.content.strip()
             print(f"[STEP 1] AI response length: {len(keyword_text)} chars")
-            print(f"[STEP 1] AI raw response: {keyword_text[:200]}...")
 
-            # Clean up response - remove markdown code blocks if present
-            cleaned_text = keyword_text.strip()
-            if cleaned_text.startswith("```"):
-                # Remove markdown code block markers
-                lines = cleaned_text.split('\n')
+            # Clean markdown code blocks
+            if keyword_text.startswith("```"):
+                lines = keyword_text.split('\n')
                 if lines[0].startswith("```"):
-                    lines = lines[1:]  # Remove first line (```json or ```)
+                    lines = lines[1:]
                 if lines and lines[-1].strip() == "```":
-                    lines = lines[:-1]  # Remove last line (```)
-                cleaned_text = '\n'.join(lines).strip()
+                    lines = lines[:-1]
+                keyword_text = '\n'.join(lines).strip()
 
-            # Parse keywords
-            keywords = json.loads(cleaned_text)
+            extracted_signals = json.loads(keyword_text)
+            print(f"[STEP 1] AI extracted:")
+            print(f"  - {len(extracted_signals.get('biomarkers', []))} biomarkers")
+            print(f"  - {len(extracted_signals.get('mechanisms', []))} mechanisms")
+            print(f"  - {len(extracted_signals.get('unmet_needs', []))} unmet needs")
+            print(f"  - {len(extracted_signals.get('drugs', []))} drugs/regimens")
 
-            # FILTER OUT EMD SERONO DRUGS (not competitors - these are OUR drugs!)
-            # Check if any EMD drug name appears ANYWHERE in the keyword string
-            emd_drugs = ["avelumab", "bavencio", "tepotinib", "tepmetko", "cetuximab", "erbitux", "pimicotinib"]
-            keywords_filtered = []
-            removed = []
+            # STEP 2: Build enriched tables using AI-extracted signals
+            print(f"[STEP 2] Building enriched data tables with AI-extracted signals...")
 
-            for kw in keywords:
-                # Check if ANY EMD drug appears in this keyword
-                contains_emd_drug = any(emd_drug in kw.lower() for emd_drug in emd_drugs)
-                if contains_emd_drug:
-                    removed.append(kw)
-                else:
-                    keywords_filtered.append(kw)
+            # Add AI-extracted signals to tables_data for journalist use
+            tables_data["ai_extracted_signals"] = extracted_signals
 
-            if removed:
-                print(f"[STEP 1] Removed EMD Serono drug keywords: {removed}")
+            print(f"[STEP 2] AI-enhanced tables ready for journalist")
 
-            keywords = keywords_filtered
-            print(f"[STEP 1] AI identified {len(keywords)} competitor keywords")
-            # Print keywords safely (avoid Unicode encoding errors on Windows)
-            for kw in keywords:
-                try:
-                    print(f"  - {kw}")
-                except UnicodeEncodeError:
-                    print(f"  - {kw.encode('ascii', 'replace').decode('ascii')}")
+        except Exception as e:
+            print(f"[TWO-STEP] Error in AI extraction for insights: {e}")
+            print(f"[TWO-STEP] Falling back to librarian-only data")
 
-            # STEP 2: Filter LIBRARIAN DATA using keywords (not raw CSV!)
-            print(f"[STEP 2] Filtering Librarian-extracted studies with AI keywords...")
-            librarian_records = tables_data["competitor_intelligence"]["tagged_records"]
+    # COMPETITOR BUTTON: Extract competitor drugs and filter studies
+    elif button_type == "competitor":
+        # LUNG CANCER: Skip two-step filtering, pass ALL studies directly
+        if tables_data.get("skip_librarian") and ta == "Lung Cancer":
+            # Use the filtered mNSCLC dataset from tables_data (206 studies, not 615)
+            mnsclc_df = tables_data.get("all_studies_df")
+            print(f"\n[LUNG CANCER] Skipping two-step filtering - passing all {len(mnsclc_df)} mNSCLC studies to journalist with MET focus")
 
-            # Filter librarian records by regimen field (more accurate than CSV Title)
-            pattern = '|'.join([re.escape(k) for k in keywords])
-            matching_row_ids = []
-            for record in librarian_records:
-                regimen = record.get('regimen', '')
-                title = record.get('title', '')
-                # Check both regimen and title fields for keywords
-                if re.search(pattern, regimen, re.IGNORECASE) or re.search(pattern, title, re.IGNORECASE):
-                    matching_row_ids.append(record['row_id'])
+            # Build comprehensive study table with Title + FULL Abstract
+            # Context analysis: 206 mNSCLC studies × ~2,400 chars avg = ~135k tokens (34% of 400k context)
+            # Markdown table: ~5.8 MB (within 10 MB API limit)
+            study_data = []
+            for idx, row in mnsclc_df.iterrows():
+                full_abstract = str(row.get('Abstract', '')) if pd.notna(row.get('Abstract')) else 'Not available'
+                study_data.append({
+                    'ID': row['Identifier'],
+                    'Title': row['Title'],
+                    'Abstract': full_abstract,  # Full abstract (avg 2,400 chars, max 3,900 chars)
+                    'Speakers': row.get('Speakers', 'N/A'),
+                    'Affiliation': row.get('Affiliation', 'N/A')
+                })
 
-            print(f"[STEP 2] Matched {len(matching_row_ids)}/{len(librarian_records)} Librarian studies")
+            study_df = pd.DataFrame(study_data)
+            study_table = study_df.to_markdown(index=False)
 
-            # Join back to filtered_df to get full row data (Speakers, Affiliation, etc.)
-            important_studies = filtered_df[filtered_df['Identifier'].isin(matching_row_ids)]
-            print(f"[STEP 2] Joined to CSV: {len(important_studies)} studies with full data")
-
-            # STEP 3: Send FULL DataFrame to AI (all columns!)
-            print(f"[STEP 3] Preparing full study data with all columns...")
-            study_table_markdown = important_studies[[
-                'Identifier', 'Title', 'Speakers', 'Affiliation', 'Date', 'Session'
-            ]].to_markdown(index=False)
-
-            print(f"[STEP 3] Generated markdown table: {len(study_table_markdown)} chars")
-
-            # Add to prompt - DO NOT include the JSON keyword list (issue #2)
             prompt = prompt + f"""
+
+**ALL {len(mnsclc_df)} METASTATIC NSCLC STUDIES FROM ESMO 2025:**
+
+{study_table}
+
+**CRITICAL INSTRUCTIONS FOR LUNG CANCER COMPETITIVE INTELLIGENCE:**
+
+You have ALL {len(mnsclc_df)} metastatic NSCLC studies from ESMO 2025 above. Your mission is to identify and analyze **MET-altered NSCLC competitors**.
+
+**FOCUS EXCLUSIVELY ON:**
+1. **MET exon 14 skipping (METex14)** - ~3-4% of NSCLC, FDA-approved indication for tepotinib
+2. **MET amplification (METamp)** - EGFR TKI resistance mechanism, emerging therapeutic target
+3. **MET overexpression / c-MET protein** - Biomarker for MET-targeting therapies
+
+**TRUE COMPETITORS TO TEPOTINIB (Tepmetko):**
+- **MET TKIs**: capmatinib (Tabrecta), savolitinib, crizotinib (off-label for METamp)
+- **MET ADCs**: telisotuzumab vedotin (Teliso-V, c-MET IHC 3+)
+- **MET bispecifics**: amivantamab (EGFR/MET dual targeting for EGFR+MET co-alterations)
+- **EGFR+MET combinations**: osimertinib + savolitinib, osimertinib + capmatinib (for MET-driven EGFR resistance)
+
+**EXCLUDE FROM SECTION 2 (not MET competitors):**
+- EGFR-only studies (osimertinib monotherapy, gefitinib, erlotinib) unless combined with MET inhibitor
+- ALK, ROS1, KRAS, BRAF, NTRK, RET inhibitors
+- Broad IO monotherapy studies (pembrolizumab, nivolumab alone) unless targeting MET biomarker subsets
+- Small cell lung cancer, mesothelioma, thyroid cancer
+
+**KEY STUDIES TO PRIORITIZE:**
+- SAVANNAH trial (osimertinib + savolitinib in MET-driven resistance)
+- Any tepotinib data (our asset - analyze positioning vs. competitors)
+- Capmatinib, savolitinib, telisotuzumab vedotin, amivantamab trials
+- Real-world MET testing patterns, biomarker prevalence studies
+
+Generate your Competitor Intelligence report focusing Section 2 exclusively on MET-altered NSCLC competitors.
+"""
+
+        # OTHER TAs: Use standard two-step pattern with Librarian
+        elif "regimen_summary" in tables_data:
+            print(f"\n[TWO-STEP] Implementing ai_assistant.py pattern for competitor intelligence...")
+
+            # STEP 1: Get important keywords from AI based on regimen summary
+            print(f"[STEP 1] Asking AI to identify important regimens/keywords...")
+            try:
+                # Use standard Chat Completions API (not Responses API) for keyword extraction
+                keyword_response = client.chat.completions.create(
+                    model="gpt-4o-mini",  # Fast model for keyword extraction
+                    messages=[
+                        {"role": "system", "content": "Extract important drug/regimen keywords for competitive intelligence analysis. Return ONLY a JSON array of search terms, no other text."},
+                        {"role": "user", "content": tables_data["regimen_summary"]}
+                    ],
+                    temperature=0.3,
+                    max_tokens=500
+                )
+
+                keyword_text = keyword_response.choices[0].message.content
+                print(f"[STEP 1] AI response length: {len(keyword_text)} chars")
+                print(f"[STEP 1] AI raw response: {keyword_text[:200]}...")
+
+                # Clean up response - remove markdown code blocks if present
+                cleaned_text = keyword_text.strip()
+                if cleaned_text.startswith("```"):
+                    # Remove markdown code block markers
+                    lines = cleaned_text.split('\n')
+                    if lines[0].startswith("```"):
+                        lines = lines[1:]  # Remove first line (```json or ```)
+                    if lines and lines[-1].strip() == "```":
+                        lines = lines[:-1]  # Remove last line (```)
+                    cleaned_text = '\n'.join(lines).strip()
+
+                # Parse keywords
+                keywords = json.loads(cleaned_text)
+
+                # FILTER OUT EMD SERONO DRUGS (not competitors - these are OUR drugs!)
+                # Check if any EMD drug name appears ANYWHERE in the keyword string
+                emd_drugs = ["avelumab", "bavencio", "tepotinib", "tepmetko", "cetuximab", "erbitux", "pimicotinib"]
+                keywords_filtered = []
+                removed = []
+
+                for kw in keywords:
+                    # Check if ANY EMD drug appears in this keyword
+                    contains_emd_drug = any(emd_drug in kw.lower() for emd_drug in emd_drugs)
+                    if contains_emd_drug:
+                        removed.append(kw)
+                    else:
+                        keywords_filtered.append(kw)
+
+                if removed:
+                    try:
+                        print(f"[STEP 1] Removed EMD Serono drug keywords: {removed}")
+                    except UnicodeEncodeError:
+                        print(f"[STEP 1] Removed {len(removed)} EMD Serono drug keywords (Unicode display error)")
+
+                keywords = keywords_filtered
+                print(f"[STEP 1] AI identified {len(keywords)} competitor keywords")
+                # Print keywords safely (avoid Unicode encoding errors on Windows)
+                for kw in keywords:
+                    try:
+                        print(f"  - {kw}")
+                    except UnicodeEncodeError:
+                        print(f"  - {kw.encode('ascii', 'replace').decode('ascii')}")
+
+                # STEP 2: Filter LIBRARIAN DATA using keywords (not raw CSV!)
+                print(f"[STEP 2] Filtering Librarian-extracted studies with AI keywords...")
+                librarian_records = tables_data["competitor_intelligence"]["tagged_records"]
+
+                # Filter librarian records by regimen field (more accurate than CSV Title)
+                pattern = '|'.join([re.escape(k) for k in keywords])
+                matching_row_ids = []
+                for record in librarian_records:
+                    regimen = record.get('regimen', '')
+                    title = record.get('title', '')
+                    # Check both regimen and title fields for keywords
+                    if re.search(pattern, regimen, re.IGNORECASE) or re.search(pattern, title, re.IGNORECASE):
+                        matching_row_ids.append(record['row_id'])
+
+                print(f"[STEP 2] Matched {len(matching_row_ids)}/{len(librarian_records)} Librarian studies")
+
+                # Join back to filtered_df to get full row data (Speakers, Affiliation, etc.)
+                important_studies = filtered_df[filtered_df['Identifier'].isin(matching_row_ids)]
+                print(f"[STEP 2] Joined to CSV: {len(important_studies)} studies with full data")
+
+                # STEP 3: Send FULL DataFrame to AI (all columns!)
+                print(f"[STEP 3] Preparing full study data with all columns...")
+                study_table_markdown = important_studies[[
+                    'Identifier', 'Title', 'Speakers', 'Affiliation', 'Date', 'Session'
+                ]].to_markdown(index=False)
+
+                print(f"[STEP 3] Generated markdown table: {len(study_table_markdown)} chars")
+
+                # Add to prompt - DO NOT include the JSON keyword list (issue #2)
+                prompt = prompt + f"""
 
 **DETAILED STUDY DATA FOR YOUR ANALYSIS:**
 
@@ -2574,13 +3041,149 @@ Here are ALL {len(important_studies)} studies matching the top competitive regim
 - If content won't fit concisely, use table for key facts + bullet points below for details
 """
 
-            print(f"[TWO-STEP] Enhanced prompt with full study data. New length: {len(prompt)} chars")
+                print(f"[TWO-STEP] Enhanced prompt with full study data. New length: {len(prompt)} chars")
+
+            except Exception as e:
+                print(f"[TWO-STEP ERROR] Failed to apply two-step pattern: {e}")
+                import traceback
+                traceback.print_exc()
+                print(f"[TWO-STEP] Falling back to original prompt without enhancement")
+
+    # KOL BUTTON: Extract influential researchers and institutions
+    elif button_type == "kol":
+        print(f"\n[TWO-STEP] Using gpt-4o-mini to identify influential KOLs...")
+
+        # STEP 1: Ask AI to identify important researchers from speaker data
+        print(f"[STEP 1] Analyzing speakers and affiliations...")
+
+        # Build speaker summary (top 100 most frequent speakers with their affiliations)
+        speaker_counts = filtered_df['Speakers'].value_counts().head(100)
+        speaker_summary = []
+        for speaker, count in speaker_counts.items():
+            # Get affiliations for this speaker
+            affiliations = filtered_df[filtered_df['Speakers'] == speaker]['Affiliation'].unique()
+            affiliation_str = "; ".join([str(a) for a in affiliations[:3]])  # Top 3 affiliations
+            speaker_summary.append(f"{speaker} ({count} studies) - {affiliation_str}")
+
+        speaker_summary_text = "\n".join(speaker_summary)
+
+        try:
+            keyword_response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": """You are a medical affairs expert identifying key opinion leaders (KOLs) in oncology.
+
+Analyze the speaker list and identify:
+1. **Influential Researchers** - Researchers with high study counts and prestigious affiliations
+2. **Rising Stars** - Emerging researchers with novel work
+3. **Key Institutions** - Academic centers and cancer centers with multiple high-profile presentations
+
+Return a JSON object:
+{
+  "influential_kols": ["Dr. Jane Smith (Memorial Sloan Kettering)", ...],
+  "rising_stars": ["Dr. John Doe (Dana-Farber)", ...],
+  "key_institutions": ["Memorial Sloan Kettering Cancer Center", "MD Anderson", ...]
+}
+
+Return ONLY valid JSON, no other text."""},
+                    {"role": "user", "content": f"Therapeutic Area: {ta}\n\nTop Speakers (by study count):\n{speaker_summary_text}"}
+                ],
+                temperature=0.3,
+                max_tokens=1000
+            )
+
+            keyword_text = keyword_response.choices[0].message.content.strip()
+            print(f"[STEP 1] AI response length: {len(keyword_text)} chars")
+
+            # Clean markdown code blocks
+            if keyword_text.startswith("```"):
+                lines = keyword_text.split('\n')
+                if lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines and lines[-1].strip() == "```":
+                    lines = lines[:-1]
+                keyword_text = '\n'.join(lines).strip()
+
+            extracted_kols = json.loads(keyword_text)
+            print(f"[STEP 1] AI identified:")
+            print(f"  - {len(extracted_kols.get('influential_kols', []))} influential KOLs")
+            print(f"  - {len(extracted_kols.get('rising_stars', []))} rising stars")
+            print(f"  - {len(extracted_kols.get('key_institutions', []))} key institutions")
+
+            # Add to tables_data
+            tables_data["ai_extracted_kols"] = extracted_kols
+            print(f"[STEP 2] AI-enhanced KOL data ready for journalist")
 
         except Exception as e:
-            print(f"[TWO-STEP ERROR] Failed to apply two-step pattern: {e}")
-            import traceback
-            traceback.print_exc()
-            print(f"[TWO-STEP] Falling back to original prompt without enhancement")
+            print(f"[TWO-STEP] Error in AI extraction for KOL: {e}")
+            print(f"[TWO-STEP] Falling back to librarian-only data")
+
+    # INSTITUTION BUTTON: Extract geographic and institutional patterns
+    elif button_type == "institution":
+        print(f"\n[TWO-STEP] Using gpt-4o-mini to analyze institutional patterns...")
+
+        # STEP 1: Ask AI to identify important institutions and geographic trends
+        print(f"[STEP 1] Analyzing affiliations and geographic distribution...")
+
+        # Build institution summary
+        affiliation_counts = filtered_df['Affiliation'].value_counts().head(100)
+        institution_summary = "\n".join([
+            f"{institution}: {count} studies"
+            for institution, count in affiliation_counts.items()
+        ])
+
+        try:
+            keyword_response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": """You are a medical affairs expert analyzing institutional research patterns.
+
+Analyze the institution list and identify:
+1. **Leading Institutions** - Top academic/cancer centers by volume and prestige
+2. **Geographic Clusters** - Regions with concentrated research activity (US, EU, Asia)
+3. **Emerging Centers** - New or growing institutions worth monitoring
+4. **Collaboration Patterns** - Multi-institutional consortia or networks
+
+Return a JSON object:
+{
+  "leading_institutions": ["Memorial Sloan Kettering", "MD Anderson", ...],
+  "geographic_clusters": {"North America": ["US institutions"], "Europe": [...], "Asia": [...]},
+  "emerging_centers": ["New institution 1", ...],
+  "collaboration_keywords": ["consortium", "network", "international", ...]
+}
+
+Return ONLY valid JSON, no other text."""},
+                    {"role": "user", "content": f"Therapeutic Area: {ta}\n\nTop Institutions (by study count):\n{institution_summary}"}
+                ],
+                temperature=0.3,
+                max_tokens=1000
+            )
+
+            keyword_text = keyword_response.choices[0].message.content.strip()
+            print(f"[STEP 1] AI response length: {len(keyword_text)} chars")
+
+            # Clean markdown code blocks
+            if keyword_text.startswith("```"):
+                lines = keyword_text.split('\n')
+                if lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines and lines[-1].strip() == "```":
+                    lines = lines[:-1]
+                keyword_text = '\n'.join(lines).strip()
+
+            extracted_institutions = json.loads(keyword_text)
+            print(f"[STEP 1] AI identified:")
+            print(f"  - {len(extracted_institutions.get('leading_institutions', []))} leading institutions")
+            print(f"  - {len(extracted_institutions.get('geographic_clusters', {}))} geographic clusters")
+            print(f"  - {len(extracted_institutions.get('emerging_centers', []))} emerging centers")
+
+            # Add to tables_data
+            tables_data["ai_extracted_institutions"] = extracted_institutions
+            print(f"[STEP 2] AI-enhanced institution data ready for journalist")
+
+        except Exception as e:
+            print(f"[TWO-STEP] Error in AI extraction for institution: {e}")
+            print(f"[TWO-STEP] Falling back to librarian-only data")
 
     # Step 4: Call OpenAI model
     # Change model here as needed: "gpt-5-mini", "gpt-4o", "gpt-4o-mini", etc.
@@ -2596,14 +3199,24 @@ Here are ALL {len(important_studies)} studies matching the top competitive regim
             {"role": "user", "content": prompt}
         ]
 
-        print(f"[DEEP] Starting analysis with high reasoning and high verbosity...")
+        # Strategic Briefing uses HIGH reasoning (meta-synthesis needs deep thought)
+        if button_type == "strategic":
+            reasoning_effort = "high"
+            verbosity_level = "medium"
+            max_tokens = 64000
+            print(f"[DEEP] Starting Strategic Briefing with HIGH reasoning and MEDIUM verbosity...")
+        else:
+            reasoning_effort = "medium"
+            verbosity_level = "medium"
+            max_tokens = 64000
+            print(f"[DEEP] Starting analysis with medium reasoning and medium verbosity...")
 
         response = client.responses.create(
             model=model,
             input=messages,
-            reasoning={"effort": "high"},  # MEDIUM: Balance reasoning with output length
-            text={"verbosity": "high"},      # HIGH: Comprehensive reports
-            max_output_tokens=64000      # Doubled to prevent publication title truncation
+            reasoning={"effort": reasoning_effort},
+            text={"verbosity": verbosity_level},
+            max_output_tokens=max_tokens
         )
 
         # Debug response structure
@@ -2662,9 +3275,13 @@ Here are ALL {len(important_studies)} studies matching the top competitive regim
             if issue.get("severity") == "high"
         ]
         if high_severity_issues:
-            print(f"\n[CHIEF EDITOR] ⚠️  QUALITY WARNING: {len(high_severity_issues)} high-severity issue(s) detected:")
+            print(f"\n[CHIEF EDITOR] WARNING: {len(high_severity_issues)} high-severity issue(s) detected:")
             for issue in high_severity_issues:
-                print(f"[CHIEF EDITOR]   - {issue.get('type', 'unknown')}: {issue.get('description', '')}")
+                issue_type = issue.get('type', 'unknown')
+                issue_desc = issue.get('description', '')
+                # Sanitize for Windows console encoding
+                safe_desc = issue_desc.encode('ascii', 'replace').decode('ascii')
+                print(f"[CHIEF EDITOR]   - {issue_type}: {safe_desc}")
             print(f"[CHIEF EDITOR] Report will be saved as-is. Manual review recommended.")
 
     # Step 5: Structure cache data
