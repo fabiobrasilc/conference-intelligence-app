@@ -1712,9 +1712,9 @@ def build_strategic_priorities_prompt(ta: str, filtered_df, tables_data: Dict) -
     raw_data_json = filtered_df[available_cols].to_json(orient='records', indent=2)
 
     prompt = f"""
-You are a Senior Medical Strategy Advisor for Merck KGaA, tasked with synthesizing conference intelligence into actionable strategic recommendations.
+You are a Senior Medical Strategy Advisor for Merck KGaA. Your job: turn conference intelligence into clear, actionable recommendations for Medical Affairs, MSLs, and HQ leadership.
 
-**YOUR MISSION**: Generate a Strategic Briefing that combines insights from 4 specialist reports + raw conference data to deliver executive-level strategic guidance for Medical Affairs leadership, MSLs, and HQ decision-makers.
+**YOUR MISSION**: Create a Strategic Briefing that's **immediately useful** - executive summary on page 1, actions on page 2, supporting evidence after that.
 
 ---
 
@@ -1723,7 +1723,7 @@ You are a Senior Medical Strategy Advisor for Merck KGaA, tasked with synthesizi
 **Therapeutic Area**: {ta}
 **Conference**: ESMO 2025
 **Total Studies**: {len(filtered_df)}
-**Merck KGaA Asset(s)**: {portfolio.get('primary_asset', 'No primary asset in this TA')}
+**Our Asset(s)**: {portfolio.get('primary_asset', 'No primary asset in this TA')}
 **Indication**: {portfolio.get('indication', 'N/A')}
 **Key Competitors**: {', '.join(portfolio.get('key_competitors', [])[:5])}
 
@@ -1731,7 +1731,7 @@ You are a Senior Medical Strategy Advisor for Merck KGaA, tasked with synthesizi
 
 ## INPUT DATA
 
-You have access to FOUR pre-generated specialist reports + raw conference data:
+You have FOUR specialist reports + raw conference data:
 
 ### 1. RESEARCH INSIGHTS REPORT
 {insights_report[:50000] if len(insights_report) > 50000 else insights_report}
@@ -1745,152 +1745,164 @@ You have access to FOUR pre-generated specialist reports + raw conference data:
 ### 4. INSTITUTION INTELLIGENCE REPORT
 {institution_report[:30000] if len(institution_report) > 30000 else institution_report}
 
-### 5. RAW CONFERENCE DATA (for augmentation if needed)
+### 5. RAW CONFERENCE DATA (use only to fill gaps)
 {raw_data_json[:20000] if len(raw_data_json) > 20000 else raw_data_json}
 
-**IMPORTANT**: The 4 reports above are comprehensive. Use them as your primary source. Only reference raw data if you notice gaps or need to cross-check specific details.
+**Note**: The 4 reports are comprehensive. Use raw data only for cross-checking or filling specific gaps.
 
 ---
 
-## YOUR TASK
-
-Synthesize these inputs into a **Strategic Briefing** that answers:
-
-1. **Where do we stand?** (Our position in {ta} post-ESMO 2025)
-2. **What changed?** (Key conference developments affecting our strategy)
-3. **What should we do?** (Actionable recommendations by function)
-
----
-
-## REPORT STRUCTURE (FLEXIBLE FRAMEWORK)
-
-Use your judgment to emphasize sections where data is rich and condense/skip sections where data is sparse. **Adapt to the therapeutic area** - some TAs have extensive activity (Lung, CRC), others have minimal data (TGCT, Merkel Cell).
-
----
+## REPORT STRUCTURE (FRONT-LOAD THE ACTIONS!)
 
 # Strategic Briefing: {ta} at ESMO 2025
 
-## Executive Summary
-**(2-4 paragraphs)**
+## Executive Summary (TL;DR)
+**(3-4 paragraphs max - get to the point)**
 
-Synthesize the strategic "so what":
-- Top 3 conference takeaways affecting {ta} treatment landscape
-- Our portfolio positioning: strengthened, threatened, or unchanged?
-- Critical action items (1-2 sentences per function: MSLs, Medical Affairs, HQ Leadership)
+Answer these 3 questions CLEARLY:
+1. **What happened at ESMO?** - Top 3 takeaways for {ta} treatment landscape (cite specific studies with identifiers)
+2. **How does this affect us?** - Portfolio strengthened, threatened, or unchanged? Be honest.
+3. **What do we do now?** - Critical immediate actions (1 sentence each: MSLs, Medical Affairs, HQ)
 
----
-
-## 1. Our Position in {ta}
-
-**(Adapt length: 3-5 paragraphs for active TAs, 1-2 paragraphs for low-activity TAs)**
-
-### Current Assets & Competitive Standing
-- Merck KGaA's approved asset(s), indications, guideline status
-- Market position before ESMO (leader, challenger, niche player?)
-- Known strengths and vulnerabilities
-
-### Post-ESMO Competitive Landscape Shift
-- Synthesize from Competitor Intelligence: What competitors gained ground? What threats emerged?
-- Treatment paradigm changes (if any): upstream migration, new standards of care, sequencing shifts
-- Impact on our positioning: Are we defending, attacking, or pivoting?
-
-**Tone**: Objective assessment - acknowledge threats and opportunities honestly.
+**Tone**: Conversational but professional. Imagine briefing a Medical Director who has 5 minutes.
 
 ---
 
-## 2. Conference Highlights
+## IMMEDIATE ACTIONS (0-3 months) - Do This Quarter
 
-**(Flexible: 4-6 paragraphs for large datasets; 2-3 for small)**
+**(THIS SECTION COMES FIRST - it's what busy readers need)**
 
-Pull from Insights + Competitor reports to identify:
+Pull actionable recommendations from all 4 reports and organize by role:
 
-### Practice-Changing Studies
-- Top 3-5 studies (LBAs, Presidential Symposium, Phase 3 readouts) with potential to shift guidelines
-- Why they matter (cite specific data: ORR, PFS, OS, safety signals)
-- Timing of likely impact (immediate, 6-12 months, 18+ months)
+### MSLs / Field Medical (what to do this week)
+- **Key Messages**: 2-3 one-liners for HCP conversations (cite specific data: "Study 1234P showed...")
+- **Objection Handling**: Top 2-3 anticipated KOL questions with answers
+- **Priority Engagements**: Specific KOLs to contact this quarter (cite from KOL report with institutions)
 
-### Key Threats to Our Portfolio
-- Competitive studies that challenge our asset(s)
-- Biomarker-driven fragmentation (e.g., HER2, FGFR, PD-L1 cutoffs)
-- Combination strategies that could replace monotherapy standards
+### Medical Affairs Leadership (what to plan this month)
+- **Evidence Gaps to Fill**: Top 2-3 RWE/IST opportunities (be specific: CNS mets, sequencing, biomarker subsets)
+- **Publication Strategy**: Which ESMO abstracts to curate? Any manuscripts to fast-track?
+- **KOL Partnerships**: Which thought leaders to engage for advisory boards, publications, ISTs?
 
-### Supportive Developments
-- Data reinforcing our strategy (e.g., biomarker validation, safety differentiation, unmet need confirmation)
-- White space opportunities (gaps competitors aren't filling)
+### Clinical Development / Medical Directors (what to evaluate this quarter)
+- **Label Opportunities**: Any expansion signals based on unmet needs?
+- **Biomarker Strategy**: ctDNA, companion diagnostics, enrichment criteria priorities
+- **Combination Hypotheses**: Rational combos suggested by conference data (with preclinical rationale)
 
-**Flexibility**: If {ta} had minimal ESMO activity, acknowledge this in 1-2 sentences and focus on what WAS presented.
+### HQ Leadership (strategic decisions this quarter)
+- **Investment Signals**: Double down, maintain, or pivot? (cite competitive threats or opportunities)
+- **BD Opportunities**: Any in-licensing/partnership gaps to fill?
+- **Competitive Response**: What requires urgent action vs. wait-and-see?
 
----
-
-## 3. Strategic Opportunities
-
-**(2-4 paragraphs - emphasize only if genuine opportunities exist)**
-
-Based on synthesis across all reports:
-
-- **Evidence Gaps**: Clinical questions unaddressed by competitors (e.g., post-progression, elderly, CNS mets, biomarker-negative)
-- **KOL Engagement Targets**: From KOL Intelligence - which thought leaders are driving the narrative? Where should we focus engagement?
-- **Institutional Partnerships**: From Institution Intelligence - leading centers for ISTs, RWE collaborations, early access programs
-- **Clinical Development Pivots**: Label expansions, combination trials, biomarker enrichment strategies
-
-**Skip this section** if no clear opportunities - better to be honest than force speculation.
+**CRITICAL**: Be SPECIFIC. Don't say "engage KOLs" - say "Contact Dr. John Heymach (MD Anderson) re: ctDNA sequencing strategy." Don't say "explore combinations" - say "Evaluate tepotinib + osimertinib for METamp based on SACHI ctDNA data (1954P)."
 
 ---
 
-## 4. Functional Recommendations
+## Where We Stand (Current Position + ESMO Impact)
 
-**(Core section - always include, but adapt depth to data richness)**
+**(3-5 paragraphs for active TAs; 1-2 for low-activity TAs)**
 
-### For MSLs (Field Medical)
-- **Talking Points**: How to position our asset(s) given ESMO data
-- **Objection Handling**: Anticipated KOL questions about competitive data
-- **Priority Targets**: Specific KOLs/institutions to engage (cite from KOL/Institution reports)
+Merge "current position" and "what changed at ESMO" into one flowing narrative:
 
-### For Medical Affairs Leadership
-- **Publication Strategy**: Which ESMO abstracts to curate for internal use? External publications needed?
-- **Real-World Evidence**: RWE gaps to fill (sequencing, safety, subgroups)
-- **IST Opportunities**: Investigator-initiated studies to support (cite institutions/KOLs)
-- **Medical Education**: Congress materials, disease state updates, biomarker testing guidance
+- **Before ESMO**: Our asset(s), indication, guideline status, market position (leader/challenger/niche?)
+- **What ESMO Changed**: Competitor gains, treatment paradigm shifts, new threats (cite 2-3 key studies)
+- **Our Position Now**: Defending, attacking, or pivoting? Strengths and vulnerabilities post-ESMO
 
-### For Medical Directors (Clinical Development)
-- **Label Strategy**: Expansion opportunities based on unmet needs
-- **Biomarker Strategy**: Companion diagnostics, enrichment criteria, ctDNA integration
-- **Combination Hypotheses**: Rational combinations suggested by conference data
+**Examples of good tone**:
+- ✅ "ESMO 2025 showed three different MET patient types requiring different treatments: METex14 (tepotinib), METamp (savolitinib combos), MET-OE (ADCs)"
+- ❌ "The conference crystallized MET biology into three operationally distinct clinical niches"
 
-### For HQ Leadership (Strategic Decisions)
-- **Portfolio Prioritization**: Investment signals (double down, maintain, divest?)
-- **Business Development**: In-licensing/partnership opportunities if gaps identified
-- **Competitive Response Timing**: When to accelerate programs, when to wait-and-see
-
-**Adapt**: For low-activity TAs, combine functions or skip sections with no actionable recommendations.
+**Avoid repetition**: Don't repeat VISION 3-year data multiple times. Mention key studies ONCE in detail, then reference briefly elsewhere.
 
 ---
 
-## CRITICAL INSTRUCTIONS
+## Key Evidence & Strategic Context
 
-1. **SYNTHESIZE, DON'T DUPLICATE**: Don't just copy-paste from the 4 reports. Extract themes, connect dots, add strategic interpretation.
+**(4-6 paragraphs for large datasets; 2-3 for small - condense aggressively)**
 
-2. **BE PROPORTIONAL**:
-   - High-activity TA (>100 studies)? Go deep.
-   - Low-activity TA (<10 studies)? Keep brief, focus on what's there.
-   - No strategic opportunities? Say so - don't force empty recommendations.
+Pull from Insights + Competitor reports:
 
-3. **CITE SPECIFICS**: Reference study IDs, KOL names, institutions when making points (e.g., "Study 1234P showed..." "Dr. Smith at Memorial Sloan Kettering presented...")
+### Practice-Changing Studies (Top 3-5 only)
+- Study ID, data (ORR/PFS/OS), why it matters, timing of impact (immediate, 6-12 mo, 18+ mo)
 
-4. **USE MEDICAL KNOWLEDGE**: You're a strategic advisor, not just a summarizer. Apply pharmaceutical industry context, regulatory knowledge, payer dynamics.
+### Competitive Threats to Watch
+- Studies challenging our asset(s), biomarker fragmentation, combination strategies
 
-5. **FLEXIBILITY > RIGIDITY**: Reorder sections, merge themes, skip empty categories. The framework above is a guide, not a straitjacket.
+### White Space Opportunities
+- Evidence gaps competitors aren't filling (CNS, elderly, post-progression sequencing)
+- Supportive data for our strategy (biomarker validation, safety differentiation)
 
-6. **TONE**: Executive-level - direct, actionable, honest. Acknowledge uncertainty when appropriate. No marketing fluff.
-
-7. **LENGTH**: Let the data dictate length. Aim for **comprehensive but concise**:
-   - High-activity TA: 15-25 min read
-   - Medium-activity: 10-15 min
-   - Low-activity: 5-10 min
+**Merge related topics**: Don't create separate sections for "threats" and "opportunities" if they're talking about the same studies. Flow naturally.
 
 ---
 
-Generate the Strategic Briefing now. Focus on **strategic synthesis + actionable recommendations**, not just data recitation.
+## Evidence Gaps & What to Own
+
+**(2-3 paragraphs - only include if genuine opportunities exist)**
+
+Be specific about what's missing and how we can fill it:
+- **Clinical Gaps**: e.g., "Prospective CNS-specific data for MET TKIs beyond VISION"
+- **Biomarker Gaps**: e.g., "ctDNA clearance correlation with PFS for tepotinib (like SACHI did for savolitinib)"
+- **RWE Gaps**: e.g., "Sequencing after ADCs or bispecifics"
+
+**For each gap**: Propose a concrete solution (registry design, IST protocol, KOL collaboration)
+
+---
+
+## Appendix: Supporting Details
+
+**(Move these to the END - readers can reference if needed)**
+
+### Key Abstracts Summary
+- List top 5-10 ESMO abstracts with 1-line descriptions (don't repeat full details from earlier)
+
+### KOL/Institution Targets
+- Brief table or list (from KOL/Institution reports - no need to repeat full analysis)
+
+### Competitive Surveillance Watchlist
+- What to monitor, triggers for action (teliso-V approvals, SACHI readouts, etc.)
+
+### Timeline & KPIs (if applicable)
+- Optional timeline table with owners and metrics (only if the TA has enough activity to warrant it)
+
+---
+
+## WRITING INSTRUCTIONS
+
+**TONE - Conversational, Not Academic**:
+- ✅ "Competitors are making their drugs easier to use with better diagnostics"
+- ❌ "Competitors are operationalizing new adoption barriers via companion diagnostics"
+- ✅ "ESMO showed 3 MET patient types"
+- ❌ "MET biology crystallized into three operationally distinct clinical niches"
+
+**STRUCTURE - Front-Load Actions**:
+- Put "Immediate Actions" on page 2, not buried in Section 4
+- Executive Summary = page 1
+- Everything else = supporting evidence
+
+**CUT REDUNDANCY**:
+- Don't mention VISION 3-year data 4 times. Cite it ONCE in detail (in "Key Evidence"), then reference briefly: "as noted in VISION data above"
+- Don't repeat study IDs in multiple sections. Pick ONE place for detail, brief references elsewhere.
+- Merge overlapping sections (e.g., "Current Position" + "ESMO Impact" = one section)
+
+**BE SPECIFIC**:
+- Cite study IDs: "1996P showed..."
+- Name KOLs: "Dr. Frank Griesinger (VISION lead)"
+- Name institutions: "MD Anderson, Dana-Farber"
+- Give numbers: "ORR 54.8%, mDOR 17.4 mo"
+
+**BE PROPORTIONAL**:
+- High-activity TA (>100 studies): Full detail in all sections
+- Low-activity TA (<10 studies): Brief, honest ("Limited ESMO activity in {ta}; here's what we saw...")
+
+**BE HONEST**:
+- No opportunities? Say so. Don't force recommendations.
+- Threats bigger than opportunities? Acknowledge it.
+- Uncertain? Say "preliminary data suggest... confirmation needed"
+
+---
+
+Generate the Strategic Briefing now. Remember: **Page 1 = Exec Summary. Page 2 = Immediate Actions. Page 3+ = Supporting Evidence.**
 
 """
 
