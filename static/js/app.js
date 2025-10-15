@@ -1072,8 +1072,145 @@ document.addEventListener('DOMContentLoaded', function() {
     return titles[type] || type;
   }
 
+  // ===== Pharma Jokes for Loading States =====
+  const pharmaJokes = [
+    // R&D & Discovery
+    "R&D scientist: 'It works in mice!' Regulatory: 'You're not a mouse.'",
+    "Discovery pipeline: Where 10,000 compounds go to become 1 approved drug... maybe",
+    "Why did the molecule fail screening? Bad binding energy AND bad attitude!",
+    "Preclinical success rate: High. Clinical success rate: *nervous laughter*",
+    "Hit-to-lead: The pharmaceutical hunger games for molecules",
+    "Why do R&D teams love caffeine? It's the only compound with 100% bioavailability in their lab!",
+
+    // Clinical Trials & Development
+    "Clinical trials: Where 'p < 0.05' means champagne, 'p = 0.051' means existential crisis",
+    "Phase I: Will it kill them? Phase II: Does it work? Phase III: *sweating intensifies*",
+    "Why did Phase III fail? Even the placebo was overachieving!",
+    "Clinical endpoints: Because 'trust me bro' isn't statistically significant",
+    "Recruitment goal: 500 patients. Actual enrollment: 12. Timeline: Optimistic fiction.",
+
+    // Regulatory Affairs
+    "Regulatory affairs: Where 'maybe' is the most optimistic word you'll hear",
+    "FDA meeting prep: 90% anxiety, 10% slides, 100% coffee",
+    "Why did the submission get delayed? CRF version 47 had a typo in the footer",
+    "Regulatory timelines: Add 6 months to whatever they say, then double it",
+    "21 CFR Part 11: Making sure your digital signature needs a signature",
+
+    // Medical Affairs & MSLs
+    "MSL life: GPS says 3 hours, my bladder says 'LOL NOPE'",
+    "Medical Affairs motto: 'If it's not in Veeva, it didn't happen'",
+    "MSL presenting: If data doesn't dazzle, acronyms will confuse!",
+    "MSL territory planning: Like chess, but with traffic and no parking",
+    "Why did the biomarker get promoted? Highly predictive of success!",
+
+    // Commercial & Market Access
+    "Pricing & reimbursement: Where your $10 pill becomes $2 after negotiations",
+    "Payer meetings: Bringing data to a cost-cutting contest",
+    "Market access strategy: Hope ICER doesn't destroy your launch",
+    "Why did the sales rep cry? The formulary said 'preferred alternative available'",
+    "Commercial team: 'We'll be first in class!' Payers: 'Cool, generic launches when?'",
+    "HEOR models: Making assumptions look scientific since 1990",
+
+    // Manufacturing & Supply Chain
+    "Manufacturing: Where 'slight deviation' means 6 months of investigation",
+    "GMP: Good Manufacturing Practice or 'God, More Paperwork'?",
+    "Why was the batch rejected? Temperature was 24.8°C instead of 25°C ± 2°C",
+    "Supply chain strategy: Just-in-time delivery meets just-in-case hoarding",
+    "Sterile manufacturing: Where a speck of dust costs $2M to investigate",
+
+    // Pharmacovigilance & Safety
+    "Pharmacovigilance: Where 'patient sneezed' becomes a 40-page report",
+    "Adverse events: The part where everyone suddenly pays attention",
+    "Why did the safety scientist panic? Someone reported 'headache' for a headache drug",
+    "Signal detection: Finding needles in haystacks, but the haystack is on fire",
+
+    // HQ & Strategy
+    "Strategy meeting: Where 'synergy' is mentioned 47 times per hour",
+    "HQ portfolio review: Killing your favorite programs since 2010",
+    "Franchise team alignment: 6 departments, 8 opinions, 0 consensus",
+    "Why did the VP restructure? Because it's Tuesday",
+    "Pipeline prioritization: May the odds be ever in your molecule's favor",
+
+    // Legal & Compliance
+    "Compliance: The department that says 'no' in 37 different ways",
+    "Why did legal reject the slide? It implied efficacy by existing",
+    "Off-label discussion: The phrase that summons 3 lawyers instantly",
+    "Consent forms: Now with 60% more lawyer words per sentence!",
+
+    // Science & Mechanisms
+    "Why did the antibody break up? Too clingy!",
+    "What's a lazy enzyme? A catalyst with commitment issues!",
+    "Why are checkpoint inhibitors bad at parties? They block all the fun signals!",
+    "Why don't viruses pay rent? Professional cellular squatters since forever",
+    "What do you call a shy antibody? Anti-social immunity!",
+    "Why don't bacteria win debates? They lack culture AND arguments!",
+    "Why are ADCs so effective? They deliver the punchline directly to target!",
+    "Why did mRNA visit the ribosome? Needed someone to translate its problems!",
+    "Bioavailability: How much drug survives metabolism. Also: my Monday energy.",
+    "Why was the peptide bond stressed? Too much tension in the relationship!",
+    "Why don't platelets panic? They stick together through thick and thin!",
+
+    // Conference & General
+    "Conference truth: LBA = Late Beer Available (if you're lucky)",
+    "What's faster than light? Anyone leaving a 5pm Friday symposium!",
+    "Poster session strategy: Look engaged, collect business cards, find coffee",
+    "Why did the abstract get accepted? Someone on the committee owed someone a favor",
+    "Poster session reality: 90% networking, 10% science, 100% standing",
+    "ESMO badge collection: Gotta catch 'em all!",
+    "Why are conference WiFi passwords so complex? To keep you at the booth longer!",
+    "Conference app navigation: Because getting lost is part of the experience!",
+    "Plenary session attendance: Inversely proportional to proximity to coffee",
+    "Why did the abstract get rejected? Reviewers needed their quota of rejections",
+    "Oral presentation: 15 minutes of science, 10 minutes of Q&A awkwardness",
+    "Conference hotels: Where $500/night gets you a view of the parking lot",
+    "Why are keynote speakers always running late? They're networking too!",
+    "Poster boards: The Tinder of scientific collaboration",
+    "Conference buffet strategy: Carbs for energy, protein for endurance, coffee for survival",
+    "What's a conference attendee's favorite cardio? Speed-walking between sessions!",
+    "Satellite symposium = Free lunch + sales pitch (but mostly free lunch)",
+    "Why bring business cards to a conference? So you can lose them all by day 2!",
+    "Conference etiquette: Pretend you understand every acronym",
+    "Abstract submission deadline: The ultimate procrastination Olympics",
+    "Why are late-breaking abstracts so exciting? Fresh data, fresh drama!",
+    "Conference exhibit hall: Where pens are currency",
+    "Breakout session attendance: Directly proportional to breakfast quality",
+    "Why did the presenter go over time? Because rules don't apply to PIs!",
+    "Conference fatigue: Real. Coffee dependency: Also real.",
+    "Meet-the-expert sessions: Where experts meet other experts pretending to be attendees",
+    "Poster number location: A treasure hunt with scientific stakes",
+    "Why are conference bags so big? Gotta fit all those vendor tchotchkes!",
+    "Abstract word limit: The art of saying everything while saying nothing",
+    "Conference app notifications: Because FOMO needed a digital assistant",
+    "Why attend the opening ceremony? Free swag and mild guilt if you skip it",
+    "Scientific sessions vs. coffee breaks: Attendance says it all",
+    "Parallel sessions: Ensuring you always miss something important",
+    "Why are poster sessions at 7am? Someone on the committee hates joy",
+    "Conference registration fees: Funding next year's conference since forever",
+    "Meet-and-greet receptions: Awkward small talk with name tag squinting",
+    "Why is the best data always in the last slide? Suspense sells!",
+    "Conference abstract book: 500 pages you'll never read but must carry",
+    "Poster tube survival: Making it home without losing/crushing/forgetting it",
+    "Industry symposium lunch: The price of a sandwich is your email address",
+    "Why do conferences have dress codes? So we can all ignore them together!",
+    "Session moderator's job: Impossible. Cutting off PIs mid-sentence? Career suicide.",
+    "Conference time zones: Your body says 3am, the schedule says 'keynote now'",
+    "Why are the best conversations in the hallway? Because slides can't interrupt!",
+    "Poster awards: Popularity contest disguised as peer review",
+    "Conference swag hierarchy: Pens < notepads < tote bags < USB drives < actual science",
+    "Why submit to ESMO? Because ASCO rejected you (kidding... mostly)",
+    "Symposium Q&A: Where one person asks a 5-minute 'question'",
+    "Conference dinner: Networking + wine = questionable career decisions",
+    "Late-breaking data: Breaking news or breaking hearts?",
+    "Why are conference centers so cold? To keep you awake during talks!"
+  ];
+
+  function getRandomJoke() {
+    return pharmaJokes[Math.floor(Math.random() * pharmaJokes.length)];
+  }
+
   // ===== Chat (placeholder) =====
   let isChatStreaming = false;  // Track if chat is currently streaming
+  let jokeRotationInterval = null;  // Track joke rotation interval
 
   if (sendChatBtn) {
     sendChatBtn.addEventListener('click', () => {
@@ -1134,15 +1271,28 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       // Generate unique ID for this response
       const responseId = 'chat-content-' + Date.now();
+      const jokeId = 'joke-' + Date.now();
 
-      // Add loading message
+      // Add loading message with rotating joke
+      const initialJoke = getRandomJoke();
       appendToChat(`
         <div class="d-flex justify-content-start mb-2">
           <div class="bg-light border rounded p-3" style="max-width:90%;">
-            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-            <div id="${responseId}" class="chat-stream">Thinking...</div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="spinner-border spinner-border-sm" role="status" style="flex-shrink: 0;"></span>
+              <div id="${jokeId}" class="text-muted" style="font-style: italic; font-size: 0.9em;">${escapeHtml(initialJoke)}</div>
+            </div>
+            <div id="${responseId}" class="chat-stream" style="display: none;"></div>
           </div>
         </div>`);
+
+      // Start rotating jokes every 5 seconds
+      jokeRotationInterval = setInterval(() => {
+        const jokeElement = document.getElementById(jokeId);
+        if (jokeElement) {
+          jokeElement.textContent = getRandomJoke();
+        }
+      }, 5000);
 
       // Build filters from chat scope selector
       const drugFilters = activeChatScope.type === 'drug' ? [activeChatScope.value] : [];
@@ -1177,7 +1327,19 @@ document.addEventListener('DOMContentLoaded', function() {
       let out = '';            // accumulated assistant text
 
       const contentDiv = document.getElementById(responseId);
-      contentDiv.textContent = '';  // clear "Thinking..." safely
+
+      // Stop joke rotation when response starts
+      if (jokeRotationInterval) {
+        clearInterval(jokeRotationInterval);
+        jokeRotationInterval = null;
+      }
+
+      // Hide joke and show response content
+      const jokeElement = document.getElementById(jokeId);
+      if (jokeElement) {
+        jokeElement.style.display = 'none';
+      }
+      contentDiv.style.display = 'block';
 
       // Remove the spinner that's in the same parent div
       const spinnerEl = contentDiv.parentElement.querySelector('.spinner-border');
@@ -1220,10 +1382,10 @@ document.addEventListener('DOMContentLoaded', function() {
                   contentDiv.insertAdjacentHTML('beforeend', '<div id="' + responseId + '-text" class="mt-3"></div>');
                 }
 
-                // Add spinner below table until AI text starts
+                // Add spinner below table until AI text starts (no joke rotation here, just simple spinner)
                 if (!document.getElementById(responseId + '-spinner')) {
                   contentDiv.insertAdjacentHTML('beforeend',
-                    '<div id="' + responseId + '-spinner" class="mt-2"><span class="spinner-border spinner-border-sm me-2"></span><span class="text-muted">Analyzing...</span></div>');
+                    '<div id="' + responseId + '-spinner" class="mt-2" style="display: none;"></div>');
                 }
                 chatContainer.scrollTop = chatContainer.scrollHeight;
               } else if (parsed.text) {
@@ -1275,6 +1437,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     } catch (error) {
       console.error('Chat error:', error);
+
+      // Stop joke rotation on error
+      if (jokeRotationInterval) {
+        clearInterval(jokeRotationInterval);
+        jokeRotationInterval = null;
+      }
+
       appendToChat(`
         <div class="d-flex justify-content-start mb-2">
           <div class="bg-danger text-white rounded p-2">Error: ${error.message}</div>
