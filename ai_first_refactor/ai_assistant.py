@@ -35,340 +35,51 @@ def handle_chat_query(
     latest_report: str = None
 ) -> Dict[str, Any]:
     """
-    Main chat handler - Two-step AI-first approach.
+    SIMPLIFIED Main chat handler - Just extract keywords and filter.
 
-    Step 1: AI interprets query and generates search keywords (with conversation context)
+    Step 1: AI extracts search keywords from query + conversation history
     Step 2: Filter DataFrame using keywords
-    Step 3: AI analyzes filtered results (with conversation context + latest report if available)
+    Step 3: AI analyzes filtered results with full conversation context
 
-    Args:
-        df: Full conference dataset (already filtered by UI filters)
-        user_query: Raw user question
-        active_filters: Dict of active UI filters
-        conversation_history: List of {user: str, assistant: str} from previous exchanges
-        thinking_mode: "auto" (default), "quick", "normal", or "deep"
-        active_ta: Active therapeutic area from button click (e.g., "Bladder Cancer")
-        latest_report: Latest generated insights report for the active TA (if available)
-
-    Returns:
-        {
-            'type': 'ai_response',
-            'filtered_data': DataFrame (filtered results for table),
-            'response_stream': generator (AI analysis tokens)
-        }
+    The AI handles greetings, confirmations, and strategic questions naturally
+    using conversation history. No hardcoded classification logic needed.
     """
 
     if conversation_history is None:
         conversation_history = []
 
     print(f"\n{'='*70}")
-    print(f"[AI-FIRST] User query: {user_query}")
-    print(f"[AI-FIRST] Starting dataset: {len(df)} studies")
-    print(f"[AI-FIRST] Conversation history: {len(conversation_history)} previous exchanges")
+    print(f"[SIMPLIFIED] User query: {user_query}")
+    print(f"[SIMPLIFIED] Starting dataset: {len(df)} studies")
+    print(f"[SIMPLIFIED] Conversation history: {len(conversation_history)} previous exchanges")
     print(f"{'='*70}")
 
-    # STEP 1: AI interprets query and decides response strategy
-    print(f"\n[STEP 1] AI interpreting query...")
-    interpretation = extract_search_keywords_from_ai(user_query, len(df), active_filters, conversation_history)
+    # STEP 1: AI extracts search keywords (no classification, just keywords!)
+    print(f"\n[STEP 1] AI extracting search keywords...")
+    keywords = extract_simple_keywords(user_query, len(df), active_filters, conversation_history)
 
-    # Check response type
-    response_type = interpretation.get('response_type')
-
-    # SIMPLIFICATION: Treat all followups as fresh searches EXCEPT for simple confirmations
-    if response_type == 'followup':
-        # Special case: User saying "Yes" to a previous suggestion
-        if user_query.strip().lower() in ['yes', 'yes please', 'yeah', 'yep', 'sure', 'ok', 'okay']:
-            print(f"[FOLLOWUP] User confirmed with '{user_query}' - extracting keywords from previous context")
-            # Get the context_query which contains what the user is confirming
-            context_query = interpretation.get('context_query', '')
-
-            # If context mentions broadening search with specific keywords, extract them
-            if 'broaden' in context_query.lower() or 'keywords' in context_query.lower():
-                # Extract keywords from the context_query
-                # Example: "Broaden search to keywords: burnout, wellbeing, workforce, clinician mental health"
-                keyword_match = re.search(r'keywords?:\s*([^)]+)', context_query, re.IGNORECASE)
-                if keyword_match:
-                    keywords_text = keyword_match.group(1)
-                    # Split by commas and clean up
-                    search_terms = [k.strip(' "\'') for k in keywords_text.split(',')]
-                    print(f"[FOLLOWUP] Extracted search terms from context: {search_terms}")
-
-                    # Override interpretation to be a search with these terms
-                    interpretation = {
-                        'response_type': 'search',
-                        'drugs': [],
-                        'drug_classes': [],
-                        'therapeutic_areas': [],
-                        'institutions': [],
-                        'dates': [],
-                        'speakers': [],
-                        'search_terms': search_terms
-                    }
-                    response_type = 'search'
-                else:
-                    # No keywords found, treat as fresh search
-                    print(f"[FOLLOWUP] No keywords found in context, treating as fresh search")
-                    interpretation = extract_search_keywords_from_ai(user_query, len(df), active_filters, [])
-                    response_type = interpretation.get('response_type')
-            else:
-                # Not a broadening confirmation, treat as fresh search
-                print(f"[FOLLOWUP] Not a broadening confirmation, treating as fresh search")
-                interpretation = extract_search_keywords_from_ai(user_query, len(df), active_filters, [])
-                response_type = interpretation.get('response_type')
-        else:
-            # Not a simple confirmation, treat as fresh search to avoid mixing unrelated topics
-            print(f"[FOLLOWUP] Detected, but treating as fresh search to avoid mixing unrelated topics")
-            print(f"[FOLLOWUP] Re-calling AI to extract proper search keywords...")
-            interpretation = extract_search_keywords_from_ai(user_query, len(df), active_filters, [])
-            response_type = interpretation.get('response_type')
-
-    # Handle greeting
-    if response_type == 'greeting':
-        print(f"[STEP 1] AI detected greeting - responding conversationally")
-        greeting_message = interpretation.get('message', 'How can I help you today?')
-
-        def greeting_generator():
-            yield greeting_message
-
-        return {
-            'type': 'ai_response',
-            'filtered_data': pd.DataFrame(),
-            'response_stream': greeting_generator()
-        }
-
-    # Handle error
-    if response_type == 'error':
-        print(f"[STEP 1] AI extraction error - returning error message")
-        error_message = interpretation.get('message', 'Sorry, I encountered an error. Please try again.')
-
-        def error_generator():
-            yield error_message
-
-        return {
-            'type': 'ai_response',
-            'filtered_data': pd.DataFrame(),
-            'response_stream': error_generator()
-        }
-
-    # Handle conceptual/strategic query (answer with knowledge, optionally use studies as evidence)
-    if response_type == 'conceptual_query':
-        print(f"[STEP 1] AI detected conceptual/strategic query")
-        topic = interpretation.get('topic', '')
-        context_entities = interpretation.get('context_entities', [])
-        retrieve_studies = interpretation.get('retrieve_supporting_studies', False)
-        print(f"[CONCEPTUAL] Topic: {topic}")
-        print(f"[CONCEPTUAL] Context entities: {', '.join(context_entities)}")
-        print(f"[CONCEPTUAL] Retrieve supporting studies: {retrieve_studies}")
-
-        # If AI wants supporting studies, filter by context entities
-        if retrieve_studies and context_entities:
-            print(f"[STEP 2] Filtering for supporting studies about: {', '.join(context_entities)}")
-            entity_pattern = '|'.join([re.escape(e) for e in context_entities])
-            filtered_df = df[
-                df['Title'].str.contains(entity_pattern, case=False, na=False, regex=True)
-            ]
-            print(f"[STEP 2] Filtered: {len(df)} -> {len(filtered_df)} supporting studies")
-        elif retrieve_studies and not context_entities:
-            # FALLBACK should rarely happen if AI prompt is working correctly
-            print(f"[STEP 2] FALLBACK: AI requested studies but didn't extract entities")
-            print(f"[STEP 2] This suggests AI prompt needs improvement - returning empty dataset")
-            filtered_df = pd.DataFrame()
-        else:
-            # No study filtering needed - AI will answer from knowledge
-            filtered_df = pd.DataFrame()
-            print(f"[STEP 2] No study filtering needed - conceptual answer from medical knowledge")
-
-        # Skip to Step 3 - AI answers conceptually
-        print(f"\n[STEP 3] AI answering conceptual query about '{topic}'...")
-        response_generator = analyze_filtered_results_with_ai(
-            user_query=user_query,
-            filtered_df=filtered_df,
-            original_count=len(df),
-            active_filters=active_filters,
-            extracted_keywords={'response_type': 'conceptual_query', 'topic': topic, 'context_entities': context_entities},
-            thinking_mode=thinking_mode,
-            conversation_history=conversation_history,
-            active_ta=active_ta,
-            latest_report=latest_report
-        )
-
-        return {
-            'type': 'ai_response',
-            'filtered_data': filtered_df,
-            'response_stream': response_generator
-        }
-
-    # Handle follow-up question (reuse previous data from conversation history)
-    if response_type == 'followup':
-        print(f"[STEP 1] AI detected follow-up question - extracting previous study identifiers from conversation history")
-        context_query = interpretation.get('context_query', '')
-        print(f"[FOLLOWUP] Context: {context_query}")
-
-        # Extract study identifiers mentioned in the most recent assistant response
-        if conversation_history:
-            last_response = conversation_history[-1].get('assistant', '')
-            # Find all study identifiers (pattern: digits followed by P, like "1234P")
-            identifier_pattern = r'\b(\d+P)\b'
-            identifiers = list(set(re.findall(identifier_pattern, last_response)))
-
-            if identifiers:
-                print(f"[FOLLOWUP] Found {len(identifiers)} study identifiers in previous response: {', '.join(identifiers[:10])}")
-                # Filter DataFrame to only include these studies
-                filtered_df = df[df['Identifier'].isin(identifiers)].copy()
-                print(f"[FOLLOWUP] Filtered to {len(filtered_df)} studies from previous conversation")
-
-                # Create pseudo-keywords for the analyzer to understand context
-                keywords = {
-                    'response_type': 'followup',
-                    'context_query': context_query,
-                    'reused_identifiers': identifiers
-                }
-
-                # Skip to Step 3 - AI analyzes the same filtered results
-                print(f"\n[STEP 3] AI analyzing {len(filtered_df)} studies from follow-up...")
-                response_generator = analyze_filtered_results_with_ai(
-                    user_query=user_query,
-                    filtered_df=filtered_df,
-                    original_count=len(df),
-                    active_filters=active_filters,
-                    extracted_keywords=keywords,
-                    thinking_mode=thinking_mode,
-                    conversation_history=conversation_history,
-                    active_ta=active_ta,
-                    latest_report=latest_report
-                )
-
-                return {
-                    'type': 'ai_response',
-                    'filtered_data': filtered_df,
-                    'response_stream': response_generator
-                }
-            else:
-                # No identifiers found - check if this is a confirmation response or ask for confirmation
-                print(f"[FOLLOWUP] No study identifiers found in previous response")
-
-                # Check if previous message was a confirmation question
-                if conversation_history and 'is that right' in last_response.lower():
-                    # This is a confirmation response - extract entities from context_query
-                    print(f"[FOLLOWUP] User responding to confirmation - extracting entities from context")
-
-                    # Combine context query + user query for entity extraction
-                    combined_text = f"{context_query} {user_query}"
-
-                    # Extract drug names using comprehensive pattern
-                    drug_pattern = r'\b([A-Z][a-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|ciclib|alisib|govitecan|deruxtecan|tuximab))\b'
-                    potential_drugs = re.findall(drug_pattern, combined_text)
-
-                    # Also extract multi-word drug names (e.g., "enfortumab vedotin")
-                    multi_word_pattern = r'\b([A-Z][a-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|govitecan|deruxtecan)\s+[a-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|govitecan|deruxtecan))\b'
-                    multi_word_drugs = re.findall(multi_word_pattern, combined_text, re.IGNORECASE)
-
-                    # Extract biomarker names (e.g., "Nectin-4", "METex14", "HER2")
-                    biomarker_pattern = r'\b((?:PD-L1|PD-1|HER2|HER3|EGFR|MET|ALK|ROS1|NTRK|KRAS|BRAF|RET|Nectin-4|Nectin4|TROP-2|TROP2|B7-H3|METex14))\b'
-                    biomarkers = re.findall(biomarker_pattern, combined_text, re.IGNORECASE)
-
-                    # Combine all entities
-                    all_entities = list(set(potential_drugs + multi_word_drugs + biomarkers))
-
-                    if all_entities:
-                        print(f"[FOLLOWUP] Extracted entities from confirmation: {', '.join(all_entities)}")
-
-                        # Filter dataset by extracted entities
-                        entity_pattern = '|'.join([re.escape(e) for e in all_entities])
-                        filtered_df = df[
-                            df['Title'].str.contains(entity_pattern, case=False, na=False, regex=True)
-                        ]
-                        print(f"[FOLLOWUP] Entity extraction filtered: {len(df)} -> {len(filtered_df)} studies")
-
-                        # Safety check: If still > 300 studies, ask user to be more specific
-                        if len(filtered_df) > 300:
-                            print(f"[FOLLOWUP] Filtered dataset still too large ({len(filtered_df)} > 300) - asking user to clarify")
-
-                            def clarification_generator():
-                                yield f"I found {len(filtered_df)} studies related to {', '.join(all_entities[:3])}.\n\n"
-                                yield f"That's a lot of data to analyze at once (I can handle up to 300 studies for quality analysis).\n\n"
-                                yield f"Could you narrow it down? For example:\n"
-                                yield f"- Focus on a specific drug or comparison\n"
-                                yield f"- Mention a specific study identifier (e.g., '1234P')\n"
-                                yield f"- Ask about a specific aspect (efficacy, safety, biomarkers)\n"
-
-                            return {
-                                'type': 'ai_response',
-                                'filtered_data': pd.DataFrame(),
-                                'response_stream': clarification_generator()
-                            }
-
-                        # Dataset is manageable - proceed with analysis
-                        print(f"[FOLLOWUP] Dataset size acceptable ({len(filtered_df)} ≤ 300) - proceeding with analysis")
-
-                        keywords = {
-                            'response_type': 'followup',
-                            'context_query': context_query,
-                            'extracted_entities': all_entities
-                        }
-
-                        print(f"\n[STEP 3] AI analyzing {len(filtered_df)} follow-up studies...")
-                        response_generator = analyze_filtered_results_with_ai(
-                            user_query=user_query,
-                            filtered_df=filtered_df,
-                            original_count=len(df),
-                            active_filters=active_filters,
-                            extracted_keywords=keywords,
-                            thinking_mode=thinking_mode,
-                            conversation_history=conversation_history,
-                            active_ta=active_ta,
-                            latest_report=latest_report
-                        )
-
-                        return {
-                            'type': 'ai_response',
-                            'filtered_data': filtered_df,
-                            'response_stream': response_generator
-                        }
-
-                # Not a confirmation response - ask for confirmation
-                print(f"[FOLLOWUP] Asking user to confirm what they want")
-
-                def confirmation_generator():
-                    yield f"Just to make sure I understand correctly:\n\n"
-                    yield f"You want me to {context_query}\n\n"
-                    yield f"Is that right? Feel free to clarify or add anything else you'd like to know!"
-
-                return {
-                    'type': 'ai_response',
-                    'filtered_data': pd.DataFrame(),
-                    'response_stream': confirmation_generator()
-                }
-
-    # Data query - extract keywords from interpretation
-    keywords = interpretation
-    print(f"[STEP 1] AI-generated keywords:")
+    print(f"[STEP 1] Extracted keywords:")
     for key, values in keywords.items():
-        if values and key != 'response_type':
+        if values:
             print(f"  {key}: {values}")
 
-    # STEP 2: Filter DataFrame using AI-generated keywords
-    print(f"\n[STEP 2] Filtering dataset with AI-generated keywords...")
+    # STEP 2: Filter DataFrame using keywords
+    print(f"\n[STEP 2] Filtering dataset...")
     filtered_df = filter_dataframe_with_keywords(df, keywords)
     print(f"[STEP 2] Filtered: {len(df)} -> {len(filtered_df)} studies")
 
-    if len(filtered_df) > 0 and len(filtered_df) <= 50:
-        sample_ids = filtered_df['Identifier'].dropna().head(10).tolist()
-        if sample_ids:
-            print(f"[STEP 2] Sample IDs: {', '.join(map(str, sample_ids))}")
-
-    # STEP 3: AI analyzes filtered results
+    # STEP 3: AI analyzes filtered results (handles greetings, confirmations, strategic questions naturally)
     print(f"\n[STEP 3] AI analyzing {len(filtered_df)} filtered studies...")
     response_generator = analyze_filtered_results_with_ai(
         user_query=user_query,
         filtered_df=filtered_df,
         original_count=len(df),
-        active_filters=active_filters,  # Pass active filters so analyzer knows what's filtered
-        extracted_keywords=keywords,  # Pass keywords for transparency
-        thinking_mode=thinking_mode,  # Pass thinking mode to analyzer
-        conversation_history=conversation_history,  # Pass history for context
-        active_ta=active_ta,  # Pass active TA scope
-        latest_report=latest_report  # Pass latest generated report for context
+        active_filters=active_filters,
+        extracted_keywords=keywords,
+        thinking_mode=thinking_mode,
+        conversation_history=conversation_history,
+        active_ta=active_ta,
+        latest_report=latest_report
     )
 
     return {
@@ -378,30 +89,26 @@ def handle_chat_query(
     }
 
 
-def extract_search_keywords_from_ai(
+def extract_simple_keywords(
     user_query: str,
     dataset_size: int,
     active_filters: Dict,
     conversation_history: List[Dict[str, str]] = None
-) -> Dict[str, Any]:
+) -> Dict[str, List[str]]:
     """
-    STEP 1: AI interprets query and decides response strategy.
+    SIMPLIFIED STEP 1: AI extracts search keywords ONLY (no classification).
 
-    The AI determines:
-    1. Is this a greeting/casual query? → Return direct response
-    2. Is this a data query? → Extract search keywords
-    3. Is this a follow-up question? → Use conversation context
+    NO classification logic - just extract keywords and let the second AI call
+    handle greetings, confirmations, and strategic questions naturally.
 
     Args:
         user_query: User's raw question
         dataset_size: Number of studies currently visible
         active_filters: Active UI filters for context
-        conversation_history: Previous user/assistant exchanges for context
+        conversation_history: Previous exchanges (for "Yes" confirmations, etc.)
 
     Returns:
-        Dict with either:
-        - {"response_type": "greeting", "message": "Hi! I can help..."} for casual queries
-        - {"response_type": "search", "drugs": [...], "dates": [...], ...} for data queries
+        Dict with keyword lists: {"drugs": [...], "dates": [...], "search_terms": [...]}
     """
 
     if conversation_history is None:
@@ -417,216 +124,177 @@ def extract_search_keywords_from_ai(
         filter_parts.append(f"{', '.join(active_filters['drug'])}")
     filter_context = " about " + " and ".join(filter_parts) if filter_parts else ""
 
-    # Build conversation context - FULL history for follow-up detection
+    # Build conversation history (for "Yes" confirmations)
     history_context = ""
     if conversation_history:
-        history_context = "\n\n**CONVERSATION HISTORY (FULL - last 5 exchanges):**\n"
-        for i, exchange in enumerate(conversation_history[-5:], 1):  # Last 5 exchanges
+        history_context = "\n\n**CONVERSATION HISTORY (last 3 exchanges):**\n"
+        for i, exchange in enumerate(conversation_history[-3:], 1):
             history_context += f"\n--- Exchange {i} ---\n"
             history_context += f"User: {exchange.get('user', '')}\n"
-            # Include FULL assistant response (no truncation) for follow-up detection
-            history_context += f"Assistant: {exchange.get('assistant', '')}\n"
+            history_context += f"Assistant: {exchange.get('assistant', '')[:200]}...\n"
 
-    system_prompt = f"""You are a pharmaceutical query interpreter for a conference intelligence system.
+    system_prompt = f"""You are a pharmaceutical keyword extractor for conference search.
 
 **CONTEXT:**
 - User is viewing {dataset_size} studies{filter_context} from ESMO 2025
-- The dataset is already pre-filtered by UI filters (if any)
-- Your job: Extract ONLY the minimal keyword set needed to retrieve what the user asked for
+- Your ONLY job: Extract search keywords from the user's query
 
-**Option 1 - Casual/Greeting Query** (Hi, Hello, Thanks, How are you, etc.):
-Return: {{"response_type": "greeting", "message": "your friendly conversational response"}}
-- Acknowledge the greeting naturally
-- Mention the {dataset_size} studies{filter_context} they're viewing
-- Offer to help: "What would you like to know?"
+**KEYWORD EXTRACTION RULES:**
 
-**Option 2 - Follow-Up Question** (referring to previous studies/data):
-⚠️ **CRITICAL PREREQUISITE:** ONLY use this option if CONVERSATION HISTORY EXISTS (shown above). If no history, skip to Option 3 or 4!
-
-If conversation history exists AND the user's query refers to previous results using phrases like:
-- "these studies", "those presentations", "the above data", "from that list"
-- "tell me more about them", "what do they mean", "how do they impact..."
-- "Yes" or "Yes, and..." (responding to a confirmation question)
-- Any question that clearly builds on the previous exchange
-Then return: {{"response_type": "followup", "context_query": "brief summary of what user is asking about the previous data"}}
-
-**SPECIAL CASE - Confirmation Response:**
-If the previous assistant message was a confirmation question (e.g., "You want me to X, is that right?"), and the user responds with "Yes", "Yes and...", or clarifies:
-- Extract entities from BOTH the previous assistant's confirmation question AND the user's new response
-- Include ALL mentioned drugs, biomarkers, comparisons in context_query
-- Example:
-  * Assistant: "You want me to compare zelenectide vedotin vs enfortumab vedotin, is that right?"
-  * User: "Yes, and also sacituzumab"
-  * context_query: "compare zelenectide vedotin, enfortumab vedotin, and sacituzumab govitecan"
-
-**Option 3 - Conceptual/Strategic Question** (answering with medical/strategic knowledge):
-CRITICAL: If the user asks a question that requires EXPLANATION, COMPARISON, or STRATEGIC ANALYSIS rather than study retrieval:
-- Mechanism questions: "What is the difference between X and Y?", "How does X work?", "What's the MOA of X?"
-- Market/strategy questions: "How could X gain market share?", "What's the competitive landscape for X?"
-- Background questions: "Tell me about X", "What is X used for?"
-Then return: {{"response_type": "conceptual_query", "topic": "brief description of what they're asking about", "context_entities": ["entity1", "entity2"], "retrieve_supporting_studies": true/false}}
-
-**IMPORTANT ENTITY EXTRACTION RULE**:
-If the query mentions ANY specific entity (drug, biomarker, pathway, institution, person):
-- Set "retrieve_supporting_studies" to TRUE (default for entity queries)
-- Populate "context_entities" with the FULL entity name AND common variants/abbreviations
-- DO NOT include generic suffixes alone (-vedotin, -mab, -nib) as they are too broad and match many drugs
-
-**CRITICAL: EXCLUDE GENERIC TERMS** that are too broad or already in the active TA filter:
-❌ EXCLUDE:
-- Generic treatment settings: "metastatic", "perioperative", "neoadjuvant", "adjuvant", "locally advanced", "first-line", "1L", "2L"
-- Single-letter abbreviations: "P", "E", "V", "N", "A" (too broad - match everything)
-- Generic chemotherapy: "platinum", "cisplatin", "carboplatin", "chemotherapy" (unless user specifically asks about them)
-- TA names already filtered: "bladder cancer", "NSCLC", "lung cancer" (redundant with active filters)
-- Generic biomarker descriptors: "positive", "negative", "high", "low" (unless part of specific entity like "PD-L1 positive")
-
-✅ INCLUDE:
-- Specific drug names: "enfortumab vedotin", "avelumab", "pembrolizumab", "tepotinib"
-- Multi-word drug combinations as complete phrases: "enfortumab vedotin + pembrolizumab" (NOT split into parts)
-- Specific biomarkers: "Nectin-4", "METex14", "HER2", "PD-L1"
-- Trial names if mentioned: "KEYNOTE-905", "EV-302", "JAVELIN"
-
-Examples:
-  * "What is zelenectide vedotin?" → context_entities: ["zelenectide vedotin", "zelenectide-vedotin"]
-  * "EV+P moving to perioperative" → context_entities: ["enfortumab vedotin + pembrolizumab", "EV+P"] (NOT "perioperative")
-  * "Platinum→avelumab vs EV+P in metastatic setting" → context_entities: ["avelumab", "enfortumab vedotin + pembrolizumab"] (NOT "platinum", "metastatic")
-  * "Tell me about METex14" → context_entities: ["METex14", "MET exon 14", "MET exon 14 skipping"]
-
-Only set "retrieve_supporting_studies" to FALSE for pure mechanism questions with NO specific entities:
-- "What is the difference between PD-1 and PD-L1?" (class comparison, not specific drug)
-- "How do checkpoint inhibitors work?" (mechanism category, not specific drug)
-
-**Option 4 - New Data Query** - Apply DECISION PRIORITY:
-
-**DECISION PRIORITY (CRITICAL):**
-1) If user mentions a MOLECULAR ENTITY (mutation/alteration/pathway/biomarker), that becomes the PRIMARY filter
-   - Examples: "METex14", "MET exon 14 skipping", "EGFR L858R", "HER2-low", "PD-L1 ≥50%", "KRAS G12C"
-   - When molecular entity is present, DO NOT infer or add drug filters unless user explicitly asks for drugs
-   - Put molecular entities in search_terms, NOT drug_classes
-
-2) If user mentions DRUG ABBREVIATIONS, expand them to full names:
+1. **Drug abbreviations** - expand to full names:
    - "EV" → enfortumab vedotin
    - "P" / "pembro" → pembrolizumab
    - "Nivo" → nivolumab
    - "Atezo" → atezolizumab
-   - For combinations (like "EV + P"), provide BOTH drug names
+   - For combinations ("EV + P"), provide BOTH drugs
 
-3) Only extract DRUGS if:
-   - User explicitly mentions them (name or abbreviation), OR
-   - User asks for drug comparisons
+2. **Confirmation responses** ("Yes", "Yes and..."):
+   - CRITICAL: If user says "Yes" or "Yes and...", look at conversation history
+   - Extract ALL keywords/terms mentioned in the PREVIOUS ASSISTANT MESSAGE
+   - Example: Previous assistant said "broaden to: burnout, wellbeing, workforce" → User says "Yes" → Extract: ["burnout", "wellbeing", "workforce"]
+   - Example: Previous assistant said "Would you like studies about EV+P?" → User says "Yes" → Extract: ["enfortumab vedotin", "pembrolizumab"]
+   - If user says "Yes" but conversation history is empty or unclear, return empty keywords
 
-4) Prefer RECALL over PRECISION on first pass
-   - Be conservative with constraints
-   - Don't add filters the user didn't ask for
-   - User can refine later if needed
+3. **Molecular entities** - put in search_terms:
+   - "METex14", "MET exon 14 skipping", "EGFR L858R", "HER2", "PD-L1", "KRAS G12C"
 
-5) Do NOT extract therapeutic_areas or drug_classes that are already in active filters above
+4. **Generic terms to EXCLUDE** (too broad):
+   - ❌ "metastatic", "perioperative", "neoadjuvant", "adjuvant", "first-line", "1L", "2L"
+   - ❌ Single letters: "P", "E", "V" (unless part of abbreviation like "EV+P")
+   - ❌ TA names already in active filters: "bladder cancer", "NSCLC"
 
-**Output Format:**
-Return: {{"response_type": "search", "drugs": [...], "drug_classes": [...], "therapeutic_areas": [...], "institutions": [...], "dates": [...], "speakers": [...], "search_terms": [...]}}
+5. **Empty keywords** - If user is just greeting or asking a conceptual question with NO specific entities:
+   - Return empty lists for all fields
+   - The second AI call will handle greetings/conceptual answers naturally
 
-Return ONLY valid JSON, no other text."""
+**OUTPUT FORMAT:**
+Return ONLY valid JSON in this exact format:
+{{
+  "drug_combinations": [
+    ["drug1", "drug2"],
+    ["drug3"]
+  ],
+  "drug_classes": ["ADC", "checkpoint inhibitor"],
+  "therapeutic_areas": ["therapeutic area"],
+  "institutions": ["institution name"],
+  "dates": ["date"],
+  "speakers": ["speaker name"],
+  "search_terms": ["biomarker", "term"]
+}}
 
-    # Combine system and user prompts into single input string for Responses API
+**CRITICAL - Drug Combination Logic:**
+- "drug_combinations" is an array of arrays - each inner array is a treatment group
+- Drugs in the SAME inner array = AND logic (must appear together, e.g., combination regimen)
+- Drugs in DIFFERENT inner arrays = OR logic (alternative options)
+
+Examples:
+* "EV + P studies" → {{"drug_combinations": [["enfortumab vedotin", "pembrolizumab"]]}}
+  → Finds studies with BOTH enfortumab vedotin AND pembrolizumab
+
+* "avelumab studies" → {{"drug_combinations": [["avelumab"]]}}
+  → Finds studies with avelumab
+
+* "EV+P vs avelumab" or "EV+P or avelumab" → {{"drug_combinations": [["enfortumab vedotin", "pembrolizumab"], ["avelumab"]]}}
+  → Finds studies with (enfortumab vedotin AND pembrolizumab) OR (avelumab)
+
+* "Compare tepotinib, capmatinib, and crizotinib" → {{"drug_combinations": [["tepotinib"], ["capmatinib"], ["crizotinib"]]}}
+  → Finds studies with tepotinib OR capmatinib OR crizotinib
+
+* "Platinum followed by avelumab" → {{"drug_combinations": [["platinum", "avelumab"]]}}
+  → Sequential regimen = treat as combination (AND logic)
+
+Use your pharmaceutical knowledge to identify combination regimens vs alternatives!
+
+Return ONLY JSON, no other text."""
+
     combined_prompt = f"""{system_prompt}{history_context}
 
 USER QUERY: "{user_query}"
 
-**Examples demonstrating DECISION PRIORITY:**
+**Examples:**
 
-Greeting:
-"Hello!" → {{"response_type": "greeting", "message": "Hi! I can help you explore the {dataset_size} studies{filter_context}. What would you like to know?"}}
+Greeting (NO keywords needed):
+"Hello!" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
-Follow-up (referring to previous studies):
-"What do these studies mean for avelumab?" → {{"response_type": "followup", "context_query": "Impact of previously discussed studies on avelumab positioning"}}
-"Tell me more about them" → {{"response_type": "followup", "context_query": "Additional details about previously mentioned studies"}}
+Drug abbreviation (combination):
+"EV + P studies" → {{"drug_combinations": [["enfortumab vedotin", "pembrolizumab"]], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
-Conceptual/Knowledge Questions (answer with medical knowledge, optionally use studies as evidence):
-"What is the difference between PD-1 and PD-L1 inhibitors?" → {{"response_type": "conceptual_query", "topic": "Mechanism difference between PD-1 vs PD-L1 checkpoint inhibitors", "context_entities": [], "retrieve_supporting_studies": false}}
-"How could retifanlimab gain market share in MCC?" → {{"response_type": "conceptual_query", "topic": "Market positioning strategy for retifanlimab in Merkel cell carcinoma", "context_entities": ["retifanlimab", "avelumab"], "retrieve_supporting_studies": true}}
+Comparison query (combination vs alternative):
+"EV+P vs avelumab" → {{"drug_combinations": [["enfortumab vedotin", "pembrolizumab"], ["avelumab"]], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
-Drug/Entity Information Queries (ALWAYS retrieve studies, NEVER include generic suffixes alone):
-"What is zelenectide vedotin?" → {{"response_type": "conceptual_query", "topic": "Zelenectide vedotin ADC drug information", "context_entities": ["zelenectide vedotin", "zelenectide-vedotin"], "retrieve_supporting_studies": true}}
-"What is enfortumab vedotin?" → {{"response_type": "conceptual_query", "topic": "Enfortumab vedotin ADC information", "context_entities": ["enfortumab vedotin", "enfortumab-vedotin", "enfortumab"], "retrieve_supporting_studies": true}}
-"Tell me about tepotinib" → {{"response_type": "conceptual_query", "topic": "Tepotinib MET inhibitor", "context_entities": ["tepotinib", "tepmetko"], "retrieve_supporting_studies": true}}
-"What is METex14?" → {{"response_type": "conceptual_query", "topic": "MET exon 14 skipping mutation in NSCLC", "context_entities": ["METex14", "MET exon 14", "MET exon 14 skipping"], "retrieve_supporting_studies": true}}
-"Who is presenting on avelumab?" → {{"response_type": "conceptual_query", "topic": "Avelumab presenters at ESMO", "context_entities": ["avelumab", "bavencio"], "retrieve_supporting_studies": true}}
+Confirmation response (extract keywords from PREVIOUS assistant message):
+User: "Yes" (previous assistant message was: "Would you like to broaden to keywords: burnout, wellbeing, workforce?") → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": ["burnout", "wellbeing", "workforce"]}}
 
-Drug abbreviation expansion (NEW search):
-"EV + P studies" → {{"response_type": "search", "drugs": ["enfortumab vedotin", "pembrolizumab"], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
+Another confirmation example:
+User: "Yes" (previous assistant message mentioned "EV+P studies") → {{"drug_combinations": [["enfortumab vedotin", "pembrolizumab"]], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
-Molecular entity (PRIMARY filter - don't add drugs):
-"METex14 skipping studies" → {{"response_type": "search", "drugs": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": ["METex14", "MET exon 14 skipping", "MET exon14 skipping"]}}
+Molecular entity:
+"METex14 skipping" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": ["METex14", "MET exon 14 skipping"]}}
 
-Molecular entity + explicit drug:
-"capmatinib in METex14" → {{"response_type": "search", "drugs": ["capmatinib"], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": ["METex14", "MET exon 14"]}}
+Conceptual question (NO specific entities):
+"What is the difference between PD-1 and PD-L1?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
-Drug class (only when explicitly asked):
-"ADC studies in breast cancer" → {{"response_type": "search", "drugs": [], "drug_classes": ["antibody-drug conjugate", "ADC"], "therapeutic_areas": ["breast cancer"], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
-
-Now interpret the user query above. Return ONLY valid JSON."""
+Now extract keywords from the user query above. Return ONLY valid JSON."""
 
     try:
-        # Use Responses API (input is a string, not messages array)
-        print(f"[AI EXTRACTION] Calling GPT-5 API...")
+        print(f"[SIMPLIFIED EXTRACTION] Calling GPT-5 API...")
         response = client.responses.create(
             model="gpt-5-mini",
-            input=combined_prompt,  # Single string, not array of messages
-            reasoning={"effort": "medium"},  # MEDIUM: Balanced - keyword extraction doesn't need high reasoning
-            text={"verbosity": "low"},  # LOW: Output is just JSON keywords
-            max_output_tokens=4000
+            input=combined_prompt,
+            reasoning={"effort": "low"},  # Simple keyword extraction
+            text={"verbosity": "low"},
+            max_output_tokens=1000
         )
 
-        # Check response status and error
-        print(f"[AI EXTRACTION] Response status: {response.status}")
-        print(f"[AI EXTRACTION] Response error: {response.error}")
-        print(f"[AI EXTRACTION] Response incomplete_details: {response.incomplete_details}")
-
-        # Check output structure
-        if hasattr(response, 'output'):
-            try:
-                print(f"[AI EXTRACTION] Output object: {response.output}")
-            except UnicodeEncodeError:
-                print(f"[AI EXTRACTION] Output object: <contains Unicode - cannot display>")
-            if response.output:
-                print(f"[AI EXTRACTION] Output type: {type(response.output)}")
-                print(f"[AI EXTRACTION] Output dir: {dir(response.output)}")
-
-        # Get response text directly (non-streaming)
         response_text = response.output_text if hasattr(response, 'output_text') else ""
-        print(f"[AI EXTRACTION] output_text length: {len(response_text)} chars")
+        print(f"[SIMPLIFIED EXTRACTION] Response: {response_text[:200]}")
 
-        if response_text:
-            print(f"[AI EXTRACTION] output_text preview: {response_text[:200]}")
-
-        # Check if we got empty response
         if not response_text.strip():
-            print(f"[AI EXTRACTION ERROR] API returned empty response - retrying with simpler prompt")
-            # Return error indicator
+            print(f"[SIMPLIFIED EXTRACTION] Empty response - returning empty keywords")
             return {
-                'response_type': 'error',
-                'message': 'Sorry, I had trouble understanding your query. Could you try rephrasing it? For example: "Show me EV + P studies" or "What studies are about pembrolizumab?"'
+                "drug_combinations": [],
+                "drug_classes": [],
+                "therapeutic_areas": [],
+                "institutions": [],
+                "dates": [],
+                "speakers": [],
+                "search_terms": []
             }
 
-        # Parse JSON
         keywords = json.loads(response_text.strip())
+
+        # Backward compatibility: convert old "drugs" format to "drug_combinations"
+        if "drugs" in keywords and "drug_combinations" not in keywords:
+            # Old format: ["drug1", "drug2"] → New format: [["drug1"], ["drug2"]] (OR logic)
+            keywords["drug_combinations"] = [[drug] for drug in keywords["drugs"]]
+            del keywords["drugs"]
 
         return keywords
 
     except json.JSONDecodeError as e:
-        print(f"[AI EXTRACTION ERROR] Invalid JSON from API: {e}")
-        print(f"[AI EXTRACTION ERROR] Response text was: {response_text[:200]}")
+        print(f"[SIMPLIFIED EXTRACTION ERROR] Invalid JSON: {e}")
+        print(f"[SIMPLIFIED EXTRACTION ERROR] Response: {response_text[:200]}")
         return {
-            'response_type': 'error',
-            'message': 'Sorry, I had trouble processing your request. Could you try rephrasing your question more simply?'
+            "drug_combinations": [],
+            "drug_classes": [],
+            "therapeutic_areas": [],
+            "institutions": [],
+            "dates": [],
+            "speakers": [],
+            "search_terms": []
         }
     except Exception as e:
-        print(f"[AI EXTRACTION ERROR] {e}")
+        print(f"[SIMPLIFIED EXTRACTION ERROR] {e}")
         import traceback
         traceback.print_exc()
         return {
-            'response_type': 'error',
-            'message': 'Sorry, I encountered an error. Please try again.'
+            "drug_combinations": [],
+            "drug_classes": [],
+            "therapeutic_areas": [],
+            "institutions": [],
+            "dates": [],
+            "speakers": [],
+            "search_terms": []
         }
 
 
@@ -669,41 +337,56 @@ def filter_dataframe_with_keywords(
         ]
         print(f"  After institution filter: {len(filtered)} studies")
 
-    # 3. Filter by drugs (if specified)
-    if keywords.get('drugs'):
-        # For combination queries, we need BOTH drugs present
-        if len(keywords['drugs']) > 1:
-            # Combination: ALL drugs must be present
-            for drug in keywords['drugs']:
-                drug_pattern = re.escape(drug)
-                if 'search_text_normalized' in filtered.columns:
-                    filtered = filtered[
-                        filtered['search_text_normalized'].str.contains(
+    # 3. Filter by drug combinations (if specified)
+    if keywords.get('drug_combinations'):
+        # Smart AND/OR logic:
+        # - Within a combination (inner array): AND logic (all drugs must be present)
+        # - Between combinations (different arrays): OR logic (studies matching ANY combination)
+
+        combination_results = []
+
+        for combo in keywords['drug_combinations']:
+            combo_filtered = filtered.copy()
+
+            if len(combo) == 1:
+                # Single drug - simple filter
+                drug_pattern = re.escape(combo[0])
+                if 'search_text_normalized' in combo_filtered.columns:
+                    combo_filtered = combo_filtered[
+                        combo_filtered['search_text_normalized'].str.contains(
                             drug_pattern, case=False, na=False, regex=True
                         )
                     ]
                 else:
-                    filtered = filtered[
-                        filtered['Title'].str.contains(drug_pattern, case=False, na=False, regex=True)
+                    combo_filtered = combo_filtered[
+                        combo_filtered['Title'].str.contains(drug_pattern, case=False, na=False, regex=True)
                     ]
-                print(f"  After '{drug}' filter: {len(filtered)} studies")
-        else:
-            # Single drug: OR search
-            drug_pattern = '|'.join([re.escape(d) for d in keywords['drugs']])
-            if 'search_text_normalized' in filtered.columns:
-                filtered = filtered[
-                    filtered['search_text_normalized'].str.contains(
-                        drug_pattern, case=False, na=False, regex=True
-                    )
-                ]
+                print(f"  Combination [{combo[0]}]: {len(combo_filtered)} studies")
             else:
-                filtered = filtered[
-                    filtered['Title'].str.contains(drug_pattern, case=False, na=False, regex=True)
-                ]
-            print(f"  After drug filter: {len(filtered)} studies")
+                # Multiple drugs - AND logic (all must be present)
+                for drug in combo:
+                    drug_pattern = re.escape(drug)
+                    if 'search_text_normalized' in combo_filtered.columns:
+                        combo_filtered = combo_filtered[
+                            combo_filtered['search_text_normalized'].str.contains(
+                                drug_pattern, case=False, na=False, regex=True
+                            )
+                        ]
+                    else:
+                        combo_filtered = combo_filtered[
+                            combo_filtered['Title'].str.contains(drug_pattern, case=False, na=False, regex=True)
+                        ]
+                print(f"  Combination [{' + '.join(combo)}]: {len(combo_filtered)} studies after AND filter")
 
-    # 4. Filter by drug classes (if specified and no specific drugs)
-    if keywords.get('drug_classes') and not keywords.get('drugs'):
+            combination_results.append(combo_filtered)
+
+        # Union all combination results (OR between combinations)
+        if combination_results:
+            filtered = pd.concat(combination_results).drop_duplicates()
+            print(f"  After drug combination filter (OR between {len(keywords['drug_combinations'])} groups): {len(filtered)} studies")
+
+    # 4. Filter by drug classes (if specified and no specific drug combinations)
+    if keywords.get('drug_classes') and not keywords.get('drug_combinations'):
         class_pattern = '|'.join([re.escape(c) for c in keywords['drug_classes']])
         if 'search_text_normalized' in filtered.columns:
             filtered = filtered[
@@ -764,7 +447,7 @@ def filter_dataframe_with_keywords(
     # 7. Filter by additional search terms (if specified)
     # NOTE: Only apply if we don't already have drug-based filtering
     # This prevents over-filtering when drugs already imply the context
-    if keywords.get('search_terms') and not keywords.get('drugs'):
+    if keywords.get('search_terms') and not keywords.get('drug_combinations'):
         term_pattern = '|'.join([re.escape(t) for t in keywords['search_terms']])
         if 'search_text_normalized' in filtered.columns:
             filtered = filtered[
