@@ -216,86 +216,101 @@ def handle_chat_query(
                     'response_stream': response_generator
                 }
             else:
-                # No identifiers found - try entity extraction from follow-up context
+                # No identifiers found - check if this is a confirmation response or ask for confirmation
                 print(f"[FOLLOWUP] No study identifiers found in previous response")
-                print(f"[FOLLOWUP] Attempting entity extraction from context query and user prompt")
 
-                # Combine context query + user query for entity extraction
-                combined_text = f"{context_query} {user_query}"
+                # Check if previous message was a confirmation question
+                if conversation_history and 'is that right' in last_response.lower():
+                    # This is a confirmation response - extract entities from context_query
+                    print(f"[FOLLOWUP] User responding to confirmation - extracting entities from context")
 
-                # Extract drug names using comprehensive pattern
-                drug_pattern = r'\b([A-Z][a-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|ciclib|alisib|govitecan|deruxtecan|tuximab))\b'
-                potential_drugs = re.findall(drug_pattern, combined_text)
+                    # Combine context query + user query for entity extraction
+                    combined_text = f"{context_query} {user_query}"
 
-                # Also extract multi-word drug names (e.g., "enfortumab vedotin")
-                multi_word_pattern = r'\b([A-Z][a-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|govitecan|deruxtecan)\s+[a-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|govitecan|deruxtecan))\b'
-                multi_word_drugs = re.findall(multi_word_pattern, combined_text, re.IGNORECASE)
+                    # Extract drug names using comprehensive pattern
+                    drug_pattern = r'\b([A-Z][a-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|ciclib|alisib|govitecan|deruxtecan|tuximab))\b'
+                    potential_drugs = re.findall(drug_pattern, combined_text)
 
-                # Extract biomarker names (e.g., "Nectin-4", "METex14", "HER2")
-                biomarker_pattern = r'\b((?:PD-L1|PD-1|HER2|HER3|EGFR|MET|ALK|ROS1|NTRK|KRAS|BRAF|RET|Nectin-4|Nectin4|TROP-2|TROP2|B7-H3|METex14))\b'
-                biomarkers = re.findall(biomarker_pattern, combined_text, re.IGNORECASE)
+                    # Also extract multi-word drug names (e.g., "enfortumab vedotin")
+                    multi_word_pattern = r'\b([A-Z][a-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|govitecan|deruxtecan)\s+[a-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|govitecan|deruxtecan))\b'
+                    multi_word_drugs = re.findall(multi_word_pattern, combined_text, re.IGNORECASE)
 
-                # Combine all entities
-                all_entities = list(set(potential_drugs + multi_word_drugs + biomarkers))
+                    # Extract biomarker names (e.g., "Nectin-4", "METex14", "HER2")
+                    biomarker_pattern = r'\b((?:PD-L1|PD-1|HER2|HER3|EGFR|MET|ALK|ROS1|NTRK|KRAS|BRAF|RET|Nectin-4|Nectin4|TROP-2|TROP2|B7-H3|METex14))\b'
+                    biomarkers = re.findall(biomarker_pattern, combined_text, re.IGNORECASE)
 
-                if all_entities:
-                    print(f"[FOLLOWUP] Extracted entities: {', '.join(all_entities)}")
+                    # Combine all entities
+                    all_entities = list(set(potential_drugs + multi_word_drugs + biomarkers))
 
-                    # Filter dataset by extracted entities
-                    entity_pattern = '|'.join([re.escape(e) for e in all_entities])
-                    filtered_df = df[
-                        df['Title'].str.contains(entity_pattern, case=False, na=False, regex=True)
-                    ]
-                    print(f"[FOLLOWUP] Entity extraction filtered: {len(df)} -> {len(filtered_df)} studies")
+                    if all_entities:
+                        print(f"[FOLLOWUP] Extracted entities from confirmation: {', '.join(all_entities)}")
 
-                    # Safety check: If still > 300 studies, ask user to be more specific
-                    if len(filtered_df) > 300:
-                        print(f"[FOLLOWUP] Filtered dataset still too large ({len(filtered_df)} > 300) - asking user to clarify")
+                        # Filter dataset by extracted entities
+                        entity_pattern = '|'.join([re.escape(e) for e in all_entities])
+                        filtered_df = df[
+                            df['Title'].str.contains(entity_pattern, case=False, na=False, regex=True)
+                        ]
+                        print(f"[FOLLOWUP] Entity extraction filtered: {len(df)} -> {len(filtered_df)} studies")
 
-                        def clarification_generator():
-                            yield f"I found {len(filtered_df)} studies that might be relevant to your follow-up question about {', '.join(all_entities[:3])}.\n\n"
-                            yield f"That's too many studies to analyze effectively (I can handle up to 300 studies at once to ensure quality analysis).\n\n"
-                            yield f"Could you please be more specific? For example:\n"
-                            yield f"- Focus on a specific drug or comparison\n"
-                            yield f"- Mention a specific study identifier (e.g., '1234P')\n"
-                            yield f"- Ask about a specific aspect (e.g., efficacy, safety, biomarkers)\n"
+                        # Safety check: If still > 300 studies, ask user to be more specific
+                        if len(filtered_df) > 300:
+                            print(f"[FOLLOWUP] Filtered dataset still too large ({len(filtered_df)} > 300) - asking user to clarify")
+
+                            def clarification_generator():
+                                yield f"I found {len(filtered_df)} studies related to {', '.join(all_entities[:3])}.\n\n"
+                                yield f"That's a lot of data to analyze at once (I can handle up to 300 studies for quality analysis).\n\n"
+                                yield f"Could you narrow it down? For example:\n"
+                                yield f"- Focus on a specific drug or comparison\n"
+                                yield f"- Mention a specific study identifier (e.g., '1234P')\n"
+                                yield f"- Ask about a specific aspect (efficacy, safety, biomarkers)\n"
+
+                            return {
+                                'type': 'ai_response',
+                                'filtered_data': pd.DataFrame(),
+                                'response_stream': clarification_generator()
+                            }
+
+                        # Dataset is manageable - proceed with analysis
+                        print(f"[FOLLOWUP] Dataset size acceptable ({len(filtered_df)} ≤ 300) - proceeding with analysis")
+
+                        keywords = {
+                            'response_type': 'followup',
+                            'context_query': context_query,
+                            'extracted_entities': all_entities
+                        }
+
+                        print(f"\n[STEP 3] AI analyzing {len(filtered_df)} follow-up studies...")
+                        response_generator = analyze_filtered_results_with_ai(
+                            user_query=user_query,
+                            filtered_df=filtered_df,
+                            original_count=len(df),
+                            active_filters=active_filters,
+                            extracted_keywords=keywords,
+                            thinking_mode=thinking_mode,
+                            conversation_history=conversation_history,
+                            active_ta=active_ta,
+                            latest_report=latest_report
+                        )
 
                         return {
                             'type': 'ai_response',
-                            'filtered_data': pd.DataFrame(),
-                            'response_stream': clarification_generator()
+                            'filtered_data': filtered_df,
+                            'response_stream': response_generator
                         }
 
-                    # Dataset is manageable - proceed with analysis
-                    print(f"[FOLLOWUP] Dataset size acceptable ({len(filtered_df)} ≤ 300) - proceeding with analysis")
+                # Not a confirmation response - ask for confirmation
+                print(f"[FOLLOWUP] Asking user to confirm what they want")
 
-                    keywords = {
-                        'response_type': 'followup',
-                        'context_query': context_query,
-                        'extracted_entities': all_entities
-                    }
+                def confirmation_generator():
+                    yield f"Just to make sure I understand correctly:\n\n"
+                    yield f"You want me to {context_query}\n\n"
+                    yield f"Is that right? Feel free to clarify or add anything else you'd like to know!"
 
-                    print(f"\n[STEP 3] AI analyzing {len(filtered_df)} follow-up studies...")
-                    response_generator = analyze_filtered_results_with_ai(
-                        user_query=user_query,
-                        filtered_df=filtered_df,
-                        original_count=len(df),
-                        active_filters=active_filters,
-                        extracted_keywords=keywords,
-                        thinking_mode=thinking_mode,
-                        conversation_history=conversation_history,
-                        active_ta=active_ta,
-                        latest_report=latest_report
-                    )
-
-                    return {
-                        'type': 'ai_response',
-                        'filtered_data': filtered_df,
-                        'response_stream': response_generator
-                    }
-                else:
-                    print(f"[FOLLOWUP] Could not extract entities - falling back to full dataset")
-                    # Fall through to normal search if no entities extracted
+                return {
+                    'type': 'ai_response',
+                    'filtered_data': pd.DataFrame(),
+                    'response_stream': confirmation_generator()
+                }
 
     # Data query - extract keywords from interpretation
     keywords = interpretation
@@ -401,9 +416,18 @@ Return: {{"response_type": "greeting", "message": "your friendly conversational 
 CRITICAL: If the user's query refers to previous results using phrases like:
 - "these studies", "those presentations", "the above data", "from that list"
 - "tell me more about them", "what do they mean", "how do they impact..."
+- "Yes" or "Yes, and..." (responding to a confirmation question)
 - Any question that clearly builds on the previous exchange
 Then return: {{"response_type": "followup", "context_query": "brief summary of what user is asking about the previous data"}}
-IMPORTANT: The system will reuse the previously filtered data - DO NOT extract new search keywords.
+
+**SPECIAL CASE - Confirmation Response:**
+If the previous assistant message was a confirmation question (e.g., "You want me to X, is that right?"), and the user responds with "Yes", "Yes and...", or clarifies:
+- Extract entities from BOTH the previous assistant's confirmation question AND the user's new response
+- Include ALL mentioned drugs, biomarkers, comparisons in context_query
+- Example:
+  * Assistant: "You want me to compare zelenectide vedotin vs enfortumab vedotin, is that right?"
+  * User: "Yes, and also sacituzumab"
+  * context_query: "compare zelenectide vedotin, enfortumab vedotin, and sacituzumab govitecan"
 
 **Option 3 - Conceptual/Strategic Question** (answering with medical/strategic knowledge):
 CRITICAL: If the user asks a question that requires EXPLANATION, COMPARISON, or STRATEGIC ANALYSIS rather than study retrieval:
