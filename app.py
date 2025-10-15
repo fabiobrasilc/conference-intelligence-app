@@ -598,12 +598,9 @@ ESMO_THERAPEUTIC_AREAS = {
         "regex": True
     },
     "Lung Cancer": {
-        "keywords": ["non-small cell lung cancer", "non-small-cell lung cancer", "NSCLC",
-                     "MET exon", "MET amplification", "METex14", "MET mutation", "MET-positive", "MET inhibitor",
-                     r"\bALK\b", r"\bEGFR\b", r"\bKRAS\b", r"\bBRAF\b", r"\bRET\b", r"\bROS1\b", r"\bNTRK\b"],
-        "exclude_if_in_title": [r"(?<!non-)small.?cell.?lung", r"\bSCLC\b", "mesothelioma", "thymic", "thymoma",
-                               "colorectal", "breast", "prostate", "bladder", "gastric"],
-        "regex": True
+        "keywords": ["NSCLC", "non-small cell lung cancer", "non-small-cell lung cancer"],
+        "exclude_if_in_title": [],
+        "regex": False
     },
     "Colorectal Cancer": {
         "keywords": ["colorectal", r"\bcrc\b", "colon", "rectal", "bowel"],
