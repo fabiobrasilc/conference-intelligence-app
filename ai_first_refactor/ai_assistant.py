@@ -74,6 +74,17 @@ def handle_chat_query(
     # Check response type
     response_type = interpretation.get('response_type')
 
+    # GUARDRAIL: Cannot be a follow-up if there's no conversation history!
+    if response_type == 'followup' and (not conversation_history or len(conversation_history) == 0):
+        print(f"[FOLLOWUP ERROR] AI classified as followup but no conversation history exists!")
+        print(f"[FOLLOWUP ERROR] Reclassifying as conceptual_query to prevent returning all studies")
+        # Override AI's incorrect classification
+        response_type = 'conceptual_query'
+        interpretation['response_type'] = 'conceptual_query'
+        interpretation['topic'] = interpretation.get('context_query', user_query)
+        interpretation['context_entities'] = []
+        interpretation['retrieve_supporting_studies'] = True
+
     # Handle greeting
     if response_type == 'greeting':
         print(f"[STEP 1] AI detected greeting - responding conversationally")
