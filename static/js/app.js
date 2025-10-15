@@ -1797,40 +1797,51 @@ document.addEventListener('DOMContentLoaded', function() {
   chatScopeDropdown.addEventListener('change', () => {
     const selected = chatScopeDropdown.value;
     if (selected === 'all') {
-      // Show styled modal warning for "All conference data"
-      const scopeWarningModal = new bootstrap.Modal(document.getElementById('chatScopeWarningModal'));
-      const modalElement = document.getElementById('chatScopeWarningModal');
-      const confirmBtn = document.getElementById('confirmScopeWarning');
+      // Check if user has already seen the warning this session
+      const hasSeenScopeWarning = sessionStorage.getItem('cosmicScopeWarningShown');
 
-      let userConfirmed = false;  // Track if user clicked "Continue"
-
-      // Handle "Continue with All Data" button
-      const handleConfirm = () => {
-        userConfirmed = true;
+      if (hasSeenScopeWarning) {
+        // Already seen warning - apply scope directly
         activeChatScope = { type: 'all', value: null };
         chatInput.disabled = false;
         chatInput.placeholder = 'Ask about the conference data...';
-        scopeWarningModal.hide();
-      };
+      } else {
+        // First time - show styled modal warning for "All conference data"
+        const scopeWarningModal = new bootstrap.Modal(document.getElementById('chatScopeWarningModal'));
+        const modalElement = document.getElementById('chatScopeWarningModal');
+        const confirmBtn = document.getElementById('confirmScopeWarning');
 
-      // Handle modal close (user clicked "Go Back" or X button)
-      const handleCancel = () => {
-        // Only reset if user DIDN'T click "Continue"
-        if (!userConfirmed) {
-          chatScopeDropdown.value = '';
-          activeChatScope = { type: 'none', value: null };
-          chatInput.disabled = true;
-          chatInput.placeholder = 'Select scope above to start typing';
-        }
-        // Clean up event listeners
-        modalElement.removeEventListener('hidden.bs.modal', handleCancel);
-        confirmBtn.removeEventListener('click', handleConfirm);
-      };
+        let userConfirmed = false;  // Track if user clicked "Continue"
 
-      confirmBtn.addEventListener('click', handleConfirm);
-      modalElement.addEventListener('hidden.bs.modal', handleCancel);
+        // Handle "Continue with All Data" button
+        const handleConfirm = () => {
+          userConfirmed = true;
+          activeChatScope = { type: 'all', value: null };
+          chatInput.disabled = false;
+          chatInput.placeholder = 'Ask about the conference data...';
+          sessionStorage.setItem('cosmicScopeWarningShown', 'true'); // Mark as shown
+          scopeWarningModal.hide();
+        };
 
-      scopeWarningModal.show();
+        // Handle modal close (user clicked "Go Back" or X button)
+        const handleCancel = () => {
+          // Only reset if user DIDN'T click "Continue"
+          if (!userConfirmed) {
+            chatScopeDropdown.value = '';
+            activeChatScope = { type: 'none', value: null };
+            chatInput.disabled = true;
+            chatInput.placeholder = 'Select scope above to start typing';
+          }
+          // Clean up event listeners
+          modalElement.removeEventListener('hidden.bs.modal', handleCancel);
+          confirmBtn.removeEventListener('click', handleConfirm);
+        };
+
+        confirmBtn.addEventListener('click', handleConfirm);
+        modalElement.addEventListener('hidden.bs.modal', handleCancel);
+
+        scopeWarningModal.show();
+      }
 
     } else if (selected.startsWith('drug:')) {
       activeChatScope = { type: 'drug', value: selected.replace('drug:', '') };
@@ -1863,18 +1874,18 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('[SIDEBAR DEBUG] 🤖 AI Assistant tab shown - hiding filter sidebar');
       document.body.classList.remove('data-tab-active');
       document.body.classList.add('ai-tab-active');
-
-      // Auto-popup data sources warning once per session
-      const hasSeenWarning = sessionStorage.getItem('cosmicDataWarningShown');
-      if (!hasSeenWarning) {
-        setTimeout(() => {
-          const modal = new bootstrap.Modal(document.getElementById('dataWarningModal'));
-          modal.show();
-          sessionStorage.setItem('cosmicDataWarningShown', 'true');
-        }, 300);
-      }
     }
     console.log('[SIDEBAR DEBUG] Body classes:', document.body.className);
+  }
+
+  // Show Important Info modal on first app load (Data Explorer tab)
+  const hasSeenInfoModal = sessionStorage.getItem('cosmicInfoModalShown');
+  if (!hasSeenInfoModal) {
+    setTimeout(() => {
+      const modal = new bootstrap.Modal(document.getElementById('dataWarningModal'));
+      modal.show();
+      sessionStorage.setItem('cosmicInfoModalShown', 'true');
+    }, 500);
   }
 
   // Listen to all tab buttons

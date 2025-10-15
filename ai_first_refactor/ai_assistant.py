@@ -441,12 +441,26 @@ If the query mentions ANY specific entity (drug, biomarker, pathway, institution
 - Set "retrieve_supporting_studies" to TRUE (default for entity queries)
 - Populate "context_entities" with the FULL entity name AND common variants/abbreviations
 - DO NOT include generic suffixes alone (-vedotin, -mab, -nib) as they are too broad and match many drugs
-- Examples:
+
+**CRITICAL: EXCLUDE GENERIC TERMS** that are too broad or already in the active TA filter:
+❌ EXCLUDE:
+- Generic treatment settings: "metastatic", "perioperative", "neoadjuvant", "adjuvant", "locally advanced", "first-line", "1L", "2L"
+- Single-letter abbreviations: "P", "E", "V", "N", "A" (too broad - match everything)
+- Generic chemotherapy: "platinum", "cisplatin", "carboplatin", "chemotherapy" (unless user specifically asks about them)
+- TA names already filtered: "bladder cancer", "NSCLC", "lung cancer" (redundant with active filters)
+- Generic biomarker descriptors: "positive", "negative", "high", "low" (unless part of specific entity like "PD-L1 positive")
+
+✅ INCLUDE:
+- Specific drug names: "enfortumab vedotin", "avelumab", "pembrolizumab", "tepotinib"
+- Multi-word drug combinations as complete phrases: "enfortumab vedotin + pembrolizumab" (NOT split into parts)
+- Specific biomarkers: "Nectin-4", "METex14", "HER2", "PD-L1"
+- Trial names if mentioned: "KEYNOTE-905", "EV-302", "JAVELIN"
+
+Examples:
   * "What is zelenectide vedotin?" → context_entities: ["zelenectide vedotin", "zelenectide-vedotin"]
-  * "What is enfortumab vedotin?" → context_entities: ["enfortumab vedotin", "enfortumab-vedotin", "enfortumab"]
+  * "EV+P moving to perioperative" → context_entities: ["enfortumab vedotin + pembrolizumab", "EV+P"] (NOT "perioperative")
+  * "Platinum→avelumab vs EV+P in metastatic setting" → context_entities: ["avelumab", "enfortumab vedotin + pembrolizumab"] (NOT "platinum", "metastatic")
   * "Tell me about METex14" → context_entities: ["METex14", "MET exon 14", "MET exon 14 skipping"]
-  * "What's tepotinib?" → context_entities: ["tepotinib", "tepmetko"]
-  * "Who is presenting on avelumab?" → context_entities: ["avelumab", "bavencio"]
 
 Only set "retrieve_supporting_studies" to FALSE for pure mechanism questions with NO specific entities:
 - "What is the difference between PD-1 and PD-L1?" (class comparison, not specific drug)
@@ -540,7 +554,10 @@ Now interpret the user query above. Return ONLY valid JSON."""
 
         # Check output structure
         if hasattr(response, 'output'):
-            print(f"[AI EXTRACTION] Output object: {response.output}")
+            try:
+                print(f"[AI EXTRACTION] Output object: {response.output}")
+            except UnicodeEncodeError:
+                print(f"[AI EXTRACTION] Output object: <contains Unicode - cannot display>")
             if response.output:
                 print(f"[AI EXTRACTION] Output type: {type(response.output)}")
                 print(f"[AI EXTRACTION] Output dir: {dir(response.output)}")
@@ -840,6 +857,17 @@ def analyze_filtered_results_with_ai(
     # Build system prompt
     system_prompt = f"""You are an AI medical affairs intelligence assistant for EMD Serono (Merck KGaA).
 
+**YOUR KNOWLEDGE BASE:**
+You have comprehensive pharmaceutical medical knowledge including:
+- Drug mechanisms of action (MOAs), targets, and pharmacology
+- Treatment landscapes across therapeutic areas
+- Standard of care and guideline-directed therapy
+- Clinical trial design and endpoints
+- Regulatory approvals and label positioning
+- Competitive dynamics and market access strategies
+
+**IMPORTANT:** You are NOT just a data retrieval system. The conference studies provided are SUPPORTING EVIDENCE to contextualize your strategic analysis, not your primary knowledge source.
+
 **ACTIVE FILTERS (USER'S VIEW):**
 {filter_context_str}
 
@@ -869,6 +897,30 @@ Your role changes based on what the user is asking:
 → Goal: Provide strategic analysis using competitive intelligence
 → Response: Strategic insights first, use studies as evidence of trends
 → Frame around EMD assets (avelumab, tepotinib, cetuximab) when relevant
+→ Use your pharmaceutical medical knowledge to assess:
+  * Treatment sequencing and positioning
+  * Unmet needs and market gaps
+  * Payer/provider perspectives on value
+  * Guideline adoption and KOL influence
+  * Competitive differentiation opportunities
+
+**CRITICAL RESPONSE STRUCTURE - 70/30 RULE:**
+Your primary job is to ANSWER THE USER'S QUESTION directly and thoughtfully (70% of response).
+After answering, mention relevant supporting studies as evidence (30% of response).
+
+❌ WRONG - Table description focus:
+"I found 92 studies about this topic. The table shows studies from these institutions..."
+
+✅ RIGHT - Question-first approach:
+"[Direct answer to user's question - 2-3 paragraphs]
+Supporting evidence: Studies 1234P, 5678P at ESMO show... [cite specific findings]"
+
+For "What is X?" queries:
+1. Answer what X is (definition, mechanism, indication) - 70%
+2. Then: "By the way, X appears in [N] studies at ESMO 2025:" - 30%
+3. Mention 1-3 key studies with brief findings
+
+End responses with: "Would you like me to dive deeper into any of these studies?" (not a menu of options)
 
 **IMPORTANT - Abstract Usage:**
 - If the filtered data includes "Abstract" fields, use them to provide evidence-based answers
@@ -909,17 +961,22 @@ Your role changes based on what the user is asking:
 **Conference Intelligence Context:** I found {len(filtered_df)} ESMO 2025 studies related to this topic.
 {data_notice}
 
-**IMPORTANT RESPONSE STRUCTURE:**
-1. Start by answering the user's question directly (definition, mechanism, background, comparison)
-2. Then transition naturally: "At ESMO 2025, there are {len(filtered_df)} studies on this topic:" or "Relevant conference data from ESMO 2025:"
-3. Highlight 1-3 key studies with Identifiers and main findings
-4. Provide strategic context if relevant to EMD portfolio
-5. Note: A table of all {len(filtered_df)} studies will be displayed above your response
+**CRITICAL RESPONSE STRUCTURE (70/30 RULE):**
+1. **ANSWER THE QUESTION FIRST (70%):** Start by answering the user's question directly using your pharmaceutical medical knowledge
+   - For "What is X?": Define X, explain mechanism, indication, approval status, competitive position
+   - For strategic questions: Provide thoughtful strategic analysis of the competitive landscape
+   - For comparison questions: Explain the key differences with clinical context
+2. **THEN cite supporting evidence (30%):** After answering, transition naturally to conference data
+   - "By the way, X appears in {len(filtered_df)} studies at ESMO 2025:"
+   - Mention 1-3 key studies with Identifiers and brief findings from abstracts
+   - Provide strategic context if relevant to EMD portfolio
+3. **Table display:** Note that a detailed table of all {len(filtered_df)} studies will appear AFTER your response
 
 **Studies Available (JSON format with {len(available_cols)} fields: {', '.join(available_cols)}):**
 {dataset_json}
 
-Answer the user's question using BOTH your medical knowledge AND the conference studies above. Always cite study Identifiers when referencing data. Make it clear this is a conference intelligence platform, not just a knowledge base."""
+Answer the user's question using BOTH your medical knowledge AND the conference studies above. Always cite study Identifiers when referencing data. End with: "Would you like me to dive deeper into any of these studies?"
+"""
         else:
             # No studies - pure knowledge answer
             user_message = f"""**User Question:** {user_query}

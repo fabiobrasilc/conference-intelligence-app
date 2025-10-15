@@ -1503,6 +1503,37 @@ def apply_therapeutic_area_filter(df: pd.DataFrame, ta_filter: str) -> pd.Series
 # HELPER FUNCTIONS FOR AI ASSISTANT
 # ============================================================================
 
+def fix_markdown_strikethrough(text: str) -> str:
+    """
+    Fix accidental markdown strikethrough caused by approximation symbols.
+
+    The AI uses ~ for "approximately" (e.g., ~1,301 pts), but when two tildes
+    appear together (~~), markdown interprets it as strikethrough formatting.
+
+    This function simply removes ~ before numbers to avoid the markdown conflict.
+    The numbers are already approximations in context, so the ~ is redundant.
+
+    Examples:
+        "~1,301 pts" → "1,301 pts"
+        "~16.9 mo" → "16.9 mo"
+        "~2.1–2.4 mo" → "2.1–2.4 mo"
+        "~~intentional strikethrough~~" → preserved (no numbers after ~)
+
+    Args:
+        text: Markdown text to fix
+
+    Returns:
+        Fixed text with ~ removed before numbers
+    """
+    import re
+
+    # Pattern: Remove ~ when it appears before a number (with optional space)
+    # This catches: ~1,301 or ~ 1,301 or ~2.1
+    text = re.sub(r'~\s*(\d)', r'\1', text)
+
+    return text
+
+
 def get_latest_report_for_ta(ta: str, button_type: str = None) -> str:
     """
     Load the most recently generated report for a given therapeutic area.
@@ -1550,6 +1581,10 @@ def get_latest_report_for_ta(ta: str, button_type: str = None) -> str:
                             latest_timestamp = timestamp
             except (FileNotFoundError, json.JSONDecodeError, KeyError):
                 continue
+
+        # Fix markdown strikethrough issues before returning
+        if latest_report:
+            latest_report = fix_markdown_strikethrough(latest_report)
 
         return latest_report
     except Exception as e:
@@ -3683,7 +3718,9 @@ def stream_openai_tokens(prompt: str, model: str = "gpt-5-mini", reasoning_effor
         for event in stream:
             if event.type == "response.output_text.delta":
                 token_count += 1
-                yield "data: " + json.dumps({"text": event.delta}) + "\n\n"
+                # Fix markdown strikethrough issues in token
+                fixed_token = fix_markdown_strikethrough(event.delta)
+                yield "data: " + json.dumps({"text": fixed_token}) + "\n\n"
             elif event.type == "response.done":
                 # Check finish reason
                 if hasattr(event, 'response') and hasattr(event.response, 'finish_reason'):
@@ -3961,6 +3998,9 @@ def stream_playbook(playbook_key):
                             analysis_text = cached_data.get("analysis", "")
 
                             if analysis_text:
+                                # Fix markdown strikethrough issues BEFORE streaming
+                                analysis_text = fix_markdown_strikethrough(analysis_text)
+
                                 # Stream in chunks while preserving ALL line breaks
                                 chunk_size = 50  # characters per chunk
                                 for i in range(0, len(analysis_text), chunk_size):
@@ -4021,6 +4061,9 @@ def stream_playbook(playbook_key):
                         analysis_text = cached_data.get("analysis", "")
 
                         if analysis_text:
+                            # Fix markdown strikethrough issues BEFORE streaming
+                            analysis_text = fix_markdown_strikethrough(analysis_text)
+
                             # Stream in chunks while preserving ALL line breaks
                             chunk_size = 50  # characters per chunk
                             for i in range(0, len(analysis_text), chunk_size):
@@ -4523,24 +4566,58 @@ def stream_chat_ai_first():
 
             print(f"[AI-FIRST] AI processing complete, streaming response...")
 
-            # 3. Send table data first (if frontend needs it)
-            table_df = result['filtered_data']
-            if not table_df.empty and len(table_df) <= 500:
-                # Remove internal search columns before displaying
-                display_cols = ['Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Identifier', 'Room', 'Date', 'Time', 'Session', 'Theme']
-                table_df_display = table_df[[col for col in display_cols if col in table_df.columns]]
-
-                # Format table as HTML for frontend
-                table_html = f"""<div class='entity-table-container'>
-<h6 class='entity-table-title'>📊 Filtered Results ({len(table_df_display)} studies)</h6>
-{dataframe_to_custom_html(table_df_display)}
-</div>"""
-                yield "data: " + json.dumps({"table": table_html}) + "\n\n"
-                print(f"[AI-FIRST] Sent table with {len(table_df_display)} rows")
-
-            # 4. Stream AI response tokens
+            # 3. Stream AI response tokens FIRST (before table)
             for token in result['response_stream']:
                 yield "data: " + json.dumps({"text": token}) + "\n\n"
+
+            # 4. THEN send table data (after AI response completes) - COLLAPSIBLE
+            table_df = result['filtered_data']
+            if not table_df.empty and len(table_df) <= 500:
+                # New column order: Identifier, Title, Speakers, Affiliation, Abstract, Date, Session
+                display_cols = ['Identifier', 'Title', 'Speakers', 'Affiliation', 'Abstract', 'Date', 'Session']
+                table_df_display = table_df[[col for col in display_cols if col in table_df.columns]]
+
+                # Generate unique ID for this table
+                import hashlib
+                table_id = hashlib.md5(str(len(table_df_display)).encode()).hexdigest()[:8]
+
+                # Format table as collapsible HTML for frontend
+                table_html = f"""<div class='entity-table-container collapsible-table' style='margin-top: 1rem;'>
+<button class='toggle-table-btn' onclick='toggleTable("{table_id}")' style='
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+'>
+    <span>📊 Show Supporting Studies ({len(table_df_display)} studies)</span>
+    <span id='toggle-icon-{table_id}'>▼</span>
+</button>
+<div id='table-{table_id}' style='display: none; margin-top: 0.5rem;'>
+{dataframe_to_custom_html(table_df_display)}
+</div>
+</div>
+<script>
+function toggleTable(id) {{
+    const table = document.getElementById('table-' + id);
+    const icon = document.getElementById('toggle-icon-' + id);
+    if (table.style.display === 'none') {{
+        table.style.display = 'block';
+        icon.textContent = '▲';
+    }} else {{
+        table.style.display = 'none';
+        icon.textContent = '▼';
+    }}
+}}
+</script>"""
+                yield "data: " + json.dumps({"table": table_html}) + "\n\n"
+                print(f"[AI-FIRST] Sent collapsible table with {len(table_df_display)} rows after AI response")
 
             yield "data: [DONE]\n\n"
             print(f"[AI-FIRST] Streaming completed")
