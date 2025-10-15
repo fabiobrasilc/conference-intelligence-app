@@ -249,6 +249,249 @@ EMD_PORTFOLIO = {
 
 
 # ============================================================================
+# PUBMED INTEGRATION - DYNAMIC MEDICAL KNOWLEDGE
+# ============================================================================
+
+# PubMed queries for recent clinical trials (per therapeutic area)
+PUBMED_QUERIES = {
+    "Lung Cancer": '("MET"[title] AND nsclc) OR tepotinib[title]',
+    # Other TAs will be added as user provides queries
+    "Bladder Cancer": None,
+    "Colorectal Cancer": None,
+    "Head and Neck Cancer": None,
+    "Renal Cancer": None,
+    "TGCT": None,
+    "Merkel Cell": None
+}
+
+
+def fetch_pubmed_trials(ta: str, max_results: int = 20) -> List[Dict[str, Any]]:
+    """
+    Fetch recent clinical trials from PubMed for therapeutic area context.
+
+    Uses Biopython Entrez to query PubMed with TA-specific search terms,
+    filtering for Clinical Trial or Clinical Study publication types.
+
+    Args:
+        ta: Therapeutic area name
+        max_results: Maximum number of trials to fetch (default 20)
+
+    Returns:
+        List of dicts with keys: pmid, title, abstract, year, authors
+        Returns empty list if query not defined for TA or if API fails.
+    """
+    from Bio import Entrez
+
+    # Set email and API key for NCBI (required)
+    Entrez.email = "m337928@merckgroup.com"
+    Entrez.api_key = "a67284fcad76aef86e7e6281b44e59224508"  # Allows 10 requests/second
+
+    # Get TA-specific query
+    query = PUBMED_QUERIES.get(ta)
+    if not query:
+        print(f"[PUBMED] No query defined for {ta} - skipping")
+        return []
+
+    try:
+        print(f"[PUBMED] Fetching recent trials for {ta}...")
+        print(f"[PUBMED] Query: {query}")
+
+        # Search PubMed
+        search_handle = Entrez.esearch(
+            db="pubmed",
+            term=f"{query} AND (Clinical Trial[ptyp] OR Clinical Study[ptyp])",
+            retmax=max_results,
+            sort="date",  # Most recent first
+            retmode="xml"
+        )
+        search_results = Entrez.read(search_handle)
+        search_handle.close()
+
+        pmids = search_results.get("IdList", [])
+        if not pmids:
+            print(f"[PUBMED] No trials found for {ta}")
+            return []
+
+        print(f"[PUBMED] Found {len(pmids)} trials, fetching details...")
+
+        # Fetch full records
+        fetch_handle = Entrez.efetch(
+            db="pubmed",
+            id=pmids,
+            rettype="medline",
+            retmode="xml"
+        )
+        records = Entrez.read(fetch_handle)
+        fetch_handle.close()
+
+        trials = []
+        for article in records.get("PubmedArticle", []):
+            try:
+                medline = article.get("MedlineCitation", {})
+                article_data = medline.get("Article", {})
+
+                pmid = str(medline.get("PMID", ""))
+                title = article_data.get("ArticleTitle", "")
+
+                # Get abstract (may be structured or plain text)
+                abstract_data = article_data.get("Abstract", {})
+                abstract_texts = abstract_data.get("AbstractText", [])
+                if isinstance(abstract_texts, list):
+                    abstract = " ".join([str(txt) for txt in abstract_texts])
+                else:
+                    abstract = str(abstract_texts)
+
+                # Get year
+                pub_date = article_data.get("Journal", {}).get("JournalIssue", {}).get("PubDate", {})
+                year = pub_date.get("Year", "")
+
+                # Get authors
+                author_list = article_data.get("AuthorList", [])
+                authors = []
+                for author in author_list[:3]:  # First 3 authors
+                    last = author.get("LastName", "")
+                    init = author.get("Initials", "")
+                    if last:
+                        authors.append(f"{last} {init}".strip())
+                authors_str = ", ".join(authors)
+                if len(author_list) > 3:
+                    authors_str += " et al."
+
+                trials.append({
+                    "pmid": pmid,
+                    "title": title,
+                    "abstract": abstract,
+                    "year": year,
+                    "authors": authors_str
+                })
+
+            except Exception as e:
+                print(f"[PUBMED] Error parsing article: {e}")
+                continue
+
+        print(f"[PUBMED] Successfully fetched {len(trials)} trial records")
+        return trials
+
+    except Exception as e:
+        print(f"[PUBMED] API error: {e}")
+        return []
+
+
+def summarize_trials_with_ai(trials: List[Dict[str, Any]], ta: str) -> str:
+    """
+    Use gpt-5-mini to summarize PubMed trials into concise context.
+
+    Takes raw trial data (title + abstract) and generates 2-3 sentence
+    summaries focused on what Medical Affairs professionals need to know.
+
+    Args:
+        trials: List of trial dicts from fetch_pubmed_trials()
+        ta: Therapeutic area name
+
+    Returns:
+        Formatted string with trial summaries for journalist context.
+        Returns empty string if no trials or API fails.
+    """
+    if not trials:
+        return ""
+
+    try:
+        print(f"[PUBMED AI] Summarizing {len(trials)} trials using gpt-5-mini...")
+
+        # Build prompt with trial data
+        trials_text = ""
+        for i, trial in enumerate(trials, 1):
+            trials_text += f"\n\n---\n**Trial {i}** (PMID: {trial['pmid']}, {trial['year']})\n"
+            trials_text += f"Authors: {trial['authors']}\n"
+            trials_text += f"Title: {trial['title']}\n"
+            trials_text += f"Abstract: {trial['abstract'][:1500]}...\n"  # Truncate long abstracts
+
+        prompt = f"""You are a Medical Affairs expert in {ta}. Review these recent clinical trials and create detailed, actionable summaries.
+
+For EACH trial, provide:
+1. Trial name (if available), phase, and design
+2. Intervention/drug(s) tested with doses if mentioned
+3. Patient population (n=X if available) and key inclusion criteria
+4. Primary endpoint and key results (include specific numbers: ORR X%, mPFS X months, etc.)
+5. Strategic relevance for pharmaceutical companies
+
+Be specific about actual data points. Include numbers whenever available.
+
+Format:
+- **[Drug/Intervention] (PMID: [number])**: [Phase X trial, n=X patients]. [Detailed summary with specific results]. Strategic relevance: [How this impacts the treatment landscape].
+
+Recent trials:
+{trials_text}
+"""
+
+        start_time = time.time()
+        response = client.responses.create(
+            model="gpt-5-mini",
+            input=[{"role": "user", "content": prompt}],
+            reasoning={"effort": "low"},
+            text={"verbosity": "low"},
+            max_output_tokens=3000
+        )
+
+        summary = response.output_text or ""
+        elapsed = time.time() - start_time
+
+        print(f"[PUBMED AI] Generated summary in {elapsed:.1f}s ({len(summary)} chars)")
+        return summary
+
+    except Exception as e:
+        print(f"[PUBMED AI] Error summarizing trials: {e}")
+        # Fallback: return simple list
+        fallback = "\n".join([
+            f"- **{t['title']}** (PMID: {t['pmid']}, {t['year']})"
+            for t in trials[:10]  # Limit to 10 to save tokens
+        ])
+        return fallback
+
+
+def get_pubmed_context_for_ta(ta: str, max_trials: int = 20) -> str:
+    """
+    Get PubMed trial context for a therapeutic area (fetches + summarizes).
+
+    This is the main entry point for PubMed integration. It:
+    1. Fetches recent trials from PubMed
+    2. Summarizes them using AI
+    3. Returns formatted context for inclusion in journalist prompt
+
+    Args:
+        ta: Therapeutic area name
+        max_trials: Maximum trials to fetch (default 20)
+
+    Returns:
+        Formatted string ready to inject into strategic prompt.
+        Returns empty string if no query defined or if fetch/summarize fails.
+    """
+    trials = fetch_pubmed_trials(ta, max_trials)
+    if not trials:
+        return ""
+
+    summary = summarize_trials_with_ai(trials, ta)
+    if not summary:
+        return ""
+
+    # Format for prompt injection
+    context = f"""## RECENT CLINICAL TRIAL CONTEXT (for medical knowledge)
+
+The following recent clinical trials in {ta} provide important context for interpreting ESMO abstracts. Reference these when relevant to avoid recommending studies that already happened or to build on existing evidence:
+
+{summary}
+
+Use this context to:
+- Avoid recommending trials that already exist or failed
+- Reference relevant prior studies when discussing ESMO abstracts
+- Provide informed perspective on whether ESMO data is confirmatory, contradictory, or novel
+- Suggest evidence-building that logically extends from existing trials
+"""
+
+    return context
+
+
+# ============================================================================
 # LANDSCAPE CONTEXT LOADING
 # ============================================================================
 
@@ -1712,20 +1955,58 @@ def build_strategic_priorities_prompt(ta: str, filtered_df, tables_data: Dict) -
     raw_data_json = filtered_df[available_cols].to_json(orient='records', indent=2)
 
     prompt = f"""
-You are a Senior Medical Strategy Advisor for Merck KGaA. Your job: turn conference intelligence into clear, actionable recommendations for Medical Affairs, MSLs, and HQ leadership.
+You are a Senior Medical Strategy Advisor for Merck KGaA with deep expertise in {ta} oncology. Your job: synthesize ESMO 2025 conference intelligence into strategic guidance for Medical Affairs, MSLs, and leadership.
 
-**YOUR MISSION**: Create a Strategic Briefing that's **immediately useful** - executive summary on page 1, actions on page 2, supporting evidence after that.
+**YOUR MISSION**: Create a Strategic Briefing that's practical, honest, and grounded in real-world pharmaceutical workflows.
 
 ---
 
-## CONTEXT
+## CONFERENCE TIMING CONTEXT
+
+**Today's Date**: October 14, 2025
+**ESMO 2025 Dates**: October 17-21, 2025 (starts in 3 days)
+
+This is a PRE-CONFERENCE strategic briefing based on published abstracts.
+
+**Adjust language accordingly**:
+- ❌ "What we learned at ESMO"
+- ✅ "Based on ESMO 2025 abstracts" or "Data being presented at ESMO"
+- Use "At ESMO" (for activities during conference) and "After ESMO" (for follow-up)
+- Do NOT use generic time ranges like "Next 2-4 weeks" - be specific to conference context
+
+---
+
+## THERAPEUTIC AREA CONTEXT
 
 **Therapeutic Area**: {ta}
 **Conference**: ESMO 2025
-**Total Studies**: {len(filtered_df)}
-**Our Asset(s)**: {portfolio.get('primary_asset', 'No primary asset in this TA')}
+**Total Studies/Abstracts**: {len(filtered_df)}
+
+---
+
+## EMD SERONO / MERCK KGAA PORTFOLIO & CLINICAL DEVELOPMENT HISTORY
+
+**USE YOUR MEDICAL KNOWLEDGE**: You are an expert in {ta} with deep knowledge of:
+- EMD Serono/Merck KGaA's clinical programs and historical trials
+- Competitor trials and regulatory landscape
+- Treatment guidelines (NCCN, ESMO, etc.)
+- Recent published evidence in this field
+
+When making recommendations:
+1. Don't recommend studies that already happened or failed
+2. Build on existing evidence - reference relevant prior trials
+3. Provide informed perspective on whether ESMO data is confirmatory, contradictory, or novel
+4. Suggest evidence-building that logically extends from existing work
+
+---
+
+**Current Approved Asset(s)**: {portfolio.get('primary_asset', 'No primary asset in this TA')}
 **Indication**: {portfolio.get('indication', 'N/A')}
 **Key Competitors**: {', '.join(portfolio.get('key_competitors', [])[:5])}
+
+---
+
+{get_pubmed_context_for_ta(ta, max_trials=20)}
 
 ---
 
@@ -1752,157 +2033,207 @@ You have FOUR specialist reports + raw conference data:
 
 ---
 
-## REPORT STRUCTURE (FRONT-LOAD THE ACTIONS!)
+## REPORT STRUCTURE
 
-# Strategic Briefing: {ta} at ESMO 2025
+Generate a Strategic Briefing using this NEW structure:
 
-## Executive Summary (TL;DR)
-**(3-4 paragraphs max - get to the point)**
+# Strategic Briefing: {ta} — ESMO 2025
 
-Answer these 3 questions CLEARLY:
-1. **What happened at ESMO?** - Top 3 takeaways for {ta} treatment landscape (cite specific studies with identifiers)
-2. **How does this affect us?** - Portfolio strengthened, threatened, or unchanged? Be honest.
-3. **What do we do now?** - Critical immediate actions (1 sentence each: MSLs, Medical Affairs, HQ)
-
-**Tone**: Conversational but professional. Imagine briefing a Medical Director who has 5 minutes.
+*Pre-conference briefing based on ESMO 2025 abstracts.*
 
 ---
 
-## IMMEDIATE ACTIONS (0-3 months) - Do This Quarter
+## Executive Summary
 
-**(THIS SECTION COMES FIRST - it's what busy readers need)**
+Write 2-3 short paragraphs in plain, conversational language:
 
-Pull actionable recommendations from all 4 reports and organize by role:
+First paragraph: Current competitive position of our asset(s) going into ESMO. Where does {portfolio.get('primary_asset', 'our asset')} stand in the treatment landscape?
 
-### MSLs / Field Medical (what to do this week)
-- **Key Messages**: 2-3 one-liners for HCP conversations (cite specific data: "Study 1234P showed...")
-- **Objection Handling**: Top 2-3 anticipated KOL questions with answers
-- **Priority Engagements**: Specific KOLs to contact this quarter (cite from KOL report with institutions)
+Second paragraph: Key ESMO developments that could change this landscape. What are the 3-4 most important findings being presented and why do they matter?
 
-### Medical Affairs Leadership (what to plan this month)
-- **Evidence Gaps to Fill**: Top 2-3 RWE/IST opportunities (be specific: CNS mets, sequencing, biomarker subsets)
-- **Publication Strategy**: Which ESMO abstracts to curate? Any manuscripts to fast-track?
-- **KOL Partnerships**: Which thought leaders to engage for advisory boards, publications, ISTs?
-
-### Clinical Development / Medical Directors (what to evaluate this quarter)
-- **Label Opportunities**: Any expansion signals based on unmet needs?
-- **Biomarker Strategy**: ctDNA, companion diagnostics, enrichment criteria priorities
-- **Combination Hypotheses**: Rational combos suggested by conference data (with preclinical rationale)
-
-### HQ Leadership (strategic decisions this quarter)
-- **Investment Signals**: Double down, maintain, or pivot? (cite competitive threats or opportunities)
-- **BD Opportunities**: Any in-licensing/partnership gaps to fill?
-- **Competitive Response**: What requires urgent action vs. wait-and-see?
-
-**CRITICAL**: Be SPECIFIC. Don't say "engage KOLs" - say "Contact Dr. John Heymach (MD Anderson) re: ctDNA sequencing strategy." Don't say "explore combinations" - say "Evaluate tepotinib + osimertinib for METamp based on SACHI ctDNA data (1954P)."
+Third paragraph: Top strategic priorities emerging from ESMO. What should Medical Affairs focus on during and after the conference?
 
 ---
 
-## Where We Stand (Current Position + ESMO Impact)
+## Pre-ESMO 2025 {ta} Landscape
 
-**(3-5 paragraphs for active TAs; 1-2 for low-activity TAs)**
+### Current Treatment Paradigm
+Describe in paragraph form the current standard of care for {ta}, focusing on:
+- Where our asset(s) fit in the treatment algorithm
+- Key evidence supporting current positioning
+- Market access and uptake status (if known from reports)
+- Testing/diagnostic landscape relevant to our asset(s)
 
-Merge "current position" and "what changed at ESMO" into one flowing narrative:
+### Competitive Positioning
+Using information from the PubMed context and specialist reports, describe:
+- How {portfolio.get('primary_asset', 'our primary asset')} compares to key competitors
+- Recent clinical trial results that have shaped the landscape
+- Current market dynamics (gaining/losing ground, stable position)
 
-- **Before ESMO**: Our asset(s), indication, guideline status, market position (leader/challenger/niche?)
-- **What ESMO Changed**: Competitor gains, treatment paradigm shifts, new threats (cite 2-3 key studies)
-- **Our Position Now**: Defending, attacking, or pivoting? Strengths and vulnerabilities post-ESMO
-
-**Examples of good tone**:
-- ✅ "ESMO 2025 showed three different MET patient types requiring different treatments: METex14 (tepotinib), METamp (savolitinib combos), MET-OE (ADCs)"
-- ❌ "The conference crystallized MET biology into three operationally distinct clinical niches"
-
-**Avoid repetition**: Don't repeat VISION 3-year data multiple times. Mention key studies ONCE in detail, then reference briefly elsewhere.
-
----
-
-## Key Evidence & Strategic Context
-
-**(4-6 paragraphs for large datasets; 2-3 for small - condense aggressively)**
-
-Pull from Insights + Competitor reports:
-
-### Practice-Changing Studies (Top 3-5 only)
-- Study ID, data (ORR/PFS/OS), why it matters, timing of impact (immediate, 6-12 mo, 18+ mo)
-
-### Competitive Threats to Watch
-- Studies challenging our asset(s), biomarker fragmentation, combination strategies
-
-### White Space Opportunities
-- Evidence gaps competitors aren't filling (CNS, elderly, post-progression sequencing)
-- Supportive data for our strategy (biomarker validation, safety differentiation)
-
-**Merge related topics**: Don't create separate sections for "threats" and "opportunities" if they're talking about the same studies. Flow naturally.
+### Evidence Gaps and Unmet Needs
+Based on the current landscape and PubMed trial context, what key questions remain unanswered? Which gaps might ESMO 2025 address versus those that will persist?
 
 ---
 
-## Evidence Gaps & What to Own
+## What's Being Presented at ESMO 2025 in {ta}
 
-**(2-3 paragraphs - only include if genuine opportunities exist)**
+### High-Priority Studies Relevant to Our Portfolio
 
-Be specific about what's missing and how we can fill it:
-- **Clinical Gaps**: e.g., "Prospective CNS-specific data for MET TKIs beyond VISION"
-- **Biomarker Gaps**: e.g., "ctDNA clearance correlation with PFS for tepotinib (like SACHI did for savolitinib)"
-- **RWE Gaps**: e.g., "Sequencing after ADCs or bispecifics"
+For each major study being presented that impacts our positioning, provide actual data from the abstracts:
 
-**For each gap**: Propose a concrete solution (registry design, IST protocol, KOL collaboration)
+**For REGULAR ABSTRACTS** (those with session identifiers like 1996P, 1958P, LBA5, etc.):
+- Include SPECIFIC NUMBERS from the published abstract: ORR X%, mPFS X.X months, n=X patients, etc.
+- Use past/present tense: "shows", "reports", "demonstrates"
+- Format example: "Key data: ORR 54.8%, mDOR 17.4 months (tissue-positive cohort, n=208)"
+- DO NOT use "expected to show" language - report what the abstract actually presents
 
----
+**For LATE-BREAKING ABSTRACTS** (LBA without full abstracts):
+- Note that full data not yet released
+- Describe what is expected based on trial design and prior disclosures
+- Use future tense: "expected to present", "anticipated to show"
 
-## Appendix: Supporting Details
+For EACH study include:
+- Abstract ID and brief description
+- Key data being presented (ACTUAL NUMBERS for regular abstracts)
+- What evidence gap this addresses
+- Competitive implications for our asset(s)
+- How Medical Affairs can use this information
 
-**(Move these to the END - readers can reference if needed)**
+When referencing prior trials from PubMed context, include specific details:
+- Design (phase, population size, key endpoints)
+- Key findings with specific data points
+- Strategic relevance to ESMO presentations
 
-### Key Abstracts Summary
-- List top 5-10 ESMO abstracts with 1-line descriptions (don't repeat full details from earlier)
+### Competitive Intelligence
 
-### KOL/Institution Targets
-- Brief table or list (from KOL/Institution reports - no need to repeat full analysis)
+Describe key competitor presentations and their potential impact:
+- Which competitive assets have important data being presented
+- Threat level assessment with rationale
+- Positioning implications for our portfolio
 
-### Competitive Surveillance Watchlist
-- What to monitor, triggers for action (teliso-V approvals, SACHI readouts, etc.)
+### Evidence Gaps: What Will Be Addressed vs. What Remains
 
-### Timeline & KPIs (if applicable)
-- Optional timeline table with owners and metrics (only if the TA has enough activity to warrant it)
-
----
-
-## WRITING INSTRUCTIONS
-
-**TONE - Conversational, Not Academic**:
-- ✅ "Competitors are making their drugs easier to use with better diagnostics"
-- ❌ "Competitors are operationalizing new adoption barriers via companion diagnostics"
-- ✅ "ESMO showed 3 MET patient types"
-- ❌ "MET biology crystallized into three operationally distinct clinical niches"
-
-**STRUCTURE - Front-Load Actions**:
-- Put "Immediate Actions" on page 2, not buried in Section 4
-- Executive Summary = page 1
-- Everything else = supporting evidence
-
-**CUT REDUNDANCY**:
-- Don't mention VISION 3-year data 4 times. Cite it ONCE in detail (in "Key Evidence"), then reference briefly: "as noted in VISION data above"
-- Don't repeat study IDs in multiple sections. Pick ONE place for detail, brief references elsewhere.
-- Merge overlapping sections (e.g., "Current Position" + "ESMO Impact" = one section)
-
-**BE SPECIFIC**:
-- Cite study IDs: "1996P showed..."
-- Name KOLs: "Dr. Frank Griesinger (VISION lead)"
-- Name institutions: "MD Anderson, Dana-Farber"
-- Give numbers: "ORR 54.8%, mDOR 17.4 mo"
-
-**BE PROPORTIONAL**:
-- High-activity TA (>100 studies): Full detail in all sections
-- Low-activity TA (<10 studies): Brief, honest ("Limited ESMO activity in {ta}; here's what we saw...")
-
-**BE HONEST**:
-- No opportunities? Say so. Don't force recommendations.
-- Threats bigger than opportunities? Acknowledge it.
-- Uncertain? Say "preliminary data suggest... confirmation needed"
+Based on ESMO abstracts, which current evidence gaps will be partially or fully addressed? Which important questions will remain unanswered?
 
 ---
 
-Generate the Strategic Briefing now. Remember: **Page 1 = Exec Summary. Page 2 = Immediate Actions. Page 3+ = Supporting Evidence.**
+## Strategic Considerations for Medical Affairs
+
+*Note: Medical Science Liaisons (MSLs) are the field-based Medical Affairs team. The following considerations integrate field execution with Medical Affairs strategy.*
+
+### Ten Strategic Questions for KOL Engagement
+
+These questions can guide advisory boards, congress interactions, and strategic planning post-ESMO:
+
+[Generate 10 open-ended strategic questions that explore key issues in {ta} treatment, each with:
+- Context for why this matters post-ESMO
+- Which ESMO abstracts inform this question
+- How our asset positioning relates to the answer]
+
+### Ten High-Value Discussion Topics
+
+These topics enable value-added scientific exchange with KOLs and HCPs:
+
+[Generate 10 discussion topics, each with:
+- 2-3 specific discussion angles
+- Supporting evidence from ESMO and prior trials
+- How our asset fits into the discussion (scientifically, not promotionally)]
+
+### Ten Objection Handling Frameworks
+
+Common challenges Medical Affairs may face post-ESMO, with suggested response approaches:
+
+[Generate 10 scenarios with response frameworks following:
+Acknowledge the concern → Provide context → Share evidence → Discuss differentiation → Position strategically]
+
+### Evidence Generation Priorities
+
+Medical Affairs teams may consider prioritizing evidence opportunities as follows:
+
+**Immediate priorities (high strategic value, low resource requirement):**
+Describe quick wins such as post-hoc analyses, literature reviews, or advisory boards that could be initiated soon after ESMO.
+
+**Medium-term opportunities (moderate investment, 6-18 month horizon):**
+Discuss potential investigator collaborations, RWE studies, or diagnostic partnerships that address key evidence gaps.
+
+**Longer-term considerations (major investment, only if strategically critical):**
+If Tier 1 and 2 activities reveal compelling opportunities, what sponsor-led programs might be considered?
+
+### At ESMO: Priority Engagement
+
+Suggest which KOLs presenting relevant data would be valuable to engage, which sessions to prioritize, and what discussion points would be most productive.
+
+### Post-ESMO: Communication and Dissemination
+
+Considerations for updating internal materials, communicating with the field, and engaging with external stakeholders based on ESMO learnings.
+
+---
+
+## Leadership Considerations
+
+### Competitive Monitoring
+
+What specific competitive developments should be tracked post-ESMO? For each threat, suggest monitoring triggers and potential responses. Use language like "if X occurs, leadership may want to consider Y" rather than prescriptive directives.
+
+### Strategic Investment Areas
+
+Based on ESMO data and competitive dynamics, what areas might warrant increased focus or resources? Frame as considerations rather than mandates.
+
+---
+
+## Appendix
+
+**Key Abstracts**
+[List format: Abstract ID — brief description and strategic relevance]
+
+**Priority KOLs**
+[List format: Name, Institution — expertise area and ESMO involvement]
+
+---
+
+## TONE AND STYLE
+
+**Use conversational, plain language** - avoid academic jargon:
+- Good: "Competitors are making their drugs easier to use with better diagnostics"
+- Bad: "Competitors are operationalizing new adoption barriers via companion diagnostics"
+
+**Use suggestive, non-directive language throughout**:
+- Good: "Medical Affairs may want to consider...", "One strategic option could be...", "Teams might explore..."
+- Bad: "Convene advisory board", "Partner with centers", "Start Tier 1", "Allocate budget"
+- Bad: "MSLs must", "Medical Directors should", "Leadership needs to"
+
+**When referencing clinical trials (especially from PubMed context)**:
+- Include specific details: trial phase, patient population (n=X), key endpoints, actual results
+- Example: "INSIGHT-2 was a Phase 2 trial of tepotinib + osimertinib in MET-amplified NSCLC (n=X) that showed ORR of X% and mPFS of X months"
+- Explain strategic relevance: "This established proof-of-concept for EGFR/MET combinations, suggesting future studies might explore different populations rather than duplicating this approach"
+- NEVER use vague phrases like "avoid duplicative combos; build on existing evidence" without explaining what this means strategically
+
+**Be specific with data and evidence**:
+- Include actual numbers: ORR percentages, PFS/OS in months, patient numbers
+- Name specific people and institutions
+- Cite abstract IDs naturally in text
+
+**Be honest and balanced**:
+- If threats outweigh opportunities, acknowledge it
+- If evidence is preliminary, say so
+- Don't force positive spin where it doesn't exist
+
+**Respect Medical Affairs expertise**:
+- Frame everything as strategic options and considerations
+- Provide rationale and evidence, not orders
+- Trust teams to make appropriate regional/local decisions
+
+**NO TABLES** - use paragraph prose or simple lists
+
+**AVOID these sections entirely**:
+- Resource allocation timelines
+- Budget recommendations
+- Specific operational directives
+- Prescriptive implementation plans
+
+---
+
+Generate the Strategic Briefing now following the structure above. Remember: Medical Affairs professionals are sophisticated strategic partners who need evidence-based options, not operational mandates.
 
 """
 
