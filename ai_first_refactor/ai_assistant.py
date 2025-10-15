@@ -337,11 +337,13 @@ Then return: {{"response_type": "conceptual_query", "topic": "brief description 
 **IMPORTANT ENTITY EXTRACTION RULE**:
 If the query mentions ANY specific entity (drug, biomarker, pathway, institution, person):
 - Set "retrieve_supporting_studies" to TRUE (default for entity queries)
-- Populate "context_entities" with the entity name AND common variants/abbreviations
+- Populate "context_entities" with the FULL entity name AND common variants/abbreviations
+- DO NOT include generic suffixes alone (-vedotin, -mab, -nib) as they are too broad and match many drugs
 - Examples:
-  * "What is zelenectide vedotin?" → context_entities: ["zelenectide vedotin", "zelenectide", "vedotin"]
+  * "What is zelenectide vedotin?" → context_entities: ["zelenectide vedotin", "zelenectide-vedotin"]
+  * "What is enfortumab vedotin?" → context_entities: ["enfortumab vedotin", "enfortumab-vedotin", "enfortumab"]
   * "Tell me about METex14" → context_entities: ["METex14", "MET exon 14", "MET exon 14 skipping"]
-  * "What's tepotinib?" → context_entities: ["tepotinib"]
+  * "What's tepotinib?" → context_entities: ["tepotinib", "tepmetko"]
   * "Who is presenting on avelumab?" → context_entities: ["avelumab", "bavencio"]
 
 Only set "retrieve_supporting_studies" to FALSE for pure mechanism questions with NO specific entities:
@@ -397,8 +399,9 @@ Conceptual/Knowledge Questions (answer with medical knowledge, optionally use st
 "What is the difference between PD-1 and PD-L1 inhibitors?" → {{"response_type": "conceptual_query", "topic": "Mechanism difference between PD-1 vs PD-L1 checkpoint inhibitors", "context_entities": [], "retrieve_supporting_studies": false}}
 "How could retifanlimab gain market share in MCC?" → {{"response_type": "conceptual_query", "topic": "Market positioning strategy for retifanlimab in Merkel cell carcinoma", "context_entities": ["retifanlimab", "avelumab"], "retrieve_supporting_studies": true}}
 
-Drug/Entity Information Queries (ALWAYS retrieve studies AND extract entity variants):
-"What is zelenectide vedotin?" → {{"response_type": "conceptual_query", "topic": "Zelenectide vedotin ADC drug information", "context_entities": ["zelenectide vedotin", "zelenectide", "vedotin"], "retrieve_supporting_studies": true}}
+Drug/Entity Information Queries (ALWAYS retrieve studies, NEVER include generic suffixes alone):
+"What is zelenectide vedotin?" → {{"response_type": "conceptual_query", "topic": "Zelenectide vedotin ADC drug information", "context_entities": ["zelenectide vedotin", "zelenectide-vedotin"], "retrieve_supporting_studies": true}}
+"What is enfortumab vedotin?" → {{"response_type": "conceptual_query", "topic": "Enfortumab vedotin ADC information", "context_entities": ["enfortumab vedotin", "enfortumab-vedotin", "enfortumab"], "retrieve_supporting_studies": true}}
 "Tell me about tepotinib" → {{"response_type": "conceptual_query", "topic": "Tepotinib MET inhibitor", "context_entities": ["tepotinib", "tepmetko"], "retrieve_supporting_studies": true}}
 "What is METex14?" → {{"response_type": "conceptual_query", "topic": "MET exon 14 skipping mutation in NSCLC", "context_entities": ["METex14", "MET exon 14", "MET exon 14 skipping"], "retrieve_supporting_studies": true}}
 "Who is presenting on avelumab?" → {{"response_type": "conceptual_query", "topic": "Avelumab presenters at ESMO", "context_entities": ["avelumab", "bavencio"], "retrieve_supporting_studies": true}}
