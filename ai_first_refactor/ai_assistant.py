@@ -74,16 +74,14 @@ def handle_chat_query(
     # Check response type
     response_type = interpretation.get('response_type')
 
-    # GUARDRAIL: Cannot be a follow-up if there's no conversation history!
-    if response_type == 'followup' and (not conversation_history or len(conversation_history) == 0):
-        print(f"[FOLLOWUP ERROR] AI classified as followup but no conversation history exists!")
-        print(f"[FOLLOWUP ERROR] Reclassifying as conceptual_query to prevent returning all studies")
-        # Override AI's incorrect classification
-        response_type = 'conceptual_query'
-        interpretation['response_type'] = 'conceptual_query'
-        interpretation['topic'] = interpretation.get('context_query', user_query)
-        interpretation['context_entities'] = []
-        interpretation['retrieve_supporting_studies'] = True
+    # SIMPLIFICATION: Treat all followups as fresh searches
+    # The previous followup logic was causing unrelated queries to share studies
+    if response_type == 'followup':
+        print(f"[FOLLOWUP] Detected, but treating as fresh search to avoid mixing unrelated topics")
+        print(f"[FOLLOWUP] Re-calling AI to extract proper search keywords...")
+        # Force a fresh extraction as a search/conceptual query
+        interpretation = extract_search_keywords_from_ai(user_query, len(df), active_filters, [])  # Pass empty list to force fresh extraction
+        response_type = interpretation.get('response_type')
 
     # Handle greeting
     if response_type == 'greeting':
