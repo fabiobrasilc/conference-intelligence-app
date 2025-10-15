@@ -133,22 +133,46 @@ def handle_chat_query(
             print(f"[STEP 2] Filtered: {len(df)} -> {len(filtered_df)} supporting studies")
         elif retrieve_studies and not context_entities:
             # FALLBACK: AI said to retrieve studies but didn't extract entities
-            # Extract potential entities from user query using simple heuristics
+            # Extract potential entities from user query using simple heuristics + abbreviation expansion
             print(f"[STEP 2] FALLBACK: AI requested studies but no entities extracted")
             print(f"[STEP 2] Attempting entity extraction from query: '{user_query}'")
 
+            # First, expand common drug abbreviations
+            abbreviation_map = {
+                r'\bEV\b': 'enfortumab vedotin',
+                r'\bEV\+P\b': 'enfortumab vedotin pembrolizumab',
+                r'\bP\b(?=\s|$)': 'pembrolizumab',  # P at end of word
+                r'\bpembro\b': 'pembrolizumab',
+                r'\bnivo\b': 'nivolumab',
+                r'\batezo\b': 'atezolizumab',
+                r'\bdurva\b': 'durvalumab',
+                r'\bavelumab\b': 'avelumab',
+                r'\bbavencio\b': 'avelumab',
+            }
+
+            query_expanded = user_query
+            entities_from_abbreviations = []
+            for abbrev_pattern, full_name in abbreviation_map.items():
+                if re.search(abbrev_pattern, query_expanded, re.IGNORECASE):
+                    entities_from_abbreviations.append(full_name)
+                    query_expanded = re.sub(abbrev_pattern, full_name, query_expanded, flags=re.IGNORECASE)
+
+            print(f"[STEP 2] FALLBACK: Expanded abbreviations: {entities_from_abbreviations}")
+
             # Remove question words and common patterns
-            query_clean = re.sub(r'\b(what|is|the|a|an|about|tell me|show me|find|who|where|when|how)\b', '', user_query, flags=re.IGNORECASE)
+            query_clean = re.sub(r'\b(what|is|the|a|an|about|tell me|show me|find|who|where|when|how|if|given|do|you|think|would|could|should)\b', '', query_expanded, flags=re.IGNORECASE)
             query_clean = query_clean.strip(' ?.,')
 
-            # Extract potential drug names (capitalized words, words ending in -mab/-nib/-tinib/-vedotin/-zumab)
-            drug_pattern = r'\b([A-Z][a-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|ciclib|alisib))\b|\b([A-Z][a-z]{4,})\b'
-            potential_drugs = re.findall(drug_pattern, query_clean)
-            potential_drugs = [d for group in potential_drugs for d in group if d]
+            # Extract potential drug names (words ending in -mab/-nib/-tinib/-vedotin/-zumab)
+            drug_pattern = r'\b([A-Za-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|ciclib|alisib|govitecan|deruxtecan))\b'
+            potential_drugs = re.findall(drug_pattern, query_clean, re.IGNORECASE)
 
-            if potential_drugs:
-                print(f"[STEP 2] FALLBACK: Extracted potential entities: {potential_drugs}")
-                entity_pattern = '|'.join([re.escape(e) for e in potential_drugs])
+            # Combine abbreviation expansions + extracted drugs
+            all_entities = list(set(entities_from_abbreviations + potential_drugs))
+
+            if all_entities:
+                print(f"[STEP 2] FALLBACK: Extracted entities: {all_entities}")
+                entity_pattern = '|'.join([re.escape(e) for e in all_entities])
                 filtered_df = df[
                     df['Title'].str.contains(entity_pattern, case=False, na=False, regex=True)
                 ]
