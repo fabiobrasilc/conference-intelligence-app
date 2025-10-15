@@ -120,6 +120,31 @@ def handle_chat_query(
                 df['Title'].str.contains(entity_pattern, case=False, na=False, regex=True)
             ]
             print(f"[STEP 2] Filtered: {len(df)} -> {len(filtered_df)} supporting studies")
+        elif retrieve_studies and not context_entities:
+            # FALLBACK: AI said to retrieve studies but didn't extract entities
+            # Extract potential entities from user query using simple heuristics
+            print(f"[STEP 2] FALLBACK: AI requested studies but no entities extracted")
+            print(f"[STEP 2] Attempting entity extraction from query: '{user_query}'")
+
+            # Remove question words and common patterns
+            query_clean = re.sub(r'\b(what|is|the|a|an|about|tell me|show me|find|who|where|when|how)\b', '', user_query, flags=re.IGNORECASE)
+            query_clean = query_clean.strip(' ?.,')
+
+            # Extract potential drug names (capitalized words, words ending in -mab/-nib/-tinib/-vedotin/-zumab)
+            drug_pattern = r'\b([A-Z][a-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|ciclib|alisib))\b|\b([A-Z][a-z]{4,})\b'
+            potential_drugs = re.findall(drug_pattern, query_clean)
+            potential_drugs = [d for group in potential_drugs for d in group if d]
+
+            if potential_drugs:
+                print(f"[STEP 2] FALLBACK: Extracted potential entities: {potential_drugs}")
+                entity_pattern = '|'.join([re.escape(e) for e in potential_drugs])
+                filtered_df = df[
+                    df['Title'].str.contains(entity_pattern, case=False, na=False, regex=True)
+                ]
+                print(f"[STEP 2] FALLBACK: Filtered: {len(df)} -> {len(filtered_df)} supporting studies")
+            else:
+                print(f"[STEP 2] FALLBACK: Could not extract entities - returning empty dataset")
+                filtered_df = pd.DataFrame()
         else:
             # No study filtering needed - AI will answer from knowledge
             filtered_df = pd.DataFrame()
@@ -309,8 +334,20 @@ CRITICAL: If the user asks a question that requires EXPLANATION, COMPARISON, or 
 - Market/strategy questions: "How could X gain market share?", "What's the competitive landscape for X?"
 - Background questions: "Tell me about X", "What is X used for?"
 Then return: {{"response_type": "conceptual_query", "topic": "brief description of what they're asking about", "context_entities": ["entity1", "entity2"], "retrieve_supporting_studies": true/false}}
-- Set "retrieve_supporting_studies" to TRUE if studies would add value (e.g., "How could retifanlimab compete?" → get retifanlimab studies)
-- Set to FALSE if it's pure knowledge question (e.g., "What's the difference between PD-1 and PD-L1?")
+
+**IMPORTANT ENTITY EXTRACTION RULE**:
+If the query mentions ANY specific entity (drug, biomarker, pathway, institution, person):
+- Set "retrieve_supporting_studies" to TRUE (default for entity queries)
+- Populate "context_entities" with the entity name AND common variants/abbreviations
+- Examples:
+  * "What is zelenectide vedotin?" → context_entities: ["zelenectide vedotin", "zelenectide", "vedotin"]
+  * "Tell me about METex14" → context_entities: ["METex14", "MET exon 14", "MET exon 14 skipping"]
+  * "What's tepotinib?" → context_entities: ["tepotinib"]
+  * "Who is presenting on avelumab?" → context_entities: ["avelumab", "bavencio"]
+
+Only set "retrieve_supporting_studies" to FALSE for pure mechanism questions with NO specific entities:
+- "What is the difference between PD-1 and PD-L1?" (class comparison, not specific drug)
+- "How do checkpoint inhibitors work?" (mechanism category, not specific drug)
 
 **Option 4 - New Data Query** - Apply DECISION PRIORITY:
 
@@ -360,7 +397,12 @@ Follow-up (referring to previous studies):
 Conceptual/Knowledge Questions (answer with medical knowledge, optionally use studies as evidence):
 "What is the difference between PD-1 and PD-L1 inhibitors?" → {{"response_type": "conceptual_query", "topic": "Mechanism difference between PD-1 vs PD-L1 checkpoint inhibitors", "context_entities": [], "retrieve_supporting_studies": false}}
 "How could retifanlimab gain market share in MCC?" → {{"response_type": "conceptual_query", "topic": "Market positioning strategy for retifanlimab in Merkel cell carcinoma", "context_entities": ["retifanlimab", "avelumab"], "retrieve_supporting_studies": true}}
-"Tell me about tepotinib's mechanism of action" → {{"response_type": "conceptual_query", "topic": "Tepotinib MET inhibitor mechanism", "context_entities": ["tepotinib"], "retrieve_supporting_studies": false}}
+
+Drug/Entity Information Queries (ALWAYS retrieve studies AND extract entity variants):
+"What is zelenectide vedotin?" → {{"response_type": "conceptual_query", "topic": "Zelenectide vedotin ADC drug information", "context_entities": ["zelenectide vedotin", "zelenectide", "vedotin"], "retrieve_supporting_studies": true}}
+"Tell me about tepotinib" → {{"response_type": "conceptual_query", "topic": "Tepotinib MET inhibitor", "context_entities": ["tepotinib", "tepmetko"], "retrieve_supporting_studies": true}}
+"What is METex14?" → {{"response_type": "conceptual_query", "topic": "MET exon 14 skipping mutation in NSCLC", "context_entities": ["METex14", "MET exon 14", "MET exon 14 skipping"], "retrieve_supporting_studies": true}}
+"Who is presenting on avelumab?" → {{"response_type": "conceptual_query", "topic": "Avelumab presenters at ESMO", "context_entities": ["avelumab", "bavencio"], "retrieve_supporting_studies": true}}
 
 Drug abbreviation expansion (NEW search):
 "EV + P studies" → {{"response_type": "search", "drugs": ["enfortumab vedotin", "pembrolizumab"], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
@@ -756,22 +798,29 @@ Your role changes based on what the user is asking:
 
     # Build user message - conditional based on query type
     if query_intent == 'conceptual_query':
-        # Conceptual query - minimal framing, let AI answer naturally
+        # Conceptual query - emphasize conference intelligence when studies found
         if len(filtered_df) > 0:
             user_message = f"""**User Question:** {user_query}
 
-**Supporting Context:** {len(filtered_df)} related studies are available as supporting evidence (if relevant to your answer).
+**Conference Intelligence Context:** I found {len(filtered_df)} ESMO 2025 studies related to this topic.
 {data_notice}
+
+**IMPORTANT RESPONSE STRUCTURE:**
+1. Start by answering the user's question directly (definition, mechanism, background, comparison)
+2. Then transition naturally: "At ESMO 2025, there are {len(filtered_df)} studies on this topic:" or "Relevant conference data from ESMO 2025:"
+3. Highlight 1-3 key studies with Identifiers and main findings
+4. Provide strategic context if relevant to EMD portfolio
+5. Note: A table of all {len(filtered_df)} studies will be displayed above your response
 
 **Studies Available (JSON format with {len(available_cols)} fields: {', '.join(available_cols)}):**
 {dataset_json}
 
-Answer the user's question directly using your medical knowledge. Use the studies above as supporting evidence only if they add value."""
+Answer the user's question using BOTH your medical knowledge AND the conference studies above. Always cite study Identifiers when referencing data. Make it clear this is a conference intelligence platform, not just a knowledge base."""
         else:
             # No studies - pure knowledge answer
             user_message = f"""**User Question:** {user_query}
 
-Answer the user's question directly using your medical and pharmaceutical knowledge. No conference studies were filtered for this conceptual question."""
+Answer the user's question directly using your medical and pharmaceutical knowledge. No conference studies were found for this topic at ESMO 2025."""
 
     else:
         # Retrieval/search query - show filtering results
