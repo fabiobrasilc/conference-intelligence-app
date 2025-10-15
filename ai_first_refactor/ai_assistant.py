@@ -74,14 +74,53 @@ def handle_chat_query(
     # Check response type
     response_type = interpretation.get('response_type')
 
-    # SIMPLIFICATION: Treat all followups as fresh searches
-    # The previous followup logic was causing unrelated queries to share studies
+    # SIMPLIFICATION: Treat all followups as fresh searches EXCEPT for simple confirmations
     if response_type == 'followup':
-        print(f"[FOLLOWUP] Detected, but treating as fresh search to avoid mixing unrelated topics")
-        print(f"[FOLLOWUP] Re-calling AI to extract proper search keywords...")
-        # Force a fresh extraction as a search/conceptual query
-        interpretation = extract_search_keywords_from_ai(user_query, len(df), active_filters, [])  # Pass empty list to force fresh extraction
-        response_type = interpretation.get('response_type')
+        # Special case: User saying "Yes" to a previous suggestion
+        if user_query.strip().lower() in ['yes', 'yes please', 'yeah', 'yep', 'sure', 'ok', 'okay']:
+            print(f"[FOLLOWUP] User confirmed with '{user_query}' - extracting keywords from previous context")
+            # Get the context_query which contains what the user is confirming
+            context_query = interpretation.get('context_query', '')
+
+            # If context mentions broadening search with specific keywords, extract them
+            if 'broaden' in context_query.lower() or 'keywords' in context_query.lower():
+                # Extract keywords from the context_query
+                # Example: "Broaden search to keywords: burnout, wellbeing, workforce, clinician mental health"
+                keyword_match = re.search(r'keywords?:\s*([^)]+)', context_query, re.IGNORECASE)
+                if keyword_match:
+                    keywords_text = keyword_match.group(1)
+                    # Split by commas and clean up
+                    search_terms = [k.strip(' "\'') for k in keywords_text.split(',')]
+                    print(f"[FOLLOWUP] Extracted search terms from context: {search_terms}")
+
+                    # Override interpretation to be a search with these terms
+                    interpretation = {
+                        'response_type': 'search',
+                        'drugs': [],
+                        'drug_classes': [],
+                        'therapeutic_areas': [],
+                        'institutions': [],
+                        'dates': [],
+                        'speakers': [],
+                        'search_terms': search_terms
+                    }
+                    response_type = 'search'
+                else:
+                    # No keywords found, treat as fresh search
+                    print(f"[FOLLOWUP] No keywords found in context, treating as fresh search")
+                    interpretation = extract_search_keywords_from_ai(user_query, len(df), active_filters, [])
+                    response_type = interpretation.get('response_type')
+            else:
+                # Not a broadening confirmation, treat as fresh search
+                print(f"[FOLLOWUP] Not a broadening confirmation, treating as fresh search")
+                interpretation = extract_search_keywords_from_ai(user_query, len(df), active_filters, [])
+                response_type = interpretation.get('response_type')
+        else:
+            # Not a simple confirmation, treat as fresh search to avoid mixing unrelated topics
+            print(f"[FOLLOWUP] Detected, but treating as fresh search to avoid mixing unrelated topics")
+            print(f"[FOLLOWUP] Re-calling AI to extract proper search keywords...")
+            interpretation = extract_search_keywords_from_ai(user_query, len(df), active_filters, [])
+            response_type = interpretation.get('response_type')
 
     # Handle greeting
     if response_type == 'greeting':
