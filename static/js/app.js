@@ -1209,6 +1209,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Handle entity table (HTML already formatted) - insert INSIDE message bubble
                 contentDiv.insertAdjacentHTML('beforeend', parsed.table);
 
+                // Remove spinner when table arrives (not just when text arrives)
+                const spinnerDiv = document.getElementById(responseId + '-spinner');
+                if (spinnerDiv) {
+                  spinnerDiv.remove();
+                }
+
                 // Create a text div for the AI response AFTER the table
                 if (!document.getElementById(responseId + '-text')) {
                   contentDiv.insertAdjacentHTML('beforeend', '<div id="' + responseId + '-text" class="mt-3"></div>');
@@ -2006,3 +2012,19 @@ document.addEventListener('DOMContentLoaded', function() {
   updateJumpToBottomButton();
 
 });
+
+// ===== Global Toggle Function for Supporting Studies Tables =====
+// This function is called by the collapsible table buttons generated in app.py
+window.toggleSupportingTable = function(id) {
+  const table = document.getElementById('table-' + id);
+  const icon = document.getElementById('toggle-icon-' + id);
+  if (table && icon) {
+    if (table.style.display === 'none') {
+      table.style.display = 'block';
+      icon.textContent = '▲';
+    } else {
+      table.style.display = 'none';
+      icon.textContent = '▼';
+    }
+  }
+};

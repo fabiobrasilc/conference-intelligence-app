@@ -4583,7 +4583,7 @@ def stream_chat_ai_first():
 
                 # Format table as collapsible HTML for frontend
                 table_html = f"""<div class='entity-table-container collapsible-table' style='margin-top: 1rem;'>
-<button class='toggle-table-btn' onclick='toggleTable("{table_id}")' style='
+<button class='toggle-table-btn' onclick='window.toggleSupportingTable("{table_id}")' style='
     background: #f0f0f0;
     border: 1px solid #ddd;
     padding: 0.5rem 1rem;
@@ -4602,20 +4602,7 @@ def stream_chat_ai_first():
 <div id='table-{table_id}' style='display: none; margin-top: 0.5rem;'>
 {dataframe_to_custom_html(table_df_display)}
 </div>
-</div>
-<script>
-function toggleTable(id) {{
-    const table = document.getElementById('table-' + id);
-    const icon = document.getElementById('toggle-icon-' + id);
-    if (table.style.display === 'none') {{
-        table.style.display = 'block';
-        icon.textContent = '▲';
-    }} else {{
-        table.style.display = 'none';
-        icon.textContent = '▼';
-    }}
-}}
-</script>"""
+</div>"""
                 yield "data: " + json.dumps({"table": table_html}) + "\n\n"
                 print(f"[AI-FIRST] Sent collapsible table with {len(table_df_display)} rows after AI response")
 

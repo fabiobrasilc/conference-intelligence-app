@@ -512,6 +512,11 @@ body.ai-tab-active .quick-intel-sidebar:not(.collapsed) ~ .main-content {
   white-space: nowrap;
 }
 
+/* Data Warning Modal - Custom Width (20% wider than default modal-lg) */
+#dataWarningModal .modal-dialog {
+  max-width: 960px; /* 20% wider than Bootstrap's default modal-lg (800px) */
+}
+
 /* Utility Classes */
 .text-purple {
   color: var(--brand) !important;
