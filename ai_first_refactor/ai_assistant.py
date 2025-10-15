@@ -544,7 +544,7 @@ Now interpret the user query above. Return ONLY valid JSON."""
             input=combined_prompt,  # Single string, not array of messages
             reasoning={"effort": "medium"},  # MEDIUM: Balanced - keyword extraction doesn't need high reasoning
             text={"verbosity": "low"},  # LOW: Output is just JSON keywords
-            max_output_tokens=1000
+            max_output_tokens=4000
         )
 
         # Check response status and error
