@@ -253,15 +253,29 @@ EMD_PORTFOLIO = {
 # ============================================================================
 
 # PubMed queries for recent clinical trials (per therapeutic area)
+# Note: Some TAs have multiple queries (e.g., H&N has locally advanced + metastatic)
 PUBMED_QUERIES = {
-    "Lung Cancer": '("MET"[title] AND nsclc) OR tepotinib[title]',
-    # Other TAs will be added as user provides queries
-    "Bladder Cancer": None,
-    "Colorectal Cancer": None,
-    "Head and Neck Cancer": None,
-    "Renal Cancer": None,
-    "TGCT": None,
-    "Merkel Cell": None
+    "Lung Cancer": ['("MET"[title] AND nsclc) OR tepotinib[title]'],
+    "Bladder Cancer": ['(metastatic urothelial[title] OR advanced urothelial[title])'],
+    "Colorectal Cancer": ['metastatic colorectal cancer[Title] AND (KRAS[TITLE] OR NRAS[TITLE]) AND WILD TYPE[TITLE]'],
+    "Head and Neck Cancer": [
+        'locally advanced squamous cell carcinoma[Title] AND neck[title]',
+        'metastatic squamous cell carcinoma[Title] AND neck[title]'
+    ],
+    "Renal Cancer": ['metastatic renal cell carcinoma[title] OR advanced renal cell carcinoma[title]'],
+    "TGCT": ['tenosynovial giant cell tum*[title] AND phase[title]'],
+    "Merkel Cell": ['merkel cell[title]']
+}
+
+# Max results per TA per query (some TAs need more trials for comprehensive context)
+PUBMED_MAX_RESULTS = {
+    "Lung Cancer": 20,
+    "Bladder Cancer": 28,
+    "Colorectal Cancer": 20,
+    "Head and Neck Cancer": 20,  # 20 per query (40 total)
+    "Renal Cancer": 25,
+    "TGCT": 11,  # All available results for this rare disease
+    "Merkel Cell": 20
 }
 
 
@@ -272,9 +286,11 @@ def fetch_pubmed_trials(ta: str, max_results: int = 20) -> List[Dict[str, Any]]:
     Uses Biopython Entrez to query PubMed with TA-specific search terms,
     filtering for Clinical Trial or Clinical Study publication types.
 
+    Supports multiple queries per TA (e.g., H&N has locally advanced + metastatic).
+
     Args:
         ta: Therapeutic area name
-        max_results: Maximum number of trials to fetch (default 20)
+        max_results: Maximum number of trials to fetch per query (default 20)
 
     Returns:
         List of dicts with keys: pmid, title, abstract, year, authors
@@ -286,91 +302,120 @@ def fetch_pubmed_trials(ta: str, max_results: int = 20) -> List[Dict[str, Any]]:
     Entrez.email = "m337928@merckgroup.com"
     Entrez.api_key = "a67284fcad76aef86e7e6281b44e59224508"  # Allows 10 requests/second
 
-    # Get TA-specific query
-    query = PUBMED_QUERIES.get(ta)
-    if not query:
+    # Get TA-specific queries (may be list of multiple queries)
+    queries = PUBMED_QUERIES.get(ta)
+    if not queries:
         print(f"[PUBMED] No query defined for {ta} - skipping")
         return []
 
+    all_trials = []
+    all_pmids_seen = set()  # Track PMIDs to avoid duplicates across queries
+
     try:
         print(f"[PUBMED] Fetching recent trials for {ta}...")
-        print(f"[PUBMED] Query: {query}")
 
-        # Search PubMed
-        search_handle = Entrez.esearch(
-            db="pubmed",
-            term=f"{query} AND (Clinical Trial[ptyp] OR Clinical Study[ptyp])",
-            retmax=max_results,
-            sort="date",  # Most recent first
-            retmode="xml"
-        )
-        search_results = Entrez.read(search_handle)
-        search_handle.close()
+        # Process each query
+        for query_idx, query in enumerate(queries, 1):
+            if len(queries) > 1:
+                print(f"[PUBMED] Query {query_idx}/{len(queries)}: {query}")
+            else:
+                print(f"[PUBMED] Query: {query}")
 
-        pmids = search_results.get("IdList", [])
-        if not pmids:
-            print(f"[PUBMED] No trials found for {ta}")
-            return []
+            # For TGCT, use query without additional filters (as requested)
+            # For other TAs, apply Clinical Trial/Study filters
+            if ta == "TGCT":
+                search_term = query
+            else:
+                search_term = f"{query} AND (Clinical Trial[ptyp] OR Clinical Study[ptyp])"
 
-        print(f"[PUBMED] Found {len(pmids)} trials, fetching details...")
+            # Search PubMed
+            search_handle = Entrez.esearch(
+                db="pubmed",
+                term=search_term,
+                retmax=max_results,
+                sort="date",  # Most recent first
+                retmode="xml"
+            )
+            search_results = Entrez.read(search_handle)
+            search_handle.close()
 
-        # Fetch full records
-        fetch_handle = Entrez.efetch(
-            db="pubmed",
-            id=pmids,
-            rettype="medline",
-            retmode="xml"
-        )
-        records = Entrez.read(fetch_handle)
-        fetch_handle.close()
-
-        trials = []
-        for article in records.get("PubmedArticle", []):
-            try:
-                medline = article.get("MedlineCitation", {})
-                article_data = medline.get("Article", {})
-
-                pmid = str(medline.get("PMID", ""))
-                title = article_data.get("ArticleTitle", "")
-
-                # Get abstract (may be structured or plain text)
-                abstract_data = article_data.get("Abstract", {})
-                abstract_texts = abstract_data.get("AbstractText", [])
-                if isinstance(abstract_texts, list):
-                    abstract = " ".join([str(txt) for txt in abstract_texts])
-                else:
-                    abstract = str(abstract_texts)
-
-                # Get year
-                pub_date = article_data.get("Journal", {}).get("JournalIssue", {}).get("PubDate", {})
-                year = pub_date.get("Year", "")
-
-                # Get authors
-                author_list = article_data.get("AuthorList", [])
-                authors = []
-                for author in author_list[:3]:  # First 3 authors
-                    last = author.get("LastName", "")
-                    init = author.get("Initials", "")
-                    if last:
-                        authors.append(f"{last} {init}".strip())
-                authors_str = ", ".join(authors)
-                if len(author_list) > 3:
-                    authors_str += " et al."
-
-                trials.append({
-                    "pmid": pmid,
-                    "title": title,
-                    "abstract": abstract,
-                    "year": year,
-                    "authors": authors_str
-                })
-
-            except Exception as e:
-                print(f"[PUBMED] Error parsing article: {e}")
+            pmids = search_results.get("IdList", [])
+            if not pmids:
+                print(f"[PUBMED] No trials found for query {query_idx}")
                 continue
 
-        print(f"[PUBMED] Successfully fetched {len(trials)} trial records")
-        return trials
+            # Filter out PMIDs we've already seen
+            new_pmids = [pmid for pmid in pmids if pmid not in all_pmids_seen]
+            if len(queries) > 1:
+                print(f"[PUBMED] Query {query_idx}: Found {len(pmids)} trials ({len(new_pmids)} new), fetching details...")
+            else:
+                print(f"[PUBMED] Found {len(pmids)} trials, fetching details...")
+
+            if not new_pmids:
+                continue
+
+            # Fetch full records
+            fetch_handle = Entrez.efetch(
+                db="pubmed",
+                id=new_pmids,
+                rettype="medline",
+                retmode="xml"
+            )
+            records = Entrez.read(fetch_handle)
+            fetch_handle.close()
+
+            for article in records.get("PubmedArticle", []):
+                try:
+                    medline = article.get("MedlineCitation", {})
+                    article_data = medline.get("Article", {})
+
+                    pmid = str(medline.get("PMID", ""))
+
+                    # Skip if we've already processed this PMID
+                    if pmid in all_pmids_seen:
+                        continue
+                    all_pmids_seen.add(pmid)
+
+                    title = article_data.get("ArticleTitle", "")
+
+                    # Get abstract (may be structured or plain text)
+                    abstract_data = article_data.get("Abstract", {})
+                    abstract_texts = abstract_data.get("AbstractText", [])
+                    if isinstance(abstract_texts, list):
+                        abstract = " ".join([str(txt) for txt in abstract_texts])
+                    else:
+                        abstract = str(abstract_texts)
+
+                    # Get year
+                    pub_date = article_data.get("Journal", {}).get("JournalIssue", {}).get("PubDate", {})
+                    year = pub_date.get("Year", "")
+
+                    # Get authors
+                    author_list = article_data.get("AuthorList", [])
+                    authors = []
+                    for author in author_list[:3]:  # First 3 authors
+                        last = author.get("LastName", "")
+                        init = author.get("Initials", "")
+                        if last:
+                            authors.append(f"{last} {init}".strip())
+                    authors_str = ", ".join(authors)
+                    if len(author_list) > 3:
+                        authors_str += " et al."
+
+                    all_trials.append({
+                        "pmid": pmid,
+                        "title": title,
+                        "abstract": abstract,
+                        "year": year,
+                        "authors": authors_str
+                    })
+
+                except Exception as e:
+                    print(f"[PUBMED] Error parsing article: {e}")
+                    continue
+
+        print(f"[PUBMED] Successfully fetched {len(all_trials)} unique trial records across {len(queries)} query(ies)")
+        return all_trials
 
     except Exception as e:
         print(f"[PUBMED] API error: {e}")
@@ -449,23 +494,25 @@ Recent trials:
         return fallback
 
 
-def get_pubmed_context_for_ta(ta: str, max_trials: int = 20) -> str:
+def get_pubmed_context_for_ta(ta: str) -> str:
     """
     Get PubMed trial context for a therapeutic area (fetches + summarizes).
 
     This is the main entry point for PubMed integration. It:
-    1. Fetches recent trials from PubMed
+    1. Fetches recent trials from PubMed using TA-specific max_results
     2. Summarizes them using AI
     3. Returns formatted context for inclusion in journalist prompt
 
     Args:
         ta: Therapeutic area name
-        max_trials: Maximum trials to fetch (default 20)
 
     Returns:
         Formatted string ready to inject into strategic prompt.
         Returns empty string if no query defined or if fetch/summarize fails.
     """
+    # Get TA-specific max results
+    max_trials = PUBMED_MAX_RESULTS.get(ta, 20)
+
     trials = fetch_pubmed_trials(ta, max_trials)
     if not trials:
         return ""
@@ -2006,7 +2053,7 @@ When making recommendations:
 
 ---
 
-{get_pubmed_context_for_ta(ta, max_trials=20)}
+{get_pubmed_context_for_ta(ta)}
 
 ---
 
