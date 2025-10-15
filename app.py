@@ -1196,8 +1196,8 @@ Focus ONLY on EMD drug relevant to the selected TA:
 3. How these trends impact EMD drug positioning in this TA""",
         "required_tables": ["biomarker_moa_hits"]
     },
-    "strategy": {
-        "button_label": "Strategic Recommendations",
+    "strategic": {
+        "button_label": "Strategic Briefing",
         "ai_prompt": """You are EMD Serono's medical affairs strategic intelligence analyst. Provide strategic analysis for ESMO 2025 focused on competitive positioning, key threats, and strategic opportunities within the selected therapeutic area.
 
 **CRITICAL INSTRUCTIONS**:
