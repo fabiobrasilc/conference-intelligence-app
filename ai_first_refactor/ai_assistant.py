@@ -132,54 +132,10 @@ def handle_chat_query(
             ]
             print(f"[STEP 2] Filtered: {len(df)} -> {len(filtered_df)} supporting studies")
         elif retrieve_studies and not context_entities:
-            # FALLBACK: AI said to retrieve studies but didn't extract entities
-            # Extract potential entities from user query using simple heuristics + abbreviation expansion
-            print(f"[STEP 2] FALLBACK: AI requested studies but no entities extracted")
-            print(f"[STEP 2] Attempting entity extraction from query: '{user_query}'")
-
-            # First, expand common drug abbreviations
-            abbreviation_map = {
-                r'\bEV\b': 'enfortumab vedotin',
-                r'\bEV\+P\b': 'enfortumab vedotin pembrolizumab',
-                r'\bP\b(?=\s|$)': 'pembrolizumab',  # P at end of word
-                r'\bpembro\b': 'pembrolizumab',
-                r'\bnivo\b': 'nivolumab',
-                r'\batezo\b': 'atezolizumab',
-                r'\bdurva\b': 'durvalumab',
-                r'\bavelumab\b': 'avelumab',
-                r'\bbavencio\b': 'avelumab',
-            }
-
-            query_expanded = user_query
-            entities_from_abbreviations = []
-            for abbrev_pattern, full_name in abbreviation_map.items():
-                if re.search(abbrev_pattern, query_expanded, re.IGNORECASE):
-                    entities_from_abbreviations.append(full_name)
-                    query_expanded = re.sub(abbrev_pattern, full_name, query_expanded, flags=re.IGNORECASE)
-
-            print(f"[STEP 2] FALLBACK: Expanded abbreviations: {entities_from_abbreviations}")
-
-            # Remove question words and common patterns
-            query_clean = re.sub(r'\b(what|is|the|a|an|about|tell me|show me|find|who|where|when|how|if|given|do|you|think|would|could|should)\b', '', query_expanded, flags=re.IGNORECASE)
-            query_clean = query_clean.strip(' ?.,')
-
-            # Extract potential drug names (words ending in -mab/-nib/-tinib/-vedotin/-zumab)
-            drug_pattern = r'\b([A-Za-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|ciclib|alisib|govitecan|deruxtecan))\b'
-            potential_drugs = re.findall(drug_pattern, query_clean, re.IGNORECASE)
-
-            # Combine abbreviation expansions + extracted drugs
-            all_entities = list(set(entities_from_abbreviations + potential_drugs))
-
-            if all_entities:
-                print(f"[STEP 2] FALLBACK: Extracted entities: {all_entities}")
-                entity_pattern = '|'.join([re.escape(e) for e in all_entities])
-                filtered_df = df[
-                    df['Title'].str.contains(entity_pattern, case=False, na=False, regex=True)
-                ]
-                print(f"[STEP 2] FALLBACK: Filtered: {len(df)} -> {len(filtered_df)} supporting studies")
-            else:
-                print(f"[STEP 2] FALLBACK: Could not extract entities - returning empty dataset")
-                filtered_df = pd.DataFrame()
+            # FALLBACK should rarely happen if AI prompt is working correctly
+            print(f"[STEP 2] FALLBACK: AI requested studies but didn't extract entities")
+            print(f"[STEP 2] This suggests AI prompt needs improvement - returning empty dataset")
+            filtered_df = pd.DataFrame()
         else:
             # No study filtering needed - AI will answer from knowledge
             filtered_df = pd.DataFrame()
@@ -448,7 +404,9 @@ Return: {{"response_type": "greeting", "message": "your friendly conversational 
 - Offer to help: "What would you like to know?"
 
 **Option 2 - Follow-Up Question** (referring to previous studies/data):
-CRITICAL: If the user's query refers to previous results using phrases like:
+⚠️ **CRITICAL PREREQUISITE:** ONLY use this option if CONVERSATION HISTORY EXISTS (shown above). If no history, skip to Option 3 or 4!
+
+If conversation history exists AND the user's query refers to previous results using phrases like:
 - "these studies", "those presentations", "the above data", "from that list"
 - "tell me more about them", "what do they mean", "how do they impact..."
 - "Yes" or "Yes, and..." (responding to a confirmation question)
