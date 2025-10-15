@@ -216,8 +216,86 @@ def handle_chat_query(
                     'response_stream': response_generator
                 }
             else:
-                print(f"[FOLLOWUP] No study identifiers found in previous response - falling back to full dataset")
-                # Fall through to normal search if no identifiers found
+                # No identifiers found - try entity extraction from follow-up context
+                print(f"[FOLLOWUP] No study identifiers found in previous response")
+                print(f"[FOLLOWUP] Attempting entity extraction from context query and user prompt")
+
+                # Combine context query + user query for entity extraction
+                combined_text = f"{context_query} {user_query}"
+
+                # Extract drug names using comprehensive pattern
+                drug_pattern = r'\b([A-Z][a-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|ciclib|alisib|govitecan|deruxtecan|tuximab))\b'
+                potential_drugs = re.findall(drug_pattern, combined_text)
+
+                # Also extract multi-word drug names (e.g., "enfortumab vedotin")
+                multi_word_pattern = r'\b([A-Z][a-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|govitecan|deruxtecan)\s+[a-z]+(?:mab|nib|tinib|vedotin|zumab|mumab|govitecan|deruxtecan))\b'
+                multi_word_drugs = re.findall(multi_word_pattern, combined_text, re.IGNORECASE)
+
+                # Extract biomarker names (e.g., "Nectin-4", "METex14", "HER2")
+                biomarker_pattern = r'\b((?:PD-L1|PD-1|HER2|HER3|EGFR|MET|ALK|ROS1|NTRK|KRAS|BRAF|RET|Nectin-4|Nectin4|TROP-2|TROP2|B7-H3|METex14))\b'
+                biomarkers = re.findall(biomarker_pattern, combined_text, re.IGNORECASE)
+
+                # Combine all entities
+                all_entities = list(set(potential_drugs + multi_word_drugs + biomarkers))
+
+                if all_entities:
+                    print(f"[FOLLOWUP] Extracted entities: {', '.join(all_entities)}")
+
+                    # Filter dataset by extracted entities
+                    entity_pattern = '|'.join([re.escape(e) for e in all_entities])
+                    filtered_df = df[
+                        df['Title'].str.contains(entity_pattern, case=False, na=False, regex=True)
+                    ]
+                    print(f"[FOLLOWUP] Entity extraction filtered: {len(df)} -> {len(filtered_df)} studies")
+
+                    # Safety check: If still > 300 studies, ask user to be more specific
+                    if len(filtered_df) > 300:
+                        print(f"[FOLLOWUP] Filtered dataset still too large ({len(filtered_df)} > 300) - asking user to clarify")
+
+                        def clarification_generator():
+                            yield f"I found {len(filtered_df)} studies that might be relevant to your follow-up question about {', '.join(all_entities[:3])}.\n\n"
+                            yield f"That's too many studies to analyze effectively (I can handle up to 300 studies at once to ensure quality analysis).\n\n"
+                            yield f"Could you please be more specific? For example:\n"
+                            yield f"- Focus on a specific drug or comparison\n"
+                            yield f"- Mention a specific study identifier (e.g., '1234P')\n"
+                            yield f"- Ask about a specific aspect (e.g., efficacy, safety, biomarkers)\n"
+
+                        return {
+                            'type': 'ai_response',
+                            'filtered_data': pd.DataFrame(),
+                            'response_stream': clarification_generator()
+                        }
+
+                    # Dataset is manageable - proceed with analysis
+                    print(f"[FOLLOWUP] Dataset size acceptable ({len(filtered_df)} ≤ 300) - proceeding with analysis")
+
+                    keywords = {
+                        'response_type': 'followup',
+                        'context_query': context_query,
+                        'extracted_entities': all_entities
+                    }
+
+                    print(f"\n[STEP 3] AI analyzing {len(filtered_df)} follow-up studies...")
+                    response_generator = analyze_filtered_results_with_ai(
+                        user_query=user_query,
+                        filtered_df=filtered_df,
+                        original_count=len(df),
+                        active_filters=active_filters,
+                        extracted_keywords=keywords,
+                        thinking_mode=thinking_mode,
+                        conversation_history=conversation_history,
+                        active_ta=active_ta,
+                        latest_report=latest_report
+                    )
+
+                    return {
+                        'type': 'ai_response',
+                        'filtered_data': filtered_df,
+                        'response_stream': response_generator
+                    }
+                else:
+                    print(f"[FOLLOWUP] Could not extract entities - falling back to full dataset")
+                    # Fall through to normal search if no entities extracted
 
     # Data query - extract keywords from interpretation
     keywords = interpretation
