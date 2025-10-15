@@ -180,7 +180,6 @@ def handle_chat_query(
         if conversation_history:
             last_response = conversation_history[-1].get('assistant', '')
             # Find all study identifiers (pattern: digits followed by P, like "1234P")
-            import re
             identifier_pattern = r'\b(\d+P)\b'
             identifiers = list(set(re.findall(identifier_pattern, last_response)))
 
