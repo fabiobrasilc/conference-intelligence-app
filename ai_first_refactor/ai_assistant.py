@@ -59,14 +59,22 @@ def handle_chat_query(
     keywords = extract_simple_keywords(user_query, len(df), active_filters, conversation_history)
 
     print(f"[STEP 1] Extracted keywords:")
+    has_keywords = False
     for key, values in keywords.items():
         if values:
             print(f"  {key}: {values}")
+            has_keywords = True
 
-    # STEP 2: Filter DataFrame using keywords
-    print(f"\n[STEP 2] Filtering dataset...")
-    filtered_df = filter_dataframe_with_keywords(df, keywords)
-    print(f"[STEP 2] Filtered: {len(df)} -> {len(filtered_df)} studies")
+    # Check if AI returned empty keywords (greeting, off-topic, or conceptual question with no entities)
+    if not has_keywords:
+        print(f"[STEP 1] No search keywords extracted - query is greeting/off-topic/conceptual")
+        print(f"[STEP 2] Skipping filtering - will respond without studies")
+        filtered_df = pd.DataFrame()  # Empty DataFrame - no studies to analyze
+    else:
+        # STEP 2: Filter DataFrame using keywords
+        print(f"\n[STEP 2] Filtering dataset...")
+        filtered_df = filter_dataframe_with_keywords(df, keywords)
+        print(f"[STEP 2] Filtered: {len(df)} -> {len(filtered_df)} studies")
 
     # STEP 3: AI analyzes filtered results (handles greetings, confirmations, strategic questions naturally)
     print(f"\n[STEP 3] AI analyzing {len(filtered_df)} filtered studies...")
@@ -509,7 +517,7 @@ def analyze_filtered_results_with_ai(
         verbosity = "low"
         print(f"[THINKING MODE] Standard - low reasoning, low verbosity")
 
-    # Format filtered data - ALWAYS include abstracts if available
+    # Format filtered data - ALWAYS include abstracts if available (empty DataFrame is fine - AI will handle naturally)
     essential_cols = ['Identifier', 'Title', 'Speakers', 'Affiliation', 'Date', 'Time', 'Session', 'Theme']
 
     # Check if Abstract column exists in the DataFrame
@@ -523,7 +531,7 @@ def analyze_filtered_results_with_ai(
 
     available_cols = [col for col in essential_cols if col in filtered_df.columns]
     print(f"[DATA COLUMNS] Sending to AI: {', '.join(available_cols)}")
-    dataset_json = filtered_df[available_cols].to_json(orient='records', indent=2)
+    dataset_json = filtered_df[available_cols].to_json(orient='records', indent=2) if len(filtered_df) > 0 else "[]"
 
     # Build interpretation summary for transparency
     interpretation_parts = []
