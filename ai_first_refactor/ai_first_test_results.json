@@ -1,0 +1,81 @@
+{
+  "timestamp": "2025-10-08 01:46:13",
+  "endpoint": "http://127.0.0.1:5001/api/chat/ai-first",
+  "total_tests": 10,
+  "passed": 5,
+  "failed": 5,
+  "results": [
+    {
+      "query": "What is pembrolizumab?",
+      "passed": false,
+      "issues": [
+        "Expected table but got none",
+        "Missing keywords: pembrolizumab, keytruda, pd-1, checkpoint"
+      ]
+    },
+    {
+      "query": "Show me ADC studies in breast cancer",
+      "passed": false,
+      "issues": [
+        "Expected table but got none",
+        "Missing keywords: adc, antibody, breast",
+        "AI didn't explain ADC = antibody-drug conjugate"
+      ]
+    },
+    {
+      "query": "EV + P data updates",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "query": "What's MD Anderson presenting?",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "query": "Sessions on 10/19",
+      "passed": false,
+      "issues": [
+        "Expected table but got none",
+        "Missing keywords: 10/19, october"
+      ]
+    },
+    {
+      "query": "Pembrolizumab studies at MD Anderson",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "query": "Top 20 most active authors",
+      "passed": true,
+      "issues": [
+        "Unexpected table with 123 rows",
+        "Missing keywords: presenter"
+      ]
+    },
+    {
+      "query": "Bladder cancer immunotherapy combinations",
+      "passed": false,
+      "issues": [
+        "Expected table but got none",
+        "Missing keywords: bladder, immunotherapy, bavencio"
+      ]
+    },
+    {
+      "query": "What are your capabilities?",
+      "passed": true,
+      "issues": [
+        "Unexpected table with 35 rows",
+        "Missing keywords: capabilities, help, can do"
+      ]
+    },
+    {
+      "query": "gleecotamab gonetecan",
+      "passed": false,
+      "issues": [
+        "Expected table but got none",
+        "Missing keywords: gleecotamab, adc, antibody"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+"indication": {
+"drug": "Avelumab (Bavencio)",
+"disease": "Metastatic/Advanced Urothelial Carcinoma",
+"line": "First-line",
+"setting": "After platinum chemotherapy without progression",
+"last_updated": "2025-01-17",
+"updated_by": "EMD Serono Competitive Intelligence Tool"
+},
+"direct_competitors": [
+{
+"drug": "Enfortumab vedotin + Pembrolizumab",
+"line_of_therapy": "1L",
+"company": "Astellas/Seagen/Merck",
+"moa": "Nectin-4 ADC + PD-1 inhibitor",
+"trials": "EV-302/KEYNOTE-A39 (median OS 34 months vs 16.1 months for chemo)",
+"threat_level": "HIGH",
+"rationale": "New 1L standard of care with unprecedented survival benefit, FDA approved Dec 2023",
+"keywords": ["enfortumab", "vedotin", "padcev", "pembrolizumab", "keytruda", "pembro", "EV-302", "EV302", "EV 302", "KEYNOTE-A39", "KEYNOTE A39", "A39", "EV+P", "EV+pembro", "EV-P", "EVP", "UNITE", "EV-103", "EV103", "KEYNOTE-905"]
+},
+{
+"drug": "Durvalumab + chemotherapy (perioperative)",
+"line_of_therapy": "1L",
+"company": "AstraZeneca",
+"moa": "PD-L1 inhibitor + chemotherapy",
+"trials": "NIAGARA (EFS HR 0.68, OS HR 0.75)",
+"threat_level": "MEDIUM",
+"rationale": "Perioperative approach for cisplatin-eligible MIBC patients, FDA PDUFA Q2 2025",
+"keywords": ["durvalumab", "imfinzi", "NIAGARA", "perioperative", "neoadjuvant"]
+},
+{
+"drug": "Nivolumab + gemcitabine-cisplatin",
+"line_of_therapy": "1L",
+"company": "Bristol Myers Squibb",
+"moa": "PD-1 inhibitor + chemotherapy",
+"trials": "CheckMate-901 (OS HR 0.78 vs chemo)",
+"threat_level": "MEDIUM",
+"rationale": "Alternative 1L option for cisplatin-eligible patients, less effective than EV+P",
+"keywords": ["nivolumab", "opdivo", "CheckMate-901", "gemcitabine", "cisplatin"]
+}
+],
+"key_biomarkers": [
+{
+"biomarker": "PD-L1 expression",
+"clinical_utility": "Historical predictor of ICI response, less relevant with current combinations",
+"prevalence": "~50% in urothelial cancer",
+"keywords": ["PD-L1", "CPS", "combined positive score", "tumor proportion score"]
+},
+{
+"biomarker": "FGFR3/2 alterations",
+"clinical_utility": "Predictor for erdafitinib response",
+"prevalence": "20% overall, 36% in upper tract",
+"keywords": ["FGFR3", "FGFR2", "mutations", "fusions", "alterations"]
+},
+{
+"biomarker": "Nectin-4 expression",
+"clinical_utility": "Target for enfortumab vedotin, ubiquitously expressed",
+"prevalence": ">90%",
+"keywords": ["nectin-4", "nectin", "PVRL4", "enfortumab target"]
+}
+]

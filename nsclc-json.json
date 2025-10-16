@@ -1,0 +1,168 @@
+{
+"indication": {
+"drug": "Tepotinib (Tepmetko)",
+"disease": "Metastatic Non-Small Cell Lung Cancer",
+"line": "Any line",
+"setting": "MET exon 14 skipping mutations (~3% of NSCLC)",
+"last_updated": "2025-01-17",
+"updated_by": "EMD Serono Competitive Intelligence Tool"
+},
+"direct_competitors": [
+{
+"drug": "Capmatinib",
+"company": "Novartis",
+"moa": "Type Ib MET TKI",
+"trials": "GEOMETRY mono-1 (ORR 68% 1L, 41% 2L+; FDA approved 2020)",
+"threat_level": "HIGH",
+"rationale": "First FDA-approved MET inhibitor for METex14, similar efficacy profile",
+"keywords": ["capmatinib", "tabrecta", "GEOMETRY", "INC280", "INC-280", "METex14"]
+},
+{
+"drug": "Savolitinib",
+"company": "HUTCHMED/AstraZeneca",
+"moa": "Type Ib MET TKI",
+"trials": "Phase IIIb China (ORR 62% 1L, 40% 2L+; China approved 2021)",
+"threat_level": "MEDIUM",
+"rationale": "Approved in China only, shows similar efficacy to tepotinib",
+"keywords": ["savolitinib", "orpathys", "AZD6094", "AZD-6094", "HMPL-504", "HMPL504", "volitinib"]
+},
+{
+"drug": "Crizotinib",
+"company": "Pfizer",
+"moa": "Type Ia multi-kinase inhibitor (MET/ALK/ROS1)",
+"trials": "PROFILE 1001 (ORR 32% in METex14)",
+"threat_level": "LOW",
+"rationale": "Off-label use, less selective, inferior CNS penetration",
+"keywords": ["crizotinib", "xalkori", "PROFILE", "PF-02341066"]
+}
+],
+"emerging_threats": [
+{
+"drug": "Elzovantinib (TPX-0022)",
+"company": "Bristol Myers Squibb",
+"moa": "Type I MET/SRC/CSF1R inhibitor",
+"phase": "Phase 1/2 (SHIELD-1)",
+"biomarker": "MET alterations including ex14",
+"threat_level": "MEDIUM",
+"keywords": ["elzovantinib", "TPX-0022", "SHIELD-1", "turning point"]
+},
+{
+"drug": "Amivantamab",
+"company": "Johnson & Johnson",
+"moa": "Bispecific EGFR/MET antibody",
+"phase": "Phase 1 (CHRYSALIS)",
+"biomarker": "METex14 or MET amplification",
+"threat_level": "MEDIUM",
+"keywords": ["amivantamab", "rybrevant", "JNJ-61186372", "CHRYSALIS"]
+},
+{
+"drug": "Cabozantinib",
+"company": "Exelixis",
+"moa": "Type II multi-targeted TKI",
+"phase": "Phase 2 (CAPTURE for resistance)",
+"biomarker": "MET D1228/Y1230 resistance mutations",
+"threat_level": "LOW",
+"keywords": ["cabozantinib", "cabometyx", "cometriq", "XL184"]
+},
+{
+"drug": "Foretinib",
+"company": "GlaxoSmithKline",
+"moa": "Type II MET/VEGFR inhibitor",
+"phase": "Preclinical/Phase 1",
+"biomarker": "MET resistance mutations",
+"threat_level": "LOW",
+"keywords": ["foretinib", "GSK1363089", "GSK-1363089", "XL880"]
+},
+{
+"drug": "Merestinib",
+"company": "Eli Lilly",
+"moa": "Type II MET inhibitor",
+"phase": "Phase 2",
+"biomarker": "MET alterations",
+"threat_level": "LOW",
+"keywords": ["merestinib", "LY2801653", "LY-2801653"]
+}
+],
+"key_biomarkers": [
+{
+"biomarker": "MET exon 14 skipping",
+"clinical_utility": "Primary driver mutation, diagnostic for MET TKI treatment",
+"prevalence": "3-4% of NSCLC, higher in elderly/non-smokers",
+"keywords": ["METex14", "MET delta ex14", "exon 14 skipping", "splice site"]
+},
+{
+"biomarker": "MET amplification",
+"clinical_utility": "Primary driver or resistance mechanism, GCN ≥10 predicts response",
+"prevalence": "1-5% primary, up to 20% post-EGFR TKI",
+"keywords": ["MET amplification", "gene copy number", "GCN", "FISH", "NGS"]
+},
+{
+"biomarker": "Liquid biopsy ctDNA",
+"clinical_utility": "Non-invasive detection and monitoring of METex14",
+"prevalence": "~70% concordance with tissue",
+"keywords": ["ctDNA", "liquid biopsy", "Guardant360", "FoundationOne Liquid"]
+}
+],
+"resistance_mechanisms": [
+{
+"mechanism": "MET D1228 mutations",
+"frequency": "~15-20% of acquired resistance",
+"treatment_options": "Type II inhibitors (cabozantinib, foretinib)",
+"keywords": ["D1228", "D1228H", "D1228N", "D1228V", "activation loop"]
+},
+{
+"mechanism": "MET Y1230 mutations",
+"frequency": "~15-20% of acquired resistance",
+"treatment_options": "Type II inhibitors, some respond to savolitinib",
+"keywords": ["Y1230", "Y1230C", "Y1230H", "Y1230N", "kinase domain"]
+},
+{
+"mechanism": "KRAS/BRAF amplification",
+"frequency": "~20-30% off-target resistance",
+"treatment_options": "Combination therapy, clinical trials",
+"keywords": ["KRAS", "BRAF", "bypass pathway", "off-target"]
+},
+{
+"mechanism": "PI3K/AKT activation",
+"frequency": "~10-15%",
+"treatment_options": "PI3K inhibitors in combination",
+"keywords": ["PI3K", "AKT", "PIK3CA", "downstream signaling"]
+},
+{
+"mechanism": "MET gene amplification",
+"frequency": "~5-10%",
+"treatment_options": "Higher dose MET TKI or combination",
+"keywords": ["MET amplification", "copy number gain", "dose escalation"]
+}
+],
+"paradigm_shifts": [
+{
+"old": "Chemotherapy for all METex14 patients",
+"new": "MET TKIs as preferred first-line therapy",
+"impact": "Tepotinib competes with capmatinib for market share",
+"year": "2020-2021"
+},
+{
+"old": "Tissue biopsy only for METex14 detection",
+"new": "Liquid biopsy as complementary/alternative diagnostic",
+"impact": "Expanded patient identification for tepotinib",
+"year": "2020-2025"
+},
+{
+"old": "Single MET TKI until progression",
+"new": "Sequential therapy with different MET TKI types",
+"impact": "Tepotinib positioned in treatment sequence based on resistance profile",
+"year": "2022-2025"
+},
+{
+"old": "MET inhibitors only for METex14",
+"new": "Exploration in MET amplification and other alterations",
+"impact": "Potential market expansion for tepotinib",
+"year": "2023-ongoing"
+}
+],
+"exclusions": {
+"settings": ["EGFR-mutant NSCLC", "ALK-positive NSCLC", "KRAS-mutant NSCLC", "MET amplification without METex14"],
+"rationale": "Different competitive sets, not relevant to METex14 skipping"
+}
+}

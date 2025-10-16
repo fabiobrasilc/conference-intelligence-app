@@ -1,0 +1,194 @@
+{
+"indication": {
+"drug": "Cetuximab (Erbitux)",
+"disease": "Metastatic Colorectal Cancer",
+"line": "1L with chemotherapy, later lines",
+"setting": "RAS wild-type only (~45% of mCRC)",
+"last_updated": "2025-10-03",
+"updated_by": "GPT-5 Thinking"
+},
+"direct_competitors": [
+{
+"drug": "Panitumumab (Vectibix)",
+"company": "Amgen",
+"moa": "EGFR monoclonal antibody",
+"status": "FDA approved",
+"threat_level": "HIGH",
+"rationale": "Head-to-head data (PARADIGM) showed OS benefit vs bevacizumab with chemo in left-sided RAS WT 1L; directly substitutes for cetuximab in the same biomarker-selected population.",
+"keywords": ["panitumumab", "vectibix", "PARADIGM"]
+},
+{
+"drug": "Bevacizumab (Avastin)",
+"company": "Genentech/Roche",
+"moa": "VEGF-A monoclonal antibody",
+"status": "FDA approved",
+"threat_level": "HIGH",
+"rationale": "Competes in 1L regimens (e.g., FOLFOX/FOLFIRI ± bevacizumab) especially in right-sided primaries or when clinicians prefer anti-angiogenic therapy over EGFR mAbs.",
+"keywords": ["bevacizumab", "avastin"]
+},
+{
+"drug": "Ziv-Aflibercept (Zaltrap)",
+"company": "Sanofi/Regeneron",
+"moa": "VEGF ligand trap (VEGF-A/B, PlGF)",
+"status": "FDA approved (2L with FOLFIRI)",
+"threat_level": "MEDIUM",
+"rationale": "Alternative anti-angiogenic in later lines that can reduce use of EGFR antibodies in subsequent therapy sequences.",
+"keywords": ["ziv-aflibercept", "Zaltrap", "aflibercept"]
+},
+{
+"drug": "Ramucirumab (Cyramza)",
+"company": "Eli Lilly",
+"moa": "VEGFR2 monoclonal antibody",
+"status": "FDA approved (2L with FOLFIRI)",
+"threat_level": "LOW",
+"rationale": "Later-line anti-angiogenic option; indirectly competes for treatment share in sequences that avoid EGFR antibodies.",
+"keywords": ["ramucirumab", "cyramza"]
+},
+{
+"drug": "Fruquintinib (Fruzaqla)",
+"company": "HUTCHMED/Takeda",
+"moa": "Oral VEGFR1/2/3 TKI",
+"status": "FDA approved (refractory 3L+)",
+"threat_level": "LOW",
+"rationale": "Active in refractory MSS mCRC and can occupy later-line slots otherwise considered for EGFR rechallenge.",
+"keywords": ["fruquintinib", "FRESCO-2", "fruzaqla"]
+}
+],
+"emerging_threats": [
+{
+"drug": "Tucatinib + Trastuzumab ± mFOLFOX6",
+"company": "Pfizer/Seagen + Genentech/Roche",
+"moa": "HER2 TKI + anti-HER2 mAb (± chemotherapy)",
+"phase": "Phase 3 (MOUNTAINEER-03)",
+"biomarker": "HER2-positive, RAS wild-type",
+"threat_level": "MEDIUM",
+"keywords": ["MOUNTAINEER-03", "tucatinib", "trastuzumab"]
+},
+{
+"drug": "Trastuzumab deruxtecan (Enhertu)",
+"company": "Daiichi Sankyo/AstraZeneca",
+"moa": "HER2-directed antibody–drug conjugate",
+"phase": "Phase 2 in mCRC; tumor-agnostic accelerated approval",
+"biomarker": "HER2-positive (IHC3+)",
+"threat_level": "MEDIUM",
+"keywords": ["trastuzumab deruxtecan", "Enhertu", "DESTINY-CRC02", "T-DXd"]
+},
+{
+"drug": "Botensilimab + Balstilimab",
+"company": "Agenus",
+"moa": "CTLA-4 (Fc-enhanced) + PD-1 inhibition",
+"phase": "Phase 2",
+"biomarker": "MSS mCRC (signals stronger without active liver metastases)",
+"threat_level": "LOW",
+"keywords": ["botensilimab", "balstilimab"]
+}
+],
+"key_biomarkers": [
+{
+"biomarker": "Extended RAS wild-type (KRAS/NRAS exons 2/3/4)",
+"clinical_utility": "Mandatory for EGFR mAb eligibility; predicts benefit to cetuximab/panitumumab",
+"prevalence": "~45% of mCRC",
+"keywords": ["KRAS", "NRAS", "exon 2", "exon 3", "exon 4", "RAS WT"]
+},
+{
+"biomarker": "Primary tumor sidedness",
+"clinical_utility": "Left-sided primaries derive greater benefit from EGFR mAbs; right-sided show limited benefit",
+"prevalence": "Left-sided ~60–70% vs right-sided ~30–40% of cases",
+"keywords": ["left-sided", "right-sided", "sidedness", "embryologic origin"]
+},
+{
+"biomarker": "BRAF V600E",
+"clinical_utility": "Negative predictor for EGFR mAbs; guides use of BRAF-targeted combinations",
+"prevalence": "~8–10% overall (enriched in right-sided)",
+"keywords": ["BRAF V600E", "BEACON", "BREAKWATER"]
+},
+{
+"biomarker": "HER2 amplification/overexpression",
+"clinical_utility": "Identifies candidates for HER2-targeted regimens that compete with EGFR mAbs, especially in later lines and potentially 1L",
+"prevalence": "~3–5% (higher in RAS WT)",
+"keywords": ["HER2", "ERBB2", "IHC3+", "FISH+", "tucatinib", "trastuzumab", "T-DXd"]
+},
+{
+"biomarker": "EGFR ligand expression (AREG/EREG)",
+"clinical_utility": "Higher expression correlates with greater EGFR mAb benefit in RAS WT disease",
+"prevalence": "Subset with high AREG/EREG expression",
+"keywords": ["amphiregulin", "epiregulin", "AREG", "EREG", "predictive"]
+}
+],
+"resistance_mechanisms": [
+{
+"mechanism": "EGFR extracellular domain mutations (e.g., S492R)",
+"frequency": "Common acquired mechanism (~20–30% of resistant clones)",
+"treatment_options": "Consider panitumumab sensitivity in S492R; clinical trials of next-gen EGFR agents/ADCs; switch to anti-angiogenic regimens",
+"keywords": ["EGFR ECD", "S492R", "cetuximab resistance", "panitumumab sensitive"]
+},
+{
+"mechanism": "Acquired KRAS/NRAS mutations",
+"frequency": "Common (~30–50% at progression on EGFR mAbs)",
+"treatment_options": "Avoid EGFR mAbs; consider anti-angiogenic or chemo options; monitor ctDNA for potential rechallenge after mutant clone decay",
+"keywords": ["ctDNA", "KRAS", "NRAS", "rechallenge", "clonal evolution"]
+},
+{
+"mechanism": "HER2 amplification",
+"frequency": "Uncommon (~5–7%)",
+"treatment_options": "Switch to HER2-targeted therapy (tucatinib + trastuzumab; trastuzumab deruxtecan)",
+"keywords": ["HER2 amp", "ERBB2", "tucatinib", "T-DXd"]
+},
+{
+"mechanism": "MET amplification",
+"frequency": "Uncommon (~5–10%)",
+"treatment_options": "Consider clinical trials combining MET inhibition with EGFR blockade; alternative non-EGFR regimens",
+"keywords": ["MET amp", "MET inhibitor", "capmatinib", "tepotinib", "resistance"]
+},
+{
+"mechanism": "MAPK pathway reactivation (e.g., BRAF/MEK alterations)",
+"frequency": "Rare to uncommon",
+"treatment_options": "Targeted combinations in trials (e.g., BRAF/MEK ± EGFR) or switch to anti-angiogenic/chemo",
+"keywords": ["MAPK", "BRAF", "MEK", "pathway reactivation"]
+}
+],
+"sidedness_stratification": [
+{
+"sidedness": "Left-sided",
+"cetuximab_efficacy": "Better",
+"rationale": "Prospective and retrospective data show superior outcomes with EGFR mAbs plus chemo in left-sided RAS WT primaries.",
+"keywords": ["left-sided", "descending/sigmoid/rectum", "EGFR mAb benefit", "PARADIGM"]
+},
+{
+"sidedness": "Right-sided",
+"cetuximab_efficacy": "Worse",
+"rationale": "Right-sided tumors harbor adverse biology (e.g., BRAF mutation, MSI, distinct microenvironment) with limited benefit from EGFR mAbs in 1L.",
+"keywords": ["right-sided", "cecum/ascending", "limited benefit", "prefer anti-VEGF"]
+}
+],
+"paradigm_shifts": [
+{
+"old": "Bevacizumab-based chemotherapy used broadly regardless of sidedness",
+"new": "EGFR mAb + chemo favored in left-sided RAS WT 1L",
+"impact": "Shifts 1L market share toward cetuximab/panitumumab in left-sided disease",
+"year": "2022-2024"
+},
+{
+"old": "KRAS exon 2 testing only",
+"new": "Extended RAS testing (KRAS/NRAS exons 2/3/4) required before EGFR mAbs",
+"impact": "Narrows eligible population to true RAS WT and optimizes benefit",
+"year": "2015-2016"
+},
+{
+"old": "Tissue-only genotyping and fixed sequences",
+"new": "ctDNA-guided strategies (e.g., EGFR rechallenge after mutant clone decay)",
+"impact": "Preserves EGFR mAb utility in later lines for selected RAS/BRAF WT by ctDNA",
+"year": "2019-2024"
+},
+{
+"old": "No effective HER2-directed options in mCRC",
+"new": "HER2-targeted regimens (tucatinib + trastuzumab; T-DXd) with growing use and movement toward 1L in HER2+ RAS WT",
+"impact": "Diverts a biomarker-defined subset from EGFR antibodies",
+"year": "2023-2025"
+}
+],
+"exclusions": {
+"settings": ["RAS-mutant mCRC", "MSI-high mCRC (immunotherapy preferred)", "Adjuvant therapy"],
+"rationale": "Different competitive sets, not relevant to RAS WT setting"
+}
+}
