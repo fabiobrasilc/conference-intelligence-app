@@ -198,6 +198,16 @@ def extract_simple_keywords(
    - Return empty lists for all fields
    - The second AI call will handle greetings/conceptual answers naturally
 
+6.5. **CRITICAL - Counting/Analysis Questions** - DO NOT EXTRACT KEYWORDS FOR THESE:
+   - If user asks "How many studies...", "Count the studies...", "What proportion of studies..."
+   - These are ANALYTICAL queries - AI needs to read ALL visible studies, not filter them
+   - Return EMPTY keywords so AI receives the full filtered dataset
+   - Examples:
+     * "How many studies on antibody drug conjugates?" → {{"drug_combinations": [], "drug_classes": [], ...}} (EMPTY)
+     * "What percentage of studies mention biomarkers?" → {{"drug_combinations": [], "drug_classes": [], ...}} (EMPTY)
+     * "Count studies by Dr. Smith" → {{"drug_combinations": [], "drug_classes": [], ...}} (EMPTY)
+   - The AI will analyze all visible studies and count/categorize them naturally
+
 7. **Continuation queries** - CRITICAL for operating on previous results:
    - If user asks to TRANSFORM/FORMAT previous results (translate, summarize, explain, format differently, etc.)
    - EXTRACT THE SAME KEYWORDS from the previous assistant message (works like "Yes" confirmations)
@@ -285,6 +295,12 @@ Study identifier query:
 
 Conceptual question (NO specific entities):
 "What is the difference between PD-1 and PD-L1?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
+
+Counting/Analysis question (NO filtering - AI needs to read ALL studies):
+"How many studies on antibody drug conjugates are being presented?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "study_identifiers": [], "search_terms": []}}
+
+Another counting example:
+"What percentage of studies mention biomarkers?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "study_identifiers": [], "search_terms": []}}
 
 Continuation query (extract keywords from previous context):
 "Can you translate that to french please" (previous assistant discussed EV+P studies) → {{"drug_combinations": [["enfortumab vedotin", "pembrolizumab"]], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
