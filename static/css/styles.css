@@ -1135,7 +1135,9 @@ mark {
   flex-shrink: 0;
   background: var(--bg);
   padding: 20px 24px 24px 24px; /* Same horizontal padding as scrollable area */
-  /* NO position: sticky - it breaks desktop layout! */
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
 }
 
 /* Chat Scope Selector (Integrated into input box) */
@@ -1444,7 +1446,7 @@ mark {
 }
 
 /* ===== MOBILE RESPONSIVE (includes iPads) ===== */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   /* On small screens, completely hide sidebar */
   .filter-sidebar {
     display: none !important;
@@ -2112,7 +2114,7 @@ mark {
 }
 
 /* Hide cards container on desktop (>1024px) */
-@media (min-width: 1025px) {
+@media (min-width: 769px) {
   .study-cards-container {
     display: none;
   }
@@ -2273,7 +2275,7 @@ mark {
 }
 
 /* Show FAB only on AI tab on mobile/iPad */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   body.ai-tab-active .mobile-qi-fab {
     display: flex;
     align-items: center;
@@ -2447,7 +2449,7 @@ mark {
 }
 
 /* Hide desktop scope selector on mobile/iPad */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .chat-scope-selector-desktop {
     display: none !important;
   }
@@ -2458,7 +2460,7 @@ mark {
 }
 
 /* Show desktop scope selector on desktop */
-@media (min-width: 1025px) {
+@media (min-width: 769px) {
   .chat-mobile-controls {
     display: none !important;
   }
@@ -2626,7 +2628,7 @@ mark {
 }
 
 /* Mobile/iPad appbar - icon-only layout for cleaner UI */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   /* Hide button text, show only emoji/icon */
   .mobile-conditional-btn .mobile-btn-text {
     display: none;
@@ -2682,7 +2684,7 @@ mark {
 }
 
 /* Desktop appbar - full text layout */
-@media (min-width: 1025px) {
+@media (min-width: 769px) {
   /* Hide mobile title, show full title */
   .appbar-title .title-mobile {
     display: none;
