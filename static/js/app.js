@@ -573,10 +573,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Step 2: Format sections with bold headers and line breaks
+    // Track formatted sections to avoid duplicates
+    const formattedSections = new Set();
+
     sectionPatterns.forEach(section => {
-      // Match "Section:" or "Section " at the start of a sentence
-      const regex = new RegExp(`(^|\\. |\\n)(${section}):?\\s*`, 'gi');
+      // Match "Section:" or "Section " ONLY at:
+      // 1. Start of text (^)
+      // 2. After a period followed by space and capital letter (\\. [A-Z])
+      // 3. After double newline (\\n\\n) - indicates clear section break
+      // This prevents matching "Results" in mid-sentence like "...These results indicate..."
+      const regex = new RegExp(`(^|\\. [A-Z]|\\n\\n)(${section}):?\\s`, 'gi');
+
       formatted = formatted.replace(regex, (match, prefix, sectionName) => {
+        const sectionKey = sectionName.toLowerCase();
+
+        // Only format this section once (avoid duplicates)
+        if (formattedSections.has(sectionKey)) {
+          return match; // Return original match without formatting
+        }
+
+        formattedSections.add(sectionKey);
         return `${prefix}<br><br><strong>${sectionName}:</strong><br>`;
       });
     });

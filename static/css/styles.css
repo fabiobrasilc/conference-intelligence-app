@@ -1112,13 +1112,13 @@ mark {
 }
 
 .action-chip .title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--ink);
 }
 
 .action-chip .sub {
-  font-size: 15px;
+  font-size: 13px;
   color: var(--muted);
 }
 
