@@ -519,6 +519,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ===== Detect if we should use mobile cards or desktop table (includes iPads) =====
   function isMobileView() {
+    // Check if force-mobile class is present (set by tablet detection script)
+    if (document.documentElement.classList.contains('force-mobile')) {
+      return true;
+    }
     return window.innerWidth <= 1024;
   }
 

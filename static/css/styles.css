@@ -1475,7 +1475,7 @@ mark {
 }
 
 /* ===== MOBILE RESPONSIVE (includes iPads) ===== */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   /* On small screens, completely hide sidebar */
   .filter-sidebar {
     display: none !important;
@@ -2308,7 +2308,7 @@ mark {
 }
 
 /* Show FAB only on AI tab on mobile/iPad */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   body.ai-tab-active .mobile-qi-fab {
     display: flex;
     align-items: center;
@@ -2482,7 +2482,7 @@ mark {
 }
 
 /* Hide desktop scope selector on mobile/iPad */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .chat-scope-selector-desktop {
     display: none !important;
   }
@@ -2676,7 +2676,7 @@ mark {
 }
 
 /* Mobile/iPad appbar - icon-only layout for cleaner UI */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   /* Hide button text, show only emoji/icon */
   .mobile-conditional-btn .mobile-btn-text {
     display: none;
@@ -2772,3 +2772,55 @@ mark {
     display: none !important;
   }
 }
+
+/* ========================================================================
+   TABLET FORCING - Forces mobile view on tablets (iPad, Android tablets)
+   ======================================================================== */
+
+html.force-mobile .filter-sidebar {
+  display: none !important;
+}
+
+html.force-mobile .quick-intel-sidebar {
+  display: none !important;
+}
+
+html.force-mobile .main-content {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+html.force-mobile .chat-scope-selector-desktop {
+  display: none !important;
+}
+
+html.force-mobile .chat-mobile-controls {
+  display: flex !important;
+}
+
+html.force-mobile #chatMenuBtn {
+  display: none !important;
+}
+
+html.force-mobile .column-toggle-container {
+  display: none !important;
+}
+
+html.force-mobile .search-btn-desktop {
+  display: none !important;
+}
+
+html.force-mobile .search-btn-mobile,
+html.force-mobile .filter-btn-mobile {
+  display: flex !important;
+}
+
+/* Force mobile card view on tablets */
+html.force-mobile #tableContainer table {
+  display: none !important;
+}
+
+html.force-mobile .mobile-card-container {
+  display: block !important;
+}
+
