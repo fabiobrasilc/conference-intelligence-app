@@ -1135,9 +1135,7 @@ mark {
   flex-shrink: 0;
   background: var(--bg);
   padding: 20px 24px 24px 24px; /* Same horizontal padding as scrollable area */
-  position: sticky;
-  bottom: 0;
-  z-index: 100;
+  /* NO position: sticky - it breaks desktop layout! */
 }
 
 /* Chat Scope Selector (Integrated into input box) */
