@@ -2147,9 +2147,17 @@ NOTE: Drug combinations (EV + P, nivo plus ipi) are handled by pre-classificatio
 "Most active institutions" | "Top 15 hospitals" | "Leading research centers" | "Where is the research coming from?" | "Academic centers in bladder cancer"
 → {{"entity_type": "institution", "search_terms": [], "generate_table": true, "table_type": "institution_ranking", "filter_context": {{}}, "top_n": 15}}
 
+**5b. LOCATION-BASED QUERIES** (session_list table - search Speaker Location AND Affiliation columns)
+"I'm from New York, who should I meet?" | "Researchers from Boston" | "California presenters" | "European institutions" | "Authors from MD Anderson"
+→ {{"entity_type": "general", "search_terms": ["New York", "NY"], "generate_table": true, "table_type": "session_list", "filter_context": {{}}, "top_n": 50}}
+
+**IMPORTANT**: Location queries search BOTH "Speaker Location" and "Affiliation" columns to find geographic matches
+
 **6. SESSION/SCHEDULE QUERIES** (session_list table)
-"What posters are on day 3?" | "All presentations on Friday" | "Proffered papers in lung cancer" | "When are the oral sessions?" | "Show me symposia"
+"What posters are on day 3?" | "All presentations on Friday" | "Proffered papers in lung cancer" | "When are the oral sessions?" | "Show me symposia" | "bladder poster presentations on 10/18"
 → {{"entity_type": "session_type", "search_terms": ["poster"], "generate_table": true, "table_type": "session_list", "filter_context": {{"date": "Day 3"}}, "top_n": 50}}
+
+**IMPORTANT**: For therapeutic area + session type + date queries (e.g., "bladder poster presentations on 10/18"), use search_terms for TA keywords (bladder, urothelial) AND session type keywords (poster) AND extract date to filter_context
 
 **7. BIOMARKER/MECHANISM SPECIFIC QUERIES** (session_list table to show all studies)
 "What's new in METex14?" | "Show me FGFR3 studies" | "HER2-positive data" | "PD-L1 biomarker studies" | "KRAS G12C research"

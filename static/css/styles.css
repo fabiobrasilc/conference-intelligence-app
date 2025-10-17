@@ -1555,7 +1555,7 @@ mark {
   }
 
   .ai-chat-scrollable {
-    padding: 20px 16px 0px 16px; /* Remove bottom padding to prevent pushing chat input down */
+    padding: 20px 16px 180px 16px; /* Add bottom padding to account for fixed chat input height */
   }
 
   .ai-greeting-title {
@@ -1713,7 +1713,7 @@ mark {
   }
 
   .ai-chat-scrollable {
-    padding: 16px 12px 0px 12px; /* Remove bottom padding to prevent pushing chat input down */
+    padding: 16px 12px 160px 12px; /* Add bottom padding to account for fixed chat input height */
   }
 
   /* Smaller table cells */
