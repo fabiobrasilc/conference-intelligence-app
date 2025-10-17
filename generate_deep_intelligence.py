@@ -1227,8 +1227,9 @@ Then provide analysis:
    - **Key Data:**
      * **Design:** Phase X trial, n=X patients, patient population, key inclusion criteria
      * **Key results:** Include ACTUAL NUMBERS from abstract: ORR X%, mPFS X.X months, mOS X.X months, response duration, etc.
-     * **Safety snapshot:** Key safety signals, treatment discontinuation rates, Grade ≥3 AEs if mentioned
+     * **Safety snapshot:** Only include if safety data is mentioned in abstract (skip if not reported)
      * If abstract not available: "Full abstract pending; will report [expected endpoints] at presentation"
+     * **IMPORTANT:** Be flexible - only include subsections that have data. If no safety data, skip Safety snapshot entirely.
 
 **2. [Abstract ID] — Drug/Regimen — Study Title (abbreviated)**
    - **Investigators:** ...
