@@ -532,6 +532,7 @@ document.addEventListener('DOMContentLoaded', function() {
       'Introduction',
       'Methods',
       'Materials and Methods',
+      'Trial Design',
       'Results',
       'Conclusions',
       'Discussion',
@@ -540,7 +541,8 @@ document.addEventListener('DOMContentLoaded', function() {
       'Aim',
       'Findings',
       'Summary',
-      'Clinical Trial Information'
+      'Clinical Trial Information',
+      'Clinical trial identification'
     ];
 
     // Step 1: Convert pipe-delimited tables to HTML tables
