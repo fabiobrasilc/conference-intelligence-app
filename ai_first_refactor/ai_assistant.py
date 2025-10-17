@@ -174,15 +174,21 @@ def extract_simple_keywords(
    - Example: Previous assistant said "Would you like studies about EV+P?" → User says "Yes" → Extract: ["enfortumab vedotin", "pembrolizumab"]
    - If user says "Yes" but conversation history is empty or unclear, return empty keywords
 
-3. **Molecular entities** - put in search_terms:
+3. **Session types** - CRITICAL for filtering by presentation format:
+   - If user asks about "poster", "posters", or "poster presentations" → extract: ["Poster", "ePoster"]
+   - Both "Poster" and "ePoster" should be bundled together as they're both poster formats
+   - Other session types: "Oral", "Mini oral", "Presidential symposium", etc.
+   - Put session types in search_terms field
+
+4. **Molecular entities** - put in search_terms:
    - "METex14", "MET exon 14 skipping", "EGFR L858R", "HER2", "PD-L1", "KRAS G12C"
 
-4. **Generic terms to EXCLUDE** (too broad):
+5. **Generic terms to EXCLUDE** (too broad):
    - ❌ "metastatic", "perioperative", "neoadjuvant", "adjuvant", "first-line", "1L", "2L"
    - ❌ Single letters: "P", "E", "V" (unless part of abbreviation like "EV+P")
    - ❌ TA names already in active filters: "bladder cancer", "NSCLC"
 
-5. **Empty keywords** - If user is just greeting or asking a conceptual question with NO specific entities:
+6. **Empty keywords** - If user is just greeting or asking a conceptual question with NO specific entities:
    - Return empty lists for all fields
    - The second AI call will handle greetings/conceptual answers naturally
 
@@ -235,8 +241,8 @@ USER QUERY: "{user_query}"
 Greeting (NO keywords needed):
 "Hello!" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
-Date format conversion:
-"What are all the bladder poster presentations happening on 10/18?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": ["10/18/2025"], "speakers": [], "search_terms": []}}
+Date + Session type (poster):
+"What are all the bladder poster presentations happening on 10/18?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": ["10/18/2025"], "speakers": [], "search_terms": ["Poster", "ePoster"]}}
 
 Date format conversion (international):
 "What are all the bladder poster presentations happening on 18/10?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": ["10/18/2025"], "speakers": [], "search_terms": []}}
@@ -481,21 +487,24 @@ def filter_dataframe_with_keywords(
         print(f"  After speaker filter (fuzzy): {len(filtered)} studies")
 
     # 7. Filter by additional search terms (if specified)
-    # NOTE: Only apply if we don't already have drug-based filtering
-    # This prevents over-filtering when drugs already imply the context
+    # Search across multiple columns: Title, Session, and search_text_normalized
+    # NOTE: Only apply if we don't already have drug-based filtering (to prevent over-filtering)
     if keywords.get('search_terms') and not keywords.get('drug_combinations'):
         term_pattern = '|'.join([re.escape(t) for t in keywords['search_terms']])
+
+        # Build combined search across multiple columns
+        title_match = filtered['Title'].str.contains(term_pattern, case=False, na=False, regex=True)
+        session_match = filtered['Session'].str.contains(term_pattern, case=False, na=False, regex=True) if 'Session' in filtered.columns else False
+
         if 'search_text_normalized' in filtered.columns:
-            filtered = filtered[
-                filtered['search_text_normalized'].str.contains(
-                    term_pattern, case=False, na=False, regex=True
-                )
-            ]
+            search_text_match = filtered['search_text_normalized'].str.contains(term_pattern, case=False, na=False, regex=True)
+            # Match if found in Title OR Session OR search_text_normalized
+            filtered = filtered[title_match | session_match | search_text_match]
         else:
-            filtered = filtered[
-                filtered['Title'].str.contains(term_pattern, case=False, na=False, regex=True)
-            ]
-        print(f"  After search terms filter: {len(filtered)} studies")
+            # Match if found in Title OR Session
+            filtered = filtered[title_match | session_match]
+
+        print(f"  After search terms filter (Title/Session/search_text): {len(filtered)} studies")
 
     print(f"  Final: {original_count} -> {len(filtered)} studies")
 
