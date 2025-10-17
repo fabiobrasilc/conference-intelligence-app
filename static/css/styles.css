@@ -1611,8 +1611,6 @@ mark {
     right: 0 !important;
     background: var(--bg) !important;
     z-index: 100 !important;
-    /* DEBUG: Bright red border to make it visible */
-    border-top: 5px solid red !important;
   }
 
   .chat-scope-selector {
