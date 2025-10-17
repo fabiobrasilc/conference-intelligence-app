@@ -2490,6 +2490,11 @@ mark {
   .chat-mobile-controls {
     display: flex;
   }
+
+  /* Hide the menu button on mobile - no label makes it confusing */
+  #chatMenuBtn {
+    display: none !important;
+  }
 }
 
 /* Show desktop scope selector on desktop */
