@@ -1218,17 +1218,26 @@ Then provide analysis:
 
 **For LIMITED activity (1-2 studies)**: Provide in-depth analysis of each study without creating redundant subsections. Focus on strategic implications, investigator/institutional context, and competitive positioning.
 
-**For MODERATE/HIGH activity**: Use standard structure:
+**For MODERATE/HIGH activity**: Use standard structure with KEY DATA extraction:
 
-**1. [Abstract ID] Drug/Regimen - Study Title (abbreviated)**
-   - **Investigators:** Lead author — Institution
-   - **Session:** Date/Session Type (LBA/Proffered/Poster)
-   - **Strategic Relevance:** Why this matters to EMD (2-3 sentences with full detail)
+**1. [Abstract ID] — Drug/Regimen — Study Title (abbreviated)**
+   - **Investigators:** Lead author — Institution (Location)
+   - **Session:** Date — Session Type (LBA/Proffered/Poster)
+   - **Strategic Relevance:** Why this matters for competitive positioning (1-2 sentences)
+   - **Key Data:**
+     * **Design:** Phase X trial, n=X patients, patient population, key inclusion criteria
+     * **Key results:** Include ACTUAL NUMBERS from abstract: ORR X%, mPFS X.X months, mOS X.X months, response duration, etc.
+     * **Safety snapshot:** Key safety signals, treatment discontinuation rates, Grade ≥3 AEs if mentioned
+     * If abstract not available: "Full abstract pending; will report [expected endpoints] at presentation"
 
-**2. [Abstract ID] Drug/Regimen - Study Title (abbreviated)**
+**2. [Abstract ID] — Drug/Regimen — Study Title (abbreviated)**
    - **Investigators:** ...
    - **Session:** ...
    - **Strategic Relevance:** ...
+   - **Key Data:**
+     * **Design:** ...
+     * **Key results:** ...
+     * **Safety snapshot:** ...
 
 Focus on:
 - Late-breaking abstracts (LBA#) - highest impact
@@ -1236,26 +1245,42 @@ Focus on:
 - Direct competitors to EMD's asset/indication
 - Combination therapies threatening current standards
 
+**CRITICAL - Data Extraction Rules:**
+- ALWAYS extract and report ACTUAL DATA from abstracts (response rates, survival numbers, n=, etc.)
+- Use past/present tense ("shows", "reports", "demonstrates"), NEVER "expected to show"
+- If abstract text is available in the studies table, extract specific efficacy/safety numbers
+- Format like Insights reports: clear Design > Key results > Safety structure
+
 ### 2.3 Emerging Threats and Novel Approaches
 
 **ONLY INCLUDE THIS SUBSECTION IF:**
 - There are 3+ studies with distinct mechanisms/approaches, OR
 - There are clear emerging threats beyond standard competitive activity
 
-**FORMATTING: Use STRUCTURED NUMBERED LIST (not table):**
+**FORMATTING: Use STRUCTURED NUMBERED LIST (not table) with KEY DATA:**
 
-**1. [Abstract ID] Drug/Mechanism - Threat Type**
+**1. [Abstract ID] — Drug/Mechanism — Threat Type**
    - **Phase:** X
    - **Why This Is a Threat:** Full explanation (2-3 sentences, no truncation)
+   - **Key Data** (if abstract available):
+     * **Design:** Brief design summary, n=X patients
+     * **Key results:** Headline efficacy numbers (ORR%, mPFS/mOS if reported)
+     * **Safety:** Notable AEs if mentioned
 
-**2. [Abstract ID] Drug/Mechanism - Threat Type**
+**2. [Abstract ID] — Drug/Mechanism — Threat Type**
    - **Phase:** X
    - **Why This Is a Threat:** ...
+   - **Key Data:**
+     * **Design:** ...
+     * **Key results:** ...
+     * **Safety:** ...
 
 Include:
 - Novel MOAs (ADCs, bispecifics, radioligands, TKIs)
 - Biomarker-driven strategies (FGFR+, HER2+, NECTIN4+)
 - First-in-human or innovative designs (perioperative, neoadjuvant)
+
+**Note:** If abstract text is available, extract actual data like Section 2.2. If not available, note "Abstract pending" and focus on threat explanation.
 
 ### 2.4 Geographic and Institutional Patterns
 
