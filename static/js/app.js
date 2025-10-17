@@ -555,8 +555,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const cells = row.split('|').map(c => c.trim()).filter(c => c);
         const tag = idx === 0 ? 'th' : 'td';
         const style = idx === 0
-          ? 'style="border: 1px solid #ddd; padding: 6px; background: #f8f9fa; font-weight: 600; text-align: left;"'
-          : 'style="border: 1px solid #ddd; padding: 6px;"';
+          ? 'style="border: 1px solid #ddd; padding: 6px; background: #f8f9fa; font-weight: 600; text-align: left; white-space: nowrap;"'
+          : 'style="border: 1px solid #ddd; padding: 6px; white-space: nowrap;"';
 
         html += '<tr>';
         cells.forEach(cell => {

@@ -1112,13 +1112,13 @@ mark {
 }
 
 .action-chip .title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--ink);
 }
 
 .action-chip .sub {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--muted);
 }
 
@@ -1570,16 +1570,10 @@ mark {
   }
 
   .action-chip .icon {
-    font-size: 20px;
+    font-size: 24px;
   }
 
-  .action-chip .title {
-    font-size: 12px;
-  }
-
-  .action-chip .sub {
-    font-size: 10px;
-  }
+  /* QI buttons font sizes kept large on mobile - inherits from desktop base styles */
 
   /* Chat input - mobile friendly */
   .ai-chat-input-container {
@@ -1719,23 +1713,13 @@ mark {
     font-size: 13px;
   }
 
-  /* Quick Intel buttons - more compact */
+  /* Quick Intel buttons - compact padding but keep font sizes large */
   .action-chip {
     padding: 8px 10px;
     gap: 8px;
   }
 
-  .action-chip .icon {
-    font-size: 18px;
-  }
-
-  .action-chip .title {
-    font-size: 11px;
-  }
-
-  .action-chip .sub {
-    display: none; /* Hide subtitle on very small screens */
-  }
+  /* QI button font sizes kept large - inherit from base styles */
 
   /* Chat input - more compact */
   .ai-chat-input-container {
