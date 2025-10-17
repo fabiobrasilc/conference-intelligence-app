@@ -916,7 +916,19 @@ document.addEventListener('DOMContentLoaded', function() {
       if (fullText && fullText.trim()) {
         // Add 500ms delay before showing tooltip
         tooltipTimer = setTimeout(() => {
-          tooltip.textContent = fullText;
+          // Check if this is an Abstract column cell
+          const cellIndex = Array.from(cell.parentElement.children).indexOf(cell);
+          const headerCell = cell.closest('table')?.querySelector('thead th:nth-child(' + (cellIndex + 1) + ')');
+          const headerText = headerCell?.textContent.trim();
+
+          if (headerText === 'Abstract') {
+            // Apply formatAbstract() to Abstract column
+            tooltip.innerHTML = formatAbstract(fullText);
+          } else {
+            // Regular text for other columns
+            tooltip.textContent = fullText;
+          }
+
           tooltip.classList.add('show');
           positionTooltip(e, tooltip);
         }, 500);

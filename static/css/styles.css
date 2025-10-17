@@ -1224,6 +1224,7 @@ mark {
   transition: all 0.2s ease;
   border-radius: 50%;
   margin-left: auto;
+  outline: none;
 }
 
 .chat-menu-btn:hover {
@@ -1233,6 +1234,10 @@ mark {
 
 .chat-menu-btn:active {
   transform: scale(0.95);
+}
+
+.chat-menu-btn:focus {
+  outline: none;
 }
 
 .chat-scope-dropdown optgroup {
