@@ -65,17 +65,8 @@ def handle_chat_query(
             print(f"  {key}: {values}")
             has_keywords = True
 
-    # Check for continuation query flag
-    use_previous_results = keywords.get('use_previous_results', False)
-
-    if use_previous_results:
-        # Continuation query - pass full dataset and let AI understand context from conversation history
-        print(f"[STEP 1] Continuation query detected - passing full dataset with conversation context")
-        print(f"[STEP 2] AI will understand from conversation history which studies to reference")
-        filtered_df = df  # Pass full dataset, AI analyzer will understand context
-
     # Check if AI returned empty keywords (greeting, off-topic, or conceptual question with no entities)
-    elif not has_keywords:
+    if not has_keywords:
         print(f"[STEP 1] No search keywords extracted - query is greeting/off-topic/conceptual")
         print(f"[STEP 2] Skipping filtering - will respond without studies")
         filtered_df = pd.DataFrame()  # Empty DataFrame - no studies to analyze
@@ -203,14 +194,14 @@ def extract_simple_keywords(
 
 7. **Continuation queries** - CRITICAL for operating on previous results:
    - If user asks to TRANSFORM/FORMAT previous results (translate, summarize, explain, format differently, etc.)
-   - AND conversation history shows previous results were displayed
-   - Set "use_previous_results": true to preserve those results
+   - EXTRACT THE SAME KEYWORDS from the previous assistant message (works like "Yes" confirmations)
+   - Look at conversation history to see what the assistant just discussed
    - Examples:
-     * "translate that to french" → {{"use_previous_results": true}}
-     * "summarize those studies" → {{"use_previous_results": true}}
-     * "explain study 1234P in more detail" → {{"use_previous_results": true}}
-     * "format that as a table" → {{"use_previous_results": true}}
-   - Do NOT set this flag for NEW searches with different keywords
+     * Previous: "Here are 10 EV+P studies..." → User: "translate that to french" → Extract: {{"drug_combinations": [["enfortumab vedotin", "pembrolizumab"]]}}
+     * Previous: "Found 15 pembrolizumab studies..." → User: "summarize those" → Extract: {{"drug_combinations": [["pembrolizumab"]]}}
+     * Previous: "Poster presentations on 10/18..." → User: "format that as table" → Extract: {{"dates": ["10/18/2025"], "search_terms": ["Poster", "ePoster"]}}
+   - DO extract keywords from previous context for continuation queries
+   - Do NOT return empty keywords - extract what was previously discussed
 
 **OUTPUT FORMAT:**
 Return ONLY valid JSON in this exact format:
@@ -224,8 +215,7 @@ Return ONLY valid JSON in this exact format:
   "institutions": ["institution name"],
   "dates": ["date"],
   "speakers": ["speaker name"],
-  "search_terms": ["biomarker", "term"],
-  "use_previous_results": false
+  "search_terms": ["biomarker", "term"]
 }}
 
 **CRITICAL - Drug Combination Logic:**
@@ -284,13 +274,13 @@ Molecular entity:
 "METex14 skipping" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": ["METex14", "MET exon 14 skipping"]}}
 
 Conceptual question (NO specific entities):
-"What is the difference between PD-1 and PD-L1?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": [], "use_previous_results": false}}
+"What is the difference between PD-1 and PD-L1?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
-Continuation query (translate/format previous results):
-"Can you translate that to french please" (previous assistant showed EV+P study results) → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": [], "use_previous_results": true}}
+Continuation query (extract keywords from previous context):
+"Can you translate that to french please" (previous assistant discussed EV+P studies) → {{"drug_combinations": [["enfortumab vedotin", "pembrolizumab"]], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
 Another continuation example:
-"Summarize those findings" (previous assistant showed study results) → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": [], "use_previous_results": true}}
+"Summarize those findings" (previous assistant showed pembrolizumab and nivolumab studies) → {{"drug_combinations": [["pembrolizumab"], ["nivolumab"]], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
 Now extract keywords from the user query above. Return ONLY valid JSON."""
 
