@@ -69,31 +69,10 @@ def handle_chat_query(
     use_previous_results = keywords.get('use_previous_results', False)
 
     if use_previous_results:
-        # Continuation query - try to extract study identifiers from previous conversation
-        print(f"[STEP 1] Continuation query detected - attempting to preserve previous results")
-
-        # Extract identifiers from the last assistant message
-        if conversation_history and len(conversation_history) > 0:
-            last_exchange = conversation_history[-1]
-            last_assistant_msg = last_exchange.get('assistant', '')
-
-            # Extract study identifiers from last message (format: NNNNX where X is a letter)
-            import re
-            identifiers = re.findall(r'\b(\d{3,4}[A-Z])\b', last_assistant_msg)
-
-            if identifiers:
-                print(f"[STEP 1] Found {len(identifiers)} study identifiers in previous response: {identifiers[:5]}...")
-                # Filter to studies matching these identifiers
-                filtered_df = df[df['Identifier'].isin(identifiers)]
-                print(f"[STEP 2] Using previous results: {len(filtered_df)} studies")
-            else:
-                print(f"[STEP 1] WARNING: No study identifiers found in previous response")
-                print(f"[STEP 2] Skipping filtering - will respond without studies")
-                filtered_df = pd.DataFrame()
-        else:
-            print(f"[STEP 1] WARNING: No conversation history available for continuation query")
-            print(f"[STEP 2] Skipping filtering - will respond without studies")
-            filtered_df = pd.DataFrame()
+        # Continuation query - pass full dataset and let AI understand context from conversation history
+        print(f"[STEP 1] Continuation query detected - passing full dataset with conversation context")
+        print(f"[STEP 2] AI will understand from conversation history which studies to reference")
+        filtered_df = df  # Pass full dataset, AI analyzer will understand context
 
     # Check if AI returned empty keywords (greeting, off-topic, or conceptual question with no entities)
     elif not has_keywords:
