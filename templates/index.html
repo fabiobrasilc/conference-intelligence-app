@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>ESMO 2025 — Conference Intelligence Platform</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
   </head>
@@ -276,15 +276,25 @@
                   <h2 class="ai-greeting-title">Welcome to COSMIC AI</h2>
                   <p class="ai-greeting-subtitle">Your ESMO 2025 Conference Intelligence Assistant</p>
 
+                  <div class="ai-greeting-description">
+                    <p class="greeting-intro">Ask questions, explore insights, and analyze 4,686 ESMO 2025 abstracts with AI-powered conversations.</p>
+
+                    <div class="greeting-tip" style="margin-top: 16px; padding: 10px 14px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%); border-left: 3px solid var(--brand); border-radius: 8px;">
+                      <p style="margin: 0; font-size: 13px; line-height: 1.4; color: var(--ink);">
+                        <strong style="color: var(--brand);">⚡ Quick Tip:</strong> Use the lightning button above to generate comprehensive reports on different topics and therapeutic areas!
+                      </p>
+                    </div>
+
                     <div class="greeting-examples" style="margin-top: 16px;">
-                      <h3 style="font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 8px; text-align: left;">Select a conversation scope below and ask questions like:</h3>
+                      <h3 style="font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 8px; text-align: left;">💬 Example Questions</h3>
+                      <p style="font-size: 12px; color: var(--muted); margin-bottom: 8px; line-height: 1.4; text-align: left;">Select a conversation scope below and ask questions like:</p>
                       <div style="font-size: 12px; color: var(--ink); line-height: 1.6; text-align: left;">
                         <p style="margin: 4px 0;">What are the new data being reported by studies on EV + P?</p>
                         <p style="margin: 4px 0;">I want to attend all sessions by Dr Andrea Necchi, can you show me?</p>
                         <p style="margin: 4px 0;">What are the implications of EV + P moving into the perioperative setting, and what might it mean for avelumab in the metastatic setting?</p>
                         <p style="margin: 4px 0;">Can you summarize the findings of studies on tepotinib?</p>
                         <p style="margin: 4px 0;">I want to know more about study 2690MO.</p>
-                        <p style="margin: 4px 0;">Which bladder HCPs from New York should I try meeting at ESMO?</p>
+                        <p style="margin: 4px 0;">I am an MSL from New York, USA - who should I plan to meet at the conference?</p>
                         <p style="margin: 4px 0;">Are there any potential practice changing studies in [therapeutic area] being presented?</p>
                         <p style="margin: 4px 0;">What are all the bladder poster presentations happening on 10/18?</p>
                       </div>
@@ -322,13 +332,13 @@
                         <path d="M12 2a10 10 0 0 0 0 20 10 10 0 0 0 0-20z"/>
                         <path d="M12 6v6l4 2"/>
                       </svg>
-                      <span class="icon-btn-label">Standard</span>
+                      <span class="icon-btn-label">Thinking</span>
                     </button>
                     <button class="chat-icon-btn" id="chatQIBtn" title="Quick Intelligence Reports">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                       </svg>
-                      <span class="icon-btn-label">Intel</span>
+                      <span class="icon-btn-label">Quick Intelligence</span>
                     </button>
                   </div>
 
@@ -545,27 +555,6 @@
       </div>
     </div>
 
-    <!-- Chat Download Confirmation Modal -->
-    <div class="modal fade" id="downloadChatModal" tabindex="-1" aria-labelledby="downloadChatModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.12);">
-          <div class="modal-header" style="border-bottom: 1px solid #e9ecef; padding: 16px 20px;">
-            <h5 class="modal-title fw-bold" id="downloadChatModalLabel">Download Chat History?</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body" style="padding: 16px 20px;">
-            <p style="margin: 0; font-size: 14px; line-height: 1.5;">
-              You're about to download a PDF file containing your complete chat history with COSMIC AI.
-            </p>
-          </div>
-          <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 12px 20px; display: flex; justify-content: space-between;">
-            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" style="border-radius: 8px;">No</button>
-            <button type="button" class="btn btn-primary btn-sm" id="confirmDownloadChat" style="border-radius: 8px;">Yes</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Mobile Filters Bottom Sheet -->
     <div class="mobile-filters-overlay" id="mobileFiltersOverlay"></div>
     <div class="mobile-filters-sheet" id="mobileFiltersSheet">
@@ -664,8 +653,6 @@
     <!-- Markdown Parser and Sanitizer for AI Intelligence Reports -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-    <!-- jsPDF for PDF generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
       marked.setOptions({
         gfm: true,
@@ -958,12 +945,6 @@
             // Update active state
             thinkingButtons.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-
-            // Update mobile button label text
-            const btnLabel = thinkingBtn.querySelector('.icon-btn-label');
-            if (btnLabel) {
-              btnLabel.textContent = thinkingValue === 'deep' ? 'Deep' : 'Standard';
-            }
 
             // Close popup after selection
             closeThinkingPopup();
