@@ -356,12 +356,22 @@ def filter_dataframe_with_keywords(
         print(f"  After date filter: {len(filtered)} studies")
 
     # 2. Filter by institutions (if specified)
+    # Search BOTH Affiliation and Speaker Location columns
     if keywords.get('institutions'):
         inst_pattern = '|'.join([re.escape(inst) for inst in keywords['institutions']])
-        filtered = filtered[
-            filtered['Affiliation'].str.contains(inst_pattern, case=False, na=False, regex=True)
-        ]
-        print(f"  After institution filter: {len(filtered)} studies")
+
+        # Check which columns are available
+        affiliation_match = filtered['Affiliation'].str.contains(inst_pattern, case=False, na=False, regex=True)
+
+        if 'Speaker Location' in filtered.columns:
+            speaker_location_match = filtered['Speaker Location'].str.contains(inst_pattern, case=False, na=False, regex=True)
+            # Match if found in EITHER Affiliation OR Speaker Location
+            filtered = filtered[affiliation_match | speaker_location_match]
+        else:
+            # Fallback to Affiliation only if Speaker Location not available
+            filtered = filtered[affiliation_match]
+
+        print(f"  After institution filter (Affiliation OR Speaker Location): {len(filtered)} studies")
 
     # 3. Filter by drug combinations (if specified)
     if keywords.get('drug_combinations'):
@@ -536,7 +546,7 @@ def analyze_filtered_results_with_ai(
         print(f"[THINKING MODE] Standard - low reasoning, low verbosity")
 
     # Format filtered data - ALWAYS include abstracts if available (empty DataFrame is fine - AI will handle naturally)
-    essential_cols = ['Identifier', 'Title', 'Speakers', 'Affiliation', 'Date', 'Time', 'Session', 'Theme']
+    essential_cols = ['Identifier', 'Title', 'Speakers', 'Speaker Location', 'Affiliation', 'Date', 'Time', 'Session', 'Theme']
 
     # Check if Abstract column exists in the DataFrame
     if 'Abstract' in filtered_df.columns:
