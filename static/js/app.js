@@ -2003,49 +2003,50 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
-  // Show modal when playbook button is clicked
-  playbookTriggers.forEach(el => {
-    el.addEventListener('click', () => {
-      const playbookType = el.getAttribute('data-playbook');
-      pendingPlaybookType = playbookType;
-      selectedFilterType = null;
-      selectedFilterValue = null;
+  // Show modal when playbook button is clicked (using event delegation for cloned mobile buttons)
+  document.body.addEventListener('click', (e) => {
+    const playbookTrigger = e.target.closest('.playbook-trigger');
+    if (!playbookTrigger) return;
 
-      const config = playbookConfig[playbookType];
+    const playbookType = playbookTrigger.getAttribute('data-playbook');
+    pendingPlaybookType = playbookType;
+    selectedFilterType = null;
+    selectedFilterValue = null;
 
-      // Update modal title/icon
-      modalIcon.textContent = config.icon;
-      modalTitle.textContent = config.title;
-      modalInstructions.textContent = config.instruction;
+    const config = playbookConfig[playbookType];
 
-      // Update TA description if element exists
-      const taDescription = document.getElementById('taModalDescription');
-      if (taDescription && config.description) {
-        taDescription.textContent = config.description;
-        taDescription.style.display = 'block';
-      }
+    // Update modal title/icon
+    modalIcon.textContent = config.icon;
+    modalTitle.textContent = config.title;
+    modalInstructions.textContent = config.instruction;
 
-      // Show/hide filter sections based on config
-      modalDrugSection.style.display = config.filters.includes('drug') ? 'block' : 'none';
-      modalTASection.style.display = config.filters.includes('ta') ? 'block' : 'none';
-      modalSelectedFilter.style.display = 'none';
+    // Update TA description if element exists
+    const taDescription = document.getElementById('taModalDescription');
+    if (taDescription && config.description) {
+      taDescription.textContent = config.description;
+      taDescription.style.display = 'block';
+    }
 
-      // Reset active states
-      document.querySelectorAll('.modal-filter-btn').forEach(btn => btn.classList.remove('active'));
+    // Show/hide filter sections based on config
+    modalDrugSection.style.display = config.filters.includes('drug') ? 'block' : 'none';
+    modalTASection.style.display = config.filters.includes('ta') ? 'block' : 'none';
+    modalSelectedFilter.style.display = 'none';
 
-      // Close mobile QI bottom sheet if it's open
-      const mobileQISheet = document.getElementById('mobileQISheet');
-      const mobileQIOverlay = document.getElementById('mobileQIOverlay');
-      if (mobileQISheet && mobileQISheet.classList.contains('active')) {
-        mobileQISheet.classList.remove('active');
-        mobileQIOverlay.classList.remove('active');
-        document.body.style.overflow = '';
-      }
+    // Reset active states
+    document.querySelectorAll('.modal-filter-btn').forEach(btn => btn.classList.remove('active'));
 
-      // Show modal
-      const modal = new bootstrap.Modal(quickIntelModal);
-      modal.show();
-    });
+    // Close mobile QI bottom sheet if it's open
+    const mobileQISheet = document.getElementById('mobileQISheet');
+    const mobileQIOverlay = document.getElementById('mobileQIOverlay');
+    if (mobileQISheet && mobileQISheet.classList.contains('active')) {
+      mobileQISheet.classList.remove('active');
+      mobileQIOverlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Show modal
+    const modal = new bootstrap.Modal(quickIntelModal);
+    modal.show();
   });
 
   // Handle filter button clicks (auto-run on selection)

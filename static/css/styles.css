@@ -1112,13 +1112,13 @@ mark {
 }
 
 .action-chip .title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--ink);
 }
 
 .action-chip .sub {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
 }
 
@@ -1584,11 +1584,14 @@ mark {
   /* Chat input - mobile friendly */
   .ai-chat-input-container {
     padding: 12px 16px 16px 16px;
+    display: block !important; /* Ensure it's always visible on mobile */
+    flex-shrink: 0 !important;
   }
 
   .chat-scope-selector {
     padding: 8px 14px;
     font-size: 12px;
+    display: flex !important; /* Ensure it's visible */
   }
 
   .chat-scope-dropdown {
@@ -1597,6 +1600,7 @@ mark {
 
   .ai-chat-input-wrapper {
     padding: 12px 14px;
+    display: flex !important; /* Ensure it's visible */
   }
 
   .ai-chat-input {
