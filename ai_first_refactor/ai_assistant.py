@@ -180,10 +180,16 @@ def extract_simple_keywords(
    - Other session types: "Oral", "Mini oral", "Presidential symposium", etc.
    - Put session types in search_terms field
 
-4. **Molecular entities** - put in search_terms:
+4. **Study identifiers** - CRITICAL for filtering by specific studies:
+   - Study IDs follow pattern: 3-4 digits + letter (e.g., "LBA2", "3111eP", "1234P")
+   - Put study IDs in "study_identifiers" field (separate from search_terms)
+   - Examples: "LBA2", "3111eP", "1234P", "567O"
+   - These filter the Identifier column directly (highest priority filter)
+
+5. **Molecular entities** - put in search_terms:
    - "METex14", "MET exon 14 skipping", "EGFR L858R", "HER2", "PD-L1", "KRAS G12C"
 
-5. **Generic terms to EXCLUDE** (too broad):
+6. **Generic terms to EXCLUDE** (too broad):
    - ❌ "metastatic", "perioperative", "neoadjuvant", "adjuvant", "first-line", "1L", "2L"
    - ❌ Single letters: "P", "E", "V" (unless part of abbreviation like "EV+P")
    - ❌ TA names already in active filters: "bladder cancer", "NSCLC"
@@ -215,6 +221,7 @@ Return ONLY valid JSON in this exact format:
   "institutions": ["institution name"],
   "dates": ["date"],
   "speakers": ["speaker name"],
+  "study_identifiers": ["LBA2", "3111eP"],
   "search_terms": ["biomarker", "term"]
 }}
 
@@ -271,7 +278,10 @@ Another confirmation example:
 User: "Yes" (previous assistant message mentioned "EV+P studies") → {{"drug_combinations": [["enfortumab vedotin", "pembrolizumab"]], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
 Molecular entity:
-"METex14 skipping" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": ["METex14", "MET exon 14 skipping"]}}
+"METex14 skipping" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "study_identifiers": [], "search_terms": ["METex14", "MET exon 14 skipping"]}}
+
+Study identifier query:
+"Tell me about study LBA2" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "study_identifiers": ["LBA2"], "search_terms": []}}
 
 Conceptual question (NO specific entities):
 "What is the difference between PD-1 and PD-L1?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
@@ -368,6 +378,15 @@ def filter_dataframe_with_keywords(
     original_count = len(filtered)
 
     # Sequential filtering (most restrictive first)
+
+    # 0. Filter by study identifiers (if specified) - HIGHEST PRIORITY
+    # Study IDs are unique, so this should return 1 study per ID
+    if keywords.get('study_identifiers'):
+        identifier_pattern = '|'.join([re.escape(id) for id in keywords['study_identifiers']])
+        filtered = filtered[
+            filtered['Identifier'].str.contains(identifier_pattern, case=False, na=False, regex=True)
+        ]
+        print(f"  After study identifier filter: {len(filtered)} studies (IDs: {', '.join(keywords['study_identifiers'])})")
 
     # 1. Filter by date (if specified)
     # Note: AI is instructed to convert dates to MM/DD/YYYY format to match dataset
