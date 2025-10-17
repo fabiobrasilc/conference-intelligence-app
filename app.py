@@ -4613,48 +4613,13 @@ def stream_chat_ai_first():
 
             print(f"[AI-FIRST] AI processing complete, streaming response...")
 
-            # 3. Stream AI response tokens FIRST (before table)
+            # 3. Stream AI response tokens (AI now includes study list at end)
             for token in result['response_stream']:
                 yield "data: " + json.dumps({"text": token}) + "\n\n"
 
-            # 4. THEN send table data (after AI response completes) - COLLAPSIBLE
-            table_df = result['filtered_data']
-            if not table_df.empty and len(table_df) <= 500:
-                # New column order: Identifier, Title, Speakers, Affiliation, Abstract, Date, Session
-                display_cols = ['Identifier', 'Title', 'Speakers', 'Affiliation', 'Abstract', 'Date', 'Session']
-                table_df_display = table_df[[col for col in display_cols if col in table_df.columns]]
-
-                # Generate unique ID for this table
-                import hashlib
-                table_id = hashlib.md5(str(len(table_df_display)).encode()).hexdigest()[:8]
-
-                # Format table as collapsible HTML for frontend
-                table_html = f"""<div class='entity-table-container collapsible-table' style='margin-top: 1rem;'>
-<button class='toggle-table-btn' onclick='window.toggleSupportingTable("{table_id}")' style='
-    background: #f0f0f0;
-    border: 1px solid #ddd;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    width: 100%;
-    text-align: left;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-'>
-    <span>📊 Show Supporting Studies ({len(table_df_display)} studies)</span>
-    <span id='toggle-icon-{table_id}'>▼</span>
-</button>
-<div id='table-{table_id}' style='display: none; margin-top: 0.5rem;'>
-{dataframe_to_custom_html(table_df_display)}
-</div>
-</div>"""
-                yield "data: " + json.dumps({"table": table_html}) + "\n\n"
-                print(f"[AI-FIRST] Sent collapsible table with {len(table_df_display)} rows after AI response")
-
+            # No table generation - AI includes formatted study list in response
             yield "data: [DONE]\n\n"
-            print(f"[AI-FIRST] Streaming completed")
+            print(f"[AI-FIRST] Streaming completed (study list included in AI response)")
 
         except Exception as e:
             print(f"[AI-FIRST] ERROR: {type(e).__name__}: {str(e)}")

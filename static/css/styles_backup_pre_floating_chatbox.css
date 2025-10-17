@@ -1,0 +1,2760 @@
+/* ===============================================
+   ESMO 2025 – Sidebar Filter Layout
+   =============================================== */
+
+/* ------- Design tokens ------- */
+:root{
+  --brand:#8b5cf6;
+  --brand-600:#7c3aed;
+  --brand-700:#6d28d9;
+
+  --ink:#101828;
+  --ink-2:#344054;
+  --muted:#667085;
+
+  --bg:#f6f8fb;
+  --card:#ffffff;
+  --stroke:#e7ecf2;
+
+  --ok:#22c55e;
+
+  --radius-2xl:18px;
+  --radius-xl:16px;
+  --radius-lg:14px;
+  --radius:12px;
+
+  --shadow-md:0 12px 30px rgba(16,24,40,.08);
+  --shadow-sm:0 6px 18px rgba(16,24,40,.06);
+
+  --focus:0 0 0 4px rgba(79,106,246,.18);
+
+  --sidebar-width: 240px;
+  --sidebar-collapsed-width: 50px;
+}
+
+/* ------- Base ------- */
+html,body{height:100%; margin:0; padding:0; overflow:hidden;}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif;
+  background:var(--bg); color:var(--ink);
+  display:flex;
+}
+
+/* ===== SIDEBAR ===== */
+.filter-sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: var(--card);
+  border-right: 1px solid var(--stroke);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+/* === TWO SIDEBAR SYSTEM: Toggle visibility based on active tab === */
+
+/* Hide filter sidebar on AI Assistant tab */
+body.ai-tab-active .filter-sidebar {
+  display: none;
+}
+
+/* Hide QI sidebar on Data Explorer tab (default state) */
+body.data-tab-active .quick-intel-sidebar {
+  display: none;
+}
+
+/* Show QI sidebar on AI Assistant tab */
+body.ai-tab-active .quick-intel-sidebar {
+  display: flex;
+}
+
+.filter-sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+
+.filter-sidebar.collapsed .sidebar-header {
+  padding: 20px 8px;
+  writing-mode: vertical-rl;
+  text-align: center;
+  position: relative;
+  cursor: pointer;
+}
+
+/* Option 1: Three-dot menu with arrow hint (most intuitive) */
+.filter-sidebar.collapsed .sidebar-header::before {
+  content: '☰';
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 22px;
+  writing-mode: horizontal-tb;
+  color: var(--brand);
+  opacity: 0.8;
+}
+
+.filter-sidebar.collapsed .sidebar-header::after {
+  content: '»';
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+  writing-mode: horizontal-tb;
+  color: var(--brand);
+  opacity: 0.6;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.filter-sidebar.collapsed .sidebar-header h6 {
+  transform: rotate(180deg);
+  margin: 0;
+  margin-top: 50px;
+  margin-bottom: 50px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--brand);
+  text-transform: uppercase;
+}
+
+.filter-sidebar.collapsed .sidebar-header .d-flex,
+.filter-sidebar.collapsed .filter-count-badge {
+  display: none !important;
+}
+
+.filter-sidebar.collapsed .sidebar-content {
+  display: none;
+}
+
+.sidebar-header {
+  padding: 20px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  position: relative;
+}
+
+.sidebar-header:hover {
+  background: var(--bg);
+}
+
+/* Pin indicator - shown when sidebar is expanded */
+.sidebar-header::after {
+  content: '📌';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-45deg);
+  font-size: 18px;
+  opacity: 0.25;
+  transition: all 0.3s ease;
+  filter: grayscale(100%);
+}
+
+.filter-sidebar.collapsed .sidebar-header::after {
+  display: none;
+}
+
+/* When pinned (not collapsed), show pin as "pinned" with color */
+.filter-sidebar:not(.collapsed) .sidebar-header::after {
+  opacity: 0.8;
+  transform: translateY(-50%) rotate(0deg);
+  filter: grayscale(0%);
+}
+
+.sidebar-header:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) rotate(0deg) scale(1.1);
+  filter: grayscale(0%);
+}
+
+.sidebar-header h6 {
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.sidebar-header #clearAllFilters {
+  font-size: 12px;
+  color: var(--brand);
+  padding: 0;
+}
+
+.sidebar-header #clearAllFilters:hover {
+  color: var(--brand-600);
+  text-decoration: underline !important;
+}
+
+.filter-count-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  background: var(--bg);
+  border-radius: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* Filter Action Buttons (Done/Clear) */
+.filter-action-buttons {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-action-btn {
+  padding: 5px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.filter-done-btn {
+  background: var(--brand) !important;
+  color: white !important;
+  border-color: var(--brand) !important;
+}
+
+.filter-done-btn:hover {
+  background: var(--brand-600) !important;
+  border-color: var(--brand-600) !important;
+  transform: scale(1.05);
+}
+
+.filter-clear-btn {
+  background: #f5f5f5 !important;
+  color: #666 !important;
+  border-color: #ddd !important;
+}
+
+.filter-clear-btn:hover {
+  background: var(--bg) !important;
+  color: var(--ink) !important;
+  border-color: var(--ink) !important;
+  transform: scale(1.05);
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+}
+
+.sidebar-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: var(--stroke);
+  border-radius: 3px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Filter Sections */
+.filter-section {
+  margin-bottom: 4px;
+  padding: 0 16px;
+}
+
+.filter-section-header {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+  user-select: none;
+}
+
+.filter-section-header:hover {
+  background: var(--bg);
+}
+
+.filter-section-header .section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-section-header .chevron {
+  font-size: 18px;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+  font-weight: bold;
+}
+
+.filter-section.collapsed .chevron {
+  transform: rotate(0deg);
+}
+
+.filter-section:not(.collapsed) .chevron {
+  transform: rotate(90deg);
+}
+
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 1000px;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  opacity: 1;
+}
+
+.filter-section.collapsed .filter-options {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+}
+
+/* Filter Toggle Buttons in Sidebar */
+.filter-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid color-mix(in oklab, var(--brand) 25%, var(--stroke));
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  margin-bottom: 0;
+}
+
+.filter-toggle-btn:hover {
+  border-color: color-mix(in oklab, var(--brand) 50%, var(--stroke));
+  box-shadow: 0 2px 4px rgba(16,24,40,.08);
+  background: color-mix(in oklab, var(--brand) 5%, #fff);
+}
+
+.filter-toggle-btn.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79,106,246,.25);
+}
+
+.filter-toggle-btn.active:hover {
+  background: var(--brand-600);
+  border-color: var(--brand-600);
+}
+
+.filter-toggle-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+
+/* Sidebar Overlay for Mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.sidebar-overlay.active {
+  display: block;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main-content {
+  margin-left: var(--sidebar-width);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  transition: margin-left 0.3s ease;
+}
+
+/* Data Explorer tab: Filter sidebar controls margin */
+body.data-tab-active .filter-sidebar.collapsed ~ .main-content {
+  margin-left: var(--sidebar-collapsed-width);
+}
+
+/* AI tab: QI sidebar controls margin */
+body.ai-tab-active .quick-intel-sidebar.collapsed ~ .main-content {
+  margin-left: 60px; /* QI sidebar collapsed width */
+}
+
+body.ai-tab-active .quick-intel-sidebar:not(.collapsed) ~ .main-content {
+  margin-left: 240px; /* QI sidebar expanded width */
+}
+
+/* Sidebar Toggle Button */
+/* Floating animation for sidebar toggle */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.sidebar-toggle {
+  display: none; /* Hidden on desktop - only visible on mobile */
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  color: var(--ink);
+  animation: float 2s ease-in-out infinite;
+  transition: transform 0.2s;
+}
+
+.sidebar-toggle:hover {
+  transform: scale(1.1);
+  animation: none;
+}
+
+/* App Bar */
+.appbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--stroke);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.appbar-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.appbar-tabs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.appbar-tab {
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.appbar-tab:hover {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.appbar-tab.active {
+  background: var(--brand);
+  color: white;
+}
+
+.appbar-tabs > span {
+  color: var(--stroke);
+  font-size: 18px;
+}
+
+.appbar-data-warning-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.appbar-data-warning-btn:hover {
+  color: var(--brand);
+  background: var(--bg);
+}
+
+.appbar-data-warning-btn:active {
+  transform: scale(0.95);
+}
+
+.appbar-data-warning-btn svg {
+  flex-shrink: 0;
+}
+
+/* Download Table Button - matches download-chat-btn style */
+.download-table-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.download-table-btn:hover {
+  color: var(--brand);
+  background: var(--bg);
+}
+
+.download-table-btn:active {
+  transform: scale(0.95);
+}
+
+.download-table-btn span {
+  white-space: nowrap;
+}
+
+/* Data Warning Modal - Custom Width (20% wider than default modal-lg) */
+#dataWarningModal .modal-dialog {
+  max-width: 960px; /* 20% wider than Bootstrap's default modal-lg (800px) */
+}
+
+/* Utility Classes */
+.text-purple {
+  color: var(--brand) !important;
+}
+
+/* Content Area */
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+/* Search Bar */
+.search-bar-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.search-bar-container .form-control-lg {
+  font-size: 14px;
+  padding: 8px 14px;
+  border-radius: 10px 0 0 10px !important;
+  border-right: none;
+}
+
+.search-bar-container .btn-outline-secondary {
+  border-radius: 10px 0 0 10px;
+  border-right: none;
+  padding: 8px 12px;
+}
+
+.search-bar-container .btn-primary {
+  border-radius: 0 10px 10px 0 !important;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+/* Column Toggle Controls (Narrow Text-Based) */
+.column-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+  padding: 2px 8px;
+  background: transparent;
+  border-radius: var(--radius);
+  border: none;
+}
+
+.toggle-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-right: 6px;
+}
+
+.column-toggle-btn {
+  padding: 3px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.column-toggle-btn:not(:last-child)::after {
+  content: "|";
+  margin-left: 8px;
+  color: #dee2e6;
+}
+
+.column-toggle-btn:hover {
+  color: var(--brand);
+}
+
+.column-toggle-btn.active {
+  background: transparent;
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.column-toggle-btn.active:hover {
+  color: #7c3aed;
+}
+
+/* Cards */
+.card {
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+}
+
+.card-header {
+  background: var(--card);
+  border-bottom: 1px solid var(--stroke);
+  padding: 10px 16px;
+}
+
+.card-header h5 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.card-body {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Table Styles */
+.table-responsive {
+  max-height: calc(100vh - 250px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#tableContainer {
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: calc(100vh - 250px);
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  table-layout: fixed !important;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Table container rounded corners */
+#tableViewport {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Column widths are set via colgroup in JavaScript */
+
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+}
+
+thead th {
+  padding: 12px 16px;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: left;
+  border-bottom: 2px solid var(--stroke);
+  white-space: nowrap;
+}
+
+/* Round top corners of first row */
+thead tr:first-child th:first-child {
+  border-top-left-radius: 12px;
+}
+
+thead tr:first-child th:last-child {
+  border-top-right-radius: 12px;
+}
+
+/* Round bottom corners of last row */
+tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 12px;
+}
+
+tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 12px;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--stroke);
+  transition: background 0.15s ease;
+}
+
+tbody tr:hover {
+  background: var(--bg);
+}
+
+tbody td {
+  padding: 12px 16px;
+  color: var(--ink-2);
+  vertical-align: top;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
+}
+
+/* Removed hover expansion - cells stay truncated, full text visible via title tooltip */
+
+/* Custom tooltip for table cells */
+.custom-cell-tooltip {
+  position: fixed;
+  background: var(--card);
+  border: 1.5px solid var(--stroke);
+  border-radius: 8px;
+  padding: 12px 16px;
+  max-width: 800px;
+  font-size: 13px;
+  color: var(--ink);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  pointer-events: none;
+  display: none;
+  word-wrap: break-word;
+  line-height: 1.5;
+}
+
+.custom-cell-tooltip.show {
+  display: block;
+}
+
+/* AI chat tables - no hover expansion, use custom tooltips */
+.ai-chat-table tbody td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-chat-table tbody tr:hover td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Highlighted Search Results */
+mark {
+  background: #fef08a;
+  color: #854d0e;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+/* ========================================
+   AI ASSISTANT - CLAUDE-STYLE LAYOUT
+   ======================================== */
+
+/* Full-height chat layout */
+.ai-chat-layout {
+  display: flex;
+  flex-direction: row;
+  height: calc(100vh - 80px);
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  background: var(--bg);
+  position: relative;
+}
+
+/* Quick Intelligence Sidebar (LEFT) - Fixed positioning like filter sidebar */
+.quick-intel-sidebar {
+  width: 240px;
+  height: 100vh;
+  background: var(--card);
+  border-right: 1.5px solid var(--stroke);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.quick-intel-sidebar.collapsed {
+  width: 60px;
+}
+
+.quick-intel-header {
+  padding: 12px;
+  border-bottom: 1.5px solid var(--stroke);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.quick-intel-header:hover {
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.quick-intel-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.quick-intel-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+.chevron-toggle {
+  margin-left: auto;
+  font-size: 20px;
+  transition: transform 0.3s ease;
+  color: var(--brand);
+  font-weight: bold;
+}
+
+.quick-intel-sidebar.collapsed .quick-intel-title {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.quick-intel-sidebar.collapsed .chevron-toggle {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.quick-intel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quick-intel-sidebar.collapsed .quick-intel-content {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Instructional text above QI buttons */
+.qi-instructions {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 8px 0;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--stroke);
+  text-align: center;
+}
+
+.quick-intel-sidebar .action-chip {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 0;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Enhanced hover effect for tooltips */
+.quick-intel-sidebar .action-chip:hover {
+  background: var(--hover);
+  transform: translateX(2px);
+  transition: all 0.2s ease;
+}
+
+.ai-chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  min-height: 0; /* Important for flexbox scrolling */
+}
+
+/* Scrollable content area (greeting + messages) */
+.ai-chat-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 40px 24px;
+}
+
+/* Greeting Section */
+.ai-greeting {
+  max-width: 1000px;
+  margin: 0 auto 20px auto;
+  text-align: center;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ai-greeting-title {
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.ai-greeting-subtitle {
+  font-size: 18px;
+  color: var(--muted);
+  margin-bottom: 32px;
+}
+
+.ai-greeting-description {
+  text-align: center;
+  background: transparent;
+  border-radius: 16px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+}
+
+.greeting-intro {
+  font-size: 15px;
+  color: var(--ink-2);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.greeting-examples {
+  margin-bottom: 20px;
+}
+
+.greeting-examples-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.example-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.example-chip {
+  background: #f0f0f0;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.example-chip:hover {
+  background: var(--brand);
+  color: white;
+}
+
+.greeting-qi-hint {
+  background: #f8f9fa;
+  border-left: 3px solid var(--brand);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+  margin-bottom: 20px;
+}
+
+.greeting-limitations {
+  background: transparent;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.limitations-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.greeting-limitations ul {
+  margin: 0 auto;
+  padding-left: 0;
+  list-style: none;
+  display: inline-block;
+  text-align: left;
+}
+
+.greeting-limitations li {
+  font-size: 12px;
+  color: var(--ink-2);
+  margin-bottom: 6px;
+  position: relative;
+  padding-left: 12px;
+}
+
+.greeting-limitations li::before {
+  content: "•";
+  color: #8b5cf6;
+  position: absolute;
+  left: 0;
+}
+
+/* Quick Intelligence Chips in Greeting */
+.ai-greeting-chips {
+  margin-top: 24px;
+}
+
+.ai-greeting-chips .label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 16px;
+  display: block;
+}
+
+.chips-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.action-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--card);
+  border: 1.5px solid var(--stroke);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-chip:hover {
+  background: var(--bg);
+  border-color: var(--brand);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.action-chip .icon {
+  font-size: 24px;
+}
+
+.action-chip .title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.action-chip .sub {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+/* Chat Messages */
+.ai-chat-messages {
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+  min-height: 100px;
+}
+
+/* Chat Input (Fixed at bottom - Claude.ai style with integrated scope selector) */
+.ai-chat-input-container {
+  flex-shrink: 0;
+  background: var(--bg);
+  padding: 20px 24px 24px 24px; /* Same horizontal padding as scrollable area */
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
+}
+
+/* Chat Scope Selector (Integrated into input box) */
+.chat-scope-selector {
+  flex-shrink: 0;
+  background: var(--card);
+  border: 1.5px solid var(--stroke);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1000px;
+  margin: 0 auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.chat-scope-selector label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.chat-scope-dropdown {
+  flex: 0 1 auto;
+  max-width: fit-content;
+  font-size: 13px;
+  border: none;
+  padding: 4px 8px 4px 4px;
+  background: transparent;
+  color: var(--ink);
+  outline: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.chat-scope-dropdown:focus {
+  outline: none;
+}
+
+.download-chat-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  display: none; /* Hidden - functionality moved to menu */
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  margin-left: auto;
+}
+
+.download-chat-btn:hover {
+  color: var(--brand);
+  background: var(--bg);
+}
+
+.download-chat-btn:active {
+  transform: scale(0.95);
+}
+
+.download-chat-text {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Chat Menu Button (Desktop) */
+.chat-menu-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 50%;
+  margin-left: auto;
+}
+
+.chat-menu-btn:hover {
+  color: var(--brand);
+  background: var(--bg);
+}
+
+.chat-menu-btn:active {
+  transform: scale(0.95);
+}
+
+.chat-scope-dropdown optgroup {
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--card);
+}
+
+.chat-scope-dropdown option {
+  padding: 8px;
+  background: var(--card);
+}
+
+.ai-chat-input-wrapper {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  background: var(--card);
+  border: 1.5px solid var(--stroke);
+  border-radius: 0 0 20px 20px;
+  border-top: 1px solid #e7ecf2;
+  padding: 14px 18px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Modal Filter Buttons */
+.modal-filter-btn {
+  padding: 8px 16px;
+  border: 1.5px solid var(--stroke);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.modal-filter-btn:hover {
+  border-color: var(--brand);
+  background: rgba(139, 92, 246, 0.05);
+  color: var(--brand);
+}
+
+.modal-filter-btn.active {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: white;
+}
+
+.ai-chat-input-wrapper:focus-within {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.ai-chat-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  resize: none;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  font-family: inherit;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.ai-chat-input::placeholder {
+  color: var(--muted);
+}
+
+.ai-chat-send-btn {
+  background: var(--brand);
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ai-chat-send-btn:hover {
+  background: var(--brand-600);
+  transform: scale(1.05);
+}
+
+.ai-chat-send-btn:disabled {
+  background: var(--muted);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Entity Tables in Chat */
+.entity-table-container {
+  margin: 16px 0;
+  padding: 16px;
+  background: var(--card);
+  border: 1.5px solid var(--stroke);
+  border-radius: 12px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.entity-table-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1.5px solid var(--stroke);
+}
+
+.entity-table-container table {
+  width: 100%;
+  margin: 0;
+  font-size: 13px;
+}
+
+.entity-table-container th {
+  background: var(--bg);
+  color: var(--ink);
+  font-weight: 600;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--stroke);
+}
+
+.entity-table-container td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--stroke);
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* Prevent hover expansion on entity tables - use custom tooltip instead */
+.entity-table-container tr:hover td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entity-table-container tr:hover {
+  background: var(--bg);
+}
+
+/* Chat Container (old style - keep for backward compatibility) */
+.chat-container {
+  min-height: 400px;
+  max-height: 600px;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.chat-welcome {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.chat-message {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-message.user {
+  align-items: flex-end;
+}
+
+.chat-message.assistant {
+  align-items: flex-start;
+}
+
+.chat-message-content {
+  max-width: 90%;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.chat-message.user .chat-message-content {
+  background: var(--brand);
+  color: white;
+}
+
+.chat-message.assistant .chat-message-content {
+  background: var(--bg);
+  color: var(--ink-2);
+  border: 1px solid var(--stroke);
+}
+
+/* Buttons */
+.btn {
+  font-weight: 500;
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.btn-primary:hover {
+  background: var(--brand-600);
+  border-color: var(--brand-600);
+}
+
+.btn-outline-secondary {
+  border-color: var(--stroke);
+  color: var(--ink-2);
+}
+
+.btn-outline-secondary:hover {
+  background: var(--bg);
+  border-color: var(--muted);
+}
+
+/* Loading Spinner */
+.spinner-border {
+  color: var(--brand);
+}
+
+/* ===== MOBILE RESPONSIVE (includes iPads) ===== */
+@media (max-width: 768px) {
+  /* On small screens, completely hide sidebar */
+  .filter-sidebar {
+    display: none !important;
+  }
+
+  /* Remove left margin on mobile - sidebar is hidden */
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  /* Show mobile filters button */
+  .mobile-filters-btn {
+    display: flex !important;
+  }
+
+  .appbar-title {
+    font-size: 16px;
+  }
+
+  .content-area {
+    padding: 12px;
+  }
+
+  .search-bar-container {
+    max-width: 100%;
+  }
+
+  /* Mobile: Show icon buttons, hide desktop search button */
+  .search-btn-desktop {
+    display: none !important;
+  }
+
+  .search-btn-mobile,
+  .filter-btn-mobile {
+    display: flex !important;
+  }
+
+  /* Mobile search bar layout */
+  .search-bar-container .input-group {
+    flex-direction: row;
+    gap: 0px;
+  }
+
+  .search-bar-container .form-control-lg {
+    border-radius: 10px 0 0 10px !important;
+    border-right: none !important;
+  }
+
+  .search-btn-mobile {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    padding: 8px 12px;
+  }
+
+  .filter-btn-mobile {
+    border-radius: 10px !important;
+    padding: 8px 12px;
+    margin-left: 8px;
+  }
+
+  /* Remove flash/white effect on mobile filter button click */
+  .filter-btn-mobile:active,
+  .filter-btn-mobile:focus {
+    background: var(--btn-outline-secondary-bg) !important;
+    outline: none !important;
+  }
+
+  /* Make table more readable on mobile */
+  table {
+    font-size: 12px;
+  }
+
+  thead th {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  tbody td {
+    padding: 10px 12px;
+    max-width: 150px;
+  }
+
+  /* Column toggles - hide on mobile (not practical for small screens) */
+  .column-toggle-container {
+    display: none !important;
+  }
+
+  /* Cards - reduce spacing on mobile */
+  .card {
+    margin-bottom: 16px;
+    border-radius: 12px;
+  }
+
+  .card-header {
+    padding: 8px 12px;
+  }
+
+  .card-header h5 {
+    font-size: 13px;
+  }
+
+  /* AI Chat - Mobile optimizations */
+  .ai-chat-layout {
+    height: calc(100vh - 60px);
+  }
+
+  .ai-chat-scrollable {
+    padding: 20px 16px 180px 16px; /* Add bottom padding to account for fixed chat input height */
+  }
+
+  .ai-greeting-title {
+    font-size: 24px;
+  }
+
+  .ai-greeting-subtitle {
+    font-size: 15px;
+  }
+
+  .ai-greeting-description {
+    padding: 12px 16px;
+  }
+
+  .greeting-intro {
+    font-size: 14px;
+  }
+
+  /* Quick Intelligence sidebar - hide completely on mobile */
+  .quick-intel-sidebar {
+    display: none !important;
+  }
+
+  /* Adjust AI chat layout when QI sidebar is hidden */
+  body.ai-tab-active .main-content {
+    margin-left: 0 !important;
+  }
+
+  .quick-intel-content {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .action-chip {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .action-chip .icon {
+    font-size: 24px;
+  }
+
+  /* QI buttons font sizes kept large on mobile - inherits from desktop base styles */
+
+  /* Chat input - mobile friendly */
+  .ai-chat-input-container {
+    padding: 12px 16px 16px 16px;
+    /* Removed display: block and position: fixed - they break desktop flex layout */
+    /* Keep default flex layout from desktop styles */
+  }
+
+  .chat-scope-selector {
+    padding: 8px 14px;
+    font-size: 12px;
+    display: flex !important; /* Ensure it's visible */
+  }
+
+  .chat-scope-dropdown {
+    font-size: 12px;
+  }
+
+  .ai-chat-input-wrapper {
+    padding: 12px 14px;
+    display: flex !important; /* Ensure it's visible */
+  }
+
+  .ai-chat-input {
+    font-size: 14px;
+  }
+
+  .ai-chat-send-btn {
+    padding: 8px;
+  }
+
+  /* Download buttons - smaller on mobile */
+  .download-table-btn,
+  .download-chat-btn {
+    font-size: 12px;
+    padding: 4px 6px;
+  }
+
+  .download-table-btn span,
+  .download-chat-text {
+    display: none; /* Hide text, keep icon only */
+  }
+
+  /* Touch-friendly buttons */
+  .filter-toggle-btn {
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px; /* iOS recommended touch target */
+  }
+
+  .appbar-tab {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Entity tables in chat - better mobile display */
+  .entity-table-container {
+    padding: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+
+  .entity-table-container table {
+    font-size: 12px;
+  }
+
+  .entity-table-container th,
+  .entity-table-container td {
+    padding: 6px 10px;
+    max-width: 120px;
+  }
+
+  /* Jump to bottom button - adjust position for mobile */
+  .jump-to-bottom-btn {
+    bottom: 140px;
+    left: 85%;
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra small phones - further optimization */
+  .appbar {
+    padding: 10px 12px;
+  }
+
+  .appbar-title {
+    font-size: 13px;
+  }
+
+  .appbar-tabs {
+    gap: 6px;
+  }
+
+  .appbar-tab {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* Reduce content padding on very small screens */
+  .content-area {
+    padding: 8px;
+  }
+
+  .ai-chat-scrollable {
+    padding: 16px 12px 160px 12px; /* Add bottom padding to account for fixed chat input height */
+  }
+
+  /* Smaller table cells */
+  table {
+    font-size: 11px;
+  }
+
+  thead th {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  tbody td {
+    padding: 8px 10px;
+    max-width: 120px;
+  }
+
+  /* AI greeting - smaller on phones */
+  .ai-greeting-title {
+    font-size: 20px;
+  }
+
+  .ai-greeting-subtitle {
+    font-size: 14px;
+  }
+
+  .greeting-intro {
+    font-size: 13px;
+  }
+
+  /* Quick Intel buttons - compact padding but keep font sizes large */
+  .action-chip {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  /* QI button font sizes kept large - inherit from base styles */
+
+  /* Chat input - more compact */
+  .ai-chat-input-container {
+    padding: 10px 12px 12px 12px;
+  }
+
+  .chat-scope-selector {
+    padding: 6px 12px;
+  }
+
+  .ai-chat-input-wrapper {
+    padding: 10px 12px;
+  }
+
+  .ai-chat-input {
+    font-size: 13px;
+  }
+
+  /* Very compact entity tables */
+  .entity-table-container {
+    padding: 10px;
+  }
+
+  .entity-table-container table {
+    font-size: 11px;
+  }
+
+  .entity-table-container th,
+  .entity-table-container td {
+    padding: 5px 8px;
+    max-width: 100px;
+  }
+
+  /* Jump to bottom button - smaller on phones */
+  .jump-to-bottom-btn {
+    bottom: 120px;
+    left: 80%;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+/* ===============================================
+   Jump to Bottom Button (Floating)
+   =============================================== */
+.jump-to-bottom-btn {
+  position: fixed;
+  bottom: 170px;  /* Above the chat input */
+  left: 90%;
+  transform: translateX(-50%);
+  z-index: 9999;  /* Very high to be above everything */
+
+  background: var(--brand);
+  color: white;
+  border: none;
+  border-radius: 24px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.jump-to-bottom-btn.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.jump-to-bottom-btn:hover {
+  background: var(--brand-600);
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.jump-to-bottom-btn:active {
+  transform: translateX(-50%) translateY(0);
+}
+
+
+/* ================================================
+   AI ASSISTANT PLAYBOOK TABLES - STICKY HEADERS
+   ================================================ */
+
+/* Sticky header for playbook tables */
+.playbook-table-viewport thead th {
+  position: sticky;
+  top: 0;
+  background: var(--card);
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure sticky headers work properly */
+.playbook-table-viewport {
+  position: relative;
+}
+
+.playbook-table-viewport table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Warning Footer (persistent under chat input) */
+.ai-warning-footer {
+  padding: 8px 16px;
+  background: #fff3cd;
+  border-top: 1px solid #f0e5b8;
+  font-size: 11px;
+  color: #664d03;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* QI Warning Button */
+.qi-warning-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  margin-top: 16px;
+  background: white;
+  border: 1.5px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.qi-warning-btn:hover {
+  background: #f8f9fa;
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.qi-warning-btn svg {
+  flex-shrink: 0;
+}
+
+/* Proper spacing and sizing for AI markdown responses in chat bubbles */
+.ai-chat-messages h1,
+.ai-chat-messages h2,
+.ai-chat-messages h3,
+.ai-chat-messages h4 {
+  margin: 0.6rem 0 0.35rem;
+  line-height: 1.25;
+  font-size: 1rem;
+}
+.ai-chat-messages h1 { font-size: 1.1rem; }
+.ai-chat-messages h2 { font-size: 1.05rem; }
+.ai-chat-messages h3 { font-size: 1rem; }
+.ai-chat-messages h4 { font-size: 0.95rem; }
+
+.ai-chat-messages p {
+  margin: 0.5rem 0 0.75rem;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+.ai-chat-messages ul,
+.ai-chat-messages ol {
+  margin: 0.5rem 0 0.75rem 1.25rem;
+  padding-left: 1rem;
+}
+
+.ai-chat-messages li {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+.ai-chat-messages hr {
+  border: 0;
+  height: 1px;
+  background: #e7ecf2;
+  margin: 1rem 0;
+}
+
+
+/* ===============================================
+   MOBILE CARD LAYOUT FOR STUDIES (768px and below)
+   =============================================== */
+
+.study-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px;
+}
+
+.study-card {
+  background: var(--card);
+  border: 1.5px solid var(--stroke);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.study-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.study-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-600) 100%);
+  border-bottom: 1.5px solid var(--stroke);
+}
+
+.study-identifier {
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.5px;
+}
+
+.study-session-type {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.study-card-body {
+  padding: 16px;
+}
+
+.study-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.4;
+  margin: 0 0 12px 0;
+}
+
+.study-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--bg);
+}
+
+.study-info-row:last-of-type {
+  border-bottom: none;
+  margin-bottom: 12px;
+  padding-bottom: 0;
+}
+
+.info-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info-content {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.info-content strong {
+  color: var(--ink);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.study-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--bg);
+}
+
+.meta-badge {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--bg);
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.study-abstract-toggle {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--bg);
+}
+
+.abstract-toggle-btn {
+  width: 100%;
+  background: var(--bg);
+  border: 1.5px solid var(--stroke);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.abstract-toggle-btn:hover {
+  background: var(--brand);
+  color: white;
+  border-color: var(--brand);
+}
+
+.abstract-toggle-btn:active {
+  transform: scale(0.98);
+}
+
+.study-abstract {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Smooth scrolling for abstracts */
+.study-abstract::-webkit-scrollbar {
+  width: 4px;
+}
+
+.study-abstract::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.study-abstract::-webkit-scrollbar-thumb {
+  background: var(--stroke);
+  border-radius: 2px;
+}
+
+.study-abstract::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Hide cards container on desktop (>1024px) */
+@media (min-width: 769px) {
+  .study-cards-container {
+    display: none;
+  }
+}
+
+/* Mobile Filters Button (hidden on desktop) */
+.mobile-filters-btn {
+  display: none; /* Hidden on desktop, shown on mobile via media query */
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--brand);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.mobile-filters-btn:hover {
+  background: var(--brand-600);
+  transform: scale(1.02);
+}
+
+.mobile-filters-btn:active {
+  transform: scale(0.98);
+}
+
+/* Mobile Filters Bottom Sheet */
+.mobile-filters-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--card);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  z-index: 9999;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-filters-sheet.active {
+  transform: translateY(0);
+}
+
+.mobile-filters-header {
+  padding: 16px 20px;
+  border-bottom: 1.5px solid var(--stroke);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.mobile-filters-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* Mobile filter action buttons container - positioned between title and close */
+.mobile-filter-actions {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  justify-content: flex-end;
+  margin-right: 8px;
+}
+
+.mobile-filters-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.mobile-filters-close:hover {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.mobile-filters-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-filters-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-filters-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ===============================================
+   Mobile Quick Intelligence Bottom Sheet & FAB
+   =============================================== */
+
+/* Mobile QI FAB (Floating Action Button) - WhatsApp/Telegram style */
+.mobile-qi-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  background: var(--brand);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+  transition: all 0.3s ease;
+  z-index: 9997;
+  display: none; /* Hidden by default, shown only on AI tab on mobile */
+}
+
+.mobile-qi-fab:hover {
+  background: var(--brand-600);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+}
+
+.mobile-qi-fab:active {
+  transform: scale(0.95);
+}
+
+/* Show FAB only on AI tab on mobile/iPad */
+@media (max-width: 768px) {
+  body.ai-tab-active .mobile-qi-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Mobile QI Bottom Sheet */
+.mobile-qi-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--card);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  z-index: 9999;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-qi-sheet.active {
+  transform: translateY(0);
+}
+
+.mobile-qi-header {
+  padding: 16px 20px;
+  border-bottom: 1.5px solid var(--stroke);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.mobile-qi-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.mobile-qi-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.mobile-qi-close:hover {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.mobile-qi-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-qi-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-qi-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ===============================================
+   Conditional Mobile Button (Filters / QI)
+   =============================================== */
+
+/* Unified styling for both conditional buttons */
+.mobile-conditional-btn {
+  display: none; /* Hidden on desktop, shown on mobile via media query */
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--stroke);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.mobile-conditional-btn:hover {
+  background: var(--bg);
+  border-color: var(--ink);
+}
+
+.mobile-conditional-btn:active {
+  transform: scale(0.98);
+}
+
+.mobile-conditional-btn svg {
+  flex-shrink: 0;
+}
+
+/* ===============================================
+   Chat Mobile Icon Buttons (Scope & Thinking)
+   =============================================== */
+
+/* Mobile controls container */
+.chat-mobile-controls {
+  display: none; /* Hidden by default, shown on mobile */
+  align-items: center;
+  gap: 10px;
+}
+
+/* Icon button styling */
+.chat-icon-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--stroke);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.chat-icon-btn:hover {
+  background: var(--bg);
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.chat-icon-btn:active {
+  transform: scale(0.98);
+}
+
+.chat-icon-btn svg {
+  flex-shrink: 0;
+}
+
+.icon-btn-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Hide desktop scope selector on mobile/iPad */
+@media (max-width: 768px) {
+  .chat-scope-selector-desktop {
+    display: none !important;
+  }
+
+  .chat-mobile-controls {
+    display: flex;
+  }
+}
+
+/* Show desktop scope selector on desktop */
+@media (min-width: 769px) {
+  .chat-mobile-controls {
+    display: none !important;
+  }
+
+  .chat-scope-selector-desktop {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+}
+
+/* Toolkit Popup Overlay */
+.chat-toolkit-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.chat-toolkit-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Toolkit Popup (Bottom Sheet) */
+.chat-toolkit-popup {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--card);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  z-index: 9999;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-toolkit-popup.active {
+  transform: translateY(0);
+}
+
+.toolkit-popup-header {
+  padding: 16px 20px;
+  border-bottom: 1.5px solid var(--stroke);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(139, 92, 246, 0.02) 100%);
+}
+
+.toolkit-popup-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.toolkit-popup-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.toolkit-popup-close:hover {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.toolkit-popup-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Toolkit Sections */
+.toolkit-section {
+  margin-bottom: 24px;
+}
+
+.toolkit-section:last-child {
+  margin-bottom: 0;
+}
+
+.toolkit-section-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.toolkit-section-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+/* Toolkit Option Group */
+.toolkit-option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Toolkit Option Buttons */
+.toolkit-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1.5px solid var(--stroke);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.toolkit-option-btn:hover {
+  background: var(--bg);
+  border-color: var(--brand);
+}
+
+.toolkit-option-btn.active {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-600) 100%);
+  border-color: var(--brand);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+}
+
+.toolkit-option-btn.active .toolkit-option-text {
+  color: white;
+  font-weight: 600;
+}
+
+.toolkit-option-btn.active .toolkit-option-icon {
+  color: white;
+}
+
+.toolkit-option-icon {
+  flex-shrink: 0;
+  color: var(--muted);
+  transition: all 0.2s ease;
+}
+
+.toolkit-option-text {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  transition: all 0.2s ease;
+}
+
+/* Mobile/iPad appbar - icon-only layout for cleaner UI */
+@media (max-width: 768px) {
+  /* Hide button text, show only emoji/icon */
+  .mobile-conditional-btn .mobile-btn-text {
+    display: none;
+  }
+
+  .mobile-conditional-btn {
+    padding: 8px 12px;
+    font-size: 20px;
+    min-width: auto;
+  }
+
+  /* Show shorter title on mobile */
+  .appbar-title .title-full {
+    display: none;
+  }
+
+  .appbar-title .title-mobile {
+    display: inline;
+  }
+
+  /* Tab buttons - show only SVG icons */
+  .appbar-tab .tab-text {
+    display: none;
+  }
+
+  .appbar-tab .tab-icon-svg {
+    display: block;
+  }
+
+  .appbar-tab {
+    padding: 8px 10px;
+    min-width: auto;
+  }
+
+  .tab-divider {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  /* Important Info button - show only SVG icon */
+  .appbar-data-warning-btn .info-text {
+    display: none;
+  }
+
+  .appbar-data-warning-btn .info-icon-svg {
+    display: block;
+  }
+
+  .appbar-data-warning-btn {
+    padding: 6px 10px;
+    min-width: auto;
+  }
+}
+
+/* Desktop appbar - full text layout */
+@media (min-width: 769px) {
+  /* Hide mobile title, show full title */
+  .appbar-title .title-mobile {
+    display: none;
+  }
+
+  .appbar-title .title-full {
+    display: inline;
+  }
+
+  /* Show text, hide SVG icons */
+  .appbar-tab .tab-icon-svg {
+    display: none;
+  }
+
+  .appbar-tab .tab-text {
+    display: inline;
+  }
+
+  /* Show SVG icon and text on desktop */
+  .appbar-data-warning-btn .info-icon-svg,
+  .appbar-data-warning-btn .info-text {
+    display: inline;
+  }
+
+  /* Hide mobile search/filter icon buttons on desktop */
+  .search-btn-mobile,
+  .filter-btn-mobile {
+    display: none !important;
+  }
+
+  .search-btn-desktop {
+    display: flex !important;
+  }
+
+  /* Hide mobile conditional buttons (Filters/QI) on desktop */
+  .mobile-conditional-btn {
+    display: none !important;
+  }
+}

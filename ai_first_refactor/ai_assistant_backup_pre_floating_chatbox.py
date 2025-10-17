@@ -180,16 +180,10 @@ def extract_simple_keywords(
    - Other session types: "Oral", "Mini oral", "Presidential symposium", etc.
    - Put session types in search_terms field
 
-4. **Study identifiers** - CRITICAL for filtering by specific studies:
-   - Study IDs follow pattern: 3-4 digits + letter (e.g., "LBA2", "3111eP", "1234P")
-   - Put study IDs in "study_identifiers" field (separate from search_terms)
-   - Examples: "LBA2", "3111eP", "1234P", "567O"
-   - These filter the Identifier column directly (highest priority filter)
-
-5. **Molecular entities** - put in search_terms:
+4. **Molecular entities** - put in search_terms:
    - "METex14", "MET exon 14 skipping", "EGFR L858R", "HER2", "PD-L1", "KRAS G12C"
 
-6. **Generic terms to EXCLUDE** (too broad):
+5. **Generic terms to EXCLUDE** (too broad):
    - ❌ "metastatic", "perioperative", "neoadjuvant", "adjuvant", "first-line", "1L", "2L"
    - ❌ Single letters: "P", "E", "V" (unless part of abbreviation like "EV+P")
    - ❌ TA names already in active filters: "bladder cancer", "NSCLC"
@@ -197,17 +191,6 @@ def extract_simple_keywords(
 6. **Empty keywords** - If user is just greeting or asking a conceptual question with NO specific entities:
    - Return empty lists for all fields
    - The second AI call will handle greetings/conceptual answers naturally
-
-7. **Continuation queries** - CRITICAL for operating on previous results:
-   - If user asks to TRANSFORM/FORMAT previous results (translate, summarize, explain, format differently, etc.)
-   - EXTRACT THE SAME KEYWORDS from the previous assistant message (works like "Yes" confirmations)
-   - Look at conversation history to see what the assistant just discussed
-   - Examples:
-     * Previous: "Here are 10 EV+P studies..." → User: "translate that to french" → Extract: {{"drug_combinations": [["enfortumab vedotin", "pembrolizumab"]]}}
-     * Previous: "Found 15 pembrolizumab studies..." → User: "summarize those" → Extract: {{"drug_combinations": [["pembrolizumab"]]}}
-     * Previous: "Poster presentations on 10/18..." → User: "format that as table" → Extract: {{"dates": ["10/18/2025"], "search_terms": ["Poster", "ePoster"]}}
-   - DO extract keywords from previous context for continuation queries
-   - Do NOT return empty keywords - extract what was previously discussed
 
 **OUTPUT FORMAT:**
 Return ONLY valid JSON in this exact format:
@@ -221,7 +204,6 @@ Return ONLY valid JSON in this exact format:
   "institutions": ["institution name"],
   "dates": ["date"],
   "speakers": ["speaker name"],
-  "study_identifiers": ["LBA2", "3111eP"],
   "search_terms": ["biomarker", "term"]
 }}
 
@@ -278,19 +260,10 @@ Another confirmation example:
 User: "Yes" (previous assistant message mentioned "EV+P studies") → {{"drug_combinations": [["enfortumab vedotin", "pembrolizumab"]], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
 Molecular entity:
-"METex14 skipping" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "study_identifiers": [], "search_terms": ["METex14", "MET exon 14 skipping"]}}
-
-Study identifier query:
-"Tell me about study LBA2" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "study_identifiers": ["LBA2"], "search_terms": []}}
+"METex14 skipping" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": ["METex14", "MET exon 14 skipping"]}}
 
 Conceptual question (NO specific entities):
 "What is the difference between PD-1 and PD-L1?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
-
-Continuation query (extract keywords from previous context):
-"Can you translate that to french please" (previous assistant discussed EV+P studies) → {{"drug_combinations": [["enfortumab vedotin", "pembrolizumab"]], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
-
-Another continuation example:
-"Summarize those findings" (previous assistant showed pembrolizumab and nivolumab studies) → {{"drug_combinations": [["pembrolizumab"], ["nivolumab"]], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
 
 Now extract keywords from the user query above. Return ONLY valid JSON."""
 
@@ -378,15 +351,6 @@ def filter_dataframe_with_keywords(
     original_count = len(filtered)
 
     # Sequential filtering (most restrictive first)
-
-    # 0. Filter by study identifiers (if specified) - HIGHEST PRIORITY
-    # Study IDs are unique, so this should return 1 study per ID
-    if keywords.get('study_identifiers'):
-        identifier_pattern = '|'.join([re.escape(id) for id in keywords['study_identifiers']])
-        filtered = filtered[
-            filtered['Identifier'].str.contains(identifier_pattern, case=False, na=False, regex=True)
-        ]
-        print(f"  After study identifier filter: {len(filtered)} studies (IDs: {', '.join(keywords['study_identifiers'])})")
 
     # 1. Filter by date (if specified)
     # Note: AI is instructed to convert dates to MM/DD/YYYY format to match dataset
@@ -767,23 +731,6 @@ End responses with: "Would you like me to dive deeper into any of these studies?
     else:
         data_notice = "\n\n📋 **Data Available:** Study metadata (title, speakers, affiliations, sessions). Full abstracts not included."
 
-    # Build formatted study list instruction for AI
-    study_list_instruction = ""
-    if len(filtered_df) > 0:
-        study_list_instruction = f"""\n\n**CRITICAL - END YOUR RESPONSE WITH STUDY LIST:**
-After your analysis, you MUST end with a formatted list of relevant studies:
-
-**Relevant studies (ask about specific ones for more details!):**
-- [Identifier] - [Title] - [Author]
-- [Identifier] - [Title] - [Author]
-...
-
-Format example:
-- LBA2 - Phase III trial of EV+P vs chemo in bladder cancer - Dr. Smith
-- 3111eP - Real-world outcomes with avelumab maintenance - Dr. Jones
-
-Include ALL {len(filtered_df)} studies from the data provided. This replaces the table view."""
-
     # Build user message - conditional based on query type
     if query_intent == 'conceptual_query':
         # Conceptual query - emphasize conference intelligence when studies found
@@ -791,9 +738,9 @@ Include ALL {len(filtered_df)} studies from the data provided. This replaces the
             user_message = f"""**User Question:** {user_query}
 
 **Conference Intelligence Context:** I found {len(filtered_df)} ESMO 2025 studies related to this topic.
-{data_notice}{study_list_instruction}
+{data_notice}
 
-**CRITICAL RESPONSE STRUCTURE:**
+**CRITICAL RESPONSE STRUCTURE (70/30 RULE):**
 1. **ANSWER THE QUESTION FIRST (70%):** Start by answering the user's question directly using your pharmaceutical medical knowledge
    - For "What is X?": Define X, explain mechanism, indication, approval status, competitive position
    - For strategic questions: Provide thoughtful strategic analysis of the competitive landscape
@@ -802,12 +749,12 @@ Include ALL {len(filtered_df)} studies from the data provided. This replaces the
    - "By the way, X appears in {len(filtered_df)} studies at ESMO 2025:"
    - Mention 1-3 key studies with Identifiers and brief findings from abstracts
    - Provide strategic context if relevant to EMD portfolio
-3. **END WITH FORMATTED STUDY LIST:** See instructions above
+3. **Table display:** Note that a detailed table of all {len(filtered_df)} studies will appear AFTER your response
 
 **Studies Available (JSON format with {len(available_cols)} fields: {', '.join(available_cols)}):**
 {dataset_json}
 
-Answer the user's question using BOTH your medical knowledge AND the conference studies above. Always cite study Identifiers when referencing data.
+Answer the user's question using BOTH your medical knowledge AND the conference studies above. Always cite study Identifiers when referencing data. End with: "Would you like me to dive deeper into any of these studies?"
 """
         else:
             # No studies - pure knowledge answer
@@ -824,12 +771,12 @@ Answer the user's question directly using your medical and pharmaceutical knowle
 **Filtering Results:**
 - Started with: {original_count} studies total
 - Filtered to: {len(filtered_df)} studies
-{data_notice}{study_list_instruction}
+{data_notice}
 
 **Filtered Studies (JSON format with {len(available_cols)} fields: {', '.join(available_cols)}):**
 {dataset_json}
 
-Analyze these {len(filtered_df)} studies and answer the user's question. Cite specific study Identifiers when referencing data. Remember to end with the formatted study list as instructed above."""
+Analyze these {len(filtered_df)} studies and answer the user's question. Cite specific study Identifiers when referencing data."""
 
     messages = [
         {"role": "system", "content": system_prompt},

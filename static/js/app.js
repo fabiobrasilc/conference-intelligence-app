@@ -2334,12 +2334,13 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Chat Scope Selector - Apply to chat requests
-  let activeChatScope = { type: 'none', value: null };  // Start with 'none' to force selection
+  let activeChatScope = { type: 'all', value: null };  // Default to 'all' (All conference data)
 
-  // Initially disable chat input until scope is selected
+  // Initialize dropdown to "All Conference Data"
   const chatInput = document.getElementById('chatInput');
-  chatInput.disabled = true;
-  chatInput.placeholder = 'Select scope above to start typing';
+  chatScopeDropdown.value = 'all';
+  chatInput.disabled = false;
+  chatInput.placeholder = 'Ask about the conference data...';
 
   chatScopeDropdown.addEventListener('change', () => {
     const selected = chatScopeDropdown.value;
