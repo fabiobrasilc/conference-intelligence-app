@@ -65,8 +65,38 @@ def handle_chat_query(
             print(f"  {key}: {values}")
             has_keywords = True
 
+    # Check for continuation query flag
+    use_previous_results = keywords.get('use_previous_results', False)
+
+    if use_previous_results:
+        # Continuation query - try to extract study identifiers from previous conversation
+        print(f"[STEP 1] Continuation query detected - attempting to preserve previous results")
+
+        # Extract identifiers from the last assistant message
+        if conversation_history and len(conversation_history) > 0:
+            last_exchange = conversation_history[-1]
+            last_assistant_msg = last_exchange.get('assistant', '')
+
+            # Extract study identifiers from last message (format: NNNNX where X is a letter)
+            import re
+            identifiers = re.findall(r'\b(\d{3,4}[A-Z])\b', last_assistant_msg)
+
+            if identifiers:
+                print(f"[STEP 1] Found {len(identifiers)} study identifiers in previous response: {identifiers[:5]}...")
+                # Filter to studies matching these identifiers
+                filtered_df = df[df['Identifier'].isin(identifiers)]
+                print(f"[STEP 2] Using previous results: {len(filtered_df)} studies")
+            else:
+                print(f"[STEP 1] WARNING: No study identifiers found in previous response")
+                print(f"[STEP 2] Skipping filtering - will respond without studies")
+                filtered_df = pd.DataFrame()
+        else:
+            print(f"[STEP 1] WARNING: No conversation history available for continuation query")
+            print(f"[STEP 2] Skipping filtering - will respond without studies")
+            filtered_df = pd.DataFrame()
+
     # Check if AI returned empty keywords (greeting, off-topic, or conceptual question with no entities)
-    if not has_keywords:
+    elif not has_keywords:
         print(f"[STEP 1] No search keywords extracted - query is greeting/off-topic/conceptual")
         print(f"[STEP 2] Skipping filtering - will respond without studies")
         filtered_df = pd.DataFrame()  # Empty DataFrame - no studies to analyze
@@ -192,6 +222,17 @@ def extract_simple_keywords(
    - Return empty lists for all fields
    - The second AI call will handle greetings/conceptual answers naturally
 
+7. **Continuation queries** - CRITICAL for operating on previous results:
+   - If user asks to TRANSFORM/FORMAT previous results (translate, summarize, explain, format differently, etc.)
+   - AND conversation history shows previous results were displayed
+   - Set "use_previous_results": true to preserve those results
+   - Examples:
+     * "translate that to french" → {{"use_previous_results": true}}
+     * "summarize those studies" → {{"use_previous_results": true}}
+     * "explain study 1234P in more detail" → {{"use_previous_results": true}}
+     * "format that as a table" → {{"use_previous_results": true}}
+   - Do NOT set this flag for NEW searches with different keywords
+
 **OUTPUT FORMAT:**
 Return ONLY valid JSON in this exact format:
 {{
@@ -204,7 +245,8 @@ Return ONLY valid JSON in this exact format:
   "institutions": ["institution name"],
   "dates": ["date"],
   "speakers": ["speaker name"],
-  "search_terms": ["biomarker", "term"]
+  "search_terms": ["biomarker", "term"],
+  "use_previous_results": false
 }}
 
 **CRITICAL - Drug Combination Logic:**
@@ -263,7 +305,13 @@ Molecular entity:
 "METex14 skipping" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": ["METex14", "MET exon 14 skipping"]}}
 
 Conceptual question (NO specific entities):
-"What is the difference between PD-1 and PD-L1?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
+"What is the difference between PD-1 and PD-L1?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": [], "use_previous_results": false}}
+
+Continuation query (translate/format previous results):
+"Can you translate that to french please" (previous assistant showed EV+P study results) → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": [], "use_previous_results": true}}
+
+Another continuation example:
+"Summarize those findings" (previous assistant showed study results) → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": [], "use_previous_results": true}}
 
 Now extract keywords from the user query above. Return ONLY valid JSON."""
 
