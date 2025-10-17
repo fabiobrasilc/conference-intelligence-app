@@ -2820,6 +2820,13 @@ html.force-mobile #tableContainer table {
   display: none !important;
 }
 
+html.force-mobile .study-cards-container {
+  display: flex !important;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px;
+}
+
 html.force-mobile .mobile-card-container {
   display: block !important;
 }
