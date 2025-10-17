@@ -1474,23 +1474,45 @@ mark {
     max-width: 100%;
   }
 
-  /* Mobile: Stack search bar vertically for easier thumb reach */
+  /* Mobile: Show icon buttons, hide desktop search button */
+  .search-btn-desktop {
+    display: none !important;
+  }
+
+  .search-btn-mobile,
+  .filter-btn-mobile {
+    display: flex !important;
+  }
+
+  /* Mobile search bar layout */
   .search-bar-container .input-group {
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    gap: 0px;
   }
 
-  .search-bar-container .form-control-lg,
-  .search-bar-container .btn-outline-secondary,
-  .search-bar-container .btn-primary {
-    width: 100%;
+  .search-bar-container .form-control-lg {
+    border-radius: 10px 0 0 10px !important;
+    border-right: none !important;
+  }
+
+  .search-btn-mobile {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    padding: 8px 12px;
+  }
+
+  .filter-btn-mobile {
     border-radius: 10px !important;
-    border: 1.5px solid var(--stroke) !important;
+    padding: 8px 12px;
+    margin-left: 8px;
   }
 
-  .search-bar-container .btn-primary {
-    padding: 12px 16px;
-    font-size: 15px;
+  /* Remove flash/white effect on mobile filter button click */
+  .filter-btn-mobile:active,
+  .filter-btn-mobile:focus {
+    background: var(--btn-outline-secondary-bg) !important;
+    outline: none !important;
   }
 
   /* Make table more readable on mobile */
@@ -1533,7 +1555,7 @@ mark {
   }
 
   .ai-chat-scrollable {
-    padding: 20px 16px;
+    padding: 20px 16px 0px 16px; /* Remove bottom padding to prevent pushing chat input down */
   }
 
   .ai-greeting-title {
@@ -1685,7 +1707,7 @@ mark {
   }
 
   .ai-chat-scrollable {
-    padding: 16px 12px;
+    padding: 16px 12px 0px 12px; /* Remove bottom padding to prevent pushing chat input down */
   }
 
   /* Smaller table cells */
@@ -2685,5 +2707,20 @@ mark {
   .appbar-data-warning-btn .info-icon-svg,
   .appbar-data-warning-btn .info-text {
     display: inline;
+  }
+
+  /* Hide mobile search/filter icon buttons on desktop */
+  .search-btn-mobile,
+  .filter-btn-mobile {
+    display: none !important;
+  }
+
+  .search-btn-desktop {
+    display: flex !important;
+  }
+
+  /* Hide mobile conditional buttons (Filters/QI) on desktop */
+  .mobile-conditional-btn {
+    display: none !important;
   }
 }

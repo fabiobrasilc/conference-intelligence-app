@@ -379,7 +379,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ===== Search (Explorer only) =====
   if (searchInput){
-    searchInput.addEventListener('input', debounce(handleLiveSearch, 300));
+    // Only enable auto-search on desktop (not mobile)
+    if (window.innerWidth > 768) {
+      searchInput.addEventListener('input', debounce(handleLiveSearch, 300));
+    }
     searchInput.addEventListener('input', toggleClearButton);
     searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSearch(); });
   }
