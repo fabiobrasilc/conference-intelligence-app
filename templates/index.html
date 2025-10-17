@@ -15,8 +15,15 @@
     <aside class="filter-sidebar collapsed" id="filterSidebar">
       <div class="sidebar-header">
         <div class="d-flex align-items-center justify-content-between">
-          <h6 class="mb-0 fw-bold">🧰 Filters</h6>
-          <button class="btn btn-sm btn-link text-decoration-none" id="clearAllFilters">Clear All</button>
+          <div class="d-flex align-items-center gap-2">
+            <h6 class="mb-0 fw-bold">🧰 Filters</h6>
+            <!-- Done and Clear buttons (only show when filters are active) -->
+            <div class="filter-action-buttons" id="filterActionButtons" style="display: none; gap: 6px;">
+              <button class="btn btn-sm filter-action-btn filter-done-btn" id="doneFiltersBtn" title="Apply filters">Done</button>
+              <button class="btn btn-sm filter-action-btn filter-clear-btn" id="clearFiltersBtn" title="Clear all filters">Clear</button>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-link text-decoration-none" id="clearAllFilters" style="display: none;">Clear All</button>
         </div>
         <div class="filter-count-badge" id="filterCountBadge">0 active</div>
       </div>
@@ -113,29 +120,29 @@
         <div class="action-chip playbook-trigger" data-playbook="insights" title="Discover scientific trends: Biomarker/MOA frequency analysis with study identifiers, emerging mechanisms, treatment paradigm shifts, and Merck KGaA portfolio positioning insights.">
           <div class="icon">📈</div>
           <div>
-            <div class="title">Insights</div>
-            <div class="sub">Signals, trends & themes</div>
+            <div class="title">Discover Insights</div>
+            <div class="sub">Trends & emerging signals</div>
           </div>
         </div>
         <div class="action-chip playbook-trigger" data-playbook="competitor" title="Analyze the competitive landscape: Drug rankings by study count, MOA class distribution, emerging threats (3-5 abstracts), and strategic positioning insights for Merck KGaA portfolio.">
           <div class="icon">🏆</div>
           <div>
-            <div class="title">Competition</div>
+            <div class="title">Competitor Activity</div>
             <div class="sub">Landscape Analysis</div>
           </div>
         </div>
         <div class="action-chip playbook-trigger" data-playbook="kol" title="Generate a comprehensive KOL analysis: Top 15 most active speakers, their research focus areas, institutional affiliations, and strategic importance for Merck KGaA partnerships.">
           <div class="icon">👩‍⚕️</div>
           <div>
-            <div class="title">KOL Analysis</div>
+            <div class="title">KOL Activity</div>
             <div class="sub">Authors & impact</div>
           </div>
         </div>
         <div class="action-chip playbook-trigger" data-playbook="institution" title="Identify leading research centers: Top 15 institutions by publication volume, geographic distribution, and partnership opportunities for clinical trials and collaborations.">
           <div class="icon">🏥</div>
           <div>
-            <div class="title">Institutions</div>
-            <div class="sub">Footprint & trials</div>
+            <div class="title">Institution Activity</div>
+            <div class="sub">Research centers</div>
           </div>
         </div>
       </div>
@@ -145,9 +152,19 @@
     <div class="main-content">
       <!-- App Bar -->
       <div class="appbar">
-        <!-- Mobile Filters Button (hidden on desktop) -->
-        <button class="mobile-filters-btn" id="mobileFiltersBtn" title="Filters">
-          ☰<span class="mobile-btn-text"> Filters</span>
+        <!-- Mobile Conditional Button (hidden on desktop) -->
+        <!-- Shows Filters button on Data Explorer tab, Quick Intelligence button on AI Assistant tab -->
+        <button class="mobile-conditional-btn mobile-filters-trigger" id="mobileFiltersBtn" title="Filters">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
+          </svg>
+          <span class="mobile-btn-text">Filters</span>
+        </button>
+        <button class="mobile-conditional-btn mobile-qi-trigger" id="mobileQIMenuBtn" title="Quick Intelligence" style="display: none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          <span class="mobile-btn-text">Quick Intelligence</span>
         </button>
 
         <h1 class="appbar-title">
@@ -262,6 +279,27 @@
 
                   <div class="ai-greeting-description">
                     <p class="greeting-intro">Ask questions, explore insights, and analyze 4,686 ESMO 2025 abstracts with AI-powered conversations.</p>
+
+                    <div class="greeting-tip" style="margin-top: 16px; padding: 10px 14px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%); border-left: 3px solid var(--brand); border-radius: 8px;">
+                      <p style="margin: 0; font-size: 13px; line-height: 1.4; color: var(--ink);">
+                        <strong style="color: var(--brand);">⚡ Quick Tip:</strong> Use the lightning button above to generate comprehensive reports on different topics and therapeutic areas!
+                      </p>
+                    </div>
+
+                    <div class="greeting-examples" style="margin-top: 16px;">
+                      <h3 style="font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 8px; text-align: left;">💬 Example Questions</h3>
+                      <p style="font-size: 12px; color: var(--muted); margin-bottom: 8px; line-height: 1.4; text-align: left;">Select a conversation scope below and ask questions like:</p>
+                      <div style="font-size: 12px; color: var(--ink); line-height: 1.6; text-align: left;">
+                        <p style="margin: 4px 0;">What are the new data being reported by studies on EV + P?</p>
+                        <p style="margin: 4px 0;">I want to attend all sessions by Dr Andrea Necchi, can you show me?</p>
+                        <p style="margin: 4px 0;">What are the implications of EV + P moving into the perioperative setting, and what might it mean for avelumab in the metastatic setting?</p>
+                        <p style="margin: 4px 0;">Can you summarize the findings of studies on tepotinib?</p>
+                        <p style="margin: 4px 0;">I want to know more about study 2690MO.</p>
+                        <p style="margin: 4px 0;">I am an MSL from New York, USA - who should I plan to meet at the conference?</p>
+                        <p style="margin: 4px 0;">Are there any potential practice changing studies in [therapeutic area] being presented?</p>
+                        <p style="margin: 4px 0;">What are all the bladder poster presentations happening on 10/18?</p>
+                      </div>
+                    </div>
                   </div>
 
                 </div>
@@ -281,25 +319,46 @@
               <div class="ai-chat-input-container">
                 <!-- Chat Scope Selector (Integrated into input box) -->
                 <div class="chat-scope-selector">
-                  <label for="chatScopeDropdown">🔍 Scope:</label>
-                  <select id="chatScopeDropdown" class="chat-scope-dropdown">
-                    <option value="">Select the scope of the conversation here</option>
-                    <option value="all">All Conference Data (4,686 studies)</option>
-                    <option value="ta:Bladder Cancer">Bladder Cancer</option>
-                    <option value="ta:Renal Cancer">Renal Cancer</option>
-                    <option value="ta:Lung Cancer">Lung Cancer (NSCLC)</option>
-                    <option value="ta:Colorectal Cancer">Colorectal Cancer</option>
-                    <option value="ta:Head and Neck Cancer">Head & Neck Cancer</option>
-                    <option value="ta:TGCT">TGCT</option>
-                    <option value="ta:Merkel Cell">Merkel Cell</option>
-                  </select>
+                  <!-- Mobile: Icon buttons that open popups -->
+                  <div class="chat-mobile-controls">
+                    <button class="chat-icon-btn" id="chatScopeBtn" title="Conversation Scope">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                      </svg>
+                      <span class="icon-btn-label">Scope</span>
+                    </button>
+                    <button class="chat-icon-btn" id="chatThinkingBtn" title="AI Thinking Mode">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2a10 10 0 0 0 0 20 10 10 0 0 0 0-20z"/>
+                        <path d="M12 6v6l4 2"/>
+                      </svg>
+                      <span class="icon-btn-label">Thinking</span>
+                    </button>
+                  </div>
 
-                  <!-- Thinking Mode Selector -->
-                  <label for="thinkingModeDropdown" style="margin-left: 15px;">🧠 AI Thinking:</label>
-                  <select id="thinkingModeDropdown" class="chat-scope-dropdown" title="Control AI reasoning depth and response detail">
-                    <option value="standard" selected>Standard</option>
-                    <option value="deep">🔬 Deep Thinking</option>
-                  </select>
+                  <!-- Desktop: Original dropdowns -->
+                  <div class="chat-scope-selector-desktop">
+                    <label for="chatScopeDropdown">🔍 Scope:</label>
+                    <select id="chatScopeDropdown" class="chat-scope-dropdown">
+                      <option value="">Select the scope of the conversation here</option>
+                      <option value="all">All Conference Data (4,686 studies)</option>
+                      <option value="ta:Bladder Cancer">Bladder Cancer</option>
+                      <option value="ta:Renal Cancer">Renal Cancer</option>
+                      <option value="ta:Lung Cancer">Lung Cancer (NSCLC)</option>
+                      <option value="ta:Colorectal Cancer">Colorectal Cancer</option>
+                      <option value="ta:Head and Neck Cancer">Head & Neck Cancer</option>
+                      <option value="ta:TGCT">TGCT</option>
+                      <option value="ta:Merkel Cell">Merkel Cell</option>
+                    </select>
+
+                    <!-- Thinking Mode Selector -->
+                    <label for="thinkingModeDropdown" style="margin-left: 15px;">🧠 AI Thinking:</label>
+                    <select id="thinkingModeDropdown" class="chat-scope-dropdown" title="Control AI reasoning depth and response detail">
+                      <option value="standard" selected>Standard</option>
+                      <option value="deep">🔬 Deep Thinking</option>
+                    </select>
+                  </div>
 
                   <button class="download-chat-btn" id="downloadChatBtn" title="Download conversation">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -342,7 +401,13 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body" style="padding: 24px;">
-            <p class="text-muted" id="modalInstructions" style="margin-bottom: 20px; font-size: 14px;">
+            <!-- Description (shown first) -->
+            <p class="ta-modal-description" id="taModalDescription" style="font-size: 15px; color: #495057; margin-bottom: 20px; line-height: 1.6;">
+              <!-- Description will be dynamically updated based on report type -->
+            </p>
+
+            <!-- Instruction text -->
+            <p class="text-muted" id="modalInstructions" style="margin-bottom: 16px; font-size: 15px; font-weight: 500;">
               Select a filter to scope your analysis.
             </p>
 
@@ -359,7 +424,6 @@
 
             <!-- Therapeutic Area Filter Section -->
             <div id="modalTASection" class="mb-4" style="display: none;">
-              <label class="form-label fw-semibold" style="font-size: 13px; color: #6c757d; margin-bottom: 12px;">🎯 THERAPEUTIC AREA</label>
               <div class="d-flex flex-wrap gap-2">
                 <button class="modal-filter-btn" data-type="ta" data-value="Bladder Cancer">Bladder Cancer</button>
                 <button class="modal-filter-btn" data-type="ta" data-value="Renal Cancer">Renal Cancer</button>
@@ -493,10 +557,93 @@
     <div class="mobile-filters-sheet" id="mobileFiltersSheet">
       <div class="mobile-filters-header">
         <h3>🧰 Filters</h3>
+        <!-- Done and Clear buttons (mobile sheet) -->
+        <div class="filter-action-buttons mobile-filter-actions" id="mobileFilterActionButtons" style="display: none; gap: 6px;">
+          <button class="btn btn-sm filter-action-btn filter-done-btn mobile-done-btn" id="mobileDoneFiltersBtn" title="Apply filters">Done</button>
+          <button class="btn btn-sm filter-action-btn filter-clear-btn mobile-clear-btn" id="mobileClearFiltersBtn" title="Clear all filters">Clear</button>
+        </div>
         <button class="mobile-filters-close" id="mobileFiltersClose">✕</button>
       </div>
       <div class="mobile-filters-body" id="mobileFiltersBody">
         <!-- Filter content will be cloned here -->
+      </div>
+    </div>
+
+    <!-- Mobile Quick Intelligence Bottom Sheet -->
+    <div class="mobile-qi-overlay" id="mobileQIOverlay"></div>
+    <div class="mobile-qi-sheet" id="mobileQISheet">
+      <div class="mobile-qi-header">
+        <h3>⚡ Quick Intelligence</h3>
+        <button class="mobile-qi-close" id="mobileQIClose">✕</button>
+      </div>
+      <div class="mobile-qi-body" id="mobileQIBody">
+        <!-- QI content will be cloned here -->
+      </div>
+    </div>
+
+    <!-- Scope Selection Popup (Mobile) -->
+    <div class="chat-toolkit-overlay" id="chatScopeOverlay"></div>
+    <div class="chat-toolkit-popup" id="chatScopePopup">
+      <div class="toolkit-popup-header">
+        <h3>Conversation Scope</h3>
+        <button class="toolkit-popup-close" id="chatScopeCloseBtn">✕</button>
+      </div>
+      <div class="toolkit-popup-body">
+        <p class="toolkit-section-desc">Select the data scope for your conversation</p>
+        <div class="toolkit-option-group">
+          <button class="toolkit-option-btn" data-scope="all" data-label="All Conference Data">
+            <span class="toolkit-option-text">All Conference Data (4,686 studies)</span>
+          </button>
+          <button class="toolkit-option-btn" data-scope="ta:Bladder Cancer" data-label="Bladder Cancer">
+            <span class="toolkit-option-text">Bladder Cancer</span>
+          </button>
+          <button class="toolkit-option-btn" data-scope="ta:Renal Cancer" data-label="Renal Cancer">
+            <span class="toolkit-option-text">Renal Cancer</span>
+          </button>
+          <button class="toolkit-option-btn" data-scope="ta:Lung Cancer" data-label="Lung Cancer">
+            <span class="toolkit-option-text">Lung Cancer (NSCLC)</span>
+          </button>
+          <button class="toolkit-option-btn" data-scope="ta:Colorectal Cancer" data-label="Colorectal Cancer">
+            <span class="toolkit-option-text">Colorectal Cancer</span>
+          </button>
+          <button class="toolkit-option-btn" data-scope="ta:Head and Neck Cancer" data-label="Head & Neck Cancer">
+            <span class="toolkit-option-text">Head & Neck Cancer</span>
+          </button>
+          <button class="toolkit-option-btn" data-scope="ta:TGCT" data-label="TGCT">
+            <span class="toolkit-option-text">TGCT</span>
+          </button>
+          <button class="toolkit-option-btn" data-scope="ta:Merkel Cell" data-label="Merkel Cell">
+            <span class="toolkit-option-text">Merkel Cell</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Thinking Popup (Mobile) -->
+    <div class="chat-toolkit-overlay" id="chatThinkingOverlay"></div>
+    <div class="chat-toolkit-popup" id="chatThinkingPopup">
+      <div class="toolkit-popup-header">
+        <h3>AI Thinking Mode</h3>
+        <button class="toolkit-popup-close" id="chatThinkingCloseBtn">✕</button>
+      </div>
+      <div class="toolkit-popup-body">
+        <p class="toolkit-section-desc">Control AI reasoning depth and response detail</p>
+        <div class="toolkit-option-group">
+          <button class="toolkit-option-btn active" data-thinking="standard">
+            <svg class="toolkit-option-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="13 17 18 12 13 7"/>
+              <polyline points="6 17 11 12 6 7"/>
+            </svg>
+            <span class="toolkit-option-text">Standard</span>
+          </button>
+          <button class="toolkit-option-btn" data-thinking="deep">
+            <svg class="toolkit-option-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+            </svg>
+            <span class="toolkit-option-text">Deep Thinking</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -565,6 +712,260 @@
             closeMobileFilters();
           }
         });
+      })();
+
+      // Mobile Quick Intelligence Bottom Sheet Logic
+      (function() {
+        const mobileQIFab = document.getElementById('mobileQIFab');
+        const mobileQISheet = document.getElementById('mobileQISheet');
+        const mobileQIOverlay = document.getElementById('mobileQIOverlay');
+        const mobileQIClose = document.getElementById('mobileQIClose');
+        const mobileQIBody = document.getElementById('mobileQIBody');
+        const quickIntelSidebar = document.getElementById('quickIntelSidebar');
+
+        // Clone QI content from sidebar to mobile sheet (only once)
+        if (quickIntelSidebar && mobileQIBody && mobileQIBody.children.length === 0) {
+          const sidebarContent = quickIntelSidebar.querySelector('.quick-intel-content');
+          if (sidebarContent) {
+            const clonedContent = sidebarContent.cloneNode(true);
+            mobileQIBody.appendChild(clonedContent);
+          }
+        }
+
+        // Open mobile QI sheet
+        if (mobileQIFab) {
+          mobileQIFab.addEventListener('click', function() {
+            mobileQISheet.classList.add('active');
+            mobileQIOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+          });
+        }
+
+        // Close mobile QI sheet
+        function closeMobileQI() {
+          mobileQISheet.classList.remove('active');
+          mobileQIOverlay.classList.remove('active');
+          document.body.style.overflow = ''; // Restore scrolling
+        }
+
+        if (mobileQIClose) {
+          mobileQIClose.addEventListener('click', closeMobileQI);
+        }
+
+        if (mobileQIOverlay) {
+          mobileQIOverlay.addEventListener('click', closeMobileQI);
+        }
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && mobileQISheet.classList.contains('active')) {
+            closeMobileQI();
+          }
+        });
+      })();
+
+      // Conditional Button Switching (Filters vs Quick Intelligence)
+      (function() {
+        const filtersBtn = document.getElementById('mobileFiltersBtn');
+        const qiMenuBtn = document.getElementById('mobileQIMenuBtn');
+        const mobileQISheet = document.getElementById('mobileQISheet');
+        const mobileQIOverlay = document.getElementById('mobileQIOverlay');
+        const appbarTabs = document.querySelectorAll('.appbar-tab');
+
+        // Function to switch between buttons based on active tab
+        function switchConditionalButton() {
+          // Check body classes set by app.js
+          const isAITabActive = document.body.classList.contains('ai-tab-active');
+          const isDataTabActive = document.body.classList.contains('data-tab-active');
+
+          console.log('[CONDITIONAL BTN] Body classes:', document.body.className);
+          console.log('[CONDITIONAL BTN] AI active:', isAITabActive, 'Data active:', isDataTabActive);
+
+          if (isAITabActive) {
+            // AI Assistant tab: Show Quick Intelligence button, hide Filters
+            filtersBtn.style.display = 'none';
+            qiMenuBtn.style.display = 'flex';
+            console.log('[CONDITIONAL BTN] Showing QI button');
+          } else {
+            // Data Explorer tab (or default): Show Filters button, hide QI
+            filtersBtn.style.display = 'flex';
+            qiMenuBtn.style.display = 'none';
+            console.log('[CONDITIONAL BTN] Showing Filters button');
+          }
+        }
+
+        // Listen to tab changes
+        appbarTabs.forEach(tab => {
+          tab.addEventListener('click', function() {
+            setTimeout(switchConditionalButton, 150); // Small delay for app.js to update body classes
+          });
+        });
+
+        // Handle QI menu button click (opens Quick Intelligence bottom sheet)
+        if (qiMenuBtn) {
+          qiMenuBtn.addEventListener('click', function() {
+            mobileQISheet.classList.add('active');
+            mobileQIOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+          });
+        }
+
+        // Initial check on page load
+        setTimeout(switchConditionalButton, 100); // Slight delay to let app.js set initial classes
+      })();
+
+      // Chat Scope Popup Logic
+      (function() {
+        const scopeBtn = document.getElementById('chatScopeBtn');
+        const scopePopup = document.getElementById('chatScopePopup');
+        const scopeOverlay = document.getElementById('chatScopeOverlay');
+        const scopeClose = document.getElementById('chatScopeCloseBtn');
+        const scopeDropdown = document.getElementById('chatScopeDropdown');
+
+        // Open scope popup
+        if (scopeBtn) {
+          scopeBtn.addEventListener('click', function() {
+            scopePopup.classList.add('active');
+            scopeOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+          });
+        }
+
+        // Close scope popup
+        function closeScopePopup() {
+          scopePopup.classList.remove('active');
+          scopeOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+
+        if (scopeClose) {
+          scopeClose.addEventListener('click', closeScopePopup);
+        }
+
+        if (scopeOverlay) {
+          scopeOverlay.addEventListener('click', closeScopePopup);
+        }
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && scopePopup.classList.contains('active')) {
+            closeScopePopup();
+          }
+        });
+
+        // Handle scope selection buttons
+        const scopeButtons = document.querySelectorAll('#chatScopePopup .toolkit-option-btn[data-scope]');
+        scopeButtons.forEach(btn => {
+          btn.addEventListener('click', function() {
+            const scopeValue = this.getAttribute('data-scope');
+            const scopeLabel = this.getAttribute('data-label');
+
+            // Update dropdown (for desktop compatibility)
+            if (scopeDropdown) {
+              scopeDropdown.value = scopeValue;
+              // Trigger change event for app.js to pick up
+              scopeDropdown.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            // Update active state
+            scopeButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            // Update button label
+            const btnLabel = scopeBtn.querySelector('.icon-btn-label');
+            if (btnLabel) {
+              btnLabel.textContent = scopeLabel || 'Scope';
+            }
+
+            // Close popup after selection
+            closeScopePopup();
+          });
+        });
+
+        // Sync initial state with dropdown
+        if (scopeDropdown && scopeDropdown.value) {
+          const activeButton = document.querySelector(`#chatScopePopup .toolkit-option-btn[data-scope="${scopeDropdown.value}"]`);
+          if (activeButton) {
+            scopeButtons.forEach(b => b.classList.remove('active'));
+            activeButton.classList.add('active');
+
+            const btnLabel = scopeBtn.querySelector('.icon-btn-label');
+            if (btnLabel) {
+              btnLabel.textContent = activeButton.getAttribute('data-label') || 'Scope';
+            }
+          }
+        }
+      })();
+
+      // Chat Thinking Mode Popup Logic
+      (function() {
+        const thinkingBtn = document.getElementById('chatThinkingBtn');
+        const thinkingPopup = document.getElementById('chatThinkingPopup');
+        const thinkingOverlay = document.getElementById('chatThinkingOverlay');
+        const thinkingClose = document.getElementById('chatThinkingCloseBtn');
+        const thinkingDropdown = document.getElementById('thinkingModeDropdown');
+
+        // Open thinking popup
+        if (thinkingBtn) {
+          thinkingBtn.addEventListener('click', function() {
+            thinkingPopup.classList.add('active');
+            thinkingOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+          });
+        }
+
+        // Close thinking popup
+        function closeThinkingPopup() {
+          thinkingPopup.classList.remove('active');
+          thinkingOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+
+        if (thinkingClose) {
+          thinkingClose.addEventListener('click', closeThinkingPopup);
+        }
+
+        if (thinkingOverlay) {
+          thinkingOverlay.addEventListener('click', closeThinkingPopup);
+        }
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && thinkingPopup.classList.contains('active')) {
+            closeThinkingPopup();
+          }
+        });
+
+        // Handle thinking mode buttons
+        const thinkingButtons = document.querySelectorAll('#chatThinkingPopup .toolkit-option-btn[data-thinking]');
+        thinkingButtons.forEach(btn => {
+          btn.addEventListener('click', function() {
+            const thinkingValue = this.getAttribute('data-thinking');
+
+            // Update dropdown (for desktop compatibility)
+            if (thinkingDropdown) {
+              thinkingDropdown.value = thinkingValue;
+              // Trigger change event for app.js to pick up
+              thinkingDropdown.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            // Update active state
+            thinkingButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            // Close popup after selection
+            closeThinkingPopup();
+          });
+        });
+
+        // Sync initial state with dropdown
+        if (thinkingDropdown && thinkingDropdown.value) {
+          const activeButton = document.querySelector(`#chatThinkingPopup .toolkit-option-btn[data-thinking="${thinkingDropdown.value}"]`);
+          if (activeButton) {
+            thinkingButtons.forEach(b => b.classList.remove('active'));
+            activeButton.classList.add('active');
+          }
+        }
       })();
     </script>
   </body>

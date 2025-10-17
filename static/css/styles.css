@@ -204,6 +204,50 @@ body.ai-tab-active .quick-intel-sidebar {
   font-weight: 500;
 }
 
+/* Filter Action Buttons (Done/Clear) */
+.filter-action-buttons {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-action-btn {
+  padding: 5px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.filter-done-btn {
+  background: var(--brand) !important;
+  color: white !important;
+  border-color: var(--brand) !important;
+}
+
+.filter-done-btn:hover {
+  background: var(--brand-600) !important;
+  border-color: var(--brand-600) !important;
+  transform: scale(1.05);
+}
+
+.filter-clear-btn {
+  background: #f5f5f5 !important;
+  color: #666 !important;
+  border-color: #ddd !important;
+}
+
+.filter-clear-btn:hover {
+  background: var(--bg) !important;
+  color: var(--ink) !important;
+  border-color: var(--ink) !important;
+  transform: scale(1.05);
+}
+
 .sidebar-content {
   flex: 1;
   overflow-y: auto;
@@ -1068,13 +1112,13 @@ mark {
 }
 
 .action-chip .title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--ink);
 }
 
 .action-chip .sub {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
 }
 
@@ -1505,13 +1549,14 @@ mark {
     font-size: 14px;
   }
 
-  /* Quick Intelligence sidebar on mobile */
+  /* Quick Intelligence sidebar - hide completely on mobile */
   .quick-intel-sidebar {
-    width: 60px;
+    display: none !important;
   }
 
-  .quick-intel-sidebar.active {
-    width: 200px;
+  /* Adjust AI chat layout when QI sidebar is hidden */
+  body.ai-tab-active .main-content {
+    margin-left: 0 !important;
   }
 
   .quick-intel-content {
@@ -2115,7 +2160,7 @@ mark {
   border-bottom: 1.5px solid var(--stroke);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
   flex-shrink: 0;
 }
 
@@ -2124,6 +2169,17 @@ mark {
   font-weight: 600;
   color: var(--ink);
   margin: 0;
+  flex-shrink: 0;
+}
+
+/* Mobile filter action buttons container - positioned between title and close */
+.mobile-filter-actions {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  justify-content: flex-end;
+  margin-right: 8px;
 }
 
 .mobile-filters-close {
@@ -2172,14 +2228,400 @@ mark {
   pointer-events: all;
 }
 
+/* ===============================================
+   Mobile Quick Intelligence Bottom Sheet & FAB
+   =============================================== */
+
+/* Mobile QI FAB (Floating Action Button) - WhatsApp/Telegram style */
+.mobile-qi-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  background: var(--brand);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+  transition: all 0.3s ease;
+  z-index: 9997;
+  display: none; /* Hidden by default, shown only on AI tab on mobile */
+}
+
+.mobile-qi-fab:hover {
+  background: var(--brand-600);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+}
+
+.mobile-qi-fab:active {
+  transform: scale(0.95);
+}
+
+/* Show FAB only on AI tab on mobile */
+@media (max-width: 768px) {
+  body.ai-tab-active .mobile-qi-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Mobile QI Bottom Sheet */
+.mobile-qi-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--card);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  z-index: 9999;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-qi-sheet.active {
+  transform: translateY(0);
+}
+
+.mobile-qi-header {
+  padding: 16px 20px;
+  border-bottom: 1.5px solid var(--stroke);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.mobile-qi-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.mobile-qi-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.mobile-qi-close:hover {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.mobile-qi-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-qi-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-qi-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ===============================================
+   Conditional Mobile Button (Filters / QI)
+   =============================================== */
+
+/* Unified styling for both conditional buttons */
+.mobile-conditional-btn {
+  display: none; /* Hidden on desktop, shown on mobile via media query */
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--stroke);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.mobile-conditional-btn:hover {
+  background: var(--bg);
+  border-color: var(--ink);
+}
+
+.mobile-conditional-btn:active {
+  transform: scale(0.98);
+}
+
+.mobile-conditional-btn svg {
+  flex-shrink: 0;
+}
+
+/* ===============================================
+   Chat Mobile Icon Buttons (Scope & Thinking)
+   =============================================== */
+
+/* Mobile controls container */
+.chat-mobile-controls {
+  display: none; /* Hidden by default, shown on mobile */
+  align-items: center;
+  gap: 10px;
+}
+
+/* Icon button styling */
+.chat-icon-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--stroke);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.chat-icon-btn:hover {
+  background: var(--bg);
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.chat-icon-btn:active {
+  transform: scale(0.98);
+}
+
+.chat-icon-btn svg {
+  flex-shrink: 0;
+}
+
+.icon-btn-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Hide desktop scope selector on mobile */
+@media (max-width: 768px) {
+  .chat-scope-selector-desktop {
+    display: none !important;
+  }
+
+  .chat-mobile-controls {
+    display: flex;
+  }
+}
+
+/* Show desktop scope selector on desktop */
+@media (min-width: 769px) {
+  .chat-mobile-controls {
+    display: none !important;
+  }
+
+  .chat-scope-selector-desktop {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+}
+
+/* Toolkit Popup Overlay */
+.chat-toolkit-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.chat-toolkit-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Toolkit Popup (Bottom Sheet) */
+.chat-toolkit-popup {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--card);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  z-index: 9999;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-toolkit-popup.active {
+  transform: translateY(0);
+}
+
+.toolkit-popup-header {
+  padding: 16px 20px;
+  border-bottom: 1.5px solid var(--stroke);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(139, 92, 246, 0.02) 100%);
+}
+
+.toolkit-popup-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.toolkit-popup-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.toolkit-popup-close:hover {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.toolkit-popup-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Toolkit Sections */
+.toolkit-section {
+  margin-bottom: 24px;
+}
+
+.toolkit-section:last-child {
+  margin-bottom: 0;
+}
+
+.toolkit-section-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.toolkit-section-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+/* Toolkit Option Group */
+.toolkit-option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Toolkit Option Buttons */
+.toolkit-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1.5px solid var(--stroke);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.toolkit-option-btn:hover {
+  background: var(--bg);
+  border-color: var(--brand);
+}
+
+.toolkit-option-btn.active {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-600) 100%);
+  border-color: var(--brand);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+}
+
+.toolkit-option-btn.active .toolkit-option-text {
+  color: white;
+  font-weight: 600;
+}
+
+.toolkit-option-text {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  transition: all 0.2s ease;
+}
+
 /* Mobile appbar - icon-only layout for cleaner UI */
 @media (max-width: 768px) {
-  /* Hide filter button text, show only emoji */
-  .mobile-filters-btn .mobile-btn-text {
+  /* Hide button text, show only emoji/icon */
+  .mobile-conditional-btn .mobile-btn-text {
     display: none;
   }
 
-  .mobile-filters-btn {
+  .mobile-conditional-btn {
     padding: 8px 12px;
     font-size: 20px;
     min-width: auto;

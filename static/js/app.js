@@ -217,6 +217,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (badge) {
       badge.textContent = totalFilters === 0 ? '0 active' : `${totalFilters} active`;
     }
+
+    // Show/hide Done and Clear buttons based on filter count (desktop sidebar)
+    const filterActionButtons = document.getElementById('filterActionButtons');
+    console.log('[FILTER BUTTONS] Element found:', !!filterActionButtons, 'Total filters:', totalFilters);
+    if (filterActionButtons) {
+      const displayValue = totalFilters > 0 ? 'flex' : 'none';
+      console.log('[FILTER BUTTONS] Setting display to:', displayValue);
+      filterActionButtons.style.display = displayValue;
+    } else {
+      console.error('[FILTER BUTTONS] Element #filterActionButtons not found!');
+    }
+
+    // Show/hide mobile filter action buttons
+    const mobileFilterActionButtons = document.getElementById('mobileFilterActionButtons');
+    if (mobileFilterActionButtons) {
+      mobileFilterActionButtons.style.display = totalFilters > 0 ? 'flex' : 'none';
+    }
   }
 
   // Clear All Filters functionality
@@ -237,6 +254,84 @@ document.addEventListener('DOMContentLoaded', function() {
       // Update UI and reload data
       syncAIFilters();
       smartLoad();
+    });
+  }
+
+  // Clear Filters button (in header, next to Filters title)
+  const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+  if (clearFiltersBtn) {
+    clearFiltersBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent sidebar toggle
+
+      // Clear all filter arrays
+      currentFilters.drug_filters = [];
+      currentFilters.ta_filters = [];
+      currentFilters.session_filters = [];
+      currentFilters.date_filters = [];
+
+      // Remove active class from all filter buttons (both sidebar and mobile sheet)
+      document.querySelectorAll('.filter-toggle-btn').forEach(btn => btn.classList.remove('active'));
+
+      // Update UI and reload data
+      syncAIFilters();
+      smartLoad();
+    });
+  }
+
+  // Done Filters button (closes mobile filter sheet)
+  const doneFiltersBtn = document.getElementById('doneFiltersBtn');
+  if (doneFiltersBtn) {
+    doneFiltersBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent sidebar toggle
+
+      // Close mobile filter sheet if it's open
+      const mobileFiltersSheet = document.getElementById('mobileFiltersSheet');
+      const mobileFiltersOverlay = document.getElementById('mobileFiltersOverlay');
+
+      if (mobileFiltersSheet && mobileFiltersSheet.classList.contains('active')) {
+        mobileFiltersSheet.classList.remove('active');
+        mobileFiltersOverlay.classList.remove('active');
+        document.body.style.overflow = ''; // Restore scrolling
+      }
+    });
+  }
+
+  // Mobile Clear Filters button (in mobile filter sheet)
+  const mobileClearFiltersBtn = document.getElementById('mobileClearFiltersBtn');
+  if (mobileClearFiltersBtn) {
+    mobileClearFiltersBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+
+      // Clear all filter arrays
+      currentFilters.drug_filters = [];
+      currentFilters.ta_filters = [];
+      currentFilters.session_filters = [];
+      currentFilters.date_filters = [];
+
+      // Remove active class from all filter buttons (both sidebar and mobile sheet)
+      document.querySelectorAll('.filter-toggle-btn').forEach(btn => btn.classList.remove('active'));
+
+      // Update UI and reload data
+      syncAIFilters();
+      smartLoad();
+    });
+  }
+
+  // Mobile Done Filters button (in mobile filter sheet)
+  const mobileDoneFiltersBtn = document.getElementById('mobileDoneFiltersBtn');
+  if (mobileDoneFiltersBtn) {
+    mobileDoneFiltersBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+
+      // Close mobile filter sheet
+      const mobileFiltersSheet = document.getElementById('mobileFiltersSheet');
+      const mobileFiltersOverlay = document.getElementById('mobileFiltersOverlay');
+
+      if (mobileFiltersSheet && mobileFiltersSheet.classList.contains('active')) {
+        mobileFiltersSheet.classList.remove('active');
+        mobileFiltersOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
     });
   }
 
@@ -424,6 +519,73 @@ document.addEventListener('DOMContentLoaded', function() {
     return window.innerWidth <= 768;
   }
 
+  // ===== Format Abstract with Structure and Tables =====
+  function formatAbstract(text) {
+    if (!text) return '';
+
+    // Common section headers to detect (case insensitive)
+    const sectionPatterns = [
+      'Background',
+      'Introduction',
+      'Methods',
+      'Materials and Methods',
+      'Results',
+      'Conclusions',
+      'Discussion',
+      'Objectives',
+      'Purpose',
+      'Aim',
+      'Findings',
+      'Summary',
+      'Clinical Trial Information'
+    ];
+
+    // Step 1: Convert pipe-delimited tables to HTML tables
+    let formatted = text;
+
+    // Detect tables by looking for pipes and multiple rows
+    const tableRegex = /(\|[^\n]+\|\n?){2,}/g;
+    formatted = formatted.replace(tableRegex, (tableMatch) => {
+      const rows = tableMatch.trim().split('\n').filter(r => r.trim());
+      if (rows.length < 2) return tableMatch; // Need at least 2 rows
+
+      let html = '<div style="overflow-x: auto; margin: 12px 0;"><table class="abstract-table" style="width: 100%; border-collapse: collapse; font-size: 11px; min-width: 300px;">';
+
+      rows.forEach((row, idx) => {
+        const cells = row.split('|').map(c => c.trim()).filter(c => c);
+        const tag = idx === 0 ? 'th' : 'td';
+        const style = idx === 0
+          ? 'style="border: 1px solid #ddd; padding: 6px; background: #f8f9fa; font-weight: 600; text-align: left;"'
+          : 'style="border: 1px solid #ddd; padding: 6px;"';
+
+        html += '<tr>';
+        cells.forEach(cell => {
+          html += `<${tag} ${style}>${escapeHtml(cell)}</${tag}>`;
+        });
+        html += '</tr>';
+      });
+
+      html += '</table></div>';
+      return html;
+    });
+
+    // Step 2: Format sections with bold headers and line breaks
+    sectionPatterns.forEach(section => {
+      // Match "Section:" or "Section " at the start of a sentence
+      const regex = new RegExp(`(^|\\. |\\n)(${section}):?\\s*`, 'gi');
+      formatted = formatted.replace(regex, (match, prefix, sectionName) => {
+        return `${prefix}<br><br><strong>${sectionName}:</strong><br>`;
+      });
+    });
+
+    // Step 3: Clean up excessive line breaks and add proper spacing
+    formatted = formatted
+      .replace(/(<br>\s*){3,}/g, '<br><br>') // Max 2 line breaks
+      .replace(/^\s*<br><br>/, ''); // Remove leading breaks
+
+    return formatted;
+  }
+
   // ===== Card rendering for mobile =====
   function renderCards(data, skipDataUpdate = false) {
     if (!skipDataUpdate) {
@@ -519,7 +681,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   <span id="abstract-icon-${index}">▼</span> View Abstract
                 </button>
                 <div class="study-abstract" id="abstract-${index}" style="display: none;">
-                  ${escapeHtml(abstract)}
+                  ${formatAbstract(abstract)}
                 </div>
               </div>
             ` : ''}
@@ -1808,31 +1970,36 @@ document.addEventListener('DOMContentLoaded', function() {
       icon: '🏆',
       title: 'Competitor Intelligence',
       filters: ['ta'], // TA only - AI will discuss all assets in this TA
-      instruction: 'Select a therapeutic area to analyze:'
+      instruction: 'Select a therapeutic area to analyze:',
+      description: 'Generate a comprehensive competitive landscape report including drug rankings by study count, MOA class distribution, emerging competitive threats, and strategic positioning insights.'
     },
     kol: {
       icon: '👥',
       title: 'KOL Analysis',
       filters: ['ta'], // TA only - AI will discuss all KOLs in this TA
-      instruction: 'Select a therapeutic area:'
+      instruction: 'Select a therapeutic area:',
+      description: 'Generate a comprehensive KOL activity report featuring the top 15 most active speakers, their research focus areas, institutional affiliations, and strategic importance for partnerships.'
     },
     institution: {
       icon: '🏥',
       title: 'Academic Partnership Opportunities',
       filters: ['ta'], // TA only
-      instruction: 'Select a therapeutic area:'
+      instruction: 'Select a therapeutic area:',
+      description: 'Identify leading research institutions with analysis of the top 15 centers by publication volume, geographic distribution, and partnership opportunities for clinical trials and collaborations.'
     },
     insights: {
       icon: '📈',
       title: 'Scientific Trends',
       filters: ['ta'], // TA only - AI will discuss all biomarkers/MOAs in this TA
-      instruction: 'Select a therapeutic area:'
+      instruction: 'Select a therapeutic area:',
+      description: 'Discover scientific insights and trends including analysis of new data, biomarker frequency, MOA patterns, emerging mechanisms, treatment paradigm shifts, and therapeutic landscape evolution.'
     },
     strategic: {
       icon: '📋',
       title: 'Strategic Briefing',
       filters: ['ta'], // TA only - AI will provide TA-wide strategy with asset-specific context
-      instruction: 'Select a therapeutic area to analyze:'
+      instruction: 'Select a therapeutic area to analyze:',
+      description: 'Generate an executive strategic briefing that synthesizes all intelligence reports into actionable recommendations for Medical Affairs, MSLs, and HQ Leadership.'
     }
   };
 
@@ -1851,6 +2018,13 @@ document.addEventListener('DOMContentLoaded', function() {
       modalTitle.textContent = config.title;
       modalInstructions.textContent = config.instruction;
 
+      // Update TA description if element exists
+      const taDescription = document.getElementById('taModalDescription');
+      if (taDescription && config.description) {
+        taDescription.textContent = config.description;
+        taDescription.style.display = 'block';
+      }
+
       // Show/hide filter sections based on config
       modalDrugSection.style.display = config.filters.includes('drug') ? 'block' : 'none';
       modalTASection.style.display = config.filters.includes('ta') ? 'block' : 'none';
@@ -1858,6 +2032,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Reset active states
       document.querySelectorAll('.modal-filter-btn').forEach(btn => btn.classList.remove('active'));
+
+      // Close mobile QI bottom sheet if it's open
+      const mobileQISheet = document.getElementById('mobileQISheet');
+      const mobileQIOverlay = document.getElementById('mobileQIOverlay');
+      if (mobileQISheet && mobileQISheet.classList.contains('active')) {
+        mobileQISheet.classList.remove('active');
+        mobileQIOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
 
       // Show modal
       const modal = new bootstrap.Modal(quickIntelModal);
