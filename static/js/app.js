@@ -379,8 +379,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ===== Search (Explorer only) =====
   if (searchInput){
-    // Only enable auto-search on desktop (not mobile)
-    if (window.innerWidth > 768) {
+    // Only enable auto-search on desktop (not mobile/iPad)
+    if (window.innerWidth > 1024) {
       searchInput.addEventListener('input', debounce(handleLiveSearch, 300));
     }
     searchInput.addEventListener('input', toggleClearButton);
@@ -517,9 +517,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // Store custom column widths (persists across re-renders)
   let customColumnWidths = {};
 
-  // ===== Detect if we should use mobile cards or desktop table =====
+  // ===== Detect if we should use mobile cards or desktop table (includes iPads) =====
   function isMobileView() {
-    return window.innerWidth <= 768;
+    return window.innerWidth <= 1024;
   }
 
   // ===== Format Abstract with Structure and Tables =====

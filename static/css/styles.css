@@ -1445,8 +1445,8 @@ mark {
   color: var(--brand);
 }
 
-/* ===== MOBILE RESPONSIVE ===== */
-@media (max-width: 768px) {
+/* ===== MOBILE RESPONSIVE (includes iPads) ===== */
+@media (max-width: 1024px) {
   /* On small screens, completely hide sidebar */
   .filter-sidebar {
     display: none !important;
@@ -2119,8 +2119,8 @@ mark {
   background: var(--muted);
 }
 
-/* Hide cards container on desktop (>768px) */
-@media (min-width: 769px) {
+/* Hide cards container on desktop (>1024px) */
+@media (min-width: 1025px) {
   .study-cards-container {
     display: none;
   }
@@ -2280,8 +2280,8 @@ mark {
   transform: scale(0.95);
 }
 
-/* Show FAB only on AI tab on mobile */
-@media (max-width: 768px) {
+/* Show FAB only on AI tab on mobile/iPad */
+@media (max-width: 1024px) {
   body.ai-tab-active .mobile-qi-fab {
     display: flex;
     align-items: center;
@@ -2454,8 +2454,8 @@ mark {
   font-weight: 500;
 }
 
-/* Hide desktop scope selector on mobile */
-@media (max-width: 768px) {
+/* Hide desktop scope selector on mobile/iPad */
+@media (max-width: 1024px) {
   .chat-scope-selector-desktop {
     display: none !important;
   }
@@ -2466,7 +2466,7 @@ mark {
 }
 
 /* Show desktop scope selector on desktop */
-@media (min-width: 769px) {
+@media (min-width: 1025px) {
   .chat-mobile-controls {
     display: none !important;
   }
@@ -2633,8 +2633,8 @@ mark {
   transition: all 0.2s ease;
 }
 
-/* Mobile appbar - icon-only layout for cleaner UI */
-@media (max-width: 768px) {
+/* Mobile/iPad appbar - icon-only layout for cleaner UI */
+@media (max-width: 1024px) {
   /* Hide button text, show only emoji/icon */
   .mobile-conditional-btn .mobile-btn-text {
     display: none;
@@ -2690,7 +2690,7 @@ mark {
 }
 
 /* Desktop appbar - full text layout */
-@media (min-width: 769px) {
+@media (min-width: 1025px) {
   /* Hide mobile title, show full title */
   .appbar-title .title-mobile {
     display: none;
