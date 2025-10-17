@@ -1771,22 +1771,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ===== Download Conversation =====
   const downloadChatBtn = document.getElementById('downloadChatBtn');
+  const confirmDownloadBtn = document.getElementById('confirmDownloadChat');
+
   if (downloadChatBtn) {
-    downloadChatBtn.addEventListener('click', downloadConversation);
+    downloadChatBtn.addEventListener('click', () => {
+      // Check if there's conversation to download
+      const chatMessages = chatContainer.querySelectorAll('.d-flex');
+      if (chatMessages.length === 0) {
+        alert('No conversation to download yet.');
+        return;
+      }
+      // Show confirmation modal
+      const modal = new bootstrap.Modal(document.getElementById('downloadChatModal'));
+      modal.show();
+    });
   }
 
-  function downloadConversation() {
-    // Extract conversation from chat container
-    const chatMessages = chatContainer.querySelectorAll('.d-flex');
-    if (chatMessages.length === 0) {
-      alert('No conversation to download yet.');
-      return;
-    }
+  if (confirmDownloadBtn) {
+    confirmDownloadBtn.addEventListener('click', downloadConversationPDF);
+  }
 
-    let conversation = 'ESMO 2025 Conference Intelligence - Conversation Export\n';
-    conversation += '=' .repeat(60) + '\n';
-    conversation += `Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}\n`;
-    conversation += '=' .repeat(60) + '\n\n';
+  function downloadConversationPDF() {
+    const chatMessages = chatContainer.querySelectorAll('.d-flex');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Add title
+    doc.setFontSize(16);
+    doc.text('ESMO 2025 - Chat History', 20, 20);
+    doc.setFontSize(10);
+    doc.text(`Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 20, 30);
+
+    let yPos = 45;
+    const pageHeight = doc.internal.pageSize.height;
+    const marginBottom = 20;
 
     chatMessages.forEach((msg, index) => {
       const isUser = msg.classList.contains('justify-content-end');
@@ -1796,24 +1814,30 @@ document.addEventListener('DOMContentLoaded', function() {
       const text = msgDiv.innerText || msgDiv.textContent;
       if (!text.trim()) return;
 
-      if (isUser) {
-        conversation += `USER:\n${text}\n\n`;
-      } else {
-        conversation += `AI ASSISTANT:\n${text}\n\n`;
+      // Add new page if needed
+      if (yPos > pageHeight - marginBottom) {
+        doc.addPage();
+        yPos = 20;
       }
-      conversation += '-'.repeat(60) + '\n\n';
+
+      // Add speaker label
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      doc.text(isUser ? 'USER:' : 'AI ASSISTANT:', 20, yPos);
+      yPos += 7;
+
+      // Add message text
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(10);
+      const lines = doc.splitTextToSize(text, 170);
+      doc.text(lines, 20, yPos);
+      yPos += (lines.length * 5) + 10;
     });
 
-    // Create blob and download
-    const blob = new Blob([conversation], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ESMO2025_Conversation_${new Date().toISOString().slice(0,10)}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    doc.save(`ESMO2025_Chat_${new Date().toISOString().slice(0,10)}.pdf`);
+
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('downloadChatModal')).hide();
   }
 
   // ===== Utilities =====
