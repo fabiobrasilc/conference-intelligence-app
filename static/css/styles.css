@@ -1603,7 +1603,8 @@ mark {
   /* Chat input - mobile friendly */
   .ai-chat-input-container {
     padding: 12px 16px 16px 16px;
-    /* Keep flex layout - don't use display: block as it breaks desktop */
+    /* Removed display: block and position: fixed - they break desktop flex layout */
+    /* Keep default flex layout from desktop styles */
   }
 
   .chat-scope-selector {
