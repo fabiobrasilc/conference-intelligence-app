@@ -2831,3 +2831,13 @@ html.force-mobile .mobile-card-container {
   display: block !important;
 }
 
+/* Fix chat input positioning on tablets - ensure it's fully visible */
+html.force-mobile .ai-chat-input-container {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+  z-index: 1000 !important;
+}
+
