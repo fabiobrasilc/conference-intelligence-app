@@ -3422,10 +3422,10 @@ Generate your Competitor Intelligence report focusing Section 2 exclusively on M
                 important_studies = filtered_df[filtered_df['Identifier'].isin(matching_row_ids)]
                 print(f"[STEP 2] Joined to CSV: {len(important_studies)} studies with full data")
 
-                # STEP 3: Send FULL DataFrame to AI (all columns!)
+                # STEP 3: Send FULL DataFrame to AI (all columns including Abstract!)
                 print(f"[STEP 3] Preparing full study data with all columns...")
                 study_table_markdown = important_studies[[
-                    'Identifier', 'Title', 'Speakers', 'Affiliation', 'Date', 'Session'
+                    'Identifier', 'Title', 'Speakers', 'Affiliation', 'Date', 'Session', 'Abstract'
                 ]].to_markdown(index=False)
 
                 print(f"[STEP 3] Generated markdown table: {len(study_table_markdown)} chars")
