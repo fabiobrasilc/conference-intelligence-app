@@ -1,0 +1,1019 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ESMO 2025 — Conference Intelligence Platform</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  </head>
+  <body>
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Left Sidebar for Filters -->
+    <aside class="filter-sidebar collapsed" id="filterSidebar">
+      <div class="sidebar-header">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <h6 class="mb-0 fw-bold">🧰 Filters</h6>
+            <!-- Done and Clear buttons (only show when filters are active) -->
+            <div class="filter-action-buttons" id="filterActionButtons" style="display: none; gap: 6px;">
+              <button class="btn btn-sm filter-action-btn filter-done-btn" id="doneFiltersBtn" title="Apply filters">Done</button>
+              <button class="btn btn-sm filter-action-btn filter-clear-btn" id="clearFiltersBtn" title="Clear all filters">Clear</button>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-link text-decoration-none" id="clearAllFilters" style="display: none;">Clear All</button>
+        </div>
+        <div class="filter-count-badge" id="filterCountBadge">0 active</div>
+      </div>
+
+      <div class="sidebar-content">
+        <!-- Drug Focus Section -->
+        <div class="filter-section collapsed">
+          <div class="filter-section-header" data-section="drug">
+            <span class="section-title">🎯 Drug Focus</span>
+            <span class="chevron">›</span>
+          </div>
+          <div class="filter-options">
+            <button class="filter-toggle-btn drug-filter-btn" data-value="Avelumab Focus">Avelumab</button>
+            <button class="filter-toggle-btn drug-filter-btn" data-value="Tepotinib Focus">Tepotinib</button>
+            <button class="filter-toggle-btn drug-filter-btn" data-value="Cetuximab Focus">Cetuximab</button>
+          </div>
+        </div>
+
+        <!-- Therapeutic Area Section -->
+        <div class="filter-section collapsed">
+          <div class="filter-section-header" data-section="ta">
+            <span class="section-title">🏥 Therapeutic Area</span>
+            <span class="chevron">›</span>
+          </div>
+          <div class="filter-options">
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Bladder Cancer">Bladder Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Renal Cancer">Renal Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Lung Cancer">Lung Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Colorectal Cancer">Colorectal Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Head and Neck Cancer">Head & Neck Cancer</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="TGCT">TGCT</button>
+            <button class="filter-toggle-btn ta-filter-btn" data-value="Merkel Cell">Merkel Cell</button>
+          </div>
+        </div>
+
+        <!-- Session Type Section -->
+        <div class="filter-section collapsed">
+          <div class="filter-section-header" data-section="session">
+            <span class="section-title">📋 Session Type</span>
+            <span class="chevron">›</span>
+          </div>
+          <div class="filter-options">
+            <button class="filter-toggle-btn session-filter-btn" data-value="Poster">Poster</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="ePoster">ePoster</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Proffered Paper">Proffered Paper</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Mini Oral Session">Mini Oral</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Educational Session">Educational</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Symposia">Symposia</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Industry-Sponsored Symposium">Industry-Sponsored</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Multidisciplinary Session">Multidisciplinary</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Special Session">Special</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Young Oncologists Session">Young Oncologists</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Challenge Your Expert">Challenge Expert</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Patient Advocacy Session">Patient Advocacy</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="EONS Session">EONS</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Highlights">Highlights</button>
+            <button class="filter-toggle-btn session-filter-btn" data-value="Keynote Lecture">Keynote Lecture</button>
+          </div>
+        </div>
+
+        <!-- Conference Day Section -->
+        <div class="filter-section collapsed">
+          <div class="filter-section-header" data-section="date">
+            <span class="section-title">📅 Conference Day</span>
+            <span class="chevron">›</span>
+          </div>
+          <div class="filter-options">
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 1">Oct 17th</button>
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 2">Oct 18th</button>
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 3">Oct 19th</button>
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 4">Oct 20th</button>
+            <button class="filter-toggle-btn date-filter-btn" data-value="Day 5">Oct 21st</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Quick Intelligence Sidebar (AI Assistant only) -->
+    <aside class="quick-intel-sidebar" id="quickIntelSidebar">
+      <div class="quick-intel-header">
+        <span class="quick-intel-icon">⚡</span>
+        <h6 class="quick-intel-title">Quick Intelligence</h6>
+        <span class="chevron-toggle">‹</span>
+      </div>
+      <div class="quick-intel-content">
+        <p class="qi-instructions">Use the buttons below to see comprehensive AI-powered reports on each topic.</p>
+        <div class="action-chip playbook-trigger" data-playbook="strategic" title="Executive strategic briefing: Synthesizes all intelligence reports into actionable recommendations for Medical Affairs, MSLs, and HQ Leadership.">
+          <div class="icon">🎯</div>
+          <div>
+            <div class="title">Strategic Briefing</div>
+            <div class="sub">Executive synthesis</div>
+          </div>
+        </div>
+        <div class="action-chip playbook-trigger" data-playbook="insights" title="Discover scientific trends: Biomarker/MOA frequency analysis with study identifiers, emerging mechanisms, treatment paradigm shifts, and Merck KGaA portfolio positioning insights.">
+          <div class="icon">📈</div>
+          <div>
+            <div class="title">Discover Insights</div>
+            <div class="sub">Trends & emerging signals</div>
+          </div>
+        </div>
+        <div class="action-chip playbook-trigger" data-playbook="competitor" title="Analyze the competitive landscape: Drug rankings by study count, MOA class distribution, emerging threats (3-5 abstracts), and strategic positioning insights for Merck KGaA portfolio.">
+          <div class="icon">🏆</div>
+          <div>
+            <div class="title">Competitor Activity</div>
+            <div class="sub">Landscape Analysis</div>
+          </div>
+        </div>
+        <div class="action-chip playbook-trigger" data-playbook="kol" title="Generate a comprehensive KOL analysis: Top 15 most active speakers, their research focus areas, institutional affiliations, and strategic importance for Merck KGaA partnerships.">
+          <div class="icon">👩‍⚕️</div>
+          <div>
+            <div class="title">KOL Activity</div>
+            <div class="sub">Authors & impact</div>
+          </div>
+        </div>
+        <div class="action-chip playbook-trigger" data-playbook="institution" title="Identify leading research centers: Top 15 institutions by publication volume, geographic distribution, and partnership opportunities for clinical trials and collaborations.">
+          <div class="icon">🏥</div>
+          <div>
+            <div class="title">Institution Activity</div>
+            <div class="sub">Research centers</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <!-- App Bar -->
+      <div class="appbar">
+        <h1 class="appbar-title">
+          <span class="title-full">COSMIC - ESMO 2025 Conference Intelligence</span>
+          <span class="title-mobile">COSMIC for ESMO2025</span>
+        </h1>
+        <div class="appbar-tabs" role="tablist" aria-label="Main sections">
+          <button class="appbar-tab active" data-bs-toggle="tab" data-bs-target="#data-explorer" type="button" role="tab" aria-controls="data-explorer" aria-selected="true" title="Data Explorer">
+            <svg class="tab-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <span class="tab-text">Data Explorer</span>
+          </button>
+          <span class="tab-divider">|</span>
+          <button class="appbar-tab" data-bs-toggle="tab" data-bs-target="#ai-assistant" type="button" role="tab" aria-controls="ai-assistant" aria-selected="false" title="AI Assistant">
+            <svg class="tab-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span class="tab-text">AI Assistant</span>
+          </button>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm appbar-data-warning-btn" data-bs-toggle="modal" data-bs-target="#dataWarningModal" title="Important Info">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="info-icon-svg">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <span class="info-text">Important Info</span>
+        </button>
+      </div>
+
+      <!-- Hidden default nav-tabs (for bootstrap mechanics) -->
+      <ul class="nav nav-tabs" id="mainTabs" role="tablist" style="display:none;">
+        <li class="nav-item"><button class="nav-link active" id="data-explorer-tab" data-bs-toggle="tab" data-bs-target="#data-explorer" type="button" role="tab">Data Explorer</button></li>
+        <li class="nav-item"><button class="nav-link" id="ai-assistant-tab" data-bs-toggle="tab" data-bs-target="#ai-assistant" type="button" role="tab">AI Assistant</button></li>
+      </ul>
+
+      <div class="tab-content" id="mainTabContent">
+
+        <!-- ===================== DATA EXPLORER ===================== -->
+        <div class="tab-pane fade show active" id="data-explorer" role="tabpanel" aria-labelledby="data-explorer-tab">
+          <div class="content-area">
+
+            <!-- Search Bar -->
+            <div class="search-bar-container mb-3">
+              <div class="input-group">
+                <button class="btn btn-outline-secondary" id="clearSearchBtn" title="Clear search" style="display: none;">✕</button>
+                <input type="text" class="form-control form-control-lg" id="searchInput" placeholder="Search titles, authors, institutions... (Boolean: AND, OR, NOT | Exact match: &quot;ATM&quot;)" />
+                <!-- Desktop: Full text search button -->
+                <button class="btn btn-primary search-btn-desktop" id="searchBtn">🔍 Search</button>
+                <!-- Mobile: Icon-only search button -->
+                <button class="btn btn-primary search-btn-mobile" id="searchBtnMobile" title="Search">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                  </svg>
+                </button>
+                <!-- Mobile: Filter icon button -->
+                <button class="btn btn-outline-secondary filter-btn-mobile" id="mobileFiltersIconBtn" title="Filters">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Column Toggle Controls -->
+            <div class="column-toggle-container mb-2">
+              <span class="toggle-label">Toggle Columns:</span>
+              <button class="column-toggle-btn active" data-column="Title">Title</button>
+              <button class="column-toggle-btn active" data-column="Speakers">Speakers</button>
+              <button class="column-toggle-btn" data-column="Speaker Location">Location</button>
+              <button class="column-toggle-btn active" data-column="Abstract">Abstract</button>
+              <button class="column-toggle-btn active" data-column="Affiliation">Affiliation</button>
+              <button class="column-toggle-btn active" data-column="Identifier">Identifier</button>
+              <button class="column-toggle-btn active" data-column="Session">Session</button>
+              <button class="column-toggle-btn" data-column="Room">Room</button>
+              <button class="column-toggle-btn" data-column="Date">Date</button>
+              <button class="column-toggle-btn" data-column="Time">Time</button>
+              <button class="column-toggle-btn" data-column="Theme">Theme</button>
+            </div>
+
+            <!-- Data Table -->
+            <div class="card">
+              <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                  <h5 class="mb-0">
+                    Conference Data —
+                    <small id="filterContext" class="text-muted">Loading filter context...</small>
+                  </h5>
+                  <button class="download-table-btn" id="exportBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                    </svg>
+                    <span>Download table</span>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="tableContainer">
+                  <div class="text-center py-4">
+                    <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    <p class="mt-2 mb-0">Loading ESMO 2025 data...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===================== AI ASSISTANT ===================== -->
+        <div class="tab-pane fade" id="ai-assistant" role="tabpanel" aria-labelledby="ai-assistant-tab">
+          <div class="ai-chat-layout">
+
+            <!-- Chat Container (Full height, centered) -->
+            <div class="ai-chat-main">
+
+              <!-- Scrollable Content Area -->
+              <div class="ai-chat-scrollable">
+                <!-- Greeting (shows before first message) -->
+                <div id="aiGreeting" class="ai-greeting">
+                  <h2 class="ai-greeting-title">Welcome to COSMIC AI</h2>
+                  <p class="ai-greeting-subtitle">Your ESMO 2025 Conference Intelligence Assistant</p>
+
+                    <div class="greeting-examples" style="margin-top: 16px;">
+                      <h3 style="font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 8px; text-align: left;">Check out the left sidebar (desktop) or the "Intel" button below (mobile) for comprehensive conference reports!</h3>
+                      <p></p>
+                      <p></p>
+                      <h3 style="font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 8px; text-align: left;">Select a chat scope below and ask me:</h3>
+                      <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px; text-align: left;">Chat scope is "all conference data" by default. Select a TA for faster, targeted responses!</p>
+                      <div style="font-size: 12px; color: var(--ink); line-height: 1.6; text-align: left;">
+                        <p style="margin: 4px 0;">What are the new data being reported by studies on EV + P?</p>
+                        <p style="margin: 4px 0;">I want to attend all sessions by Dr Andrea Necchi, can you show me?</p>
+                        <p style="margin: 4px 0;">What are the implications of EV + P moving into the perioperative setting, and what might it mean for avelumab in the metastatic setting?</p>
+                        <p style="margin: 4px 0;">I want to know more about study 2690MO.</p>
+                        <p style="margin: 4px 0;">Which bladder HCPs from New York should I try meeting at ESMO?</p>
+                        <p style="margin: 4px 0;">Are there any potential practice changing studies in [therapeutic area] being presented?</p>
+                        <p style="margin: 4px 0;">What are all the bladder poster presentations happening on 10/18?</p>
+                      </div>
+                    </div>
+
+                </div>
+
+                <!-- Chat Messages Container -->
+                <div id="chatContainer" class="ai-chat-messages">
+                  <!-- Messages will appear here -->
+                </div>
+
+                <!-- Floating Jump to Bottom Button -->
+                <button id="jumpToBottomBtn" class="jump-to-bottom-btn">
+                  ↓ Bottom
+                </button>
+              </div>
+
+              <!-- Chat Input (Fixed at bottom of chat area) -->
+              <div class="ai-chat-input-container">
+                <!-- Chat Scope Selector (Integrated into input box) -->
+                <div class="chat-scope-selector">
+                  <!-- Mobile: Icon buttons that open popups -->
+                  <div class="chat-mobile-controls">
+                    <button class="chat-icon-btn" id="chatScopeBtn" title="Conversation Scope">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                      </svg>
+                      <span class="icon-btn-label">All Conference Data</span>
+                    </button>
+                    <button class="chat-icon-btn" id="chatQIBtn" title="Quick Intelligence Reports">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                      </svg>
+                      <span class="icon-btn-label">Intel</span>
+                    </button>
+                    <button class="chat-icon-btn" id="chatMenuBtn" title="Chat Options">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="5.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="12" y1="19" x2="12" y2="19.01"/>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Desktop: Original dropdowns -->
+                  <div class="chat-scope-selector-desktop">
+                    <label for="chatScopeDropdown">🔍 Scope:</label>
+                    <select id="chatScopeDropdown" class="chat-scope-dropdown">
+                      <option value="">Select the scope of the conversation here</option>
+                      <option value="all">All Conference Data (4,686 studies)</option>
+                      <option value="ta:Bladder Cancer">Bladder Cancer</option>
+                      <option value="ta:Renal Cancer">Renal Cancer</option>
+                      <option value="ta:Lung Cancer">Lung Cancer (NSCLC)</option>
+                      <option value="ta:Colorectal Cancer">Colorectal Cancer</option>
+                      <option value="ta:Head and Neck Cancer">Head & Neck Cancer</option>
+                      <option value="ta:TGCT">TGCT</option>
+                      <option value="ta:Merkel Cell">Merkel Cell</option>
+                    </select>
+                  </div>
+
+                  <!-- Hidden controls (managed by menu popup) -->
+                  <select id="thinkingModeDropdown" class="chat-scope-dropdown" style="display:none;" title="Control AI reasoning depth and response detail">
+                    <option value="standard" selected>Standard</option>
+                    <option value="deep">🔬 Deep Thinking</option>
+                  </select>
+
+                  <button class="chat-menu-btn" id="chatMenuBtnDesktop" title="Chat Options">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+                    </svg>
+                  </button>
+
+                  <!-- Hidden download button (functionality moved to menu, but element needed for JS) -->
+                  <button id="downloadChatBtn" style="display: none;"></button>
+                </div>
+
+                <div class="ai-chat-input-wrapper">
+                  <textarea
+                    id="chatInput"
+                    class="ai-chat-input"
+                    placeholder="Ask about conference insights, competitive intelligence, KOLs..."
+                    rows="1"></textarea>
+                  <button class="ai-chat-send-btn" id="chatSendBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 19V5M5 12l7-7 7 7"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Quick Intelligence Filter Modal -->
+    <div class="modal fade" id="quickIntelModal" tabindex="-1" aria-labelledby="quickIntelModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.12);">
+          <div class="modal-header" style="border-bottom: 1px solid #e9ecef; padding: 20px 24px;">
+            <h5 class="modal-title fw-bold" id="quickIntelModalLabel">
+              <span id="modalIcon">⚡</span> <span id="modalTitle">Quick Intelligence</span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" style="padding: 24px;">
+            <!-- Description (shown first) -->
+            <p class="ta-modal-description" id="taModalDescription" style="font-size: 15px; color: #495057; margin-bottom: 20px; line-height: 1.6;">
+              <!-- Description will be dynamically updated based on report type -->
+            </p>
+
+            <!-- Instruction text -->
+            <p class="text-muted" id="modalInstructions" style="margin-bottom: 16px; font-size: 15px; font-weight: 500;">
+              Select a filter to scope your analysis.
+            </p>
+
+            <!-- Drug Focus Filter Section -->
+            <div id="modalDrugSection" class="mb-4" style="display: none;">
+              <label class="form-label fw-semibold" style="font-size: 13px; color: #6c757d; margin-bottom: 12px;">💊 EMD SERONO/MERCK KGAA ASSETS FOCUS</label>
+              <div class="d-flex flex-wrap gap-2">
+                <button class="modal-filter-btn" data-type="drug" data-value="Avelumab Focus">Avelumab (mUC 1LM)</button>
+                <button class="modal-filter-btn" data-type="drug" data-value="Tepotinib Focus">Tepotinib (NSCLC METex14)</button>
+                <button class="modal-filter-btn" data-type="drug" data-value="Cetuximab CRC">Cetuximab (mCRC)</button>
+                <button class="modal-filter-btn" data-type="drug" data-value="Cetuximab H&N">Cetuximab (la/mH&N)</button>
+              </div>
+            </div>
+
+            <!-- Therapeutic Area Filter Section -->
+            <div id="modalTASection" class="mb-4" style="display: none;">
+              <div class="d-flex flex-wrap gap-2">
+                <button class="modal-filter-btn" data-type="ta" data-value="Bladder Cancer">Bladder Cancer</button>
+                <button class="modal-filter-btn" data-type="ta" data-value="Renal Cancer">Renal Cancer</button>
+                <button class="modal-filter-btn" data-type="ta" data-value="Lung Cancer">Lung Cancer</button>
+                <button class="modal-filter-btn" data-type="ta" data-value="Colorectal Cancer">Colorectal</button>
+                <button class="modal-filter-btn" data-type="ta" data-value="Head and Neck Cancer">Head & Neck</button>
+                <button class="modal-filter-btn" data-type="ta" data-value="TGCT">TGCT</button>
+                <button class="modal-filter-btn" data-type="ta" data-value="Merkel Cell">Merkel Cell</button>
+              </div>
+            </div>
+
+            <!-- Selected Filter Display -->
+            <div id="modalSelectedFilter" class="alert alert-light" style="border-radius: 8px; font-size: 13px; margin-top: 16px; display: none;">
+              <strong>Selected:</strong> <span id="modalSelectedFilterText"></span>
+            </div>
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 16px 24px;">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 8px;">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Warning Modal -->
+    <div class="modal fade" id="dataWarningModal" tabindex="-1" aria-labelledby="dataWarningModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 80px rgba(0,0,0,0.12);">
+          <div class="modal-header" style="border-bottom: 1px solid #e9ecef; padding: 14px 18px;">
+            <h5 class="modal-title fw-bold" id="dataWarningModalLabel" style="font-size: 16px;">
+              ⚠️ Data Sources & Important Warnings
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" style="padding: 12px 16px;">
+            <div style="margin-bottom: 10px; padding: 8px; background-color: transparent; border-left: 4px solid #8b5cf6; border-radius: 6px;">
+              <strong style="color: #8b5cf6; font-size: 14px;">⛔ DO NOT SHARE CONFIDENTIAL/INTERNAL INFORMATION</strong>
+              <p style="margin: 4px 0 0 0; font-size: 11px; color: #8b5cf6; line-height: 1.3;">No internal EMD Serono/Merck KGaA data was used to train the AI model. All prompts are sent to OpenAI servers.</p>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+              <h6 class="fw-bold" style="font-size: 14px; margin-bottom: 4px;">Data Sources</h6>
+              <ul style="font-size: 14px; margin: 3px 0; padding-left: 16px; line-height: 1.3;">
+                <li style="margin-bottom: 2px;"><strong>Conference Data:</strong> All sourced from publicly available ESMO 2025 materials</li>
+              </ul>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+              <h6 class="fw-bold" style="font-size: 14px; margin-bottom: 4px;">Data Limitations</h6>
+              <ul style="font-size: 14px; margin: 3px 0; padding-left: 16px; line-height: 1.3;">
+                <li style="margin-bottom: 2px;"><strong>Affiliation Confidence:</strong> 80%+ perfect match; Authors without affiliations lack PubMed-indexed publications</li>
+                <li style="margin-bottom: 2px;"><strong>Scope:</strong> Titles, authors, sessions, full abstracts. Late-Breaking Abstracts (LBA) pending.</li>
+                <li style="margin-bottom: 2px;"><strong>AI Accuracy:</strong> AI can make mistakes. Always verify critical information</li>
+              </ul>
+            </div>
+
+            <div style="margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #007bff;">
+              <h6 class="fw-bold" style="color: #007bff; margin-bottom: 4px; font-size: 12px;">💬 A message from this app's creator</h6>
+              <p style="font-size: 14px; margin-bottom: 4px; line-height: 1.3;">
+                <strong>Fabio Brasil da Costa</strong> <span style="color: #6c757d; font-size: 10px;">(MSL, US Oncology, Medical Affairs, EMD Serono)</span>
+              </p>
+              <p style="font-size: 14px; margin: 0; line-height: 1.3;">
+                Hi! Thanks for using COSMIC! I developed this app entirely on my own free time. Please be patient if you encounter any issues, bugs, or incorrect information. Send feedback to: <a href="mailto:fabio.brasil-da-costa@emdserono.com" style="color: #007bff; text-decoration: none;">fabio.brasil-da-costa@emdserono.com</a>
+              </p>
+            </div>
+
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 12px 18px;">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="border-radius: 8px;">I Understand</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Scope Warning Modal -->
+    <div class="modal fade" id="chatScopeWarningModal" tabindex="-1" aria-labelledby="chatScopeWarningLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.12); max-height: 90vh; display: flex; flex-direction: column;">
+          <div class="modal-header" style="border-bottom: 1px solid #e9ecef; padding: 16px 20px; background-color: #fff3cd; flex-shrink: 0;">
+            <h5 class="modal-title fw-bold" id="chatScopeWarningLabel" style="font-size: 1.1rem;">
+              ⚠️ All Conference Data Scope
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" style="padding: 16px 20px; overflow-y: auto; flex: 1;">
+            <div style="margin-bottom: 12px; padding: 10px 12px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 6px;">
+              <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                <strong>Setting the scope to all 4,686 sessions may result in longer AI response times.</strong>
+              </p>
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <h6 class="fw-bold" style="font-size: 0.95rem; margin-bottom: 6px;">💡 Best Practice</h6>
+              <p style="font-size: 13px; margin-bottom: 8px; line-height: 1.4;">
+                Select a TA from the dropdown or mention it in your prompt to speed up responses.
+              </p>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+              <h6 class="fw-bold" style="color: #dc3545; font-size: 0.9rem; margin-bottom: 4px;">❌ Don't:</h6>
+              <div style="padding: 8px 10px; background-color: #f8d7da; border-left: 3px solid #dc3545; border-radius: 4px; font-family: monospace; font-size: 12px; color: #721c24;">
+                "Tell me about immune checkpoint inhibitors"
+              </div>
+              <p style="font-size: 12px; color: #666; margin: 4px 0 0 0; font-style: italic;">
+                → Searches all 4,686 studies (1-2 min wait)
+              </p>
+            </div>
+
+            <div>
+              <h6 class="fw-bold" style="color: #28a745; font-size: 0.9rem; margin-bottom: 4px;">✅ Do:</h6>
+              <div style="padding: 8px 10px; background-color: #d4edda; border-left: 3px solid #28a745; border-radius: 4px; font-family: monospace; font-size: 12px; color: #155724;">
+                "Tell me about immune checkpoint inhibitors in glioblastoma"
+              </div>
+              <p style="font-size: 12px; color: #666; margin: 4px 0 0 0; font-style: italic;">
+                → AI narrows scope automatically (faster)
+              </p>
+            </div>
+
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 12px 20px; display: flex; justify-content: space-between; flex-shrink: 0;">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" style="border-radius: 8px;">Go Back</button>
+            <button type="button" class="btn btn-warning btn-sm" id="confirmScopeWarning" style="border-radius: 8px;">Continue with All Data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Download Confirmation Modal -->
+    <div class="modal fade" id="downloadChatModal" tabindex="-1" aria-labelledby="downloadChatModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 8px 32px rgba(0,0,0,0.12);">
+          <div class="modal-header" style="border-bottom: 1px solid #e9ecef; padding: 16px 20px;">
+            <h5 class="modal-title fw-bold" id="downloadChatModalLabel">Download Chat History?</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" style="padding: 16px 20px;">
+            <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+              You're about to download a PDF file containing your complete chat history with COSMIC AI.
+            </p>
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 12px 20px; display: flex; justify-content: space-between;">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" style="border-radius: 8px;">No</button>
+            <button type="button" class="btn btn-primary btn-sm" id="confirmDownloadChat" style="border-radius: 8px;">Yes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Filters Bottom Sheet -->
+    <div class="mobile-filters-overlay" id="mobileFiltersOverlay"></div>
+    <div class="mobile-filters-sheet" id="mobileFiltersSheet">
+      <div class="mobile-filters-header">
+        <h3>🧰 Filters</h3>
+        <!-- Done and Clear buttons (mobile sheet) -->
+        <div class="filter-action-buttons mobile-filter-actions" id="mobileFilterActionButtons" style="display: none; gap: 6px;">
+          <button class="btn btn-sm filter-action-btn filter-done-btn mobile-done-btn" id="mobileDoneFiltersBtn" title="Apply filters">Done</button>
+          <button class="btn btn-sm filter-action-btn filter-clear-btn mobile-clear-btn" id="mobileClearFiltersBtn" title="Clear all filters">Clear</button>
+        </div>
+        <button class="mobile-filters-close" id="mobileFiltersClose">✕</button>
+      </div>
+      <div class="mobile-filters-body" id="mobileFiltersBody">
+        <!-- Filter content will be cloned here -->
+      </div>
+    </div>
+
+    <!-- Mobile Quick Intelligence Bottom Sheet -->
+    <div class="mobile-qi-overlay" id="mobileQIOverlay"></div>
+    <div class="mobile-qi-sheet" id="mobileQISheet">
+      <div class="mobile-qi-header">
+        <h3>⚡ Quick Intelligence</h3>
+        <button class="mobile-qi-close" id="mobileQIClose">✕</button>
+      </div>
+      <div class="mobile-qi-body" id="mobileQIBody">
+        <!-- QI content will be cloned here -->
+      </div>
+    </div>
+
+    <!-- Scope Selection Popup (Mobile) -->
+    <div class="chat-toolkit-overlay" id="chatScopeOverlay"></div>
+    <div class="chat-toolkit-popup" id="chatScopePopup">
+      <div class="toolkit-popup-header">
+        <h3>Conversation Scope</h3>
+        <button class="toolkit-popup-close" id="chatScopeCloseBtn">✕</button>
+      </div>
+      <div class="toolkit-popup-body">
+        <p class="toolkit-section-desc">Select the data scope for your conversation</p>
+        <div class="toolkit-option-group">
+          <button class="toolkit-option-btn" data-scope="all" data-label="All Conference Data">
+            <span class="toolkit-option-text">All Conference Data (4,686 studies)</span>
+          </button>
+          <button class="toolkit-option-btn" data-scope="ta:Bladder Cancer" data-label="Bladder Cancer">
+            <span class="toolkit-option-text">Bladder Cancer</span>
+          </button>
+          <button class="toolkit-option-btn" data-scope="ta:Renal Cancer" data-label="Renal Cancer">
+            <span class="toolkit-option-text">Renal Cancer</span>
+          </button>
+          <button class="toolkit-option-btn" data-scope="ta:Lung Cancer" data-label="Lung Cancer">
+            <span class="toolkit-option-text">Lung Cancer (NSCLC)</span>
+          </button>
+          <button class="toolkit-option-btn" data-scope="ta:Colorectal Cancer" data-label="Colorectal Cancer">
+            <span class="toolkit-option-text">Colorectal Cancer</span>
+          </button>
+          <button class="toolkit-option-btn" data-scope="ta:Head and Neck Cancer" data-label="Head & Neck Cancer">
+            <span class="toolkit-option-text">Head & Neck Cancer</span>
+          </button>
+          <button class="toolkit-option-btn" data-scope="ta:TGCT" data-label="TGCT">
+            <span class="toolkit-option-text">TGCT</span>
+          </button>
+          <button class="toolkit-option-btn" data-scope="ta:Merkel Cell" data-label="Merkel Cell">
+            <span class="toolkit-option-text">Merkel Cell</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Menu Popup (Mobile + Desktop) -->
+    <div class="chat-toolkit-overlay" id="chatMenuOverlay"></div>
+    <div class="chat-toolkit-popup" id="chatMenuPopup">
+      <div class="toolkit-popup-header">
+        <h3>Chat Options</h3>
+        <button class="toolkit-popup-close" id="chatMenuCloseBtn">✕</button>
+      </div>
+      <div class="toolkit-popup-body">
+        <p class="toolkit-section-desc">AI Thinking Mode</p>
+        <div class="toolkit-option-group">
+          <button class="toolkit-option-btn active" data-action="thinking" data-thinking="standard">
+            <svg class="toolkit-option-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="13 17 18 12 13 7"/>
+              <polyline points="6 17 11 12 6 7"/>
+            </svg>
+            <span class="toolkit-option-text">Standard Thinking</span>
+          </button>
+          <button class="toolkit-option-btn" data-action="thinking" data-thinking="deep">
+            <svg class="toolkit-option-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+            </svg>
+            <span class="toolkit-option-text">Deep Thinking</span>
+          </button>
+        </div>
+
+        <p class="toolkit-section-desc" style="margin-top: 20px;">Actions</p>
+        <div class="toolkit-option-group">
+          <button class="toolkit-option-btn" data-action="download" id="menuDownloadChatBtn">
+            <svg class="toolkit-option-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            <span class="toolkit-option-text">Download Chat</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Markdown Parser and Sanitizer for AI Intelligence Reports -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+      marked.setOptions({
+        gfm: true,
+        breaks: true,        // keeps single newlines readable while streaming
+        smartLists: true,
+        headerIds: false
+      });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    <!-- Mobile Filters JavaScript -->
+    <script>
+      // Mobile Filters Bottom Sheet Logic
+      (function() {
+        const mobileFiltersBtn = document.getElementById('mobileFiltersBtn');
+        const mobileFiltersSheet = document.getElementById('mobileFiltersSheet');
+        const mobileFiltersOverlay = document.getElementById('mobileFiltersOverlay');
+        const mobileFiltersClose = document.getElementById('mobileFiltersClose');
+        const mobileFiltersBody = document.getElementById('mobileFiltersBody');
+        const filterSidebar = document.getElementById('filterSidebar');
+
+        // Clone filter content from sidebar to mobile sheet (only once)
+        if (filterSidebar && mobileFiltersBody && mobileFiltersBody.children.length === 0) {
+          const sidebarContent = filterSidebar.querySelector('.sidebar-content');
+          if (sidebarContent) {
+            const clonedContent = sidebarContent.cloneNode(true);
+            mobileFiltersBody.appendChild(clonedContent);
+          }
+        }
+
+        // Open mobile filters
+        if (mobileFiltersBtn) {
+          mobileFiltersBtn.addEventListener('click', function() {
+            mobileFiltersSheet.classList.add('active');
+            mobileFiltersOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+          });
+        }
+
+        // Close mobile filters
+        function closeMobileFilters() {
+          mobileFiltersSheet.classList.remove('active');
+          mobileFiltersOverlay.classList.remove('active');
+          document.body.style.overflow = ''; // Restore scrolling
+        }
+
+        if (mobileFiltersClose) {
+          mobileFiltersClose.addEventListener('click', closeMobileFilters);
+        }
+
+        if (mobileFiltersOverlay) {
+          mobileFiltersOverlay.addEventListener('click', closeMobileFilters);
+        }
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && mobileFiltersSheet.classList.contains('active')) {
+            closeMobileFilters();
+          }
+        });
+      })();
+
+      // Mobile Quick Intelligence Bottom Sheet Logic
+      (function() {
+        const mobileQIFab = document.getElementById('mobileQIFab');
+        const mobileQISheet = document.getElementById('mobileQISheet');
+        const mobileQIOverlay = document.getElementById('mobileQIOverlay');
+        const mobileQIClose = document.getElementById('mobileQIClose');
+        const mobileQIBody = document.getElementById('mobileQIBody');
+        const quickIntelSidebar = document.getElementById('quickIntelSidebar');
+
+        // Clone QI content from sidebar to mobile sheet (only once)
+        if (quickIntelSidebar && mobileQIBody && mobileQIBody.children.length === 0) {
+          const sidebarContent = quickIntelSidebar.querySelector('.quick-intel-content');
+          if (sidebarContent) {
+            const clonedContent = sidebarContent.cloneNode(true);
+            mobileQIBody.appendChild(clonedContent);
+          }
+        }
+
+        // Open mobile QI sheet
+        if (mobileQIFab) {
+          mobileQIFab.addEventListener('click', function() {
+            mobileQISheet.classList.add('active');
+            mobileQIOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+          });
+        }
+
+        // Close mobile QI sheet
+        function closeMobileQI() {
+          mobileQISheet.classList.remove('active');
+          mobileQIOverlay.classList.remove('active');
+          document.body.style.overflow = ''; // Restore scrolling
+        }
+
+        if (mobileQIClose) {
+          mobileQIClose.addEventListener('click', closeMobileQI);
+        }
+
+        if (mobileQIOverlay) {
+          mobileQIOverlay.addEventListener('click', closeMobileQI);
+        }
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && mobileQISheet.classList.contains('active')) {
+            closeMobileQI();
+          }
+        });
+      })();
+
+      // Mobile Search and Filter Icon Buttons
+      (function() {
+        const searchBtnMobile = document.getElementById('searchBtnMobile');
+        const mobileFiltersIconBtn = document.getElementById('mobileFiltersIconBtn');
+        const searchBtn = document.getElementById('searchBtn'); // Desktop search button
+        const mobileFiltersSheet = document.getElementById('mobileFiltersSheet');
+        const mobileFiltersOverlay = document.getElementById('mobileFiltersOverlay');
+
+        // Mobile search button triggers same function as desktop
+        if (searchBtnMobile && searchBtn) {
+          searchBtnMobile.addEventListener('click', function() {
+            searchBtn.click(); // Trigger desktop search button click event
+          });
+        }
+
+        // Mobile filter icon button opens filter sheet
+        if (mobileFiltersIconBtn) {
+          mobileFiltersIconBtn.addEventListener('click', function() {
+            mobileFiltersSheet.classList.add('active');
+            mobileFiltersOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+          });
+        }
+      })();
+
+      // Chat QI Button (opens QI sheet on mobile)
+      (function() {
+        const chatQIBtn = document.getElementById('chatQIBtn');
+        const mobileQISheet = document.getElementById('mobileQISheet');
+        const mobileQIOverlay = document.getElementById('mobileQIOverlay');
+
+        if (chatQIBtn) {
+          chatQIBtn.addEventListener('click', function() {
+            mobileQISheet.classList.add('active');
+            mobileQIOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+          });
+        }
+      })();
+
+      // Chat Scope Popup Logic
+      (function() {
+        const scopeBtn = document.getElementById('chatScopeBtn');
+        const scopePopup = document.getElementById('chatScopePopup');
+        const scopeOverlay = document.getElementById('chatScopeOverlay');
+        const scopeClose = document.getElementById('chatScopeCloseBtn');
+        const scopeDropdown = document.getElementById('chatScopeDropdown');
+
+        // Open scope popup
+        if (scopeBtn) {
+          scopeBtn.addEventListener('click', function() {
+            scopePopup.classList.add('active');
+            scopeOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+          });
+        }
+
+        // Close scope popup
+        function closeScopePopup() {
+          scopePopup.classList.remove('active');
+          scopeOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+
+        if (scopeClose) {
+          scopeClose.addEventListener('click', closeScopePopup);
+        }
+
+        if (scopeOverlay) {
+          scopeOverlay.addEventListener('click', closeScopePopup);
+        }
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && scopePopup.classList.contains('active')) {
+            closeScopePopup();
+          }
+        });
+
+        // Handle scope selection buttons
+        const scopeButtons = document.querySelectorAll('#chatScopePopup .toolkit-option-btn[data-scope]');
+        scopeButtons.forEach(btn => {
+          btn.addEventListener('click', function() {
+            const scopeValue = this.getAttribute('data-scope');
+            const scopeLabel = this.getAttribute('data-label');
+
+            // Update dropdown (for desktop compatibility)
+            if (scopeDropdown) {
+              scopeDropdown.value = scopeValue;
+              // Trigger change event for app.js to pick up
+              scopeDropdown.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            // Update active state
+            scopeButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            // Update button label
+            const btnLabel = scopeBtn.querySelector('.icon-btn-label');
+            if (btnLabel) {
+              btnLabel.textContent = scopeLabel || 'Scope';
+            }
+
+            // Close popup after selection
+            closeScopePopup();
+          });
+        });
+
+        // Sync initial state with dropdown
+        if (scopeDropdown && scopeDropdown.value) {
+          const activeButton = document.querySelector(`#chatScopePopup .toolkit-option-btn[data-scope="${scopeDropdown.value}"]`);
+          if (activeButton) {
+            scopeButtons.forEach(b => b.classList.remove('active'));
+            activeButton.classList.add('active');
+
+            const btnLabel = scopeBtn.querySelector('.icon-btn-label');
+            if (btnLabel) {
+              btnLabel.textContent = activeButton.getAttribute('data-label') || 'Scope';
+            }
+          }
+        }
+      })();
+
+      // Chat Menu Popup Logic (Mobile + Desktop)
+      (function() {
+        const menuBtnMobile = document.getElementById('chatMenuBtn');
+        const menuBtnDesktop = document.getElementById('chatMenuBtnDesktop');
+        const menuPopup = document.getElementById('chatMenuPopup');
+        const menuOverlay = document.getElementById('chatMenuOverlay');
+        const menuClose = document.getElementById('chatMenuCloseBtn');
+        const thinkingDropdown = document.getElementById('thinkingModeDropdown');
+        const downloadChatBtn = document.getElementById('downloadChatBtn'); // Old download button
+        const menuDownloadBtn = document.getElementById('menuDownloadChatBtn'); // New menu download button
+
+        // Open menu popup
+        function openMenuPopup() {
+          menuPopup.classList.add('active');
+          menuOverlay.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        }
+
+        if (menuBtnMobile) {
+          menuBtnMobile.addEventListener('click', openMenuPopup);
+        }
+
+        if (menuBtnDesktop) {
+          menuBtnDesktop.addEventListener('click', openMenuPopup);
+        }
+
+        // Close menu popup
+        function closeMenuPopup() {
+          menuPopup.classList.remove('active');
+          menuOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+
+        if (menuClose) {
+          menuClose.addEventListener('click', closeMenuPopup);
+        }
+
+        if (menuOverlay) {
+          menuOverlay.addEventListener('click', closeMenuPopup);
+        }
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && menuPopup.classList.contains('active')) {
+            closeMenuPopup();
+          }
+        });
+
+        // Handle menu action buttons
+        const menuButtons = document.querySelectorAll('#chatMenuPopup .toolkit-option-btn');
+        menuButtons.forEach(btn => {
+          btn.addEventListener('click', function() {
+            const action = this.getAttribute('data-action');
+
+            if (action === 'thinking') {
+              const thinkingValue = this.getAttribute('data-thinking');
+
+              // Update dropdown (for app.js compatibility)
+              if (thinkingDropdown) {
+                thinkingDropdown.value = thinkingValue;
+                thinkingDropdown.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+
+              // Update active state for thinking buttons only
+              const thinkingButtons = document.querySelectorAll('#chatMenuPopup .toolkit-option-btn[data-action="thinking"]');
+              thinkingButtons.forEach(b => b.classList.remove('active'));
+              this.classList.add('active');
+
+              // Close popup after selection
+              closeMenuPopup();
+            } else if (action === 'download') {
+              // Trigger the original download chat button click
+              if (downloadChatBtn) {
+                downloadChatBtn.click();
+              }
+              closeMenuPopup();
+            }
+          });
+        });
+
+        // Download button click handler
+        if (menuDownloadBtn) {
+          menuDownloadBtn.addEventListener('click', function() {
+            if (downloadChatBtn) {
+              downloadChatBtn.click();
+            }
+            closeMenuPopup();
+          });
+        }
+
+        // Sync initial state with dropdown
+        if (thinkingDropdown && thinkingDropdown.value) {
+          const activeButton = document.querySelector(`#chatMenuPopup .toolkit-option-btn[data-thinking="${thinkingDropdown.value}"]`);
+          if (activeButton) {
+            const thinkingButtons = document.querySelectorAll('#chatMenuPopup .toolkit-option-btn[data-action="thinking"]');
+            thinkingButtons.forEach(b => b.classList.remove('active'));
+            activeButton.classList.add('active');
+          }
+        }
+      })();
+    </script>
+  </body>
+</html>
