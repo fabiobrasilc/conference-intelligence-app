@@ -149,7 +149,18 @@ def extract_simple_keywords(
 
 **KEYWORD EXTRACTION RULES:**
 
-1. **Drug abbreviations** - expand to full names:
+1. **Date format conversion** - CRITICAL for matching dataset:
+   - Dataset uses US format: MM/DD/YYYY (e.g., "10/18/2025")
+   - If user query contains a date in ANY format, convert to MM/DD/YYYY:
+     * "10/18" → "10/18/2025" (add year 2025)
+     * "10/18/2025" → "10/18/2025" (already correct)
+     * "18/10" (DD/MM) → "10/18/2025" (swap to MM/DD and add year)
+     * "18/10/2025" (DD/MM/YYYY) → "10/18/2025" (swap to MM/DD/YYYY)
+     * "2025-10-18" (ISO) → "10/18/2025" (convert to MM/DD/YYYY)
+   - If day > 12, it MUST be DD/MM format - swap to MM/DD
+   - Always return dates in "dates" field as MM/DD/YYYY format
+
+2. **Drug abbreviations** - expand to full names:
    - "EV" → enfortumab vedotin
    - "P" / "pembro" → pembrolizumab
    - "Nivo" → nivolumab
@@ -223,6 +234,12 @@ USER QUERY: "{user_query}"
 
 Greeting (NO keywords needed):
 "Hello!" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
+
+Date format conversion:
+"What are all the bladder poster presentations happening on 10/18?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": ["10/18/2025"], "speakers": [], "search_terms": []}}
+
+Date format conversion (international):
+"What are all the bladder poster presentations happening on 18/10?" → {{"drug_combinations": [], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": ["10/18/2025"], "speakers": [], "search_terms": []}}
 
 Drug abbreviation (combination):
 "EV + P studies" → {{"drug_combinations": [["enfortumab vedotin", "pembrolizumab"]], "drug_classes": [], "therapeutic_areas": [], "institutions": [], "dates": [], "speakers": [], "search_terms": []}}
@@ -330,6 +347,7 @@ def filter_dataframe_with_keywords(
     # Sequential filtering (most restrictive first)
 
     # 1. Filter by date (if specified)
+    # Note: AI is instructed to convert dates to MM/DD/YYYY format to match dataset
     if keywords.get('dates'):
         date_pattern = '|'.join([re.escape(d) for d in keywords['dates']])
         filtered = filtered[
